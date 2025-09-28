@@ -1,0 +1,13 @@
+{
+  "ch1_pg4":   [{ "file": "sfx/footsteps_soft.mp3",   "time": 8500 }],
+  "ch2a_pg1":  [{ "file": "sfx/slow_drip_echo.mp3",   "time": 4000 }],
+  "ch2a_pg2":  [{ "file": "sfx/low_rumble.mp3",       "time": 8000 }],
+  "ch2a_pg2b": [{ "file": "sfx/mark_activation.mp3",  "time": 6500 }],
+  "ch2a_pg4":  [{ "file": "sfx/closing_whisper.mp3",  "time": 7000 }],
+  "ch2b_pg1":  [{ "file": "sfx/slow_drip_echo.mp3",   "time": 4000 }],
+  "ch2b_pg2b": [{ "file": "sfx/mark_touch.mp3",       "time": 6200 }],
+  "ch2b_pg4":  [{ "file": "sfx/closing_whisper.mp3",  "time": 7000 }],
+  "ch3a1_pg4": [{ "file": "sfx/footsteps_soft.mp3",   "time": 8200 }],
+  "ch3a2_pg4": [{ "file": "sfx/footsteps_soft.mp3",   "time": 8000 }],
+  "ch3a3_pg4": [{ "file": "sfx/footsteps_soft.mp3",   "time": 8000 }]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "demo_full",
+  "meta": { "id": "demo_full", "title": "Full UI Demo" },
+  "fragments": [ { "id": "intro" } ],
+  "pages": [
+    {
+      "id": "p1",
+      "type": "default",
+      "text": ["Hi there"],
+      "choices": [
+        { "label": "Next", "nextPageId": "p2", "actions": [ { "type":"unlockFragment", "fragmentId":"intro" } ] }
+      ]
+    },
+    { "id": "p2", "text": "End", "fragments":[{"id":"intro"}] }
+  ]
+}

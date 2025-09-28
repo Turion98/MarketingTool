@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "id": "forest_demo",
+    "title": "Forest Demo",
+    "description": "Egy rövid próbatörténet az erdőben.",
+    "coverImage": "/assets/covers/forest.jpg",
+    "startPageId": "ch1_pg1"
+  },
+  "pages": {
+    "ch1_pg1": {
+      "id": "ch1_pg1",
+      "text": "Belépsz az erdőbe. A fák között madarak csicsergése hallatszik.",
+      "choices": [
+        {
+          "text": "Tovább mész az ösvényen",
+          "nextPageId": "ch1_pg2"
+        },
+        {
+          "text": "Leülsz egy kőre pihenni",
+          "nextPageId": "ch1_pg3"
+        }
+      ]
+    },
+    "ch1_pg2": {
+      "id": "ch1_pg2",
+      "text": "Az ösvény egy tisztásra vezet, ahol egy kút áll.",
+      "choices": [
+        {
+          "text": "Visszamész",
+          "nextPageId": "ch1_pg1"
+        }
+      ]
+    },
+    "ch1_pg3": {
+      "id": "ch1_pg3",
+      "text": "Pár perc pihenés után erőre kapsz.",
+      "choices": [
+        {
+          "text": "Folytatod az utat",
+          "nextPageId": "ch1_pg2"
+        }
+      ]
+    }
+  }
+}

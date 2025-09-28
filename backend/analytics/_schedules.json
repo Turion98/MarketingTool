@@ -1,0 +1,13 @@
+{
+  "Erodv2_analytics": {
+    "storyId": "Erodv2_analytics",
+    "recipients": [
+      "csorgetbence@gmail.com"
+    ],
+    "frequency": "weekly",
+    "timeOfDay": "09:00",
+    "timezone": "Europe/Amsterdam",
+    "rangeSpec": "last7d",
+    "terminal": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "demo_min",
+  "meta": { "id": "demo_min", "title": "Minimal Demo" },
+  "pages": [
+    { "id": "pg1", "text": "Hello", "next": "pg2" },
+    { "id": "pg2", "text": "World" }
+  ]
+}

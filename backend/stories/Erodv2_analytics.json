@@ -1,0 +1,2235 @@
+{
+  "meta": {
+    "id": "erodv2_analytics",
+    "title": "Erod V2",
+    "description": "Analytical journey through the ruins.",
+    "coverImage": "/assets/covers/erodv2.jpg",
+    "startPageId": "ch1_pg1"
+  },
+  "id": "chapter_1",
+  "title": "Erőd",
+  "pages": [
+    {
+      "id": "ch1_pg1",
+      "text": "Az acél hideg féme visszaverte a gyertyák fényét. Egyetlen karcolás sem volt rajta, mintha maga az idő sem érné el.\nA lovag térdre ereszkedett, bal kezével a földre támaszkodott, a jobbat a pajzsra tette.\n– Megőrzöm az életet, amit rám bíznak – mondta halkan, benne tisztán csengett föl minden hang. A teremben a szavak súlya volt csak hallható.\nA körülötte állók némán figyelték, de ő nem látta őket. Csak a fémet érezte az ujja alatt, a szó pedig ott nehezedett az ajkán, mint a pajzs súlya a karján.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience",
+        "page": "knight kneeling before a pristine shield on pedestal, candlelit hall, solemn oath, medium-wide shot",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience, knight kneeling before a pristine shield on pedestal, candlelit hall, solemn oath, medium-wide shot",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, lush foliage, snow, crowds"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch1_pg1.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch1_pg2",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch1_pg2",
+      "text": "Az ajtó nyikorgása betöltötte a kis házat. A fiú felemelte a fejét, amint apja belépett. Nem rohant, csak nézte, kezében a fából készült kard és pajzs, amivel egész nap játszott.\n– Igazi lesz? – kérdezte halkan, ujjával az egyszerű faragás vonalait simítva.\nA lovag letérdelt mellé, és egy pillanatra elmosolyodott.\n– Igen. – A szót nem kísérte magyarázat. Csak a kezét tette a fiú vállára, és hagyta, hogy a gyermek ujja a pajzs szélén pihenjen.\nA felesége az ajtófélfánál állt, csöndben, kezét tördelve. Nem szólt, de a tekintetük találkozott: az ő szemében aggodalom, az övében ígéret.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience",
+        "page": "small medieval interior, boy with wooden sword and shield, father kneels, mother at doorway, eye-level",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience, small medieval interior, boy with wooden sword and shield, father kneels, mother at doorway, eye-level",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, lush foliage, snow, crowds"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch1_pg2.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch1_pg3a",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch1_pg3a",
+      "text": "A kürt hangja betöltötte az utcát, mély és elnyújtott, mint egy messziről jövő fenyegetés.\nA lovag felvette a köpenyét, megigazította a vállára vetett fegyverövét, és egy pillanatra megállt az ajtóban.\nA felesége ott állt, kezét szorosan a dereka köré kulcsolta. Nem szólt semmit, csak nézte.\nA fiú a küszöbnél állt, kezében a fából faragott kard és pajzs. A lovag ránézett, egy rövid biccentést adott – ígéretet vagy talán búcsút.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience",
+        "page": "knight in doorway fastening cloak, family watching, farewell moment, medium shot",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience, knight in doorway fastening cloak, family watching, farewell moment, medium shot",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, lush foliage, snow, crowds"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch1_pg3a.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch1_pg3b",
+      "reward": {
+        "saveFragments": [
+          "promise_to_family_fragment_echo"
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch1_pg3b",
+      "text": "A kürt ismét megszólalt, és ő kilépett a házból, a zaj és a hideg levegő közé.\nA kürt hangja nem hagyott választást. Ők hívták, ő pedig ment.\nA menetelés, a vas csikorgása, a hideg reggelek – mind gyorsan egyetlen napba sűrűsödtek.\nA csata rövid volt és kegyetlen.\nAmikor felocsúdott, bilincs volt a csuklóján, és az erőd hideg, nyirkos falai között találta magát.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience",
+        "page": "battle aftermath dissolving into capture, shackled wrists, cold stone walls, narrative transition",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience, battle aftermath dissolving into capture, shackled wrists, cold stone walls, narrative transition",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, lush foliage, snow, crowds"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch1_pg3b.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch2_pg1",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg1",
+      "text": "A kőpad hideg volt, a falból csorgó víz halk csepegése időtlen ritmusban verte vissza a csendet.\nA lánc nehéz, rozsdás vasként feküdt a csuklóján, de már nem volt rögzítve – csak emlékeztetőként maradt ott.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "dungeon cell interior, loose chain on wrist, damp stone bench, wall trickle, moody close-up",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, dungeon cell interior, loose chain on wrist, damp stone bench, wall trickle, moody close-up",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg1.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch2_pg2",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg2",
+      "text": "A börtönőr elhaladt a rács előtt. A férfi magas volt és fáradt, léptei tompán koppantak a kövezeten. Egyetlen pillanatra lassított, amikor a kulcsok megzörrentek az övén.\nA lovag nem mozdult.\nA kulcscsomó kilengett, és egy darabja halkan koppant a kövön. Az őr nem vette észre.\nAztán a léptek eltűntek a sötét folyosón, a hangjuk beleolvadt a csöndbe.\nA lovag odacsúszott.\nEgy mozdulat, nem több. A kulcs hűvös volt és nehéz.\nA zár nem ellenkezett.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "guard passing iron bars, keys dangling, one key on floor in foreground, lantern glow",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, guard passing iron bars, keys dangling, one key on floor in foreground, lantern glow",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg2.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch2_pg3",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg3",
+      "text": "A folyosó sötét és szűk volt, a falak nedvesek, a kő hidege a csizmán keresztül is érződött.\nEgy ajtó zárta el az utat, nehéz, vasalással megerősített fa. A kilincs nem engedett.\nA lovag hátrébb lépett. A szemét a falra szegezte, ahol az ajtó két oldalán két kallantyú pihent. Fölöttük, egymással szemben, két címer.\nBal oldalon egy lángoló kard ült egy madár markában. Jobb oldalon egy pajzs állt, rajta kereszttel, körbe font ágakkal.\nA kar mozdítható volt, de csak az egyik irányba engedett.\nA döntés az ő kezében volt. Előtte két út – de csak az egyik vezet kifelé.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "reinforced door with two clear crests, lever between emblems, front-facing, readable",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, reinforced door with two clear crests, lever between emblems, front-facing, readable",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg3.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "decision",
+      "choices": [
+        {
+          "id": "pull_sword",
+          "text": "Kallantyú a kard felé",
+          "next": "ch2_pg4a",
+          "reward": {
+            "setFlags": {
+              "picked_ch2_pg3_pull_sword": true
+            }
+          }
+        },
+        {
+          "id": "pull_shield",
+          "text": "Kallantyú a pajzs felé",
+          "next": "ch2_pg4b",
+          "reward": {
+            "setFlags": {
+              "picked_ch2_pg3_pull_shield": true
+            }
+          }
+        }
+      ],
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "nextSwitch": [
+        {
+          "ifAnyTrue": [
+            "picked_ch2_pg3_pull_sword"
+          ],
+          "goto": "ch2_pg4a"
+        },
+        {
+          "ifAnyTrue": [
+            "picked_ch2_pg3_pull_shield"
+          ],
+          "goto": "ch2_pg4b"
+        }
+      ]
+    },
+    {
+      "id": "ch2_pg4a",
+      "text": "A kallantyú fémje hideg volt. A lovag balra húzta, a kard irányába.\nValami kattant – de nem az ajtó nyílt ki előtte.\nA zaj hátulról érkezett. Egy rejtett zár oldódott a folyosó sötétje felé.\nNem előre hívta. Visszafelé.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "lever pulled toward sword crest, hidden latch opening behind, corridor receding, over-shoulder",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, lever pulled toward sword crest, hidden latch opening behind, corridor receding, over-shoulder",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg4a.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch1_pg3a",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg4b",
+      "text": "A kallantyú engedelmesen mozdult, a pajzs irányába.\nA zár halk kattanással oldódott.\nAz ajtó előtte megmozdult, lassan, súlyosan.\nNem szólt semmi. Csak átlépett rajta.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "lever toward shield crest, front door unlocking, subtle shift, tight framing on mechanism",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, lever toward shield crest, front door unlocking, subtle shift, tight framing on mechanism",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg4b.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch2_pg5",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg5",
+      "text": "A léptek tompán közeledtek a folyosón. Nem sokkal az ajtó mögött.\nA lovag háttal a falnak húzódott, teste szinte eggyé vált az árnyékkal.\nAz őr nem sietett. A vállán fémlap csillant, egyik kezében lámpás. A másikban kulcsok lógtak, hangtalanul.\nMegállt. A zárra nézett, majd a folyosóra. Nem vette észre.\nMég.\nA lovag keze ökölbe szorult.\nHárom mozdulat lehetséges. Mind másba torkollik.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "corridor corner, guard with lantern approaching, knight in shadow, tension, medium-wide",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, corridor corner, guard with lantern approaching, knight in shadow, tension, medium-wide",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg5.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "decision",
+      "choices": [
+        {
+          "id": "sneak",
+          "text": "Elosonok mellette",
+          "next": "ch2_pg5a",
+          "reward": {
+            "clearFlags": [
+              "has_sword",
+              "has_shield"
+            ],
+            "setFlags": {
+              "picked_ch2_pg5_sneak": true
+            }
+          }
+        },
+        {
+          "id": "knockout",
+          "text": "Leütöm az őrt (nem halálos)",
+          "next": "ch2_pg5b",
+          "reward": {
+            "setFlags": {
+              "has_sword": true,
+              "has_shield": true,
+              "picked_ch2_pg5_knockout": true
+            },
+            "saveFragments": [
+              "guard_knockout_fragment_ch1",
+              "guard_knockout_fragment_ch1_echo"
+            ]
+          }
+        },
+        {
+          "id": "kill",
+          "text": "Megölöm az őrt",
+          "next": "ch2_pg5c",
+          "reward": {
+            "setFlags": {
+              "has_sword": true,
+              "has_shield": true,
+              "picked_ch2_pg5_kill": true
+            },
+            "saveFragments": [
+              "guard_kill_fragment_ch1",
+              "guard_kill_fragment_ch1_echo"
+            ]
+          }
+        }
+      ],
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg5a",
+      "text": "Az őr hátralépett, vállával enyhén az ajtónak dőlt.\nA lovag kilépett a sötétből, hangtalanul suhant el mellette.\nEgy lélegzetvétel ideje sem volt – már el is tűnt mögötte.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "silent slip past guard at doorframe, motion implied, lantern glow behind, side angle",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, silent slip past guard at doorframe, motion implied, lantern glow behind, side angle",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg5a.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch3_pg1",
+      "reward": {
+        "clearFlags": [
+          "has_sword",
+          "has_shield"
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg5b",
+      "text": "Egy gyors lépés, egy súlyos ütés.\nAz őr összeesett, a lámpás puffanva gurult a földre.\nA kulcsok zörögve pendültek meg a kőpadlón.\nA lovag letérdelt, elvette a kardot és a pajzsot. Nem volt vér, csak csend.\nÉs egy lépés előre.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "non-lethal takedown, guard collapsing, keys skittering, knight taking sword and shield, mid action",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, non-lethal takedown, guard collapsing, keys skittering, knight taking sword and shield, mid action",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg5b.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch3_pg1",
+      "reward": {
+        "setFlags": {
+          "has_sword": true,
+          "has_shield": true
+        },
+        "saveFragments": [
+          "guard_knockout_fragment_ch1",
+          "guard_knockout_fragment_ch1_echo"
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch2_pg5c",
+      "text": "A penge mélyen hatolt. A test megtorpant, majd elernyedt.\nAz őr szeme tágra nyílt, de nem mondott semmit.\nA lovag egy pillanatig nézte a holttestet.\n„Mit tettem? A halált hoztam az életbe.” – gondolta.\nAztán elvette a kardot és a pajzsot, és elindult.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere",
+        "page": "fatal strike, guard lifeless, knight retrieving sword and shield, somber tone, restrained",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, medieval dungeon corridors, iron bars, flickering torches, tense and oppressive atmosphere, fatal strike, guard lifeless, knight retrieving sword and shield, somber tone, restrained",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, forest, grassy ground, wide outdoor vistas"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2_pg5c.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch3_pg1",
+      "reward": {
+        "setFlags": {
+          "has_sword": true,
+          "has_shield": true
+        },
+        "saveFragments": [
+          "guard_kill_fragment_ch1",
+          "guard_kill_fragment_ch1_echo"
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch3_pg1",
+      "text": "A lovag léptei elhaltak a csendben. A túloldali ajtó zárva – mint minden más út, amit eddig maga mögött hagyott. De itt nem kulcsot keresett. Itt választ kellett adnia.\nA falon szimmetrikus rendben rúnák sorakoztak. Ősi jelek, egykori jelentéssel, most új próbát formázva. Mind közül három kellett. Három, amely nyit.\nA tekintete átfutott a kőbe karcolt formákon. Egyes jelek ismerősen derengtek fel emlékei közül, vagy talán túlságosan ismerősek, túl közeliek ahhoz, amit maga mögött akart hagyni.\nAz utolsó rúnát megérintve halk reccsenés hallatszott. Az ajtó engedett.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "stone wall with carved runes large and centered, knight selecting three symbols, front-lit, high clarity",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, stone wall with carved runes large and centered, knight selecting three symbols, front-lit, high clarity",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_pg1.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "puzzle",
+      "options": [
+        "Kereszt",
+        "Madár",
+        "Ág",
+        "Kard",
+        "Pajzs",
+        "Láng"
+      ],
+      "answer": [
+        "Kereszt",
+        "Pajzs",
+        "Ág"
+      ],
+      "maxAttempts": 3,
+      "onSuccess": {
+        "goto": "ch3_pg2"
+      },
+      "onFail": {
+        "goto": "ch3_gameover_pg1"
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "kind": "runes"
+    },
+    {
+      "id": "ch3_pg2",
+      "text": "A folyosó végén egy szűk nyílás tátongott. Nem zár, nem lakat – de út mégsem vezetett át rajta.\nA nyílás mögött régi vasrudak meredtek elő, rozsdásan, de rendületlenül.\nEgyetlen rúgás nem nyitotta meg, egyetlen kéz nem feszítette szét.\nA pengét a rács közé feszítette, majd minden erejét beleadva nyomta előre.\nA vas reccsent, ahogy az acél megadta magát – de utat nyitott.\nA penge darabokban maradt a földön. A pajzs a karján maradt.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "rusted bars blocking narrow passage, blade wedged and snapping, shield on arm, dynamic close-up",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, rusted bars blocking narrow passage, blade wedged and snapping, shield on arm, dynamic close-up",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_pg2.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "conditionalRouting",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "nextSwitch": [
+        {
+          "ifNone": [
+            "has_sword",
+            "has_shield"
+          ],
+          "goto": "ch2_pg5"
+        },
+        {
+          "ifAll": [
+            "has_sword"
+          ],
+          "goto": "ch3_pg4b",
+          "action": {
+            "saveFragments": [
+              "used_sword_fragment_ch1",
+              "used_sword_fragment_ch1_echo"
+            ]
+          }
+        },
+        {
+          "ifAll": [
+            "has_shield"
+          ],
+          "goto": "ch3_pg3",
+          "action": {
+            "saveFragments": [
+              "used_shield_fragment_ch1",
+              "used_shield_fragment_ch1_echo"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ch3_pg3",
+      "text": "A sziklafal keskeny párkányán haladt, a kő omladozott a lába alatt.\nEgy rossz lépés – és a súly lehúzta. Megbotlott.\nAhogy megpróbált megkapaszkodni, a kard és a pajzs is megcsúszott, a perem szélére sodródva.\nA lovag kinyújtotta a kezét – de csak egyet érhetett el időben. A másik lassan, hangtalanul tűnt el a mélységben.\nA keze a pajzs markolatára fonódott, és visszarántotta magához.\nA kard súlya már nem volt az övé.\nA levegő csendje most másként szólt. Nem fegyverrel megy tovább – de nem is üresen.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "crumbling cliff ledge, sword and shield sliding toward abyss, knight reaching, wide, dramatic",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, crumbling cliff ledge, sword and shield sliding toward abyss, knight reaching, wide, dramatic",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_pg3.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "decision",
+      "choices": [
+        {
+          "id": "keep_sword",
+          "text": "A kardot mentem meg",
+          "next": "ch3_pg4a",
+          "reward": {
+            "setFlags": {
+              "has_sword": true,
+              "picked_ch3_pg3_keep_sword": true
+            },
+            "clearFlags": [
+              "has_shield"
+            ],
+            "saveFragments": [
+              "keep_sword_ch1",
+              "keep_sword_ch1_echo"
+            ]
+          }
+        },
+        {
+          "id": "keep_shield",
+          "text": "A pajzsot mentem meg",
+          "next": "ch3_pg4b",
+          "reward": {
+            "setFlags": {
+              "has_shield": true,
+              "picked_ch3_pg3_keep_shield": true
+            },
+            "clearFlags": [
+              "has_sword"
+            ],
+            "saveFragments": [
+              "keep_shield_ch1",
+              "keep_shield_ch1_echo"
+            ]
+          }
+        }
+      ],
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "nextSwitch": [
+        {
+          "ifAll": [
+            "has_sword"
+          ],
+          "goto": "ch3_pg4a"
+        },
+        {
+          "ifAll": [
+            "has_shield"
+          ],
+          "goto": "ch3_pg4b"
+        }
+      ]
+    },
+    {
+      "id": "ch3_pg4a",
+      "text": "A sziklás kijárat túloldalán fák ringtak a szélben – rég látott szabadság ígérete remegett a levegőben.\nA lovag kilépett a fényre. A kezében még ott volt a kard hideg súlya, de a karja üresnek érezte magát a pajzs nélkül.\nNem futott. Nem rogyott térdre. Csak állt – a penge hidegében.\nAz erdő ritkult, az ösvény szélesedett. A hegyek mögött már a hazafelé vezető út ígérete rajzolódott ki.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "forest edge beyond rock mouth, knight stepping into light holding sword, no shield, hopeful",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, forest edge beyond rock mouth, knight stepping into light holding sword, no shield, hopeful",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_pg4a.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch4_pg1",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch3_pg4b",
+      "text": "A sziklás kijárat túloldalán fák ringtak a szélben – rég látott szabadság ígérete remegett a levegőben.\nA lovag kilépett a fényre. A karján még ott volt a pajzs védelme, de az oldala üres maradt a kard nélkül.\nNem futott. Nem rogyott térdre. Csak állt – a védelem súlyával.\nAz erdő ritkult, az ösvény szélesedett. A hegyek mögött már a hazafelé vezető út ígérete rajzolódott ki.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "forest edge beyond rock mouth, knight with shield on arm, no sword, hopeful",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, forest edge beyond rock mouth, knight with shield on arm, no sword, hopeful",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_pg4b.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch4_pg1",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch4_pg1",
+      "text": "Az ösvény kanyarulatában egy alak állt. Rongyos köpönyege alatt nem látszott sem fegyver, sem arc, mégis megállásra kényszerített.\n– Tovább akarsz menni? Három kérdést kapsz. Ha akár egyet helyesen felelsz, utadra engedlek. Ha mind elhibázod… véget ér az utad.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "hooded figure blocking twilight forest path, face hidden, challenge implied, centered",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, hooded figure blocking twilight forest path, face hidden, challenge implied, centered",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg1.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch4_pg2",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch4_pg2",
+      "text": "“I have no mouth, yet you hear me.\nI have no body, yet I always return to you.\nWhat am I?”",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "first riddle, hooded figure framed close, attentive knight, stillness",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, first riddle, hooded figure framed close, attentive knight, stillness",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg2.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "puzzle",
+      "question": "I have no mouth, yet you hear me. I have no body, yet I always return to you. What am I?",
+      "options": [
+        "The echo",
+        "The memory",
+        "The wind",
+        "The thought"
+      ],
+      "correctIndex": 0,
+      "onAnswer": {
+        "setFlags": {
+          "riddle1_correct": "{{isCorrect}}"
+        },
+        "nextSwitch": [
+          {
+            "ifAnyTrue": [
+              "__isCorrect"
+            ],
+            "goto": "ch4_pg3"
+          },
+          {
+            "else": "ch4_pg3"
+          }
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "kind": "riddle"
+    },
+    {
+      "id": "ch4_pg3",
+      "text": "“I shine with no light, yet I burn without end.\nI do not touch the flesh, yet I consume the soul.\nWhat am I?”",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "second riddle, figure silhouette among trees, subtle fire metaphor in mood, medium shot",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, second riddle, figure silhouette among trees, subtle fire metaphor in mood, medium shot",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg3.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "puzzle",
+      "question": "I shine with no light, yet I burn without end. I do not touch the flesh, yet I consume the soul. What am I?",
+      "options": [
+        "The dream",
+        "The fear",
+        "The moon",
+        "The hope"
+      ],
+      "correctIndex": 0,
+      "onAnswer": {
+        "setFlags": {
+          "riddle2_correct": "{{isCorrect}}"
+        },
+        "nextSwitch": [
+          {
+            "ifAnyTrue": [
+              "__isCorrect"
+            ],
+            "goto": "ch4_pg4"
+          },
+          {
+            "else": "ch4_pg4"
+          }
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "kind": "riddle"
+    },
+    {
+      "id": "ch4_pg4",
+      "text": "“I open many doors, but I am no key.\nI always stand ahead of you, yet you can never reach me.\nWhat am I?”",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "third riddle at forked path, future just out of reach, figure gesturing ahead",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, third riddle at forked path, future just out of reach, figure gesturing ahead",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg4.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "puzzle",
+      "question": "I open many doors, but I am no key. I always stand ahead of you, yet you can never reach me. What am I?",
+      "options": [
+        "The future",
+        "The dream",
+        "The fate",
+        "The time"
+      ],
+      "correctIndex": 0,
+      "onAnswer": {
+        "setFlags": {
+          "riddle3_correct": "{{isCorrect}}"
+        },
+        "nextSwitch": [
+          {
+            "ifAnyTrue": [
+              "__isCorrect"
+            ],
+            "goto": "ch4_pg5"
+          },
+          {
+            "else": "ch4_pg5"
+          }
+        ]
+      },
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "kind": "riddle"
+    },
+    {
+      "id": "ch4_pg5",
+      "text": "Ha legalább egy válasz helyes: az útálló félreáll, és a lovag továbbhalad a birtokok széléig.\nA sziklás kijárat túloldalán fák ringtak a szélben – rég látott szabadság ígérete remegett a levegőben.\nA lovag kilépett a fényre. A bőrét idegenül érintette a nap, a levegőt mélyebben szívta be, mint amire emlékezett.\nNem futott. Nem rogyott térdre. Csak állt.\nA fák egyre ritkábbá váltak, ahogy az ösvény kiért az erdő szélére. A hegyek mögött ismerős domborzat rajzolódott ki.\nA határ.\nA lovag szeme megtelt. Ott volt – a föld, ahol fia járt, ahol az asszony várta. Még ha nem is látta őket, érezte a jelenlétüket.\nMinden lépése könnyebb lett. Már nem menekült – hazafelé ment.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "forest verge opening to familiar lowlands, knight pausing, horizon of home, wide shot",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, forest verge opening to familiar lowlands, knight pausing, horizon of home, wide shot",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg5.mp3"
+      },
+      "sfxPlaylist": [],
+      "type": "conditionalRouting",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "nextSwitch": [
+        {
+          "ifAnyTrue": [
+            "riddle1_correct",
+            "riddle2_correct",
+            "riddle3_correct"
+          ],
+          "goto": "ch4_pg6",
+          "action": {
+            "saveFragments": [
+              "hope_fragment_echo"
+            ]
+          }
+        },
+        {
+          "ifAllFalse": [
+            "riddle1_correct",
+            "riddle2_correct",
+            "riddle3_correct"
+          ],
+          "goto": "ch4_pg6_gameover"
+        }
+      ]
+    },
+    {
+      "id": "ch4_pg6",
+      "text": "A fák ritkulnak, az ösvény kiszélesedik. A határ vonala kirajzolódik. Könnyebb a lépés – már hazafelé mész.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "widening border path, trees thinning, lighter step toward home, gentle light, wide",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, widening border path, trees thinning, lighter step toward home, gentle light, wide",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg6.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch4_pg7",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch4_pg6_gameover",
+      "text": "Game Over – Az út sötétbe omlik; a csuklyás alak eltűnik. [Restart]",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "forest path collapsing into darkness, hooded figure dissolving, failure motif",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, forest path collapsing into darkness, hooded figure dissolving, failure motif",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg6_gameover.mp3"
+      },
+      "sfxPlaylist": [],
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      },
+      "next": "__END__"
+    },
+    {
+      "id": "ch4_pg7",
+      "text": "A birtokok szélén járt, amikor valami megmozdult a világ peremén.\nMintha a levegő megrepedt volna. Mintha egy kéz nyúlt volna utána – nem húsból, nem emlékből, hanem valami régi és mély dologból, ami várt rá.\nA lovag felemelte a fejét –\n– és eltűnt.",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "border fields, horizon warping, air splitting, knight vanishing mid-step, surreal",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, border fields, horizon warping, air splitting, knight vanishing mid-step, surreal",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_pg7.mp3"
+      },
+      "sfxPlaylist": [],
+      "next": "ch4_post_fragments",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch4_post_fragments",
+      "text": [
+        {
+          "default": "Az út emlékei felsejlenek…"
+        },
+        {
+          "ifUnlocked": "guard_knockout_fragment_ch1",
+          "text": "{fragment:guard_knockout_fragment_ch1}"
+        },
+        {
+          "ifUnlocked": "guard_kill_fragment_ch1",
+          "text": "{fragment:guard_kill_fragment_ch1}"
+        },
+        {
+          "ifUnlocked": "used_sword_fragment_ch1",
+          "text": "{fragment:used_sword_fragment_ch1}"
+        },
+        {
+          "ifUnlocked": "used_shield_fragment_ch1",
+          "text": "{fragment:used_shield_fragment_ch1}"
+        },
+        {
+          "ifUnlocked": "keep_sword_ch1",
+          "text": "{fragment:keep_sword_ch1}"
+        },
+        {
+          "ifUnlocked": "keep_shield_ch1",
+          "text": "{fragment:keep_shield_ch1}"
+        }
+      ],
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery",
+        "page": "montage of etched runes and faint memories, layered echoes over stone parchment, clean layout",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, mystical forest edge and ancient paths, cloaked figure, riddle-like atmosphere, surreal medieval mystery, montage of etched runes and faint memories, layered echoes over stone parchment, clean layout",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, castle interior, dungeon bars, urban elements, heavy fog"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch4_post_fragments.mp3"
+      },
+      "sfxPlaylist": [],
+      "fragmentRefs": [
+        {
+          "id": "guard_knockout_fragment_ch1",
+          "prefix": "✴ "
+        },
+        {
+          "id": "guard_kill_fragment_ch1",
+          "prefix": "✴ "
+        },
+        {
+          "id": "used_sword_fragment_ch1",
+          "prefix": "⚬ "
+        },
+        {
+          "id": "used_shield_fragment_ch1",
+          "prefix": "⚬ "
+        },
+        {
+          "id": "keep_sword_ch1",
+          "prefix": "• "
+        },
+        {
+          "id": "keep_shield_ch1",
+          "prefix": "• "
+        },
+        {
+          "id": "promise_to_family_fragment_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "guard_knockout_fragment_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "guard_kill_fragment_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "used_sword_fragment_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "used_shield_fragment_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "keep_sword_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "keep_shield_ch1_echo",
+          "prefix": "⟲ "
+        },
+        {
+          "id": "hope_fragment_echo",
+          "prefix": "⟲ "
+        }
+      ],
+      "replayOverlay": {
+        "enabled": true,
+        "title": "Replay unlocked fragments",
+        "buttons": [
+          {
+            "text": "Vissza a kezdőlapra",
+            "action": {
+              "goto": "landing"
+            }
+          },
+          {
+            "text": "Újrakezdés",
+            "action": {
+              "goto": "ch1_pg1"
+            }
+          }
+        ]
+      },
+      "next": "__END__",
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    },
+    {
+      "id": "ch3_gameover_pg1",
+      "text": "Game Over – Várfali büntetés (3 hibás rúnaválasztás után). [Restart]",
+      "imagePrompt": {
+        "global": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light",
+        "chapter": "crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape",
+        "page": "fortress wall punishment, cold stone and iron, failed runic trial, restart sigil, centered",
+        "combinedPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, crumbling stone passages and cliffside ledges, dramatic natural light, sense of peril and escape, fortress wall punishment, cold stone and iron, failed runic trial, restart sigil, centered",
+        "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, dungeon bars, indoor corridors, torch-lit cell interiors"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "maxWidth": "52ch",
+          "padding": "1.25rem 1.5rem",
+          "backdrop": "rgba(0,0,0,.35)"
+        },
+        "imageBox": {
+          "position": "right",
+          "fit": "contain"
+        },
+        "choices": {
+          "position": "below",
+          "style": {
+            "gap": 12,
+            "border": "1px solid rgba(255,255,255,0.3)"
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch3_gameover_pg1.mp3"
+      },
+      "sfxPlaylist": [],
+      "preload": {
+        "images": [],
+        "audio": [],
+        "nextPages": [],
+        "fragments": []
+      }
+    }
+  ],
+  "fragments": {
+    "guard_knockout_fragment_ch1": "Az őr eszméletlenül zuhan – csendben lépsz tovább. A kulcs zörren, a levegő megkönnyebbül.",
+    "guard_kill_fragment_ch1": "A penge megáll, a test elernyed. A csend nehezebb lesz, mint a vas.",
+    "used_sword_fragment_ch1": "Az acél megadta magát, de utat nyitott. A pajzs a karodon maradt.",
+    "used_shield_fragment_ch1": "A pajzs éle recsegve feszítette szét a vasat. A kard a kezedben maradt.",
+    "keep_sword_ch1": "A kardot választottad. A világ súlya a penge hidegében marad veled.",
+    "keep_shield_ch1": "A pajzsot választottad. A hiány súlyát a karod emlékszik.",
+    "promise_to_family_fragment_echo": "A fiú tekintete és a feleség némasága – ígéret maradt, amit nem hagyhat hátra.",
+    "guard_knockout_fragment_ch1_echo": "Az őr elnémult, de életben maradt – a csend könnyebb volt, mint a vér súlya.",
+    "guard_kill_fragment_ch1_echo": "A penge mélyre vágott, a test elernyedt – a halál ott maradt vele.",
+    "used_sword_fragment_ch1_echo": "Az acél eltört, de szabaddá tette az utat.",
+    "used_shield_fragment_ch1_echo": "A pajzs élének recsegése még most is visszhangzik a karjában.",
+    "keep_sword_ch1_echo": "A kard hidege megmaradt a kezében, erőként és teherré válva.",
+    "keep_shield_ch1_echo": "A pajzs maradt vele, de a hiány súlya is.",
+    "hope_fragment_echo": "A rejtvények szavai után halvány fény derengett – az otthon reménye villant a szemében."
+  },
+  "audio": {
+    "backgroundDefault": "/assets/audio/bg_loop.mp3",
+    "routing": "preRecordedOnly",
+    "sfxDefaults": {
+      "fadeInMs": 40,
+      "fadeOutMs": 120
+    }
+  },
+  "endSentinel": "__END__",
+  "analytics": {
+    "choiceFlags": [
+      "picked_ch2_pg3_pull_sword",
+      "picked_ch2_pg3_pull_shield",
+      "picked_ch2_pg5_sneak",
+      "picked_ch2_pg5_knockout",
+      "picked_ch2_pg5_kill",
+      "picked_ch3_pg3_keep_sword",
+      "picked_ch3_pg3_keep_shield"
+    ]
+  }
+}

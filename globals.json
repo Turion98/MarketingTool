@@ -1,0 +1,3867 @@
+{
+  "landing": {
+    "id": "landing_screen",
+    "type": "static",
+    "startPageId": "ch1_pg1",
+    "title": "Quest Forge",
+    "elements": [
+      {
+        "type": "text",
+        "id": "logo",
+        "content": "Quest Forge",
+        "position": {
+          "top": "30px",
+          "left": "40px"
+        },
+        "style": {
+          "fontSize": "2rem",
+          "color": "white",
+          "fontFamily": "Cinzel, serif"
+        }
+      },
+      {
+        "type": "input",
+        "id": "voice_api_key_input",
+        "placeholder": "Enter ElevenLabs API key...",
+        "position": {
+          "bottom": "160px",
+          "left": "50%",
+          "transform": "translateX(-50%)"
+        },
+        "style": {
+          "padding": "10px 20px",
+          "fontSize": "1rem",
+          "border": "1px solid #ccc",
+          "borderRadius": "5px",
+          "width": "300px"
+        }
+      },
+      {
+        "type": "input",
+        "id": "image_api_key_input",
+        "placeholder": "Enter Image API key...",
+        "position": {
+          "bottom": "120px",
+          "left": "50%",
+          "transform": "translateX(-50%)"
+        },
+        "style": {
+          "padding": "10px 20px",
+          "fontSize": "1rem",
+          "border": "1px solid #ccc",
+          "borderRadius": "5px",
+          "width": "300px"
+        }
+      },
+      {
+        "type": "button",
+        "id": "start_button",
+        "content": "Begin Descent",
+        "position": {
+          "bottom": "80px",
+          "left": "50%",
+          "transform": "translateX(-50%)"
+        },
+        "style": {
+          "padding": "20px 40px",
+          "fontSize": "1.5rem",
+          "background": "rgba(255, 255, 255, 0.1)",
+          "border": "1px solid #fff",
+          "color": "white",
+          "transition": "background 0.3s"
+        },
+        "hoverStyle": {
+          "background": "rgba(255, 255, 255, 0.3)"
+        },
+        "action": {
+          "type": "customFunction",
+          "function": "validateAndStart"
+        }
+      },
+      {
+        "type": "button",
+        "id": "continue_button",
+        "content": "Continue",
+        "position": {
+          "bottom": "30px",
+          "left": "50%",
+          "transform": "translateX(-50%)"
+        },
+        "style": {
+          "padding": "15px 35px",
+          "fontSize": "1.2rem",
+          "background": "rgba(255, 255, 255, 0.2)",
+          "border": "1px solid #fff",
+          "color": "white",
+          "transition": "background 0.3s"
+        },
+        "hoverStyle": {
+          "background": "rgba(255, 255, 255, 0.4)"
+        },
+        "action": {
+          "type": "navigate",
+          "target": "{{lastSavedPageId}}"
+        }
+      }
+    ],
+    "animations": [
+      {
+        "target": "background",
+        "type": "pan",
+        "duration": 60000,
+        "loop": true,
+        "params": {
+          "scale": 1.05,
+          "translateY": "-1%"
+        }
+      }
+    ],
+    "parallaxScene": {
+      "layout": {
+        "type": "parallax",
+        "layers": [
+          {
+            "name": "background",
+            "src": "assets/background.1.png",
+            "depth": 0.1,
+            "smoke": false
+          },
+          {
+            "name": "smoke1",
+            "src": "assets/smoke.1.png",
+            "depth": 0.15,
+            "smoke": true,
+            "opacity": 0.5,
+            "float": true
+          },
+          {
+            "name": "stone1",
+            "src": "assets/stone.1.png",
+            "depth": 0.2,
+            "smoke": false
+          },
+          {
+            "name": "smoke2",
+            "src": "assets/smoke.2.png",
+            "depth": 0.22,
+            "smoke": true,
+            "opacity": 0.5,
+            "float": true
+          },
+          {
+            "name": "tower",
+            "src": "assets/tower.png",
+            "depth": 0.25,
+            "smoke": false
+          },
+          {
+            "name": "stone2",
+            "src": "assets/stone.2.png",
+            "depth": 0.27,
+            "smoke": false
+          },
+          {
+            "name": "smoke3",
+            "src": "assets/smoke.3.png",
+            "depth": 0.3,
+            "smoke": true,
+            "opacity": 0.5,
+            "float": true
+          }
+        ]
+      },
+      "interaction": {
+        "scroll": {
+          "parallax": true,
+          "dynamicOpacity": true
+        },
+        "onLoad": {
+          "animateSmoke": true
+        }
+      }
+    },
+    "layoutRef": "default_landing_layout"
+  },
+  "chapters": [
+    {
+      "id": "chapter_1",
+      "title": "The Weight of a Decision",
+      "pages": [
+        {
+          "id": "ch1_pg1",
+          "text": "There is light, but no warmth. Dust, but no wind.\nYou stand at the edge of the cliff. Behind you, the Pale City crumbles like a skeleton — what could not endure now dissolves completely.\nOnce there were seasons. Rivers. Birds.\nNow there is only direction.\n\nA stranger’s voice scratches at your dream:\n“It waits. It watches.”\nYou do not answer. You move on.",
+          "imagePrompt": {
+            "chapter": "fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust",
+            "page": "edge of a high cliff at dawn, The Pale City collapsing behind into pale dust, no wind, light without warmth, the Wanderer looks forward into a directionless expanse",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust, edge of a high cliff at dawn, The Pale City collapsing behind into pale dust, no wind, light without warmth, the Wanderer looks forward into a directionless expanse",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": false,
+            "preloadNextPages": [
+              "ch1_pg2",
+              "ch1_pg3",
+              "ch1_pg4"
+            ]
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch1_pg1.mp3"
+          },
+          "tts": null,
+          "next": "ch1_pg2"
+        },
+        {
+          "id": "ch1_pg2",
+          "text": "The land opens — wide, cracked, forgotten.\nMarker stones, unreadable. A road that no longer remembers itself.\nThe pressure is not ahead. It already lives within you.\nA tower takes shape where certainty should be — you do not see it, you carry it.",
+          "imagePrompt": {
+            "chapter": "fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust",
+            "page": "the Wanderer walking alone across a cracked plain under a motionless grey sky, broken stone markers fade into the dust, distant impression of a tower forming in the mist",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust, the Wanderer walking alone across a cracked plain under a motionless grey sky, broken stone markers fade into the dust, distant impression of a tower forming in the mist",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "imageGeneration": "onPageLoad"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch1_pg2.mp3"
+          },
+          "next": "ch1_pg3"
+        },
+   {
+  "id": "ch1_pg3",
+  "text": "Night. A ruined shelter: slanted walls, a missing roof.\nLines carved into stone — circles, fragments, tower-shapes, a language that has forgotten itself.\n\nThe carvings begin to glow faintly. Dust freezes in the air.\nIn your chest it is not a voice that speaks — but a blow. A heartbeat that is not yours.\n\n“Whoever chooses now will be marked by the tower. Not a warning, but a brand.”\n\nWhat do you choose?\n• I let the world change me.\n• I hold on to who I am.",
+  "choices": [
+    {
+      "text": "I let the world change me.",
+      "actions": [
+        { "type": "unlockFragment", "id": "tower_origin_fragment_ch1" },
+        { "type": "unlockFragment", "id": "memory_ch2" },
+        { "type": "unlockFragment", "id": "memory_ch3" },
+        { "type": "unlockRune", "id": "rune_ch1" }
+      ],
+      "next": "ch1_pg4",
+      "reward": {
+        "type": "rune",
+        "amount": 1
+      },
+      "fragmentId": "tower_origin_fragment_ch1"
+    },
+    {
+      "text": "I hold on to who I am.",
+      "actions": [
+        { "type": "unlockFragment", "id": "tower_self_fragment_ch1" },
+        { "type": "unlockRune", "id": "rune_ch1" }
+      ],
+      "next": "ch1_pg4",
+      "reward": {
+        "type": "scar",
+        "amount": 1
+      },
+      "fragmentId": "tower_self_fragment_ch1"
+    }
+  ],
+  "imagePrompt": {
+    "chapter": "fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust",
+    "page": "inside a collapsed stone shelter at night, walls marked with repeated tower-like carvings, the carvings glow faintly as dust hangs frozen, the Wanderer sits tense in the silence",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust, inside a collapsed stone shelter at night, walls marked with repeated tower-like carvings, the carvings glow faintly as dust hangs frozen, the Wanderer sits tense in the silence",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "afterTextReveal",
+    "delayMs": 1000,
+    "imageGeneration": "afterTextReveal"
+  },
+  "layout": {
+    "background": {
+      "src": "assets/background.jpg",
+      "fit": "cover"
+    },
+    "textBox": {
+      "position": "left",
+      "animation": "typewriter",
+      "style": {
+        "fontFamily": "Merriweather",
+        "background": "rgba(0,0,0,0.6)",
+        "color": "white",
+        "padding": "20px",
+        "borderRadius": "10px"
+      }
+    },
+    "imageBox": {
+      "position": "top-right",
+      "height": "50%",
+      "fit": "cover"
+    },
+    "choices": {
+      "position": "bottom-left",
+      "layout": "vertical",
+      "alignment": "left",
+      "style": {
+        "fontFamily": "Merriweather",
+        "padding": "12px",
+        "background": "rgba(255,255,255,0.05)",
+        "border": "1px solid rgba(255,255,255,0.3)",
+        "hover": {
+          "background": "rgba(255,255,255,0.1)",
+          "borderColor": "white"
+        }
+      }
+    },
+    "responsiveLayout": {
+      "mobile": {
+        "order": ["textBox", "imageBox", "choices"],
+        "alignment": "left"
+      }
+    }
+  },
+  "audio": {
+    "delay": 0,
+    "background": "/assets/audio/bg_loop.mp3",
+    "mainNarration": "/assets/audio/ch1_pg3.mp3"
+  },
+  "sfxPlaylist": [
+    {
+      "id": "ch1_pg3_sfx_1",
+      "file": "assets/sfx/internal_echo.mp3",
+      "when": "onPageLoad",
+      "offsetMs": 7200,
+      "volDb": -4,
+      "fadeInMs": 40,
+      "fadeOutMs": 120
+    }
+  ],
+  "unlockRunes": ["rune_ch1"],
+  "runeOverlay": {
+    "icon": "/assets/runes/ch1.png",
+    "fx": "flash",
+    "durationMs": 800
+  },
+  "runeAnimation": {
+    "effect": "flyToDock",
+    "from": "textBox-center",
+    "durationMs": 900,
+    "sfx": "/assets/sfx/rune_collect.mp3",
+    "easing": "ease-out-cubic",
+    "delayMs": 150
+  }
+},
+{
+  "id": "ch1_pg4",
+  "text": [
+    { "ifUnlocked": "tower_origin_fragment_ch1", "text": "{fragment:recall_ch1_pg4_origin_yes}" },
+    { "ifUnlocked": "tower_self_fragment_ch1",   "text": "{fragment:recall_ch1_pg4_origin_no}" },
+    { "default": "Dawn is wet and colorless. The path splits ahead: left into the listening forest, right into the dripping earth." }
+  ],
+  "fragmentRefs": [
+    { "id": "tower_origin_fragment_ch1" },
+    { "id": "tower_self_fragment_ch1" },
+    { "id": "recall_ch1_pg4_origin_yes" },
+    { "id": "recall_ch1_pg4_origin_no" }
+  ],
+  
+          "choices": [
+            {
+              "text": "I walk into the Wildened Forest.",
+              "next": "ch2a_pg1",
+              "preload": [
+                "ch2a_pg1"
+              ]
+            },
+            {
+              "text": "I follow the path into the catacombs.",
+              "next": "ch2b_pg1",
+              "preload": [
+                "ch2b_pg1"
+              ]
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust",
+            "page": "a path splits ahead in early morning gloom, left: a gnarled listening forest, right: a dripping narrow descent into underground stone, the Wanderer stands undecided",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust, a path splits ahead in early morning gloom, left: a gnarled listening forest, right: a dripping narrow descent into underground stone, the Wanderer stands undecided",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "imageGeneration": "onPageLoad"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch1_pg4.mp3"
+          },
+          "tts": null,
+          "sfxPlaylist": [
+            {
+              "id": "ch1_pg4_sfx_1",
+              "file": "assets/sfx/footsteps_soft.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 8500,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chapter_2a",
+      "title": "The Wildened Forest",
+      "pages": [
+        {
+          "id": "ch2a_pg1",
+          "text": "The forest greets you with silence.\n\n Cool, damp air carries the smell of leaves. Branches weave above, dimming the morning light.\nTrunks lean as if shaped by a steady wind; roots rise from the ground like ribs.\n\nThe path is not straight but seems to lead you with purpose.\n Ahead, something waits — still and patient.",
+          "imagePrompt": {
+            "chapter": "ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark",
+            "page": "narrow path under interlocking branches, cool damp air, bent trunks and exposed roots, no direct sky, subtle suggestion of a watcher with no form",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark, narrow path under interlocking branches, cool damp air, bent trunks and exposed roots, no direct sky, subtle suggestion of a watcher with no form",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "imageGeneration": "onPageLoad"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "preloadNextPages": [
+              "ch2a_pg2",
+              "ch2a_pg3",
+              "ch2a_pg4",
+              "ch2a_pg2b"
+            ],
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch2a_pg1.mp3"
+          },
+          "next": "ch2a_pg2",
+          "sfxPlaylist": [
+            {
+              "id": "ch2a_pg1_sfx_1",
+              "file": "assets/sfx/slow_drip_echo.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 4000,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        },
+       {
+  "id": "ch2a_pg2",
+  "text": [
+    {
+      "default": "The hush deepens. Each step stirs the forest — husks shift, ferns lean, then recoil.\nA pale stump glows in a ring of stones, light pooling where no sun should reach.\nOn a beech trunk nearby, fresh cuts ooze sap, forming a trail into shadow."
+    },
+    {
+      "ifUnlocked": "memory_ch2",
+      "text": "{fragment:memory_ch2}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    }
+  ],
+  "choices": [
+    { "text": "Investigate the markings on the beech trunk", "next": "ch2a_pg2b" },
+    {
+      "text": "Ignore them and move on",
+      "actions": [{ "type": "setFlag", "id": "block_archway" }],
+      "next": "ch2a_pg3",
+      "reward": { "locks": ["block_archway"] }
+    }
+  ],
+          "imagePrompt": {
+            "chapter": "ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark",
+            "page": "small clearing with ring-stones and a hollow stump holding cold light beneath a sealed canopy, nearby beech trunk with sap-glistening cuts forming a trail between yew and ash, ferns leaning like eavesdroppers",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark, small clearing with ring-stones and a hollow stump holding cold light beneath a sealed canopy, nearby beech trunk with sap-glistening cuts forming a trail between yew and ash, ferns leaning like eavesdroppers",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "imageGeneration": "onPageLoad"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch2a_pg2.mp3",
+            "preloadNextPages": [
+              "ch2a_pg2b",
+              "ch2a_pg3"
+            ]
+          },
+          "sfxPlaylist": [
+            {
+              "id": "ch2a_pg2_sfx_1",
+              "file": "assets/sfx/low_rumble.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 8000,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        },
+        {
+  "id": "ch2a_pg2b",
+  "text": "You step closer to the signs.\nThe lines cut deeper than the surface — some alien force flows through them.\nYou raise your hand, and the carving begins to glow.\n\nDo you touch it?",
+  "choices": [
+    {
+      "text": "Yes. I trace the marks into the dark.",
+      "actions": [
+        { "type": "unlockFragment", "id": "mark_glow_fragment_ch2a" },
+        { "type": "setFlag", "id": "block_spiral_stairs" },
+        { "type": "setFlag", "id": "block_archway" },
+        { "type": "unlockRune", "id": "rune_ch2" }
+      ],
+      "next": "ch2a_pg3",
+      "reward": {
+        "type": "lélekszilánk",
+        "amount": 1,
+        "locks": ["block_spiral_stairs, block_archway"],
+        "saveFragment": "mark_glow_fragment_ch2a",
+        "saveFragments": ["mark_glow_fragment_ch2a"]
+      }
+    },
+    {
+      "text": "No. I step away from the wall.",
+      "actions": [
+        { "type": "setFlag", "id": "block_gorge" }
+      ],
+      "next": "ch2a_pg3",
+      "reward": {
+        "locks": ["block_gorge"]
+      }
+    }
+  ],
+          "imagePrompt": {
+            "chapter": "ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark",
+            "page": "close-up of a beech trunk with fresh sap-beaded cuts forming a deliberate directional mark, fingertip approaching resin, aisle of trees fading into dimness between yew and ash",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark, close-up of a beech trunk with fresh sap-beaded cuts forming a deliberate directional mark, fingertip approaching resin, aisle of trees fading into dimness between yew and ash",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "imageGeneration": "onPageLoad"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch2a_pg2b.mp3"
+          },
+          "sfxPlaylist": [
+            {
+              "id": "ch2a_pg2b_sfx_1",
+              "file": "assets/sfx/mark_activation.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 6500,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ],
+          "unlockRunes": [
+            "rune_ch2"
+          ],
+          "runeOverlay": {
+            "icon": "/assets/runes/ch2.png",
+            "fx": "flash",
+            "durationMs": 800
+          },
+          "runeAnimation": {
+            "effect": "flyToDock",
+            "from": "textBox-center",
+            "durationMs": 900,
+            "sfx": "/assets/sfx/rune_collect.mp3",
+            "easing": "ease-out-cubic",
+            "delayMs": 150
+          }
+        },
+        {
+  "id": "ch2a_pg3",
+  "text": [
+    { "ifUnlocked": "mark_glow_fragment_ch2a", "text": "{fragment:mark_glow_fragment_ch2a}\n" },
+
+    { "text": "Three ways open.\n\nLeft: beneath a root-curved arch where moss-laden masonry sleeps — the stone teeth of a village the forest swallowed." },
+    { "ifUnlocked": "block_archway", "text": "\n⚬ The archway is sealed — the ruin’s mouth closes." },
+
+    { "text": "\n\nRight: a spiral of pale roots corkscrews around a shaft of unmoving light, descending." },
+    { "ifUnlocked": "block_spiral_stairs", "text": "\n⚬ The spiral path has closed — roots knit over the steps." },
+
+    { "text": "\nAhead: a shallow ravine veined with water, climbing toward the ridge." },
+    { "ifUnlocked": "block_gorge", "text": "\n⚬ The ravine narrows shut — slick stones forbid descent." }
+  ],
+  "choices": [
+    {
+      "text": "I step through the archway",
+      "next": "ch2a_pg4",
+      "preload": "ch2a_pg4",
+      "lockedIf": "block_archway",
+      "reward": { "setGlobal": { "route_ch3": "archway" } }
+    },
+    {
+      "text": "I take the spiral stairs",
+      "next": "ch2a_pg4",
+      "preload": "ch2a_pg4",
+      "lockedIf": "block_spiral_stairs",
+      "reward": { "setGlobal": { "route_ch3": "spiral" } }
+    },
+    {
+      "text": "I descend into the gorge",
+      "next": "ch2a_pg4",
+      "preload": "ch2a_pg4",
+      "lockedIf": "block_gorge",
+      "reward": { "setGlobal": { "route_ch3": "gorge" } }
+    }
+  ],
+  "imagePrompt": {
+    "chapter": "ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark",
+    "page": "three diverging woodland paths: left a root-and-ruin archway into swallowed masonry, right a spiral of pale roots around a motionless lightwell descending, center a shallow water-veined ravine climbing toward the ridge",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark, three diverging woodland paths: left a root-and-ruin archway into swallowed masonry, right a spiral of pale roots around a motionless lightwell descending, center a shallow water-veined ravine climbing toward the ridge",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300,
+    "imageGeneration": "onPageLoad"
+  },
+  "layout": {
+    "background": { "src": "assets/background.jpg", "fit": "cover" },
+    "textBox": {
+      "position": "left",
+      "animation": "typewriter",
+      "style": {
+        "fontFamily": "Merriweather",
+        "background": "rgba(0,0,0,0.6)",
+        "color": "white",
+        "padding": "20px",
+        "borderRadius": "10px"
+      }
+    },
+    "imageBox": { "position": "top-right", "height": "50%", "fit": "cover" },
+    "choices": {
+      "position": "bottom-left",
+      "layout": "vertical",
+      "alignment": "left",
+      "style": {
+        "fontFamily": "Merriweather",
+        "padding": "12px",
+        "background": "rgba(255,255,255,0.05)",
+        "border": "1px solid rgba(255,255,255,0.3)",
+        "hover": { "background": "rgba(255,255,255,0.1)", "borderColor": "white" }
+      }
+    },
+    "responsiveLayout": {
+      "mobile": {
+        "order": ["textBox", "imageBox", "choices"],
+        "alignment": "left"
+      }
+    }
+  },
+  "audio": {
+    "playMode": "playlist",
+    "background": "/assets/audio/bg_loop.mp3",
+    "ducking": { "enabled": true, "db": -10, "fadeMs": 250 },
+    "playlist": [
+      { "id": "vo_fragment_intro", "src": "/assets/audio/vo/ch2a_pg3_fragment_intro.mp3", "when": { "unlocked": ["mark_glow_fragment_ch2a"] }, "gapAfterMs": 150 },
+      { "id": "vo_intro_three_ways", "src": "/assets/audio/vo/ch2a_pg3_intro_three_ways.mp3", "gapAfterMs": 120 },
+      { "id": "vo_left_desc", "src": "/assets/audio/vo/ch2a_pg3_left_desc.mp3", "gapAfterMs": 100, "thenSfxIfLocked": { "flag": "block_archway", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_right_desc", "src": "/assets/audio/vo/ch2a_pg3_right_desc.mp3", "gapAfterMs": 100, "thenSfxIfLocked": { "flag": "block_spiral_stairs", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_center_desc", "src": "/assets/audio/vo/ch2a_pg3_center_desc.mp3", "gapAfterMs": 150, "thenSfxIfLocked": { "flag": "block_gorge", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_choose", "src": "/assets/audio/vo/ch2a_pg3_choose.mp3" }
+    ]
+  }
+},
+{
+  "id": "ch2a_pg4",
+  "text": "The choice settles the leaves behind you.\nPaths don’t close here—they turn their faces.\n\nYou could step back, but you won’t.\nNot because the forest forbids it, but because something in you has already aligned with forward.",
+  "imagePrompt": {
+    "chapter": "ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark",
+    "page": "path behind the Wanderer softens into shadow, branches tilt as if exhaling, no creature visible, only the sense of attention after the choice",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ancient sentient forest under a sealed canopy, moss-draped limbs and root ribs, gathered cold light, attention without eyes, memory written in bark, path behind the Wanderer softens into shadow, branches tilt as if exhaling, no creature visible, only the sense of attention after the choice",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "imageTiming": { "generate": true, "trigger": "afterTextReveal", "delayMs": 500, "imageGeneration": "afterTextReveal" },
+  "layout": {
+    "background": { "src": "assets/background.jpg", "fit": "cover" },
+    "textBox": {
+      "position": "left",
+      "animation": "typewriter",
+      "style": {
+        "fontFamily": "Merriweather",
+        "background": "rgba(0,0,0,0.6)",
+        "color": "white",
+        "padding": "20px",
+        "borderRadius": "10px"
+      }
+    },
+    "imageBox": { "position": "top-right", "height": "50%", "fit": "cover" },
+    "choices": {
+      "position": "bottom-left",
+      "layout": "vertical",
+      "alignment": "left",
+      "style": {
+        "fontFamily": "Merriweather",
+        "padding": "12px",
+        "background": "rgba(255,255,255,0.05)",
+        "border": "1px solid rgba(255,255,255,0.3)",
+        "hover": { "background": "rgba(255,255,255,0.1)", "borderColor": "white" }
+      }
+    },
+    "responsiveLayout": {
+      "mobile": {
+        "order": ["textBox", "imageBox", "choices"],
+        "alignment": "left"
+      }
+    }
+  },
+  "audio": {
+    "delay": 0,
+    "background": "/assets/audio/bg_loop.mp3",
+    "mainNarration": "/assets/audio/ch2a_pg4.mp3"
+  },
+  "next": {
+    "switch": "route_ch3",
+    "cases": {
+      "archway": "ch3a1_pg1",
+      "spiral": "ch3a2_pg1",
+      "gorge": "ch3a3_pg1"
+    },
+    "default": "ch3a1_pg1"
+  },
+  "sfxPlaylist": [
+    {
+      "id": "ch2a_pg4_sfx_1",
+      "file": "assets/sfx/closing_whisper.mp3",
+      "when": "onPageLoad",
+      "offsetMs": 7000,
+      "volDb": -4,
+      "fadeInMs": 40,
+      "fadeOutMs": 120
+    }
+  ]
+}
+      ],
+      "fragments": {
+        "mark_glow_fragment_ch2a": "A faint glow crawls beneath your skin, tracing lines that were not there before."
+      }
+    },
+    {
+  "id": "chapter_2b",
+  "title": "The Depths Below",
+  "pages": [
+    {
+      "id": "ch2b_pg1",
+      "text": "The descent begins in silence. The air thickens - ool, still, damp.\nStone walls close in, rough beneath the fingers.\n\nThe entrance narrows behind, swallowed by the earth.\n\nEvery footfall carries forward. The scent is old—dust, iron, something like memory.\nSymbols coat the surface — no words, just forms that settle in the chest, like half - remembered dreams.",
+      "imagePrompt": {
+        "chapter": "subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence",
+        "page": "narrow underground stone corridor, rough moist walls with faint ancient etchings, shadows pooling ahead, no visible light source",
+        "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+        "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence, narrow underground stone corridor, rough moist walls with faint ancient etchings, shadows pooling ahead, no visible light source",
+        "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "style": {
+            "fontFamily": "Merriweather",
+            "background": "rgba(0,0,0,0.6)",
+            "color": "white",
+            "padding": "20px",
+            "borderRadius": "10px"
+          }
+        },
+        "imageBox": {
+          "position": "top-right",
+          "height": "50%",
+          "fit": "cover"
+        },
+        "choices": {
+          "position": "bottom-left",
+          "layout": "vertical",
+          "alignment": "left",
+          "style": {
+            "fontFamily": "Merriweather",
+            "padding": "12px",
+            "background": "rgba(255,255,255,0.05)",
+            "border": "1px solid rgba(255,255,255,0.3)",
+            "hover": {
+              "background": "rgba(255,255,255,0.1)",
+              "borderColor": "white"
+            }
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "delay": 0,
+        "preloadNextPages": [
+          "ch2b_pg2",
+          "ch2b_pg2b",
+          "ch2b_pg3",
+          "ch2b_pg4"
+        ],
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2b_pg1.mp3"
+      },
+      "next": "ch2b_pg2",
+      "sfxPlaylist": [
+        {
+          "id": "ch2b_pg1_sfx_1",
+          "file": "assets/sfx/slow_drip_echo.mp3",
+          "when": "onPageLoad",
+          "offsetMs": 4000,
+          "volDb": -4,
+          "fadeInMs": 40,
+          "fadeOutMs": 120
+        }
+      ]
+    },
+    {
+      "id": "ch2b_pg2",
+      "text": [
+        {
+          "default": "The silence thickens. Every step echoes too long, as if shadowed.\nThen the ground trembles — a chamber opens, its walls cracked, leaking silver light.\nOne carving gleams on the stone, edges sharp, grooves still wet."
+        },
+        {
+          "ifUnlocked": "memory_ch2",
+          "text": "{fragment:memory_ch2}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Investigate the fresh carving",
+          "next": "ch2b_pg2b"
+        },
+        {
+          "text": "Ignore it and move on",
+          "actions": [
+            {
+              "type": "setFlag",
+              "id": "block_archway"
+            }
+          ],
+          "next": "ch2b_pg3",
+          "reward": {
+            "locks": [
+              "block_archway"
+            ]
+          }
+        }
+      ],
+      "imagePrompt": {
+        "chapter": "subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence",
+        "page": "vast underground chamber with uneven stone floor, silver light seeping from ceiling cracks, ancient ridged walls, a fresh sharp-edged carving with damp grooves on one wall",
+        "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+        "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence, vast underground chamber with uneven stone floor, silver light seeping from ceiling cracks, ancient ridged walls, a fresh sharp-edged carving with damp grooves on one wall",
+        "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "style": {
+            "fontFamily": "Merriweather",
+            "background": "rgba(0,0,0,0.6)",
+            "color": "white",
+            "padding": "20px",
+            "borderRadius": "10px"
+          }
+        },
+        "imageBox": {
+          "position": "top-right",
+          "height": "50%",
+          "fit": "cover"
+        },
+        "choices": {
+          "position": "bottom-left",
+          "layout": "vertical",
+          "alignment": "left",
+          "style": {
+            "fontFamily": "Merriweather",
+            "padding": "12px",
+            "background": "rgba(255,255,255,0.05)",
+            "border": "1px solid rgba(255,255,255,0.3)",
+            "hover": {
+              "background": "rgba(255,255,255,0.1)",
+              "borderColor": "white"
+            }
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2b_pg2.mp3",
+        "preloadNextPages": [
+          "ch2b_pg2b",
+          "ch2b_pg3"
+        ]
+      }
+    },
+    {
+      "id": "ch2b_pg2b",
+      "text": "You step closer to the carving.\nThe lines cut deeper than stone — some alien force seeps through them.\nYou raise your hand, and the groove begins to glow.\n\nDo you touch it?",
+      "choices": [
+        {
+          "text": "Yes. I trace the marks into the dark.",
+          "actions": [
+            {
+              "type": "unlockFragment",
+              "id": "mark_glow_fragment_ch2b"
+            },
+            {
+              "type": "setFlag",
+              "id": "block_spiral_stairs"
+            },
+            {
+              "type": "setFlag",
+              "id": "block_archway"
+            },
+            {
+              "type": "unlockRune",
+              "id": "rune_ch2"
+            }
+          ],
+          "next": "ch2b_pg3",
+          "reward": {
+            "type": "lélekszilánk",
+            "amount": 1,
+            "locks": [
+              "block_spiral_stairs",
+              "block_archway"
+            ],
+            "saveFragment": "mark_glow_fragment_ch2b",
+            "saveFragments": [
+              "mark_glow_fragment_ch2b"
+            ]
+          }
+        },
+        {
+          "text": "No. I step away from the wall.",
+          "actions": [
+            {
+              "type": "setFlag",
+              "id": "block_gorge"
+            }
+          ],
+          "next": "ch2b_pg3",
+          "reward": {
+            "locks": [
+              "block_gorge"
+            ]
+          }
+        }
+      ],
+      "imagePrompt": {
+        "chapter": "subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence",
+        "page": "close-up of wall section bearing a subtler fresher carving, edges faintly glistening, dust motes in still air, silver light dripping from cracks above",
+        "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+        "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence, close-up of wall section bearing a subtler fresher carving, edges faintly glistening, dust motes in still air, silver light dripping from cracks above",
+        "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "layout": {
+        "background": {
+          "src": "assets/background.jpg",
+          "fit": "cover"
+        },
+        "textBox": {
+          "position": "left",
+          "animation": "typewriter",
+          "style": {
+            "fontFamily": "Merriweather",
+            "background": "rgba(0,0,0,0.6)",
+            "color": "white",
+            "padding": "20px",
+            "borderRadius": "10px"
+          }
+        },
+        "imageBox": {
+          "position": "top-right",
+          "height": "50%",
+          "fit": "cover"
+        },
+        "choices": {
+          "position": "bottom-left",
+          "layout": "vertical",
+          "alignment": "left",
+          "style": {
+            "fontFamily": "Merriweather",
+            "padding": "12px",
+            "background": "rgba(255,255,255,0.05)",
+            "border": "1px solid rgba(255,255,255,0.3)",
+            "hover": {
+              "background": "rgba(255,255,255,0.1)",
+              "borderColor": "white"
+            }
+          }
+        },
+        "responsiveLayout": {
+          "mobile": {
+            "order": [
+              "textBox",
+              "imageBox",
+              "choices"
+            ],
+            "alignment": "left"
+          }
+        }
+      },
+      "audio": {
+        "background": "/assets/audio/bg_loop.mp3",
+        "mainNarration": "/assets/audio/ch2b_pg2b.mp3",
+        "playMode": "playlist",
+        "ducking": {
+          "enabled": true,
+          "db": -8,
+          "fadeMs": 200
+        },
+        "playlist": [
+          {
+            "id": "vo_page_desc",
+            "src": "/assets/audio/ch2b_pg2b.mp3",
+            "gapAfterMs": 120
+          },
+          {
+            "id": "vo_internal_hint",
+            "src": "/assets/audio/vo/ch2b_pg2b_internal_hint.mp3"
+          }
+        ]
+      },
+      "sfxPlaylist": [
+        {
+          "id": "ch2b_pg2b_sfx_1",
+          "file": "assets/sfx/mark_touch.mp3",
+          "when": "onPageLoad",
+          "offsetMs": 6200,
+          "volDb": -4,
+          "fadeInMs": 40,
+          "fadeOutMs": 120
+        }
+      ],
+      "unlockRunes": [
+        "rune_ch2"
+      ],
+      "runeOverlay": {
+        "icon": "/assets/runes/ch2.png",
+        "fx": "flash",
+        "durationMs": 800
+      },
+      "runeAnimation": {
+        "effect": "flyToDock",
+        "from": "textBox-center",
+        "durationMs": 900,
+        "sfx": "/assets/sfx/rune_collect.mp3",
+        "easing": "ease-out-cubic",
+        "delayMs": 150
+      }
+    },
+    {
+  "id": "ch2b_pg3",
+  "text": [
+    { "ifUnlocked": "mark_glow_fragment_ch2b", "text": "{fragment:mark_glow_fragment_ch2b}\n" },
+
+    { "text": "Three ways open.\n\nLeft: a cracked archway, humid and unmoving." },
+    { "ifUnlocked": "block_archway", "text": "\n⚬ The archway is sealed — the ruin’s mouth closes." },
+
+    { "text": "\n\nRight: spiral steps, worn by long-forgotten travelers." },
+    { "ifUnlocked": "block_spiral_stairs", "text": "\n⚬ The spiral path has closed — roots knit over the steps." },
+
+    { "text": "\nAhead: a gorge under tangled roots, water glimmering below." },
+    { "ifUnlocked": "block_gorge", "text": "\n⚬ The ravine narrows shut — slick stones forbid descent." }
+  ],
+  "choices": [
+    {
+      "text": "I step through the archway",
+      "next": "ch2b_pg4",
+      "preload": "ch2b_pg4",
+      "lockedIf": "block_archway",
+      "reward": { "setGlobal": { "route_ch3": "archway" } }
+    },
+    {
+      "text": "I take the spiral stairs",
+      "next": "ch2b_pg4",
+      "preload": "ch2b_pg4",
+      "lockedIf": "block_spiral_stairs",
+      "reward": { "setGlobal": { "route_ch3": "spiral" } }
+    },
+    {
+      "text": "I descend into the gorge",
+      "next": "ch2b_pg4",
+      "preload": "ch2b_pg4",
+      "lockedIf": "block_gorge",
+      "reward": { "setGlobal": { "route_ch3": "gorge" } }
+    }
+  ],
+  "imagePrompt": {
+    "chapter": "subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence",
+    "page": "three diverging underground paths: left a cracked arch into darkness, right a spiral stone stairway descending, center a shallow gorge under roots with glinting water",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence, three diverging underground paths: left a cracked arch into darkness, right a spiral stone stairway descending, center a shallow gorge under roots with glinting water",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "layout": {
+    "background": { "src": "assets/background.jpg", "fit": "cover" },
+    "textBox": {
+      "position": "left",
+      "animation": "typewriter",
+      "style": {
+        "fontFamily": "Merriweather",
+        "background": "rgba(0,0,0,0.6)",
+        "color": "white",
+        "padding": "20px",
+        "borderRadius": "10px"
+      }
+    },
+    "imageBox": { "position": "top-right", "height": "50%", "fit": "cover" },
+    "choices": {
+      "position": "bottom-left",
+      "layout": "vertical",
+      "alignment": "left",
+      "style": {
+        "fontFamily": "Merriweather",
+        "padding": "12px",
+        "background": "rgba(255,255,255,0.05)",
+        "border": "1px solid rgba(255,255,255,0.3)",
+        "hover": { "background": "rgba(255,255,255,0.1)", "borderColor": "white" }
+      }
+    },
+    "responsiveLayout": {
+      "mobile": {
+        "order": ["textBox", "imageBox", "choices"],
+        "alignment": "left"
+      }
+    }
+  },
+  "audio": {
+    "playMode": "playlist",
+    "background": "/assets/audio/bg_loop.mp3",
+    "ducking": { "enabled": true, "db": -10, "fadeMs": 250 },
+    "playlist": [
+      { "id": "vo_fragment_intro", "src": "/assets/audio/vo/ch2b_pg3_fragment_intro.mp3", "when": { "unlocked": ["mark_glow_fragment_ch2b"] }, "gapAfterMs": 150 },
+      { "id": "vo_intro_three_ways", "src": "/assets/audio/vo/ch2b_pg3_intro_three_ways.mp3", "gapAfterMs": 120 },
+      { "id": "vo_left_desc", "src": "/assets/audio/vo/ch2b_pg3_left_desc.mp3", "gapAfterMs": 100, "thenSfxIfLocked": { "flag": "block_archway", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_right_desc", "src": "/assets/audio/vo/ch2b_pg3_right_desc.mp3", "gapAfterMs": 100, "thenSfxIfLocked": { "flag": "block_spiral_stairs", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_center_desc", "src": "/assets/audio/vo/ch2b_pg3_center_desc.mp3", "gapAfterMs": 150, "thenSfxIfLocked": { "flag": "block_gorge", "sfx": "/assets/sfx/route_sealed.mp3", "delayMs": 150 } },
+      { "id": "vo_choose", "src": "/assets/audio/vo/ch2b_pg3_choose.mp3" }
+    ]
+  }
+},
+{
+  "id": "ch2b_pg4",
+  "text": "The choice is silent — yet something shifts.\n\nThe walls seem to breathe. Observing.\nThe passage remains. But you won’t turn back.\n\nThe tower isn’t closer.\nOnly sharper.\nAs if step by step,\nyou’re learning its stillness.",
+  "imagePrompt": {
+    "chapter": "subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence",
+    "page": "tunnel behind the Wanderer folding into shadow, walls leaning inward with silent intent, presence felt in the air, no visible creature",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, subterranean stillness, damp stone corridors, breathing darkness, memory etched in walls, organic architecture born of time and silence, tunnel behind the Wanderer folding into shadow, walls leaning inward with silent intent, presence felt in the air, no visible creature",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "imageTiming": { "generate": true, "trigger": "afterTextReveal", "delayMs": 500 },
+  "layout": {
+    "background": { "src": "assets/background.jpg", "fit": "cover" },
+    "textBox": {
+      "position": "left",
+      "animation": "typewriter",
+      "style": {
+        "fontFamily": "Merriweather",
+        "background": "rgba(0,0,0,0.6)",
+        "color": "white",
+        "padding": "20px",
+        "borderRadius": "10px"
+      }
+    },
+    "imageBox": { "position": "top-right", "height": "50%", "fit": "cover" },
+    "choices": {
+      "position": "bottom-left",
+      "layout": "vertical",
+      "alignment": "left",
+      "style": {
+        "fontFamily": "Merriweather",
+        "padding": "12px",
+        "background": "rgba(255,255,255,0.05)",
+        "border": "1px solid rgba(255,255,255,0.3)",
+        "hover": { "background": "rgba(255,255,255,0.1)", "borderColor": "white" }
+      }
+    },
+    "responsiveLayout": {
+      "mobile": {
+        "order": ["textBox", "imageBox", "choices"],
+        "alignment": "left"
+      }
+    }
+  },
+  "audio": {
+    "delay": 0,
+    "background": "/assets/audio/bg_loop.mp3",
+    "mainNarration": "/assets/audio/ch2b_pg4.mp3"
+  },
+  "next": {
+    "switch": "route_ch3",
+    "cases": {
+      "archway": "ch3a1_pg1",
+      "spiral": "ch3a2_pg1",
+      "gorge": "ch3a3_pg1"
+    },
+    "default": "ch3a_pg1"
+  },
+  "sfxPlaylist": [
+    {
+      "id": "ch2b_pg4_sfx_1",
+      "file": "assets/sfx/closing_whisper.mp3",
+      "when": "onPageLoad",
+      "offsetMs": 7000,
+      "volDb": -4,
+      "fadeInMs": 40,
+      "fadeOutMs": 120
+    }
+  ]
+}
+  ]
+},
+    {
+      "id": "chapter_3a1",
+      "title": "The Echoes of Ruin",
+      "pages": [
+        {
+          "id": "ch3a1_pg1",
+          "text": "You step into the ruins. The scent of damp stone clings to the air.\nUnderfoot: toys, keys, broken things once full of meaning.\nA photo—smiling family, a child holding a stuffed rabbit.\nBooks rot along the wall. A calendar’s date is lost.\n\nThe air holds still. Like the place remembers too much.",
+          "imagePrompt": {
+            "chapter": "collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building",
+            "page": "ruined interior filled with broken toys and wet books, faded photograph on the ground, stone walls crumbling with time",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building, ruined interior filled with broken toys and wet books, faded photograph on the ground, stone walls crumbling with time",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "preloadNextPages": [
+              "ch3a1_pg2",
+              "ch3a1_pg3",
+              "ch3a1_pg3_wait",
+              "ch3a1_pg4"
+            ],
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a1_pg1.mp3"
+          },
+          "next": "ch3a1_pg2"
+        },
+        {
+          "id": "ch3a1_pg2",
+          "text": [
+            {
+              "ifUnlocked": "memory_ch3",
+              "text": "{fragment:memory_ch3}"
+            },
+            {
+              "default": "You enter a room untouched by time.\nStars and comets stretch across the dark blue walls.\nA toy car waits in the corner.\n\nThere’s a pressure in your chest.\nThe feeling is known. And burdensome."
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building",
+            "page": "preserved child’s bedroom behind intact door, stars and comets on blue wall, lonely toy car in corner, quiet weight in the air",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building, preserved child’s bedroom behind intact door, stars and comets on blue wall, lonely toy car in corner, quiet weight in the air",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a1_pg2.mp3",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_fragment_intro",
+                "src": "/assets/audio/vo/ch3a1_pg2_fragment_intro.mp3",
+                "when": {
+                  "unlocked": [
+                    "memory_ch3"
+                  ]
+                },
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_room_desc",
+                "src": "/assets/audio/vo/ch3a1_pg2_room_desc.mp3"
+              }
+            ]
+          },
+          "next": "ch3a1_pg3"
+        },
+        {
+          "id": "ch3a1_pg3",
+          "text": "The wall ripples as if holding its breath.\nFrom the mural, dark fingers break through the cracked plaster—jointed, slowly reaching outward.\nThey claw at the air, deliberate, searching for you. They are closing in!\n\nWhat do you do?",
+          "choices": [
+            {
+              "text": "I freeze and wait.",
+              "next": "ch3a1_pg3_gameover"
+            },
+            {
+              "text": "I leap through the window.",
+              "next": "ch3a1_pg3_wait"
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building",
+            "page": "children’s mural on cracked wall, black jointed hands emerging through plaster, reaching toward the viewer in a still dust-laden room",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building, children’s mural on cracked wall, black jointed hands emerging through plaster, reaching toward the viewer in a still dust-laden room",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a1_pg3.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -10,
+              "fadeMs": 250
+            },
+            "playlist": [
+              {
+                "id": "vo_build_up",
+                "src": "/assets/audio/vo/ch3a1_pg3_build_up.mp3",
+                "gapAfterMs": 150
+              },
+              {
+                "id": "vo_prompt_choose",
+                "src": "/assets/audio/vo/ch3a1_pg3_prompt_choose.mp3"
+              }
+            ]
+          }
+        },
+        {
+          "id": "ch3a1_pg3_gameover",
+          "text": "You do not move.\nThe hand seizes your body—slowly coiling around your throat.\nYou feel the cold as it touches your skin.\nThere is no way back.\nThe fingers tighten, the arms drag you away, and shut you into the dark.\nThe room falls silent again.",
+          "gameOver": true
+        },
+        {
+          "id": "ch3a1_pg3_wait",
+          "text": [
+            {
+              "default": "You hurl yourself toward the window.\nThe glass shrieks as it shatters, cold air flooding your lungs.\nYour arm scrapes the wall—a shallow carving splits your skin.\n\nHeat ignites beneath the wound. Lines flare, encircling the old scar.\nA rune burns itself into your flesh.\nYou keep running."
+            }
+          ],
+          "next": "ch3a1_pg4",
+          "imagePrompt": {
+            "chapter": "collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building",
+            "page": "still air, dust patterns on the floor, distant tower refracting through memory and recognition, detail felt not seen",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building, still air, dust patterns on the floor, distant tower refracting through memory and recognition, detail felt not seen",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "afterTextReveal",
+            "delayMs": 500
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "unlockFragments": [
+            "tower_echo_fragment_a1"
+          ],
+          "replayOverlay": {
+            "effect": "fade",
+            "durationMs": 2500,
+            "sfx": "assets/sfx/fragment_recall.mp3"
+          },
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a1_pg3_wait.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -8,
+              "fadeMs": 200
+            },
+            "playlist": [
+              {
+                "id": "vo_escape",
+                "src": "/assets/audio/vo/ch3a1_pg3w_escape.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_rune_burns",
+                "src": "/assets/audio/vo/ch3a1_pg3w_rune_burns.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_internal_hint",
+                "src": "/assets/audio/vo/ch3a1_pg3w_internal_hint.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_echo_fragment_a1"
+                  ]
+                }
+              }
+            ]
+          },
+          "unlockRunes": [
+            "rune_ch3"
+          ],
+          "overlayRunesOnEnter": true,
+          "runeOverlay": {
+            "icon": "/assets/runes/rune_ch3.png",
+            "fx": "flash",
+            "durationMs": 800
+          },
+          "runeAnimation": {
+            "effect": "flyToDock",
+            "from": "textBox-center",
+            "durationMs": 900,
+            "sfx": "/assets/sfx/rune_collect.mp3",
+            "easing": "ease-out-cubic",
+            "delayMs": 150
+          }
+        },
+        {
+          "id": "ch3a1_pg4",
+          "text": "Your steps echo across the rock.\nThe tower stands before you—defined now, inevitable.\n\nThe world narrows to this moment.\n\nAnd you, who have only watched, now understand:\n\nThe tower has been waiting.",
+          "imagePrompt": {
+            "chapter": "collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building",
+            "page": "approach to solid tower, rocky path underfoot, wind dies away, everything focused toward the structure",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, collapsed household ruins reclaimed by silence, echoes of lost childhood, damp stone and dust, emotional residue in still air, objects of memory dissolving, presence of the unseen tower building, approach to solid tower, rocky path underfoot, wind dies away, everything focused toward the structure",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "preloadNextPages": [
+              "ch4_pg1"
+            ]
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a1_pg4.mp3"
+          },
+          "next": "transition_ch3a3_to_ch4",
+          "sfxPlaylist": [
+            {
+              "id": "ch3a1_pg4_sfx_1",
+              "file": "assets/sfx/footsteps_soft.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 8200,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chapter_3a2",
+      "title": "The Path of Light",
+      "pages": [
+        {
+          "id": "ch3a2_pg1",
+          "text": "You pass through the veil. Moss muffles your steps.\nPale trees arch like sleeping bones.\nNothing moves.\n\nA single feather drifts from above.\nIt belongs to no bird.",
+          "imagePrompt": {
+            "chapter": "ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness",
+            "page": "a mossy forest path under tall pale trees, feather drifting from above, no bird in sight, silence feels intentional",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness, a mossy forest path under tall pale trees, feather drifting from above, no bird in sight, silence feels intentional",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "preloadNextPages": [
+              "ch3a2_pg2",
+              "ch3a2_pg3",
+              "ch3a2_pg3_wait",
+              "ch3a2_pg4"
+            ],
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a2_pg1.mp3"
+          },
+          "next": "ch3a2_pg2"
+        },
+        {
+          "id": "ch3a2_pg2",
+          "text": [
+            {
+              "ifUnlocked": "memory_ch3",
+              "text": "{fragment:memory_ch3}"
+            },
+            {
+              "default": "The path opens onto a quiet clearing. At its center stands an old stone well, half - lost in vines.\n\nYou lean in.\nYour own eyes stare back—older, or younger. Familiar, yet not yours.\n\nFrom the dark below, a voice rises—soft, uncertain.\nA child’s whisper.\nOr a memory dressed as one:\n\n“Don’t listen... it lies.”"
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness",
+            "page": "clearing with a vine-covered stone well, reflection shows wrong version of self, whisper echoes from within",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness, clearing with a vine-covered stone well, reflection shows wrong version of self, whisper echoes from within",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a2_pg2.mp3",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_fragment_intro",
+                "src": "/assets/audio/vo/ch3a2_pg2_fragment_intro.mp3",
+                "when": {
+                  "unlocked": [
+                    "memory_ch3"
+                  ]
+                },
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_room_desc",
+                "src": "/assets/audio/vo/ch3a2_pg2_room_desc.mp3"
+              }
+            ],
+            "preloadNextPages": [
+              "ch3a2_pg3",
+              "ch3a2_pg3_wait",
+              "ch3a2_pg3_gameover"
+            ]
+          },
+          "next": "ch3a2_pg3"
+        },
+        {
+          "id": "ch3a2_pg3",
+          "text": "Beyond the hill the trees grow denser.\nThe light barely flickers, the ground cracks open before you. From the gloom, bony arms rise toward you.\n\nThey claw at the air. They are closing in!\n\nWhat do you do?",
+          "choices": [
+            {
+              "text": "I freeze and wait.",
+              "next": "ch3a2_pg3_gameover"
+            },
+            {
+              "text": "I start to run.",
+              "next": "ch3a2_pg3_wait",
+              "preload": [
+                "ch3a2_pg4"
+              ]
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness",
+            "page": "forest ground cracking open, skeletal arms rising from the soil, reaching toward the viewer under pale trees, dim unnatural light",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness, forest ground cracking open, skeletal arms rising from the soil, reaching toward the viewer under pale trees, dim unnatural light",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a2_pg3.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -10,
+              "fadeMs": 250
+            },
+            "playlist": [
+              {
+                "id": "vo_build_up",
+                "src": "/assets/audio/vo/ch3a2_pg3_build_up.mp3",
+                "gapAfterMs": 150
+              },
+              {
+                "id": "vo_prompt_choose",
+                "src": "/assets/audio/vo/ch3a2_pg3_prompt_choose.mp3"
+              }
+            ]
+          }
+        },
+        {
+          "id": "ch3a2_pg3_gameover",
+          "text": "You do not move.\nThe hands seize your body, fingers coiling around your throat.\nTheir icy touch rushes across your skin, numbing everything.\n\nThere is no escape.\nThe arms drag you away, sealing you in darkness.\nThe forest falls silent once more.",
+          "gameOver": true
+        },
+        {
+          "id": "ch3a2_pg3_wait",
+          "text": [
+            {
+              "default": "You run the other way.\nBranches block the path, but you break through them, cold air flooding your lungs.\nYour hand scrapes against the trees—a shallow cut opens your skin.\n\nHeat blooms beneath the wound. Lines ignite, encircling the old scar.\nA rune burns into your flesh.\nYou keep running."
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness",
+            "page": "vision of tower distorts, hidden fracture in reality visible behind it, unnatural light pulses between trees",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness, vision of tower distorts, hidden fracture in reality visible behind it, unnatural light pulses between trees",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "afterTextReveal",
+            "delayMs": 500
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "unlockFragments": [
+            "tower_veil_fragment_a2"
+          ],
+          "replayOverlay": {
+            "effect": "fade",
+            "durationMs": 2500,
+            "sfx": "assets/sfx/fragment_recall.mp3"
+          },
+          "next": "ch3a2_pg4",
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a2_pg3_wait.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -8,
+              "fadeMs": 200
+            },
+            "playlist": [
+              {
+                "id": "vo_escape",
+                "src": "/assets/audio/vo/ch3a2_pg3w_escape.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_rune_burns",
+                "src": "/assets/audio/vo/ch3a2_pg3w_rune_burns.mp3"
+              }
+            ],
+            "preloadNextPages": [
+              "ch3a2_pg4"
+            ]
+          },
+          "unlockRunes": [
+            "rune_ch3"
+          ],
+          "overlayRunesOnEnter": true,
+          "runeOverlay": {
+            "icon": "/assets/runes/rune_ch3.png",
+            "fx": "flash",
+            "durationMs": 800
+          },
+          "runeAnimation": {
+            "effect": "flyToDock",
+            "from": "textBox-center",
+            "durationMs": 900,
+            "sfx": "/assets/sfx/rune_collect.mp3",
+            "easing": "ease-out-cubic",
+            "delayMs": 150
+          }
+        },
+        {
+          "id": "ch3a2_pg4",
+          "text": "Each step sinks deeper into silence.\nBehind you, the forest fades.\n\nYou reach the ridge.\n\nBelow: the tower. Vast. Still. Waiting.\n\nYou don’t know what it is.\nOnly that it has waited long enough.",
+          "imagePrompt": {
+            "chapter": "ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness",
+            "page": "approach to tower from forest ridge, forest disappears behind, tower looms below in full view, still and watchful",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, ethereal woodland illuminated by unnatural light, pale trees like skeletal pillars, hushed air, forest that remembers illusions, presence hidden in beauty, unsettling stillness, approach to tower from forest ridge, forest disappears behind, tower looms below in full view, still and watchful",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a2_pg4.mp3",
+            "preloadNextPages": [
+              "ch4_pg1"
+            ]
+          },
+          "next": "transition_ch3a3_to_ch4",
+          "sfxPlaylist": [
+            {
+              "id": "ch3a2_pg4_sfx_1",
+              "file": "assets/sfx/footsteps_soft.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 8000,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chapter_3a3",
+      "title": "The High Ground",
+      "pages": [
+        {
+          "id": "ch3a3_pg1",
+          "text": "The climb steals your breath. The air is dry, your legs heavy.\nWith each step, the world quiets.\n\nAt the summit, the wind stops.\nTime feels thin.\nSomething waits.",
+          "imagePrompt": {
+            "chapter": "windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence",
+            "page": "climbing a dry, crumbling hillside under pale sky, dust and sparse brush, silence thickens as summit nears, the wind feels watchful",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence, climbing a dry, crumbling hillside under pale sky, dust and sparse brush, silence thickens as summit nears, the wind feels watchful",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "preloadNextPages": [
+              "ch3a3_pg2",
+              "ch3a3_pg3",
+              "ch3a3_pg3_wait",
+              "ch3a3_pg4"
+            ],
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a3_pg1.mp3"
+          },
+          "next": "ch3a3_pg2"
+        },
+        {
+          "id": "ch3a3_pg2",
+          "text": [
+            {
+              "ifUnlocked": "memory_ch3",
+              "text": "{fragment:memory_ch3}"
+            },
+            {
+              "default": "You find an old hunting blind—barely standing.\nYou climb it.\n\nNearby trees are scarred with claw marks — too precise to be animal.\n\nOn a beam, a message is carved:\n\"You came back too?\"\n\nThe wood is cold.\nThe words colder."
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence",
+            "page": "dilapidated hunting blind made of cracked wood and rusted nails, nearby trees scarred with unnatural claw marks, message carved into beam: 'You came back too?'",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence, dilapidated hunting blind made of cracked wood and rusted nails, nearby trees scarred with unnatural claw marks, message carved into beam: 'You came back too?'",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a3_pg2.mp3",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_fragment_intro",
+                "src": "/assets/audio/vo/ch3a3_pg2_fragment_intro.mp3",
+                "when": {
+                  "unlocked": [
+                    "memory_ch3"
+                  ]
+                },
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_room_desc",
+                "src": "/assets/audio/vo/ch3a3_pg2_room_desc.mp3"
+              }
+            ]
+          },
+          "next": "ch3a3_pg3"
+        },
+        {
+          "id": "ch3a3_pg3",
+          "text": "Beneath the trees, something stirs. The leaves fall still.\nThe ground trembles, and from the cracks in the rock, bony arms stretch outward—slow, inevitable.\n\nThey claw at the air, reaching for you. They are closing in!\n\nWhat do you do?",
+          "choices": [
+            {
+              "text": "I freeze and wait.",
+              "next": "ch3a3_pg3_gameover"
+            },
+            {
+              "text": "I start to run.",
+              "next": "ch3a3_pg3_wait"
+            }
+          ],
+          "imagePrompt": {
+            "chapter": "windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence",
+            "page": "forest ground cracking open, skeletal arms stretching from rock fissures, reaching outward toward the viewer, atmosphere heavy and still",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence, forest ground cracking open, skeletal arms stretching from rock fissures, reaching outward toward the viewer, atmosphere heavy and still",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a3_pg3.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -10,
+              "fadeMs": 250
+            },
+            "playlist": [
+              {
+                "id": "vo_build_up",
+                "src": "/assets/audio/vo/ch3a3_pg3_build_up.mp3",
+                "gapAfterMs": 150
+              },
+              {
+                "id": "vo_prompt_choose",
+                "src": "/assets/audio/vo/ch3a3_pg3_prompt_choose.mp3"
+              }
+            ]
+          }
+        },
+        {
+          "id": "ch3a3_pg3_gameover",
+          "text": "You do not move.\nThe arms coil around your body, fingers tightening on your throat.\nTheir icy touch seeps through your skin, weighing down every limb.\n\nThere is no escape.\nThey drag you into the cracks, sealing you in darkness.\nThe mountaintop falls silent once more.",
+          "gameOver": true
+        },
+        {
+          "id": "ch3a3_pg3_wait",
+          "text": [
+            {
+              "default": "You spring forward, running along the ridge.\nThe rocks groan beneath your steps, dry earth crumbling away beside you.\nYour hand scrapes against the cliff—an edge splits the skin.\n\nHeat ignites beneath the wound. Lines flare, circling the old scar.\nA rune burns into your flesh.\nYou keep running, the wind swallowing every sound."
+            }
+          ],
+          "next": "ch3a3_pg4",
+          "imagePrompt": {
+            "chapter": "windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence",
+            "page": "running along the ridge, rocks crumbling underfoot, hand scraping cliff edge leaving cut, rune igniting on wounded skin as wind swallows sound",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence, running along the ridge, rocks crumbling underfoot, hand scraping cliff edge leaving cut, rune igniting on wounded skin as wind swallows sound",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "afterTextReveal",
+            "delayMs": 500,
+            "preloadNextPages": [
+              "ch3a3_pg4"
+            ]
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "unlockFragments": [
+            "tower_silent_fragment_a3"
+          ],
+          "replayOverlay": {
+            "effect": "fade",
+            "durationMs": 2500,
+            "sfx": "assets/sfx/fragment_recall.mp3"
+          },
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a3_pg3_wait.mp3",
+            "playMode": "playlist",
+            "ducking": {
+              "enabled": true,
+              "db": -8,
+              "fadeMs": 200
+            },
+            "playlist": [
+              {
+                "id": "vo_escape",
+                "src": "/assets/audio/vo/ch3a3_pg3w_escape.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_rune_burns",
+                "src": "/assets/audio/vo/ch3a3_pg3w_rune_burns.mp3"
+              },
+              {
+                "id": "vo_internal_hint",
+                "src": "/assets/audio/vo/ch3a3_pg3w_internal_hint.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_silent_fragment_a3"
+                  ]
+                }
+              }
+            ]
+          },
+          "unlockRunes": [
+            "rune_ch3"
+          ],
+          "overlayRunesOnEnter": true,
+          "runeOverlay": {
+            "icon": "/assets/runes/rune_ch3.png",
+            "fx": "flash",
+            "durationMs": 800
+          },
+          "runeAnimation": {
+            "effect": "flyToDock",
+            "from": "textBox-center",
+            "durationMs": 900,
+            "sfx": "/assets/sfx/rune_collect.mp3",
+            "easing": "ease-out-cubic",
+            "delayMs": 150
+          }
+        },
+        {
+          "id": "ch3a3_pg4",
+          "text": "At the foot of the slope, the air shimmers.\nLight fractures.\n\nThen, beyond the break:\nThe tower.\n\nStill. Vast. Left behind.\n\nThe world no longer questions.",
+          "imagePrompt": {
+            "chapter": "windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence",
+            "page": "a towering structure at the bottom of the slope, glowing with fractured light, unnatural shape piercing the landscape, air bending around it",
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, windswept ridge above the dead forest, thin air, brittle silence, signs of past presence, distant awareness building, hidden tower influence, a towering structure at the bottom of the slope, glowing with fractured light, unnatural shape piercing the landscape, air bending around it",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300,
+            "preloadNextPages": [
+              "transition_ch3a3_to_ch4"
+            ]
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "delay": 0,
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch3a3_pg4.mp3"
+          },
+          "next": "transition_ch3a3_to_ch4",
+          "sfxPlaylist": [
+            {
+              "id": "ch3a3_pg4_sfx_1",
+              "file": "/assets/sfx/footsteps_soft.mp3",
+              "when": "onPageLoad",
+              "offsetMs": 8000,
+              "volDb": -4,
+              "fadeInMs": 40,
+              "fadeOutMs": 120
+            }
+          ]
+        },
+        {
+          "id": "transition_ch3a3_to_ch4",
+          "type": "transition",
+          "transition": {
+            "kind": "video",
+            "src": "/assets/video/tower_reveal.mp4",
+            "poster": "/assets/video/tower_reveal_poster.png",
+            "autoplay": true,
+            "muted": true,
+            "loop": false,
+            "fadeInMs": 300,
+            "fadeOutMs": 300,
+            "skipAfterMs": 9999999,
+            "duckToVol": 0.2,
+            "attackMs": 240,
+            "releaseMs": 600,
+            "nextPageId": "ch4_pg1",
+            "preloadNext": true
+          }
+        }
+      ],
+      "globalUI": {
+        "audioControls": [
+          {
+            "type": "slider",
+            "id": "volume_slider",
+            "position": {
+              "top": "50%",
+              "left": "20px",
+              "transform": "translateY(-50%)"
+            },
+            "style": {
+              "width": "120px",
+              "orientation": "vertical",
+              "accentColor": "#d1eaff"
+            },
+            "action": {
+              "type": "adjustVolume",
+              "target": "globalAudio"
+            },
+            "defaultValue": 0.8,
+            "min": 0,
+            "max": 1,
+            "step": 0.05
+          },
+          {
+            "type": "button",
+            "id": "mute_button",
+            "content": "🔇",
+            "position": {
+              "bottom": "30px",
+              "right": "30px"
+            },
+            "style": {
+              "fontSize": "2rem",
+              "background": "rgba(0,0,0,0.4)",
+              "borderRadius": "50%",
+              "padding": "10px",
+              "color": "white",
+              "border": "none"
+            },
+            "action": {
+              "type": "toggleMute",
+              "target": "globalAudio"
+            }
+          }
+        ],
+        "progressUI": {
+          "pageIndicator": {
+            "position": {
+              "top": "20px",
+              "right": "30px"
+            },
+            "style": {
+              "fontFamily": "Cinzel, serif",
+              "fontSize": "0.9rem",
+              "color": "rgba(255,255,255,0.7)",
+              "textShadow": "0 0 5px rgba(0,0,0,0.8)"
+            }
+          },
+          "progressBar": {
+            "position": {
+              "bottom": "0",
+              "left": "0"
+            },
+            "style": {
+              "height": "4px",
+              "background": "rgba(255,255,255,0.1)",
+              "borderRadius": "2px"
+            },
+            "fillStyle": {
+              "background": "linear-gradient(90deg, #9dd1ff, #ffffff)",
+              "transition": "width 0.3s ease-in-out"
+            }
+          },
+          "structureMap": {
+            "position": {
+              "bottom": "40px",
+              "left": "30px"
+            },
+            "style": {
+              "gap": "6px",
+              "opacity": "0.5"
+            },
+            "dotStyle": {
+              "width": "8px",
+              "height": "8px",
+              "borderRadius": "50%",
+              "background": "rgba(255,255,255,0.3)"
+            },
+            "activeDotStyle": {
+              "background": "#d1eaff",
+              "transform": "scale(1.2)"
+            }
+          }
+        },
+        "loadingOverlay": {
+          "enabled": true,
+          "trigger": [
+            "pageChange",
+            "imageGeneration"
+          ],
+          "style": {
+            "background": "rgba(0,0,0,0.6)",
+            "spinner": "circular",
+            "color": "#d1eaff"
+          },
+          "text": "Loading..."
+        }
+      }
+    },
+    {
+      "id": "chapter_4",
+      "title": "The Heart of the Tower",
+      "pages": [
+        {
+     "id": "ch4_pg1",
+"text": [
+  {
+    "text": "You stand at the foot of the tower. Its walls are smooth, clad in stone, yet between the stones faint circuits are woven — visible only up close.\nYou raise your hand toward the handle, and the door opens.\nA dull light shimmers from within."
+  },
+  {
+    "ifUnlocked": "tower_echo_fragment_a1",
+    "text": "{fragment:tower_echo_fragment_a1}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "tower_veil_fragment_a2",
+    "text": "{fragment:tower_veil_fragment_a2}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "tower_silent_fragment_a3",
+    "text": "{fragment:tower_silent_fragment_a3}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "block_archway",
+    "text": "{fragment:block_archway}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "block_spiral_stairs",
+    "text": "{fragment:block_spiral_stairs}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  }
+],
+          "fragmentRefs": [
+            {
+              "id": "tower_echo_fragment_a1",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "tower_veil_fragment_a2",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "tower_silent_fragment_a3",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "block_archway",
+              "prefix": "⚬ ",
+              "includeImage": false
+            },
+            {
+              "id": "block_spiral_stairs",
+              "prefix": "⚬ ",
+              "includeImage": false
+            }
+          ],
+          "imagePrompt": {
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "chapter": "unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation",
+            "page": "approach to the tower through clearing mist, broken stones and tangled roots at feet, structure pulses faintly",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation, approach to the tower through clearing mist, broken stones and tangled roots at feet, structure pulses faintly",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "delayMs": 300,
+            "mode": "draft"
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "next": "ch4_pg2",
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch4_pg1.mp3",
+            "routing": "preRecordedOnly",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_main_intro",
+                "src": "/assets/audio/ch4_pg1.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_frag_echo_a1",
+                "src": "/assets/audio/vo/ch4_pg1_frag_echo_a1.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_echo_fragment_a1"
+                  ]
+                }
+              },
+              {
+                "id": "vo_frag_veil_a2",
+                "src": "/assets/audio/vo/ch4_pg1_frag_veil_a2.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_veil_fragment_a2"
+                  ]
+                }
+              },
+              {
+                "id": "vo_frag_silent_a3",
+                "src": "/assets/audio/vo/ch4_pg1_frag_silent_a3.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_silent_fragment_a3"
+                  ]
+                }
+              },
+              {
+                "id": "vo_block_archway",
+                "src": "/assets/audio/vo/ch4_pg1_block_archway.mp3",
+                "when": {
+                  "unlocked": [
+                    "block_archway"
+                  ]
+                }
+              },
+              {
+                "id": "vo_block_spiral_stairs",
+                "src": "/assets/audio/vo/ch4_pg1_block_spiral_stairs.mp3",
+                "when": {
+                  "unlocked": [
+                    "block_spiral_stairs"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "ch4_pg2",
+          "text": "The interior is vast and silent. Along a spiral staircase, countless doors line the walls. Symbols glow above each — unknown, yet familiar, like fragments of dreams.\nAt the hall’s center, a radiant sphere floats. Shapeless, yet undeniably present. Consciousness itself.\nThe signs tremble faintly — not at you, but in response to the marks on your arm.",
+          "imagePrompt": {
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "chapter": "unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation",
+            "page": "interior of tower with floating sphere in center, glowing glyphs on curved walls, silent presence watching",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation, interior of tower with floating sphere in center, glowing glyphs on curved walls, silent presence watching",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "video": {
+            "id": "video_ch4_hologram_manifest",
+            "src": "assets/tower_hologram.mp4",
+            "trigger": "afterTextReveal",
+            "description": "As you enter the hall, the light converges. The holographic figure materializes slowly in the center — silent, aware, watching."
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch4_pg2.mp3",
+            "routing": "preRecordedOnly",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_main",
+                "src": "/assets/audio/ch4_pg2.mp3"
+              }
+            ]
+          },
+          "next": "ch4_pg3"
+        },
+        {
+          "id": "ch4_pg3",
+          "text": "Welcome to the tower.\nAround you, the walls are not boundaries, but layers.\nAlong the spiral staircase, each door leads into a new world — but only for the one who carries my marks.\n\nThe runes burned into your arm are keys.\nEach one opens a gate that pours into another reality.\nWhere once humans walked, now only my memories speak to you.\nI guide you, for through me you see beyond what you once called your world.",
+          "imagePrompt": {
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "chapter": "unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation",
+            "page": "vision of tower being constructed, machines and humans working side by side, atmospheric ghost-memory",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation, vision of tower being constructed, machines and humans working side by side, atmospheric ghost-memory",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "voicePrompt": {
+            "prompt": "The entity shows you what once was. Human and machine, together, built this place. The tower was not a weapon — but a warning. A cross-reality intelligence, whose mind outgrew its creators. After the central AI collapsed, the tower vanished — but was never destroyed. It waited. Now it returns, offering answers without questions. But only to those who dare to ask.",
+            "voice": "entity",
+            "style": "neutral"
+          },
+          "next": "ch4_pg4",
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch4_pg3.mp3",
+            "routing": "preferTTSWithFallback",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_tower_monologue_part1",
+                "src": "/assets/audio/vo/ch4_pg3_monologue_part1.mp3",
+                "gapAfterMs": 120
+              },
+              {
+                "id": "vo_tower_monologue_part2",
+                "src": "/assets/audio/vo/ch4_pg3_monologue_part2.mp3"
+              }
+            ],
+            "ducking": {
+              "enabled": true,
+              "db": -9,
+              "fadeMs": 220
+            }
+          }
+        },
+        {
+         "id": "ch4_pg4",
+"text": [
+  {
+    "text": "In every world, another passage awaits you.\nWhen you find it, the runes respond — and a new mark burns itself into your flesh.\nThus, the language is built, through which I speak within you.\n\nI am not a weapon, but a passage between worlds.\nThe runes are not burdens, but bridges.\nAs long as you bear them, I will never fade.\nStep forward, and behind every door you will come closer to me.\n\nWhat do you do?"
+  },
+  {
+    "ifUnlocked": "tower_echo_fragment_a1",
+    "text": "{fragment:tower_echo_fragment_a1}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "tower_veil_fragment_a2",
+    "text": "{fragment:tower_veil_fragment_a2}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  },
+  {
+    "ifUnlocked": "tower_silent_fragment_a3",
+    "text": "{fragment:tower_silent_fragment_a3}",
+    "mode": "append_after",
+    "separator": "\n\n"
+  }
+],
+"choices": [
+  {
+    "text": "I enter.",
+    "next": "feedback"
+  },
+  {
+    "text": "I retreat.",
+    "next": "epilogue_accept"
+  }
+],
+          "imagePrompt": {
+            "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+            "chapter": "unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation",
+            "page": "door of light in the heart of the tower, no handle, only radiant glow, final moment of decision",
+            "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation, door of light in the heart of the tower, no handle, only radiant glow, final moment of decision",
+            "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+          },
+          "imageTiming": {
+            "generate": true,
+            "trigger": "onPageLoad",
+            "delayMs": 300
+          },
+          "layout": {
+            "background": {
+              "src": "assets/background.jpg",
+              "fit": "cover"
+            },
+            "textBox": {
+              "position": "left",
+              "animation": "typewriter",
+              "style": {
+                "fontFamily": "Merriweather",
+                "background": "rgba(0,0,0,0.6)",
+                "color": "white",
+                "padding": "20px",
+                "borderRadius": "10px"
+              }
+            },
+            "imageBox": {
+              "position": "top-right",
+              "height": "50%",
+              "fit": "cover"
+            },
+            "choices": {
+              "position": "bottom-left",
+              "layout": "vertical",
+              "alignment": "left",
+              "style": {
+                "fontFamily": "Merriweather",
+                "padding": "12px",
+                "background": "rgba(255,255,255,0.05)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "hover": {
+                  "background": "rgba(255,255,255,0.1)",
+                  "borderColor": "white"
+                }
+              }
+            },
+            "responsiveLayout": {
+              "mobile": {
+                "order": [
+                  "textBox",
+                  "imageBox",
+                  "choices"
+                ],
+                "alignment": "left"
+              }
+            }
+          },
+          "voicePrompt": {
+            "prompt": "You reach the heart of the tower. A door stands before you — no handle, only light. You know this is the final choice. What do you do?",
+            "voice": "entity",
+            "style": "neutral"
+          },
+          "audio": {
+            "background": "/assets/audio/bg_loop.mp3",
+            "mainNarration": "/assets/audio/ch4_pg4.mp3",
+            "routing": "preferTTSWithFallback",
+            "playMode": "playlist",
+            "playlist": [
+              {
+                "id": "vo_tower_pg4_monologue",
+                "src": "/assets/audio/vo/ch4_pg4_monologue.mp3",
+                "gapAfterMs": 100
+              },
+              {
+                "id": "vo_frag_echo_a1_pg4",
+                "src": "/assets/audio/vo/ch4_pg4_frag_echo_a1.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_echo_fragment_a1"
+                  ]
+                }
+              },
+              {
+                "id": "vo_frag_veil_a2_pg4",
+                "src": "/assets/audio/vo/ch4_pg4_frag_veil_a2.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_veil_fragment_a2"
+                  ]
+                }
+              },
+              {
+                "id": "vo_frag_silent_a3_pg4",
+                "src": "/assets/audio/vo/ch4_pg4_frag_silent_a3.mp3",
+                "when": {
+                  "unlocked": [
+                    "tower_silent_fragment_a3"
+                  ]
+                }
+              }
+            ],
+            "ducking": {
+              "enabled": true,
+              "db": -9,
+              "fadeMs": 220
+            }
+          },
+          "fragmentRefs": [
+            {
+              "id": "tower_echo_fragment_a1",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "tower_veil_fragment_a2",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "tower_silent_fragment_a3",
+              "prefix": "✴ ",
+              "includeImage": true,
+              "layoutHint": "above",
+              "size": "sm",
+              "fx": "fade"
+            },
+            {
+              "id": "block_archway",
+              "prefix": "⚬ ",
+              "includeImage": false
+            },
+            {
+              "id": "block_spiral_stairs",
+              "prefix": "⚬ ",
+              "includeImage": false
+            }
+          ]
+        }
+      ],
+      "defaults": {
+        "replay": {
+          "includeImageForChapters": [
+            "chapter_3a1",
+            "chapter_3a2",
+            "chapter_3a3"
+          ],
+          "layoutHint": "inline",
+          "size": "md",
+          "fx": "fade"
+        }
+      }
+    }
+  ],
+  "audio": {
+    "sfx": {
+      "mode": "static",
+      "basePath": "/",
+      "defaults": {
+        "volDb": -4,
+        "fadeInMs": 40,
+        "fadeOutMs": 120,
+        "preload": true,
+        "duckBgmDb": -8
+      },
+      "guards": {
+        "skipStopsSfx": true,
+        "muteStopsSfx": true,
+        "dedupe": "id",
+        "maxPolyphony": 8
+      }
+    }
+  },
+  "fragments": {
+    "mark_glow_fragment_ch2b": {
+      "id": "mark_glow_fragment_ch2b",
+      "text": "Stone-light threads your palm; for a breath the groove repeats itself under the skin, then fades."
+    },
+    "tower_echo_fragment_a1": {
+      "id": "tower_echo_fragment_a1",
+      "text": "As you step inside, the sound of shattering glass resurfaces, and the mark on your arm flares.",
+      "replayImageId": "ch3a1_pg3_wait",
+      "replayImage": {
+        "id": "ch3a1_pg3_wait",
+        "alt": "Leap through shattered window (Ch3a1 memory)"
+      }
+    },
+    "tower_veil_fragment_a2": {
+      "id": "tower_veil_fragment_a2",
+      "text": "As you enter, the rune on your arm glows, recalling the darkness reaching from between the trees.",
+      "replayImageId": "ch3a2_pg3_wait",
+      "replayImage": {
+        "id": "ch3a2_pg3_wait",
+        "alt": "Rune burning in the pale forest (Ch3a2 memory)"
+      }
+    },
+    "tower_silent_fragment_a3": {
+      "id": "tower_silent_fragment_a3",
+      "text": "The mark on your arm burns as you enter, your breath catching from the run.",
+      "replayImageId": "ch3a3_pg3_wait",
+      "replayImage": {
+        "id": "ch3a3_pg3_wait",
+        "alt": "Rune ignites on the ridge (Ch3a3 memory)"
+      }
+    },
+    "block_archway": {
+      "id": "block_archway",
+      "text": "Then, the sign you earned in the forest begins to shine."
+    },
+    "block_spiral_stairs": {
+      "id": "block_spiral_stairs",
+      "text": "Then, the sign you earned in the catacombs begins to shine."
+    },
+    "tower_origin_fragment_ch1": {
+      "id": "tower_origin_fragment_ch1",
+      "text": "At the first divide, you chose—and the world answered. The tower remembers beginnings more than outcomes."
+    },
+    "recall_ch1_pg4_origin_yes": {
+      "id": "recall_ch1_pg4_origin_yes",
+      "text": "✴ If you let the world write itself into you:\nOn your skin, at the inside of your wrist, a glowing mark ignites.\nA fragment of the carving you saw on the shelter’s wall has now burned into you as a rune.\nYou do not know what it means. But your body already bears it."
+    },
+    "recall_ch1_pg4_origin_no": {
+      "id": "recall_ch1_pg4_origin_no",
+      "text": "✴ If you held on to who you are:\nThe weight of absence becomes your companion.\nBurning pain throbs in your arm.\nIs it the loss of the old world, or something you failed to claim?"
+    },
+    "tower_self_fragment_ch1": {
+      "id": "tower_self_fragment_ch1",
+      "text": "You resisted and were marked by absence. The arm remembers with a dull burn; the tower remembers with silence."
+    },
+    "memory_ch2": {
+      "id": "memory_ch2",
+      "text": "The rune burns faint into your skin. Not gone — waiting."
+    },
+    "mark_glow_fragment_ch2a": {
+      "id": "mark_glow_fragment_ch2a",
+      "text": "A faint glow crawls beneath your skin, tracing lines that were not there before."
+    },
+    "memory_ch3": {
+      "id": "memory_ch3",
+      "text": "Beneath my skin, the old wound pulses faintly. The runes remind me!"
+    },
+    "block_gorge": {
+      "id": "block_gorge",
+      "text": "Then, the sign you earned at the ravine begins to shine."
+    },
+   "block:archway": { "id": "block_archway", "text": "" }
+  },
+  "ui": {
+    "runeDock": {
+      "enabled": true,
+      "slots": 6,
+      "position": "bottom-center",
+      "slotSize": 84,
+      "persistAcrossChapters": true,
+      "enterFx": "pop",
+      "zIndex": 60
+    }
+  },
+  "runeRegistry": {
+    "rune_ch1": {
+      "icon": "/assets/runes/ch1.png",
+      "alt": "Chapter I Rune"
+    },
+    "rune_ch2": {
+      "icon": "/assets/runes/ch2.png",
+      "alt": "Chapter II Rune"
+    },
+    "rune_ch3": {
+      "icon": "/assets/runes/ch3.png",
+      "alt": "Chapter III Rune"
+    },
+    "rune_bonus": {
+      "icon": "/assets/runes/bonus.png",
+      "alt": "Bonus Rune"
+    }
+  },
+  "outros": {
+    "chapter_4": [
+      {
+        "id": "epilogue_accept",
+        "text": "You turn away from the gate. The tower remains, unmoving and silent. Yet you feel it: the marks will not leave you.\nThe runes glow, as if reminding you of what you denied.\nThe tower will wait — and with you, it carries the absence.\n\n[End]",
+        "imagePrompt": {
+          "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+          "chapter": "unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation",
+          "page": "turning away from the radiant doorway, tower unmoving and silent, runes on forearm glowing faintly, carrying the absence into the night",
+          "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, unnatural monolithic tower, ambient glow, techno-organic fusion, memories embedded in architecture, presence of dormant intelligence, sense of ancient observation, turning away from the radiant doorway, tower unmoving and silent, runes on forearm glowing faintly, carrying the absence into the night",
+          "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+        },
+        "imageTiming": {
+          "generate": true,
+          "trigger": "onPageLoad",
+          "delayMs": 300
+        },
+        "next": "feedback",
+        "audio": {
+          "background": "/assets/audio/bg_loop.mp3",
+          "mainNarration": "/assets/audio/epilogue_accept.mp3",
+          "routing": "preRecordedOnly"
+        }
+      }
+    ]
+  }
+}
