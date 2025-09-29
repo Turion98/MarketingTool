@@ -1,4 +1,0 @@
-{"_type": "batch_header", "ts": "2025-09-29T05:59:30.745272Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
-{"id": "e_bmbkqe0l34bmg4pxmh7", "t": "page_exit", "ts": 1759125551371, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 52325645, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
-{"_type": "batch_header", "ts": "2025-09-29T05:59:30.747288Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
-{"id": "e_bmbkqe0l34bmg4pxmh7", "t": "page_exit", "ts": 1759125551371, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 52325645, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
