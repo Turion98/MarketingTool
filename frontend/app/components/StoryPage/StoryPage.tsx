@@ -7,9 +7,8 @@ import TypingText from "../TypingText/TypingText";
 import GeneratedImage_with_fadein from "../GeneratedImage/GeneratedImage";
 import AudioPlayer from "../AudioPlayer";
 import ChoiceButtons, { Choice } from "../ChoiceButtons/ChoiceButtons";
-import SkipButton from "../SkipButton/SkipButton";
-import RewardOverlay from "../RewardOverlay/RewardOverlay";
-import FragmentReplayOverlay from "../FragmentReplayOverlay/FragmentReplayOverlay";
+import RewardOverlay from "../labs/RewardOverlay/RewardOverlay";
+import FragmentReplayOverlay from "../labs/FragmentReplayOverlay/FragmentReplayOverlay";
 import { useGameState } from "../../lib/GameStateContext";
 import style from "./StoryPage.module.scss";
 import RestartButton from "../RestartButton/RestartButton";
@@ -36,19 +35,20 @@ import FeedbackOverlay from "../FeedbackOverlay/FeedbackOverlay";
 
 // ⬇️ 9-slice keret komponens
 import NineSlicePanel from "../NineSlicePanel/NineSlicePanel";
+import DecorBackground from "../layout/DecorBackground/DecorBackground";
+import ProgressStrip from "../layout/ProgressStrip";
+import NarrativePanel from "../layout/NarrativePanel";
+
 
 // ⬇️ típus egységesítés a contexttel
 import type { FragmentData } from "../../lib/GameStateContext";
-import RuneDockOverlay from "../RuneDockOverlay/RuneDockOverlay";
-import BrickBottomOverlay from "../BrickBottomOverlay/BrickBottomOverlay";
-import BrickTopOverlay from "../BrickTopOverlay/BrickTopOverlay";
-
-import ReplayButtonDefault from "../ReplayButton/ReplayButton";
+import RuneDockOverlay from "../labs/RuneDockOverlay/RuneDockOverlay";
+import BrickBottomOverlay from "../labs/BrickBottomOverlay/BrickBottomOverlay";
 import { flushSync } from "react-dom";
 import { resolveNextFromPage } from "../../lib/GameStateContext";
-import RuneSaveOverlay from "../RuneSaveOverlay/RuneSaveOverlay";
+import RuneSaveOverlay from "../labs/RuneSaveOverlay/RuneSaveOverlay";
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
-import PuzzleRunes from "../PuzzleRunes/PuzzleRunes";
+import PuzzleRunes from "../labs/PuzzleRunes/PuzzleRunes";
 import { useSearchParams } from "next/navigation";
 import {
    trackPageEnter, trackPageExit,
@@ -58,27 +58,17 @@ import {
  import AnalyticsSync from "../AnalyticsSync/AnalyticsSync";
 
 
+import MediaFrame from "../layout/MediaFrame/MediaFrame";
+import InteractionDock from "../layout/InteractionDock/InteractionDock";
+import ActionBar from "../layout/ActionBar/ActionBar";
+
+
 
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
 const FADE_IN_MS = 600;
-
-const RUNE_OFFSETS = { slotSize: 72, offsetX: 176, offsetY: 25 };
 const RUNE = { slot: 72, gap: 0, slots: 3, offsetX: 176, offsetY: 25 };
-
-
-const RBmod = require("../ReplayButton/ReplayButton");
-const ReplayButton =
-  (RBmod?.default && typeof RBmod.default === "function")
-    ? RBmod.default
-    : (RBmod?.ReplayButton && typeof RBmod.ReplayButton === "function")
-      ? RBmod.ReplayButton
-      : null as any;
-
-if (!ReplayButton) {
-  throw new Error("[ReplayButton] module resolved but no component export found");
-}
 
 /** ---------- Fragment-kompozíció ---------- */
 type FragmentBank = Record<
@@ -964,8 +954,8 @@ useEffect(() => {
     const ids = pageData?.imageTiming?.preloadNextPages;
     if (!ids?.length) return;
 
-   
-  
+
+
     const controllers: AbortController[] = [];
 
     ids.forEach(async (nextId: string) => {
@@ -1014,6 +1004,7 @@ useEffect(() => {
     }
   }, [showChoices, registerTimeout]);
 
+
   // ---- DERIVED HOOKOK (feltétel nélkül!) ----
   const choices = useMemo(() => pageData?.choices ?? [], [pageData?.choices]);
   const hasChoices = choices.length > 0;
@@ -1028,6 +1019,8 @@ useEffect(() => {
       return c;
     });
   }, [choices, hasChoices]);
+
+
 
 /** ⬇️ ÚJ: többes fragmentRecall támogatás – visszatér: string[] (safe) */
 const recallTexts: string[] = useMemo(() => {
@@ -1077,6 +1070,11 @@ const resolvedNext = useMemo(() => {
     (typeof pageData?.next === "string" ? pageData.next : null)
   );
 }, [pageData, globals]);
+
+const canNext = useMemo(
+  () => !hasChoices && !!resolvedNext && showChoices && !showEnd,
+  [hasChoices, resolvedNext, showChoices, showEnd]
+);
 
 useEffect(() => {
   try {
@@ -1301,7 +1299,7 @@ const handleChoice = useCallback(
         });
       });
     }
-    
+
 
     // 1) Reward-unlocks (új JSON)
     let unlocks: string[] = [];
@@ -1378,7 +1376,7 @@ if (Array.isArray(choiceObj?.actions)) {
       ])
     ).filter((id) => !isFlagId(id));
 
-    
+
 if (toUnlockFragments.length > 0) {
   flushSync(() => {
     const merged = Array.from(new Set([...unlockedFragments, ...toUnlockFragments]));
@@ -1490,7 +1488,7 @@ if (!pendingNextRef.current && next && next !== pageData?.id) {
   flags,
   derivedStoryId,
   derivedSessionId,
-  currentPageId,      
+  currentPageId,
 ]
 );
 
@@ -1585,10 +1583,8 @@ useEffect(() => {
 if (!globals?.storySrc) {
   return (
     <div className={style.storyPage}>
-      <div className={style.storyBackground}>
-        <img src="/assets/background.1.png" alt="" className={style.backgroundImage} />
-      </div>
-      <div style={{ position: "relative", zIndex: 5, padding: "8vh 4vw", color: "#fff" }}>
+      <DecorBackground />
+<div style={{ position: "relative", zIndex: 5, padding: "8vh 4vw", color: "#fff" }}>
         <h2>No story loaded</h2>
         <p>Go back to the landing page and choose a campaign.</p>
         <button onClick={() => (window.location.href = "/")}>Back to landing</button>
@@ -1624,9 +1620,6 @@ const _mustBeFn = (n: string, v: any) => {
   const t = typeof v;
   if (t !== "function") { console.error(`[BAD] ${n}:`, v); throw new Error(`${n} is ${t}`); }
 };
-_mustBeFn("ReplayButton", ReplayButton);
-_mustBeFn("SkipButton", SkipButton);
-_mustBeFn("BrickTopOverlay", BrickTopOverlay);
 _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
 _mustBeFn("RuneDockOverlay", RuneDockOverlay);
 _mustBeFn("NineSlicePanel", NineSlicePanel);
@@ -1646,26 +1639,9 @@ _mustBeFn("SmokeField", SmokeField);
     return (
       <div className={style.storyPage}>
           {analyticsSync}
-        <div className={style.storyBackground}>
-          <img
-            src="/assets/background.1.png"
-            alt="Background"
-            className={style.backgroundImage}
-          />
-          <SmokeField
-            globalScale={1.3}
-            layers={[
-              { src: "/assets/smoke1.png", speed: -14, z: 1, opacity: 0.22, opacityAmplitude: 0.1, opacityCycleTime: 23, scaleMultiplier: 1.3, horizAmplitude: 18, vertAmplitude: 42, cycleTime: 10 },
-              { src: "/assets/smoke2.png", speed: -18, z: 2, opacity: 0.24, opacityAmplitude: 0.32, opacityCycleTime: 31, scaleMultiplier: 1.3, horizAmplitude: 26, vertAmplitude: 56, cycleTime: 10 },
-              { src: "/assets/smoke5.png", speed: -30, z: 3, opacity: 0.16, opacityAmplitude: 0.15, opacityCycleTime: 29, scaleMultiplier: 1.3, horizAmplitude: 32, vertAmplitude: 18, cycleTime: 13 },
-              { src: "/assets/smoke6.png", speed: 18, z: 4, opacity: 0.08, opacityAmplitude: 0.09, opacityCycleTime: 37, scaleMultiplier: 1.3, horizAmplitude: 38, vertAmplitude: 24, cycleTime: 10 },
-              { src: "/assets/smoke3.png", speed: 22, z: 5, opacity: 0.28, opacityAmplitude: 0.15, opacityCycleTime: 41, scaleMultiplier: 1.3, horizAmplitude: 28, vertAmplitude: 22, cycleTime: 15 },
-              { src: "/assets/smoke4.png", speed: 20, z: 6, opacity: 0.34, opacityAmplitude: 0.3, cycleTime: 27, scaleMultiplier: 1.3, horizAmplitude: 34, vertAmplitude: 20 },
-            ]}
-          />
-        </div>
 
-            {showAnalytics && <AnalyticsReport />}
+        <DecorBackground />
+{showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
         <div
           style={{
@@ -1710,25 +1686,11 @@ _mustBeFn("SmokeField", SmokeField);
       <div className={style.storyPage}>
           {analyticsSync}
         <div className={style.storyBackground}>
-          <img
-            src="/assets/background.1.png"
-            alt="Background"
-            className={style.backgroundImage}
-          />
-          <SmokeField
-            globalScale={1.3}
-            layers={[
-              { src: "/assets/smoke1.png", speed: -14, z: 1, opacity: 0.22, opacityAmplitude: 0.1, opacityCycleTime: 23, scaleMultiplier: 1.3, horizAmplitude: 18, vertAmplitude: 42, cycleTime: 10 },
-              { src: "/assets/smoke2.png", speed: -18, z: 2, opacity: 0.24, opacityAmplitude: 0.32, opacityCycleTime: 31, scaleMultiplier: 1.3, horizAmplitude: 26, vertAmplitude: 56, cycleTime: 10 },
-              { src: "/assets/smoke5.png", speed: -30, z: 3, opacity: 0.16, opacityAmplitude: 0.15, opacityCycleTime: 29, scaleMultiplier: 1.3, horizAmplitude: 32, vertAmplitude: 18, cycleTime: 13 },
-              { src: "/assets/smoke6.png", speed: 18, z: 4, opacity: 0.08, opacityAmplitude: 0.09, opacityCycleTime: 37, scaleMultiplier: 1.3, horizAmplitude: 38, vertAmplitude: 24, cycleTime: 10 },
-              { src: "/assets/smoke3.png", speed: 22, z: 5, opacity: 0.28, opacityAmplitude: 0.15, opacityCycleTime: 41, scaleMultiplier: 1.3, horizAmplitude: 28, vertAmplitude: 22, cycleTime: 15 },
-              { src: "/assets/smoke4.png", speed: 20, z: 6, opacity: 0.34, opacityAmplitude: 0.3, cycleTime: 27, scaleMultiplier: 1.3, horizAmplitude: 34, vertAmplitude: 20 },
-            ]}
-          />
+          <DecorBackground preset="subtle" />
         </div>
 
-     {showAnalytics && <AnalyticsReport />}
+
+     {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
 
         <div
@@ -1760,450 +1722,327 @@ _mustBeFn("SmokeField", SmokeField);
       </div>
     );
   }
+return (
+  <div className={style.storyPage}>
+    {analyticsSync}
+    {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
-  return (
-    <div className={style.storyPage}>
-        {analyticsSync}
-      {showAnalytics && <AnalyticsReport />}
-        {/* ⬇️ Progress HUD */}
-    <div className={style.progressHud} aria-label="Story progress">
-      <div className={style.progressTrack}>
-        <div
-          className={style.progressFill}
-          style={{ width: `${Math.round((progressDisplay.value ?? 0) * 100)}%` }}
-        />
-      </div>
-      <div className={style.progressLabel}>
-        {Math.round((progressDisplay.value ?? 0) * 100)}%
-      </div>
+
+    {/* ⬇️ Progress HUD */}
+    <ProgressStrip value={progressDisplay.value ?? 0} />
+    <div className={style.progressLabel}>
+      {Math.round((progressDisplay.value ?? 0) * 100)}%
     </div>
-      <RestartButton />
 
-      <div className={style.storyBackground}>
-        <img
-          src="/assets/background.1.png"
-          alt="Background"
-          className={style.backgroundImage}
-        />
-        <SmokeField
-          globalScale={1.3}
-          layers={[
-            { src: "/assets/smoke1.png", speed: -14, z: 1, opacity: 0.22, opacityAmplitude: 0.1, opacityCycleTime: 23, scaleMultiplier: 1.3, horizAmplitude: 18, vertAmplitude: 42, cycleTime: 10 },
-            { src: "/assets/smoke2.png", speed: -18, z: 2, opacity: 0.24, opacityAmplitude: 0.32, opacityCycleTime: 31, scaleMultiplier: 1.3, horizAmplitude: 26, vertAmplitude: 56, cycleTime: 10 },
-            { src: "/assets/smoke5.png", speed: -30, z: 3, opacity: 0.16, opacityAmplitude: 0.15, opacityCycleTime: 29, scaleMultiplier: 1.3, horizAmplitude: 32, vertAmplitude: 18, cycleTime: 13 },
-            { src: "/assets/smoke6.png", speed: 18, z: 4, opacity: 0.08, opacityAmplitude: 0.09, opacityCycleTime: 37, scaleMultiplier: 1.3, horizAmplitude: 38, vertAmplitude: 24, cycleTime: 10 },
-            { src: "/assets/smoke3.png", speed: 22, z: 5, opacity: 0.28, opacityAmplitude: 0.15, opacityCycleTime: 41, scaleMultiplier: 1.3, horizAmplitude: 28, vertAmplitude: 22, cycleTime: 15 },
-            { src: "/assets/smoke4.png", speed: 20, z: 6, opacity: 0.34, opacityAmplitude: 0.3, cycleTime: 27, scaleMultiplier: 1.3, horizAmplitude: 34, vertAmplitude: 20 },
-          ]}
-        />
-      </div>
+    <RestartButton />
 
-      {isLoading && <LoadingOverlay />}
+    <div className={style.storyBackground}>
+      <DecorBackground preset="subtle" />
+    </div>
 
-<div className={style.textDockTop} role="region" aria-label="Narration box">
-  <div className={`${style["textbox-container"]} ${expanded ? style.expanded : ""}`}>
-    <NineSlicePanel
-      src="/ui/textbox_9slice.png"
-      slice={{ top: 48, right: 43, bottom: 48, left: 43 }}
-      padding={{ top: 75, right: 55, bottom: 70, left: 65 }}
-      inner={{ width: 640, height: 381 }}
-      trackScroll={true}
-      animate
-      onMeasure={(m: Measure) => {
-        setMeasure(m);
-        if (!lockedMeasure && firstLockTimer.current == null) {
-          firstLockTimer.current = window.setTimeout(() => {
-            setLockedMeasure(m);
-            firstLockTimer.current = null;
-          }, 350);
-          return;
-        }
-        if (lockedMeasure && typingDone) setLockedMeasure(m);
-      }}
-      backdrop={
-        <>
-      <RuneDockOverlay
-  flagIds={unlockedRunes}
-  imagesByFlag={imagesByFlag} 
-  usePortal
-  anchor={anchorPortal as any}
-  slotSize={RUNE.slot} slots={RUNE.slots} 
-  offsetX={RUNE.offsetX} offsetY={RUNE.offsetY}
-/>
+    {isLoading && <LoadingOverlay />}
 
-          <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} position="bottom" />
-          <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
-        </>
-      }
-    >
-      {blocks.length > 0 ? (
-        <TypingText
-          key={`tt_${pageData.id}`}
+    <div className={style.textDockTop} role="region" aria-label="Narration box">
+      <div className={`${style["textbox-container"]} ${expanded ? style.expanded : ""}`}>
+        <NarrativePanel
           lines={blocks}
           skipRequested={skipRequested}
           replayTrigger={replayKey}
           delayMs={DELAY_MS}
           onReady={() => setSkipAvailable(true)}
-          onComplete={() => {
-            setTypingDone(true);
-            setShowChoices(true);
-          }}
+          onComplete={() => { setTypingDone(true); setShowChoices(true); }}
+          onMeasure={(m: Measure) => { setMeasure(m); }}
+          typingDone={typingDone}
+          lockedMeasure={lockedMeasure}
+          setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
+          firstLockTimerRef={firstLockTimer}
+          pageId={pageData.id}
+          backdrop={(
+            <>
+              <RuneDockOverlay
+                flagIds={unlockedRunes}
+                imagesByFlag={imagesByFlag}
+                usePortal
+                anchor={anchorPortal as any}
+                slotSize={RUNE.slot}
+                slots={RUNE.slots}
+                offsetX={RUNE.offsetX}
+                offsetY={RUNE.offsetY}
+              />
+              {/* (alsó brick dekor maradhat, ha akarod) */}
+              <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} position="bottom" />
+              <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
+            </>
+          )}
         />
-      ) : (
-        <div />
-      )}
-      {/* ❌ ChoiceButtons kivéve a panelből */}
-    </NineSlicePanel>
 
-    {/* Felső tégla + Skip gomb – MINDKETTŐ PORTÁLON, közös anchor/offset */}
-    <BrickTopOverlay
-      usePortal
-      anchor={anchorPortal as any}
-      align="center"
-      zIndex={999}
-      src="/ui/brick.png"
-      decorMount="portal"
-    >
-      <SkipButton
-        active={skipAvailable && !showEnd}
-        onSkip={() => {
-          setSkipRequested(true);
-          setTimeout(() => setSkipRequested(false), 0);
-        }}
-      />
-    </BrickTopOverlay>
-
-    <BrickTopOverlay
-      usePortal
-      anchor={anchorPortal as any}
-      align="center"
-      zIndex={999}
-      src="/ui/brick.png"
-      decorMount="portal"
-      offsetX={220}      // jobb oldal: Replay
-    >
-      <ReplayButton
-        active={!showEnd}
-        onReplay={() => {
-          setSkipRequested(false);
-          setReplayKey((prev) => prev + 1);
-          triggerAudioRestart();
-        }}
-      />
-    </BrickTopOverlay>
-
-    <BrickTopOverlay
-      usePortal
-      anchor={anchorPortal as any}
-      align="left"        // bal oldalra
-      zIndex={999}
-      src="/ui/brick.png"
-      decorMount="portal"
-      offsetX={320}
-    >
-      <button
-        className={style.muteButton}
-        onClick={() => {
-          const newMuted = !isMuted;
-          setIsMuted(newMuted);
-          try {
-            setSfxMuted(newMuted);
-          } catch {}
-        }}
-        title={isMuted ? "Hang bekapcsolása" : "Némítás"}
-        aria-pressed={isMuted}
-      >
-        <img
-          src={
-            isMuted
-              ? "/icons/rune_sound_off_128_transparent.png"
-              : "/icons/rune_sound_on_128_transparent.png"
-          }
-          alt={isMuted ? "Némítva" : "Hang bekapcsolva"}
-          className={style.muteIcon}
-          width={48}
-          height={48}
-          draggable={false}
-        />
-      </button>
-    </BrickTopOverlay>
-  </div>
-</div>
-
-{/* ⬇️ A képkocka akkor is látszik, ha nincs generálás (ch1_pg1, ch4_pg1, vagy ha van imageBox) */}
-{showFrame && (
-  <div className={style.generatedImageContainer}>
-    {/* KERET – legalul */}
-    <img aria-hidden src="/frame.png" alt="" className={style.frameOverlay} />
-
-    {/* KÉP & FALLBACK – legfelül */}
-    <div className={style.imageViewport}>
-      <GeneratedImage_with_fadein
-        pageId={pageData.id}
-        prompt={shouldGenerate ? pageData.imagePrompt : undefined}
-        params={stableParams}
-        imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
-        mode={pageData.imageTiming?.mode || "draft"}
-      />
+        {/* ⬆️ KIVÉVE: BrickTopOverlay + Skip/Replay/Mute gombok – ezek most az ActionBar-ban lesznek */}
+      </div>
     </div>
-  </div>
-)}
-{/* ✅ INTERAKCIÓ DOCK – puzzle-k vagy normál choices */}
-{showChoices && !showEnd && (
-  <div className={style.choiceDockOutside}>
 
-    {/* #1: RIDDLE (egylépéses) */}
-    {isRiddlePage && (() => {
-      const r = pageData as unknown as PuzzleRiddle;
-      const dummyNext = (pageData as any)?.id ?? "";
-
-      // ChoiceButtons Choice[]: kötelező a 'next'
-      const riddleChoices: Choice[] = r.options.map((label, idx) => ({
-        id: String(idx),
-        text: label,
-        next: dummyNext, // nem használjuk tényleges navigációra
-      }));
-
-      return (
-        <ChoiceButtons
-          choices={riddleChoices}
-          unlockedFragments={[...unlockedPlus]}
-          onChoiceSelected={(_, choice) =>
-            handleRiddleAnswer(Number(choice?.id ?? -1))
-          }
-          show
+    {/* ⬇️ A képkocka akkor is látszik, ha nincs generálás (ch1_pg1, ch4_pg1, vagy ha van imageBox) */}
+    {showFrame && (
+      <MediaFrame
+        mode="image"
+        imageProps={{
+          frameSrc: "/frame.png",
+          fadeIn: true,
+          // loading: isLoading,
+        }}
+      >
+        <GeneratedImage_with_fadein
+          pageId={pageData.id}
+          prompt={shouldGenerate ? pageData.imagePrompt : undefined}
+          params={stableParams}
+          imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
+          mode={pageData.imageTiming?.mode || "draft"}
         />
-      );
-    })()}
+      </MediaFrame>
+    )}
 
-    {/* #2: RUNES (sorrend-kirakós) */}
-    {!isRiddlePage && isRunesPage && (() => {
-      const p = pageData as unknown as PuzzleRunesPage;
-      return (
-        <PuzzleRunes
-          options={p.options}
-          answer={p.answer}
-          maxAttempts={p.maxAttempts ?? 3}
-          onResult={(ok) => {
-            const branch = ok ? p.onSuccess : p.onFail;
+    {/* ✅ INTERAKCIÓ DOCK – puzzle-k vagy normál choices */}
+    {showChoices && !showEnd && (
+      <div className={style.choiceDockOutside}>
 
-            // flags
-            const fl = branch?.setFlags;
-            if (Array.isArray(fl)) fl.forEach((f) => setFlag(f));
-            else if (fl && typeof fl === "object") {
-              Object.entries(fl).forEach(([k, v]) => (v ? setFlag(k) : null));
-            }
+        {/* #1: RIDDLE (egylépéses) */}
+        {isRiddlePage && (() => {
+          const r = pageData as unknown as PuzzleRiddle;
+          const dummyNext = (pageData as any)?.id ?? "";
 
-            // goto
-            const nx = branch?.goto;
-            if (nx && nx !== pageData?.id) {
-              try { localStorage.setItem("currentPageId", nx); } catch {}
-              goToNextPage(nx);
-            }
-          }}
-        />
-      );
-    })()}
+          const riddleChoices: Choice[] = r.options.map((label, idx) => ({
+            id: String(idx),
+            text: label,
+            next: dummyNext,
+          }));
 
-    {/* #3: DEFAULT CHOICES (ha nem puzzle) */}
-    {!isRiddlePage && !isRunesPage && hasChoices && (
-      <ChoiceButtons
-        choices={patchedChoices}
-        unlockedFragments={[...unlockedPlus]}
-        onChoiceSelected={handleChoice}
+          return (
+            <ChoiceButtons
+              choices={riddleChoices}
+              unlockedFragments={[...unlockedPlus]}
+              onChoiceSelected={(_, choice) =>
+                handleRiddleAnswer(Number(choice?.id ?? -1))
+              }
+              show
+            />
+          );
+        })()}
+
+        {/* #2: RUNES (sorrend-kirakós) */}
+        {!isRiddlePage && isRunesPage && (() => {
+          const p = pageData as unknown as PuzzleRunesPage;
+          return (
+            <PuzzleRunes
+              options={p.options}
+              answer={p.answer}
+              maxAttempts={p.maxAttempts ?? 3}
+              onResult={(ok) => {
+                const branch = ok ? p.onSuccess : p.onFail;
+
+                // flags
+                const fl = branch?.setFlags;
+                if (Array.isArray(fl)) fl.forEach((f) => setFlag(f));
+                else if (fl && typeof fl === "object") {
+                  Object.entries(fl).forEach(([k, v]) => (v ? setFlag(k) : null));
+                }
+
+                // goto
+                const nx = branch?.goto;
+                if (nx && nx !== pageData?.id) {
+                  try { localStorage.setItem("currentPageId", nx); } catch {}
+                  goToNextPage(nx);
+                }
+              }}
+            />
+          );
+        })()}
+
+        {/* #3: DEFAULT CHOICES (ha nem puzzle) – InteractionDock */}
+        {!isRiddlePage && !isRunesPage && hasChoices && (
+          <InteractionDock
+            mode="default"
+            choices={patchedChoices.map((c:any) => ({
+              id: String(c.id),
+              label: String(c.text ?? c.label ?? c.id),
+              disabled: !!c.disabled,
+            }))}
+            onSelect={(choiceId: string) => {
+              const choice = patchedChoices.find((c:any) => String(c.id) === String(choiceId));
+              if (!choice) return;
+              handleChoice(String(choice.next ?? ""), choice.reward, choice as any);
+            }}
+          />
+        )}
+      </div>
+    )}
+
+    {/* ⬇️ ÚJ: alsó ActionBar – Skip/Replay/Mute/Next */}
+    <ActionBar
+      canNext={!hasChoices && !!resolvedNext && showChoices && !showEnd}
+      onNext={handleNext}
+      canSkip={skipAvailable && !showEnd}
+      onSkip={() => {
+        setSkipRequested(true);
+        setTimeout(() => setSkipRequested(false), 0);
+      }}
+      canReplay={!showEnd}
+      onReplay={() => {
+        setSkipRequested(false);
+        setReplayKey((prev) => prev + 1);
+        triggerAudioRestart();
+      }}
+      muted={!!isMuted}
+      onToggleMute={() => {
+        const newMuted = !isMuted;
+        setIsMuted(newMuted);
+        try { setSfxMuted(newMuted); } catch {}
+      }}
+    />
+
+    <AudioPlayer
+      pageId={pageData.id}
+      autoPlay
+      audioPath={pageData.audio?.background}
+      narrationPath={pageData.audio?.mainNarration}
+      voicePrompt={pageData.voicePrompt ?? undefined}
+      playMode={playModeMemo}
+      narrationPlaylist={narrationPlaylistMemo}
+      ducking={duckingMemo}
+      delayMs={DELAY_MS}
+      fadeInMs={FADE_IN_MS}
+      volume={1}
+      bgmVolume={0.6}
+      onNarrationStart={(t0: number) => setNarrationT0(t0)}
+    />
+
+    {/* ⬆️ KIVÉVE: külön Next gomb blokk – ezt az ActionBar kezeli */}
+    {/* {!hasChoices && resolvedNext && resolvedNext !== pageData?.id && showChoices && !showEnd && (
+      <button className={style.nextButton + " " + (animateNext ? style.visible : "")} onClick={handleNext}>
+        Next
+      </button>
+    )} */}
+
+    {showReward && (
+      <RewardOverlay
+        message="Memory unlocked!"
+        onComplete={() => setShowReward(false)}
+      />
+    )}
+
+    {showReplay && selectedReplay.imageId && (
+      <FragmentReplayOverlay
+        imageSrc={`/assets/generated/${selectedReplay.imageId}.png`}
+        durationMs={selectedReplay.durationMs}
+        onComplete={() => setShowReplay(false)}
+      />
+    )}
+
+    {/* Feedback overlay – teljes képernyőn, a végén jelenik meg */}
+    {showEnd && (
+      <FeedbackOverlay
+        onRestart={() => {
+          try { stopAllSfx(); } catch {}
+          localStorage.removeItem("currentPageId");
+          window.location.href = "/";
+        }}
         show
       />
     )}
-  </div>
-)}
 
-
-
-      <AudioPlayer
-        pageId={pageData.id}
-        autoPlay
-        audioPath={pageData.audio?.background}
-        narrationPath={pageData.audio?.mainNarration}
-        voicePrompt={pageData.voicePrompt ?? undefined}
-        playMode={playModeMemo}
-        narrationPlaylist={narrationPlaylistMemo}
-        ducking={duckingMemo}
-        delayMs={DELAY_MS}
-        fadeInMs={FADE_IN_MS}
-        volume={1}
-        bgmVolume={0.6}
-        onNarrationStart={(t0: number) => setNarrationT0(t0)}
-      />
-
-{!hasChoices && resolvedNext && resolvedNext !== pageData?.id && showChoices && !showEnd && (
-  <button
-    className={style.nextButton + " " + (animateNext ? style.visible : "")}
-    onClick={handleNext}
-  >
-    Next
-  </button>
-)}
-
-
-
-      {showReward && (
-        <RewardOverlay
-          message="Memory unlocked!"
-          onComplete={() => setShowReward(false)}
-        />
-      )}
-
-      {showReplay && selectedReplay.imageId && (
-        <FragmentReplayOverlay
-          imageSrc={`/assets/generated/${selectedReplay.imageId}.png`}
-          durationMs={selectedReplay.durationMs}
-          onComplete={() => setShowReplay(false)}
-        />
-      )}
-
-      {/* Feedback overlay – teljes képernyőn, a végén jelenik meg */}
-      {showEnd && (
-        <FeedbackOverlay
-          onRestart={() => {
+    {/* ⬇️ RuneSaveOverlay animáció (maradhat) */}
+    {runeAnim && (
+      <RuneSaveOverlay
+        key={runeAnim.key}
+        imageSrc={runeAnim.src}
+        startSize={180}
+        onComplete={() => {
+          if (runeAnim?.pendingRunes?.length) {
+            flushSync(() => {
+              runeAnim.pendingRunes.forEach((rid) => setFlag(rid));
+            });
             try {
-              stopAllSfx();
+              const pageId = pageData?.id || currentPageId || "unknown";
+              if (derivedStoryId && derivedSessionId && pageId) {
+                runeAnim.pendingRunes.forEach((rid) => {
+                  if (!rid) return;
+                  trackRuneUnlock(
+                    derivedStoryId, derivedSessionId,
+                    pageId,
+                    rid,
+                    { source: "choice", mode: "overlay", hasCustomImage: !!runeAnim.savedPngUrl }
+                  );
+                });
+              }
             } catch {}
-            localStorage.removeItem("currentPageId");
-            window.location.href = "/";
-          }}
-          show
-        />
-      )}
+            const rid0 = runeAnim.pendingRunes[0];
+            if (rid0 && runeAnim.savedPngUrl) {
+              setImagesByFlag((prev) => ({ ...prev, [rid0]: runeAnim.savedPngUrl! }));
+            }
+          }
+          setRuneAnim(null);
+          const nx = pendingNextRef.current;
+          pendingNextRef.current = null;
+          if (nx && nx !== pageData?.id) {
+            goToNextPage(nx);
+          }
+        }}
+      />
+    )}
 
-      {/* ⬇️ ÚJ: RuneSaveOverlay animáció */}
-      {runeAnim && (
-     <RuneSaveOverlay
-  key={runeAnim.key}
-  imageSrc={runeAnim.src}
-  startSize={180}
-  // ha kb. 900ms-ot akarsz összesen:
-  // opcionális finom eltolás:
-  // centerOffsetX={0}
-  // centerOffsetY={0}
- onComplete={() => {
-  // 1) rúnás flag-ek beírása most
-  if (runeAnim?.pendingRunes?.length) {
-    flushSync(() => {
-      runeAnim.pendingRunes.forEach((rid) => setFlag(rid));
-    });
 
-    // 🔹 TRACK: minden új rúnára lőjünk eventet (overlay mód)
-    try {
-      const pageId = pageData?.id || currentPageId || "unknown";
-      if (derivedStoryId && derivedSessionId && pageId) {
-        runeAnim.pendingRunes.forEach((rid) => {
-  if (!rid) return;
-  trackRuneUnlock(
-    derivedStoryId, derivedSessionId,
-    pageId,
-    rid,
-    { source: "choice", mode: "overlay", hasCustomImage: !!runeAnim.savedPngUrl }
-  );
-});
-
-      }
-    } catch {}
-
-    // 2) ha van egyedi PNG, mentsd a flag-hez (RuneDockOverlay már kezeli)
-    const rid0 = runeAnim.pendingRunes[0];
-    if (rid0 && runeAnim.savedPngUrl) {
-      setImagesByFlag((prev) => ({ ...prev, [rid0]: runeAnim.savedPngUrl! }));
-    }
-  }
-
-  // 3) overlay lezár
-  setRuneAnim(null);
-
-  // 4) ha volt pending next → most lépjünk
-  const nx = pendingNextRef.current;
-  pendingNextRef.current = null;
-  if (nx && nx !== pageData?.id) {
-    goToNextPage(nx);
-  }
-}}
-/>
-
-      )}
-
-      {/* ⬇️ Rejtett dev-sor (csak fejlesztésben). Kattintásra nyílik. */}
-      {process.env.NODE_ENV === "development" && (
-        <div
-          onClick={() => setDevOpen((v) => !v)}
-          style={{
-            position: "absolute",
-            left: 8,
-            right: 8,
-            bottom: 118,
-            fontSize: 12,
-            lineHeight: "16px",
-            padding: devOpen ? "8px 10px" : "3px 6px",
-            borderRadius: 8,
-            background: "rgba(0,0,0,0.35)",
-            color: "#fff",
-            opacity: devOpen ? 1 : 0.4,
-            cursor: "pointer",
-            userSelect: "none",
-            backdropFilter: "blur(2px)",
-            transition: "all .15s ease",
-            zIndex: 9999,
-          }}
-          title="Dev cache info (katt a részletekhez)"
-        >
-          {devText || "Cache: —"}
-          {devOpen && (
-            <div
+    {/* Rejtett dev-sor (csak fejlesztésben). Kattintásra nyílik. */}
+    {process.env.NODE_ENV === "development" && (
+      <div
+        onClick={() => setDevOpen((v) => !v)}
+        style={{
+          position: "absolute",
+          left: 8,
+          right: 8,
+          bottom: 118,
+          fontSize: 12,
+          lineHeight: "16px",
+          padding: devOpen ? "8px 10px" : "3px 6px",
+          borderRadius: 8,
+          background: "rgba(0,0,0,0.35)",
+          color: "#fff",
+          opacity: devOpen ? 1 : 0.4,
+          cursor: "pointer",
+          userSelect: "none",
+          backdropFilter: "blur(2px)",
+          transition: "all .15s ease",
+          zIndex: 9999,
+        }}
+        title="Dev cache info (katt a részletekhez)"
+      >
+        {devText || "Cache: —"}
+        {devOpen && (
+          <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); try { clearImageCache(); } catch {} }}
               style={{
-                marginTop: 6,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
+                padding: "4px 8px",
+                borderRadius: 6,
+                border: "1px solid rgba(255,255,255,.3)",
+                background: "rgba(255,255,255,.08)",
+                color: "#fff",
               }}
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  try {
-                    clearImageCache();
-                  } catch {}
-                }}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,.3)",
-                  background: "rgba(255,255,255,.08)",
-                  color: "#fff",
-                }}
-              >
-                Clear image_
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  try {
-                    clearVoiceCache();
-                  } catch {}
-                }}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,.3)",
-                  background: "rgba(255,255,255,.08)",
-                  color: "#fff",
-                }}
-              >
-                Clear voice_
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default StoryPage;
+              Clear image_
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); try { clearVoiceCache(); } catch {} }}
+              style={{
+                padding: "4px 8px",
+                borderRadius: 6,
+                border: "1px solid rgba(255,255,255,.3)",
+                background: "rgba(255,255,255,.08)",
+                color: "#fff",
+              }}
+            >
+              Clear voice_
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);}
