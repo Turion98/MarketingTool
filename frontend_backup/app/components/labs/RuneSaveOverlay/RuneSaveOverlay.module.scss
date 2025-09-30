@@ -1,0 +1,31 @@
+.overlayRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.runeImage {
+  position: absolute;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 8px 28px rgba(255, 150, 100, 0.45),
+              0 2px 12px rgba(255,255,255,0.1) inset;
+  filter: drop-shadow(0 0 10px rgba(255, 180, 120, 0.55));
+  will-change: transform, opacity;
+}
+.runeImg {
+  opacity: 0;
+  transform: scale(0.8);
+  animation-name: runeFadeIn;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+@keyframes runeFadeIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,39 @@
+.replayBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  transform: translateZ(0);
+  transition: transform .12s ease, opacity .12s ease, filter .12s ease;
+
+  &:hover { transform: translateZ(0) scale(1.04); }
+  &:active { transform: translateZ(0) scale(0.98); }
+}
+
+.icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+}
+
+.fallbackGlyph {
+  font-size: 28px;
+  line-height: 1;
+  opacity: .9;
+}
+
+.disabled {
+  opacity: .4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.active { opacity: 1; }

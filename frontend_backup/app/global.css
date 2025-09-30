@@ -1,0 +1,46 @@
+/* frontend/app/globals.css */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+/* Alap kurzor mindenhol */
+body, 
+.storypage *,
+.storypage *:hover,
+button,
+button:hover,
+input,
+input:hover,
+a,
+a:hover,
+.choice,
+.choice:hover {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAvUlEQVR4nO3WwRWAIAgGYG2A5nKH5muH5moBu2QRkYEiXvxPvZfIByedG7kTezSdeiMegH1bzBF4AxBhAnkBEsJqGyQAQlojsgALxC+gNYIFQAhVCBuQENrbEAEgRAtRBNBEFAO0EFUADUQ1ACHEEBVAQpRsQwyYw+rmsGYhEoQH3/Es/myMaiJo+HXekz8lAKIxzjUtrucgsgDuFDnM3wAkgDE1G4PufN3ncYFCYxLCudviCWb21BsZGWHnAEO+X19Yw/YIAAAAAElFTkSuQmCC") 0 0, auto !important;
+}
+
+/* Label hover külön (ha tényleg kell) */
+label:hover {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAvUlEQVR4nO3WwRWAIAgGYG2A5nKH5muH5moBu2QRkYEiXvxPvZfIByedG7kTezSdeiMegH1bzBF4AxBhAnkBEsJqGyQAQlojsgALxC+gNYIFQAhVCBuQENrbEAEgRAtRBNBEFAO0EFUADUQ1ACHEEBVAQpRsQwyYw+rmsGYhEoQH3/Es/myMaiJo+HXekz8lAKIxzjUtrucgsgDuFDnM3wAkgDE1G4PufN3ncYFCYxLCudviCWb21BsZGWHnAEO+X19Yw/YIAAAAAElFTkSuQmCC") 0 0, auto;
+}
+html, body,
+.storyBackground, .storyBackground *,
+.storyPage, .storyPage * {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAvUlEQVR4nO3WwRWAIAgGYG2A5nKH5muH5moBu2QRkYEiXvxPvZfIByedG7kTezSdeiMegH1bzBF4AxBhAnkBEsJqGyQAQlojsgALxC+gNYIFQAhVCBuQENrbEAEgRAtRBNBEFAO0EFUADUQ1ACHEEBVAQpRsQwyYw+rmsGYhEoQH3/Es/myMaiJo+HXekz8lAKIxzjUtrucgsgDuFDnM3wAkgDE1G4PufN3ncYFCYxLCudviCWb21BsZGWHnAEO+X19Yw/YIAAAAAElFTkSuQmCC") 0 0, auto !important;
+}
+/* Minden gomb alap aktív (kattintási) effekt */
+button:active,
+.choice:active,
+.nextButton:active,
+.replayButton:active,
+.muteButton:active {
+  transform: scale(0.96);       /* enyhe összenyomás */
+  filter: brightness(0.6);      /* kicsit sötétebb */
+  transition: transform 0.1s ease, filter 0.1s ease;
+  color: #1F3A3E;
+}
+
+
+
+

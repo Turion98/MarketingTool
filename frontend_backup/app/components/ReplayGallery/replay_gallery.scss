@@ -1,0 +1,53 @@
+.replay-gallery {
+  padding: 2rem;
+  text-align: center;
+  color: #fff;
+
+  h2 {
+    font-family: "Cinzel", serif;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+  }
+
+  .fragment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    justify-items: center;
+  }
+
+  .fragment-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    width: 100%;
+    max-width: 280px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .fragment-image {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+    }
+
+    .fragment-label {
+      font-size: 1rem;
+      font-weight: 500;
+      text-transform: capitalize;
+      color: #d0d0d0;
+      margin-bottom: 0.5rem;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+  }
+}

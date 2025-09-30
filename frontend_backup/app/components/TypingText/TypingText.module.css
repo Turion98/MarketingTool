@@ -1,0 +1,12 @@
+@charset "UTF-8";
+.textContent {
+  white-space: pre-wrap; /* hogy a \n működjön */
+  font-family: "Merriweather", serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #fff;
+  padding: 1rem;
+}
+.textContent pre {
+  margin: 0;
+}/*# sourceMappingURL=TypingText.module.css.map */

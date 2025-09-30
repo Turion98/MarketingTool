@@ -1,0 +1,82 @@
+/* /components/BrickTopOverlay/BrickTopOverlay.module.scss */
+.brickTopOverlay {
+  /* Szabályozható változók – CSAK a BACKDROP használja őket */
+  --brick-top-offset-x: 110px;
+  --brick-top-offset-y: 0px;
+  --brick-top-width: 140px;
+  --brick-top-height: 50px;
+  --brick-top-z: 999;          /* csak body-portál fallback esetén érdekes */
+  --brick-top-src: none;
+
+  position: absolute;
+  width: var(--brick-top-width);
+  height: var(--brick-top-height);
+  box-sizing: border-box;
+
+  /* Alap háttér – csak a BACKDROP ágon jelenjen meg ténylegesen */
+  background-image: var(--brick-top-src);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+
+  /* ===== BACKDROP (dekor) – a NineSlicePanel.backdrop gyereke ===== */
+  &.backdropMode {
+    z-index: 0;               /* a keret/content alatt marad */
+    pointer-events: none;
+
+    /* Pozicionálás a NineSlicePanel által szolgáltatott content-változókkal */
+    &[data-align="center"] {
+      left: calc(var(--ns-content-x) + var(--ns-content-w) / 2 + var(--brick-top-offset-x));
+      top: calc(var(--ns-content-y) + var(--brick-top-offset-y));
+      transform: translateX(-50%);
+    }
+    &[data-align="left"] {
+      left: calc(var(--ns-content-x) + var(--brick-top-offset-x));
+      top: calc(var(--ns-content-y) + var(--brick-top-offset-y));
+      transform: none;
+    }
+    &[data-align="right"] {
+      left: calc(var(--ns-content-x) + var(--ns-content-w) + var(--brick-top-offset-x));
+      top: calc(var(--ns-content-y) + var(--brick-top-offset-y));
+      transform: translateX(-100%);
+    }
+  }
+
+  /* ===== PORTÁL (interaktív gyerek) – keret ELŐTT, csak a .inner kattintható ===== */
+  &.isPortal {
+    position: fixed;
+    /* ⚠️ Itt NINCS top/left/transform számítás – azt a TSX adja.
+       ⚠️ NINCS var(--brick-top-offset-*) használat a portál ágon. */
+    z-index: var(--brick-top-z);   /* csak body-portál fallback esetén lesz hatásos */
+    pointer-events: none;          /* csak az .inner fogja a pointert */
+    background-image: none;        /* dekor ne jelenjen meg a gomb rétegen */
+  }
+
+  .inner {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    gap: 8px;
+    position: relative;
+  }
+
+  /* A SkipButton a bricken belül marad – ne pozicionálja magát át */
+  .inner :global(.skipButton) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+}
+
+/* (Opcionális) Ha külön "decorOnly" osztályt használsz a portál-dekorhoz,
+   itt lehetne engedélyezni a háttérképet – de a jelenlegi megoldásnál
+   a dekor a BACKDROP ágon van, így erre nincs szükség. */
+/*
+.brickTopOverlay.decorOnly.isPortal {
+  background-image: var(--brick-top-src);
+}
+*/

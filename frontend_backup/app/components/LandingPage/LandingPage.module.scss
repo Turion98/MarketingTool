@@ -1,0 +1,272 @@
+.landingContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ==== LOGO BLOKK ==== */
+.logoBlock {
+  position: absolute;
+  top: 6%;
+  left: 30%;
+  transform: translateX(-50%);
+}
+
+.logoImage {
+  width: 220px;
+  height: auto;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+/* ==== LEÍRÁS BLOKK ==== */
+.descriptionBlock {
+  position: absolute;
+  top: 30%;
+  left: 78%;
+  transform: translateX(-50%);
+  max-width: 400px;
+  width: 80%;
+  text-align: left;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-size: 1.25rem;
+  line-height: 2;
+  color: #f2b85b ;
+}
+
+/* ==== VOICE API INPUT BLOKK ==== */
+.apiKeyVoice {
+  position: absolute;
+  top: 33%;
+  left: 30%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+
+  label {
+    display: block;
+    font-family: var(--font-cormorant), serif; /* ÚJ */
+    font-weight: 600;
+    margin-top: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  input {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      font-family: var(--font-cormorant), serif; /* ÚJ */
+    }
+  }
+}
+
+/* ==== IMAGE API INPUT BLOKK ==== */
+.apiKeyImage {
+  position: absolute;
+  top: 43%;
+  left: 30%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+
+  label {
+    display: block;
+    font-family: var(--font-cormorant), serif; /* ÚJ */
+    font-weight: 600;
+    margin-top: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  input {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      font-family: var(--font-cormorant), serif; /* ÚJ */
+    }
+  }
+}
+
+/* ==== HIBAÜZENET BLOKK ==== */
+.errorMessage {
+  position: absolute;
+  top: 52%;
+  left: 30%;
+  transform: translateX(-50%);
+  color: #f2b85b;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8); /* sötét halo */
+  font-size: 1.2rem;
+  text-align: center;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-weight: bold;
+   
+
+  &:hover {
+    transform: translateX(-50%) scale(1.05);
+    font-size: 1.4rem;
+    text-shadow: 0 0 8px rgba(242, 184, 91, 0.8), 0 0 10px rgba(242, 184, 91, 0.6);
+    color: #f0b85b;
+    -webkit-text-stroke: 0.3px #ffffff95;
+  }
+}
+/* ===== Idle pulzálás a gombra ===== */
+@keyframes idlePulse {
+  0% {
+    box-shadow: 0 0 0 rgba(242, 184, 91, 0);
+    transform: scale(1);
+  }
+  15% {
+    box-shadow: 0 0 20px rgba(242, 184, 91, 0.8);
+    transform: scale(1.07);
+  }
+  30% {
+    box-shadow: 0 0 16px rgba(242, 184, 91, 0.6);
+    transform: scale(1.05);
+  }
+  45% {
+    box-shadow: 0 0 10px rgba(242, 184, 91, 0.3);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(242, 184, 91, 0);
+    transform: scale(1);
+  }
+}
+
+/* ===== Light sweep animáció a szövegre ===== */
+@keyframes lightSweep {
+  0%   { background-position: -200%; }
+  100% { background-position: 200%; }
+}
+
+/* ===== Start gomb ===== */
+.startButton {
+  position: absolute;
+  top: 78%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 2rem;
+  font-size: 1.4rem;
+  font-weight: 800 !important;
+  font-family: var(--font-cormorant), serif;
+  letter-spacing: 0.1em;
+  border-radius: 8px;
+  background: #1F3A3E80 !important;
+  color: #f2b85b;
+  border: 2px solid #f2b85b;
+  transition: all 0.5s ease-in-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 0 20px rgba(242, 184, 91, 0.8);
+    transform: translateX(-50%) scale(1.05);
+    font-size: 1.5rem;
+    color: #f0b85b;
+    -webkit-text-stroke: 0.3px #ffffff95;
+   
+  }
+
+  &:disabled {
+  background-color: #444;
+  color: #999 !important;
+  border-color: #666;
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: translateX(-50%) scale(1); // reset hover scale
+  font-size: 1.4rem; // reset hover font
+}
+
+}
+
+
+
+.adventuresButton {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;            /* biztosan a háttér fölött legyen */
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.adventuresButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.35);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
+
+/* ==== TESZT GOMB BLOKK ==== */
+.testButton {
+  position: absolute;
+  top: 88%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: background 0.2s ease-in-out;
+
+  &:hover:enabled {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+body .globalstartButton:hover {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApUlEQVR4nO3VwQ3CMAxF0e8fBhoO3lWkS7RPKkZIy3hQSN7YbEAGFjXjaMFXh6L6mUnCC+ZwQFMpDYb8y9awBBuhgwBpxnQQBbO0AxomgDE4PZAD50sZMyAPfB9eNsB5Bjc5QieHZDEoHgIQAbuhkA1z/8TFIkLQRBaCPJbiVvFJ0vEOdEd5tUX08BEtl++o4mR9AJP/0pI9N0D13pyItHR9e5fO2uugmJqSx4zrAuNR2bDGvg5uAAAAAElFTkSuQmCC") 0 0, auto !important;
+}
+
+/* ==== STORY FELTÖLTŐ CTA GOMB ==== */
+.uploadButton {
+  position: absolute;
+  top: 72%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.6rem 1.6rem;
+  font-size: 1.1rem;
+  font-family: var(--font-cormorant), serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 184, 91, 0.65);
+  background: rgba(31, 58, 62, 0.5);
+  color: #f2b85b;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(242, 184, 91, 0.4);
+    transform: translateX(-50%) scale(1.03);
+  }
+}
+

@@ -1,0 +1,365 @@
+/* FeedbackOverlay.module.scss */
+/* Szín- és tipó-közös elemek a játék stílusához igazítva (Merriweather + Cinzel) */
+$accent: #d1eaff;
+$text: #eef5ff;
+$muted: rgba(255, 255, 255, 0.7);
+$bg: rgba(0, 0, 0, 0.72);
+$panel: rgba(255, 255, 255, 0.04);
+$border: rgba(255, 255, 255, 0.35);
+$shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+:root {
+  --accent: #{$accent};
+  --text: #{$text};
+  --muted: #{$muted};
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: $bg;
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 24px;
+}
+
+.dialog {
+  width: min(800px, 100%);
+  max-height: min(86vh, 100%);
+  overflow: auto;
+  background: $panel;
+  border: 1px solid $accent; /* világos keret */
+  border-radius: 16px;
+  box-shadow: $shadow;
+  color: $text; /* világos szöveg */
+  padding: 20px 22px;
+  font-family: "Merriweather", Georgia, serif; /* ugyanaz a betűstílus mint a játékban */
+  animation: pop 160ms ease-out;
+
+  @media (max-width: 640px) {
+    border-radius: 12px;
+    padding: 16px;
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: translateY(6px) scale(0.99);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Fejléc */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-family: "Cinzel", serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    font-size: clamp(1.1rem, 1.2rem + 0.2vw, 1.35rem);
+    color: $text;
+    text-shadow: 0 0 8px rgba(209, 234, 255, 0.15);
+  }
+}
+
+/* Szekciók és űrlap-alapok */
+.section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 0;
+}
+
+.sectionRow {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: $muted;
+}
+
+.readonly {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed $border;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: $text;
+
+  code {
+    color: $accent;
+    word-break: break-all;
+  }
+}
+
+/* Értékelés (csillagok + hangulat) */
+.stars {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+
+.star {
+  all: unset;
+  cursor: pointer;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.25);
+  transition: transform 120ms ease, color 120ms ease, text-shadow 120ms ease;
+  padding: 6px 4px;
+  border-radius: 8px;
+
+  &:hover {
+    transform: translateY(-1px);
+    color: rgba(255, 255, 255, 0.65);
+    text-shadow: 0 0 10px rgba(209, 234, 255, 0.4);
+  }
+}
+
+.active {
+  color: $accent;
+  text-shadow: 0 0 10px rgba(209, 234, 255, 0.6);
+}
+
+.moods {
+  display: flex;
+  gap: 8px;
+}
+
+.moodBtn {
+  all: unset;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid $border;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: $accent;
+  }
+}
+
+.selected {
+  background: rgba(209, 234, 255, 0.14);
+  border-color: $accent;
+  box-shadow: inset 0 0 0 1px rgba(209, 234, 255, 0.25);
+}
+
+/* Kategória chipek */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid $border;
+  color: $text;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: $accent;
+    transform: translateY(-1px);
+  }
+}
+
+.chipOn {
+  background: rgba(209, 234, 255, 0.12);
+  border-color: $accent;
+  box-shadow: inset 0 0 0 1px rgba(209, 234, 255, 0.25);
+}
+
+/* Szövegmező */
+.textarea {
+  width: 80%;
+  resize: vertical;
+  min-height: 120px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid $border;
+  background: rgba(0, 0, 0, 0.35);
+  color: $text;
+  font-family: "Merriweather", Georgia, serif;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  &:focus {
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba(209, 234, 255, 0.18);
+  }
+}
+
+/* Checkbox sor */
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: $muted;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: $accent;
+  }
+}
+
+/* Hibaüzenet */
+.error {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+  color: #ffd7d7;
+}
+
+/* Lábléc + gombok */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+%btnBase {
+  all: unset;
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.02em;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: $text;
+  transition: transform 120ms ease, background 160ms ease, border-color 120ms ease, box-shadow 160ms ease, text-shadow 160ms ease;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(0.2);
+  }
+
+  &:not(:disabled):hover {
+    transform: translateY(-1px);
+    text-shadow: 0 0 10px rgba(209, 234, 255, 0.4);
+    box-shadow: 0 0 12px rgba(209, 234, 255, 0.25);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(209, 234, 255, 0.28);
+    border-color: $accent;
+  }
+}
+
+.primary {
+  @extend %btnBase;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: $accent;
+
+  &:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.secondary {
+  @extend %btnBase;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: $border;
+
+  &:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: $accent;
+  }
+}
+
+/* Igen/Nem gombok */
+.ynRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  max-width: 30%;
+}
+
+.ynBtn {
+  @extend %btnBase;
+  font-size: 0.9rem;            /* kisebb betű */
+  padding: 4px 8px;              /* kisebb belső margó */
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: $accent;
+  text-align: center;
+  flex: 1;                       /* szimmetrikus eloszlás */
+
+  &:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &.selected,
+  &.active {
+    background: rgba(209, 234, 255, 0.18);
+    border-color: $accent;
+    box-shadow:
+      inset 0 0 0 1px rgba(209, 234, 255, 0.25),
+      0 0 12px rgba(209, 234, 255, 0.30); /* külső glow a visszajelzéshez */
+    text-shadow: 0 0 10px rgba(209, 234, 255, 0.5);
+  }
+}
+
+/* Preferált reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .dialog,
+  .star,
+  .moodBtn,
+  .chip,
+  .primary,
+  .secondary,
+  .ynBtn {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,14 @@
+.textBoxContainer {
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: 'Merriweather', serif;
+  color: #fff;
+  z-index: 5;
+
+  p {
+    margin: 0;
+  }
+}
