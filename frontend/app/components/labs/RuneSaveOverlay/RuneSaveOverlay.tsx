@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./RuneSaveOverlay.module.scss";
-import { RUNE_ICON } from "../../lib/runeIcons"; // flagId -> abszolút/relatív útvonal
+import { RUNE_ICON } from "../../../lib/runeIcons"; // flagId -> abszolút/relatív útvonal
 
 type Props = {
   /** Elfogad flagId-t (pl. "rune_ch1") vagy közvetlen kép URL-t */

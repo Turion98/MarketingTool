@@ -2,8 +2,8 @@
 "use client";
 import React, { useCallback } from "react";
 import styles from "./ReplayButton.module.scss";
-import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick } from "../../lib/analytics";
+import { useGameState } from "../../../lib/GameStateContext";
+import { trackUiClick } from "../../../lib/analytics";
 
 type Props = {
   active?: boolean;

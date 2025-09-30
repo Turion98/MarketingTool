@@ -1,7 +1,7 @@
 // /components/RuneDockDisplay.tsx
 "use client";
 import React from "react";
-import style from "./RuneDockOverlay/RuneDockOverlay.module.scss";
+import style from "./labs/RuneDockOverlay/RuneDockOverlay.module.scss";
 
 export type RuneKey = "cross" | "branch" | "shield";
 

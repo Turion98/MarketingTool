@@ -36,8 +36,8 @@ import FeedbackOverlay from "../FeedbackOverlay/FeedbackOverlay";
 // ⬇️ 9-slice keret komponens
 import NineSlicePanel from "../NineSlicePanel/NineSlicePanel";
 import DecorBackground from "../layout/DecorBackground/DecorBackground";
-import ProgressStrip from "../layout/ProgressStrip";
-import NarrativePanel from "../layout/NarrativePanel";
+import ProgressStrip from "../layout/ProgressStrip/ProgressStrip";
+import NarrativePanel from "../layout/NarrativePanel/NarrativePanel";
 
 
 // ⬇️ típus egységesítés a contexttel
@@ -2046,3 +2046,4 @@ return (
     )}
   </div>
 );}
+export default StoryPage

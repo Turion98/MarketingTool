@@ -1,0 +1,41 @@
+:root {
+  /* könnyen skinezhető tokenek a doboz környezetéhez */
+  --np-maxw: 1200px;
+  --np-z: 5;
+  --np-pad-x: 4vw;
+  --np-pad-top: 6vh;
+  --np-gap: 10px;
+}
+
+.textDockTop {
+  position: relative;
+  z-index: var(--np-z);
+  display: flex;
+  justify-content: center;
+
+  /* a teljes sáv, ahol a narrációs doboz ül */
+  padding: var(--np-pad-top) var(--np-pad-x) 0 var(--np-pad-x);
+}
+
+.textboxContainer {
+  width: 100%;
+  max-width: var(--np-maxw);
+  display: block;
+
+  /* finom beléptető anim, ha kell */
+  transform: translateY(0);
+  animation: npFadeIn .25s ease both;
+}
+
+@keyframes npFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobil finomítások */
+@media (max-width: 600px) {
+  :root {
+    --np-pad-x: 3vw;
+    --np-pad-top: 4vh;
+  }
+}

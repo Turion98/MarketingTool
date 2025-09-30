@@ -1,0 +1,121 @@
+:root {
+  /* skinezhető tokenek */
+  --dock-bg-top: rgba(0, 0, 0, .25);
+  --dock-bg-bot: rgba(0, 0, 0, .40);
+  --dock-border: rgba(255, 255, 255, .12);
+  --dock-blur: 6px;
+  --dock-shadow: 0 12px 32px rgba(0,0,0,.35);
+
+  --choice-bg-top: rgba(255, 255, 255, .12);
+  --choice-bg-bot: rgba(255, 255, 255, .06);
+  --choice-bg-top-disabled: rgba(255, 255, 255, .05);
+  --choice-bg-bot-disabled: rgba(255, 255, 255, .03);
+  --choice-border: rgba(255, 255, 255, .18);
+  --choice-shadow: 0 6px 18px rgba(0,0,0,.30);
+  --choice-color: #fff;
+
+  --choice-font: 16px;
+  --choice-radius: 12px;
+  --choice-padding-y: 14px;
+  --choice-padding-x: 16px;
+
+  --wrapper-maxw: 1100px;
+}
+
+.wrapper {
+  position: relative;
+  z-index: 6;
+
+  display: flex;
+  justify-content: center;
+
+  width: min(80vw, var(--wrapper-maxw));
+  margin: 2.5vh auto 4vh auto;
+}
+
+.grid {
+  display: grid;
+  width: 100%;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+  backdrop-filter: blur(var(--dock-blur));
+  background: linear-gradient(180deg, var(--dock-bg-top), var(--dock-bg-bot));
+  border: 1px solid var(--dock-border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: var(--dock-shadow);
+}
+
+.choice {
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+  outline: none;
+
+  width: 100%;
+  text-align: center;
+  color: var(--choice-color);
+  font-size: var(--choice-font);
+  letter-spacing: .2px;
+
+  padding: var(--choice-padding-y) var(--choice-padding-x);
+  border-radius: var(--choice-radius);
+
+  background: linear-gradient(180deg, var(--choice-bg-top), var(--choice-bg-bot));
+  border: 1px solid var(--choice-border);
+  box-shadow: var(--choice-shadow);
+
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    filter .2s ease,
+    background .2s ease,
+    opacity .2s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+  &:active:not(:disabled) {
+    transform: translateY(1px) scale(.995);
+  }
+  &:focus-visible {
+    outline: 2px solid rgba(255,255,255,.5);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+    background: linear-gradient(
+      180deg,
+      var(--choice-bg-top-disabled),
+      var(--choice-bg-bot-disabled)
+    );
+    box-shadow: none;
+  }
+}
+
+/* kompaktabb mobilon */
+@media (max-width: 520px) {
+  :root {
+    --choice-font: 15px;
+    --choice-padding-y: 12px;
+    --choice-padding-x: 14px;
+  }
+  .grid {
+    gap: 10px;
+    padding: 10px;
+  }
+}
+
+/* extra sűrű mód (ha később kell): .wrapper[data-mode="dense"] */
+.wrapper[data-mode="dense"] .grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.wrapper[data-mode="dense"] .choice {
+  --choice-font: 15px;
+  --choice-padding-y: 10px;
+  --choice-padding-x: 12px;
+}

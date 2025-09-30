@@ -2,9 +2,9 @@
 "use client";
 import React, { useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
-import RuneDockDisplay, { RuneKey } from "../RuneDockDisplay";
+import RuneDockDisplay, { RuneKey } from "../../RuneDockDisplay";
 import style from "./RuneDockOverlay.module.scss";
-import { RUNE_ICON } from "../../lib/runeIcons";
+import { RUNE_ICON } from "../../../lib/runeIcons";
 
 type Rect = { x: number; y: number; width: number; height: number };
 

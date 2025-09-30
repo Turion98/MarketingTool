@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
-import { useGameState } from "../../lib/GameStateContext";
-import { trackPuzzleTry, trackPuzzleResult, trackUiClick } from "../../lib/analytics";
+import { useGameState } from "../../../lib/GameStateContext";
+import { trackPuzzleTry, trackPuzzleResult, trackUiClick } from "../../../lib/analytics";
 
 export default function PuzzleRunes({
   options, answer, maxAttempts = 3,
