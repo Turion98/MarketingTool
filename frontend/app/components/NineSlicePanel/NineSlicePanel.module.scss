@@ -1,0 +1,93 @@
+/* NineSlicePanel.module.scss – 9-slice + content padding + méretváltozók */
+
+.panel {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  transform: translateZ(0);
+  contain: layout paint;
+  isolation: isolate;
+  z-index: 10;
+
+  /* panel külső szélessége fix, magasság minimumra állítva */
+  width: calc(
+    (var(--ns-inner-w) + var(--ns-slice-left) + var(--ns-slice-right)) * 1px
+  );
+  min-height: calc(
+    (var(--ns-inner-h) + var(--ns-slice-top) + var(--ns-slice-bottom)) * 1px
+  );
+  max-height:100%;
+
+  margin: 0;
+}
+
+/* (OPCIONÁLIS) Underlay – a belső (content) terület optikai takarására
+   Ha nem kell takarás, ezt a blokkot töröld vagy kommenteld ki.
+*/
+.panel::before {
+  content: "";
+  position: absolute;
+  /* csak a content területet fedjük, a border-image-t nem */
+  top: calc(var(--ns-bw-top) + var(--ns-pad-top));
+  right: calc(var(--ns-bw-right) + var(--ns-pad-right));
+  bottom: calc(var(--ns-bw-bottom) + var(--ns-pad-bottom));
+  left: calc(var(--ns-bw-left) + var(--ns-pad-left));
+  /* a háttér színét a TSX-ben inline is beállíthatod (underlay.background) */
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* BACKDROP – ide rendereljük a külső díszítő tartalmat (pl. RuneDock),
+   garantáltan a keret (frame) és a tartalom (content) mögött marad. */
+.backdrop {
+  position: absolute;
+  /* a belső (content) dobozra illesztjük */
+  top: calc(var(--ns-bw-top) + var(--ns-pad-top));
+  right: calc(var(--ns-bw-right) + var(--ns-pad-right));
+  bottom: calc(var(--ns-bw-bottom) + var(--ns-pad-bottom));
+  left: calc(var(--ns-bw-left) + var(--ns-pad-left));
+  z-index: 0;
+  pointer-events: none; /* ne blokkoljon inputot; ha kell interakció, állítsd auto-ra */
+}
+
+/* Keret (9-slice) – border-image megoldás */
+.frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-width: var(--ns-bw-top) var(--ns-bw-right) var(--ns-bw-bottom) var(--ns-bw-left);
+  border-image-source: var(--ns-src);
+  /* SLICING: a vágási értékek a px-ben adott slice-ból jönnek */
+  border-image-slice: var(--ns-slice-top) var(--ns-slice-right) var(--ns-slice-bottom) var(--ns-slice-left) fill;
+  border-image-width: 1; /* border-width már pixelben adott */
+  border-image-repeat: stretch;
+  image-rendering: auto; /* (ha pixel-art lenne: pixelated) */
+  transform: translateZ(0);
+  z-index: 2;
+}
+
+/* Tartalom – padding = border + safe area */
+.content {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  z-index: 3;
+  padding-top: calc(var(--ns-bw-top) + var(--ns-pad-top));
+  padding-right: calc(var(--ns-bw-right) + var(--ns-pad-right));
+  padding-bottom: calc(var(--ns-bw-bottom) + var(--ns-pad-bottom));
+  padding-left: calc(var(--ns-bw-left) + var(--ns-pad-left));
+  overflow: hidden;
+}
+
+/* Debug (kapcsold be szükség esetén)
+.anchorDebug {
+  position: fixed;
+  left: var(--ns-anchor-x);
+  top: var(--ns-anchor-y);
+  width: var(--ns-anchor-w);
+  height: var(--ns-anchor-h);
+  border: 1px dashed rgba(255, 215, 0, 0.7);
+  pointer-events: none;
+  z-index: 99999;
+} */

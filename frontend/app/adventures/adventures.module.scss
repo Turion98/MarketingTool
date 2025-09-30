@@ -1,0 +1,16 @@
+.adventuresRoot { position: relative; min-height: 100vh; }
+.headerBar {
+  position: relative; z-index: 2; display:flex; justify-content:space-between;
+  align-items:center; padding: 24px; backdrop-filter: blur(6px);
+}
+.grid {
+  position: relative; z-index: 2; display:grid; gap:20px; padding:24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.card {
+  background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.cover { height: 160px; background-size: cover; background-position:center; }
+.body { padding:16px; display:flex; flex-direction:column; gap:10px; }
+.actions { display:flex; justify-content:flex-end; }

@@ -1,0 +1,213 @@
+@charset "UTF-8";
+.landingContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ==== LOGO BLOKK ==== */
+.logoBlock {
+  position: absolute;
+  top: 6%;
+  left: 30%;
+  transform: translateX(-50%);
+}
+
+.logoImage {
+  width: 220px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+/* ==== LEÍRÁS BLOKK ==== */
+.descriptionBlock {
+  position: absolute;
+  top: 30%;
+  left: 78%;
+  transform: translateX(-50%);
+  max-width: 400px;
+  width: 80%;
+  text-align: left;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-size: 1.25rem;
+  line-height: 2;
+  color: #f2b85b;
+}
+
+/* ==== VOICE API INPUT BLOKK ==== */
+.apiKeyVoice {
+  position: absolute;
+  top: 33%;
+  left: 30%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+}
+.apiKeyVoice label {
+  display: block;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-weight: 600;
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
+}
+.apiKeyVoice input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+.apiKeyVoice input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+}
+.apiKeyVoice input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+}
+
+/* ==== IMAGE API INPUT BLOKK ==== */
+.apiKeyImage {
+  position: absolute;
+  top: 43%;
+  left: 30%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+}
+.apiKeyImage label {
+  display: block;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-weight: 600;
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
+}
+.apiKeyImage input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+.apiKeyImage input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+}
+.apiKeyImage input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+}
+
+/* ==== HIBAÜZENET BLOKK ==== */
+.errorMessage {
+  position: absolute;
+  top: 52%;
+  left: 30%;
+  transform: translateX(-50%);
+  color: #f2b85b;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8); /* sötét halo */
+  font-size: 1.2rem;
+  text-align: center;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  font-weight: bold;
+  transition: transform 1.5s ease, text-shadow 1s ease, font-size 0.2s ease;
+}
+.errorMessage:hover {
+  transform: translateX(-50%) scale(1.05);
+  font-size: 1.4rem;
+  text-shadow: 0 0 8px rgba(242, 184, 91, 0.8), 0 0 10px rgba(242, 184, 91, 0.6);
+  color: #f0b85b;
+  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.5843137255);
+}
+
+/* ===== Idle pulzálás a gombra ===== */
+@keyframes idlePulse {
+  0% {
+    box-shadow: 0 0 0 rgba(242, 184, 91, 0);
+    transform: scale(1);
+  }
+  15% {
+    box-shadow: 0 0 20px rgba(242, 184, 91, 0.8);
+    transform: scale(1.07);
+  }
+  30% {
+    box-shadow: 0 0 16px rgba(242, 184, 91, 0.6);
+    transform: scale(1.05);
+  }
+  45% {
+    box-shadow: 0 0 10px rgba(242, 184, 91, 0.3);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(242, 184, 91, 0);
+    transform: scale(1);
+  }
+}
+/* ===== Light sweep animáció a szövegre ===== */
+@keyframes lightSweep {
+  0% {
+    background-position: -200%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+/* ===== Start gomb ===== */
+.startButton {
+  position: absolute;
+  top: 78%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 2rem;
+  font-size: 1.4rem;
+  font-weight: 800 !important;
+  font-family: var(--font-cormorant), serif;
+  letter-spacing: 0.1em;
+  border-radius: 8px;
+  background: rgba(31, 58, 62, 0.5019607843) !important;
+  color: #f2b85b;
+  border: 2px solid #f2b85b;
+  transition: all 0.5s ease-in-out;
+}
+.startButton:hover {
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 20px rgba(242, 184, 91, 0.8);
+  transform: translateX(-50%) scale(1.05);
+  font-size: 1.5rem;
+  color: #f0b85b;
+  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.5843137255);
+}
+.startButton:disabled {
+  background-color: #888;
+  animation: none;
+}
+
+/* ==== TESZT GOMB BLOKK ==== */
+.testButton {
+  position: absolute;
+  top: 88%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: background 0.2s ease-in-out;
+}
+.testButton:hover:enabled {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+body .globalstartButton:hover {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApUlEQVR4nO3VwQ3CMAxF0e8fBhoO3lWkS7RPKkZIy3hQSN7YbEAGFjXjaMFXh6L6mUnCC+ZwQFMpDYb8y9awBBuhgwBpxnQQBbO0AxomgDE4PZAD50sZMyAPfB9eNsB5Bjc5QieHZDEoHgIQAbuhkA1z/8TFIkLQRBaCPJbiVvFJ0vEOdEd5tUX08BEtl++o4mR9AJP/0pI9N0D13pyItHR9e5fO2uugmJqSx4zrAuNR2bDGvg5uAAAAAElFTkSuQmCC") 0 0, auto !important;
+}/*# sourceMappingURL=LandingPage.module.css.map */

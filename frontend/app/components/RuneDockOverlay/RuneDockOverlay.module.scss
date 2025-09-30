@@ -1,0 +1,142 @@
+/* /components/RuneDockOverlay.module.scss */
+
+/* Backdrop mód (usePortal = false) – a NineSlicePanel .backdrop gyereke */
+.runeDockOverlay {
+  position: absolute;
+
+  /* Content közepe (X) + offsetX – NineSlicePanel változóiból számolva */
+  left: calc(
+    var(--ns-bw-left) + var(--ns-pad-left)
+    + (var(--ns-content-w) / 2)
+    + var(--rune-offset-x, 0px)
+  ) !important;
+
+  /* Content alja (Y) + offsetY – pozitív = LEFELÉ */
+  top: calc(
+    var(--ns-bw-top) + var(--ns-pad-top)
+    + var(--ns-content-h)
+    + var(--rune-offset-y, 12px)
+  ) !important;
+
+  transform: translateX(-50%);
+  z-index: 0;               /* frame (z=2) és content (z=3) alatt marad */
+  pointer-events: none;
+  box-sizing: border-box;
+
+  /* DEFAULTS */
+  --rune-slots: 3;
+  --rune-slot: 72px;
+  --rune-gap: 0px;
+  --frame-padding-x: 12px;
+  --frame-padding-y: 28px;
+  --rune-offset-x: 176px;
+  --rune-offset-y: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: calc(
+    (var(--rune-slots) * var(--rune-slot))
+    + ((var(--rune-slots) - 1) * var(--rune-gap))
+    + (2 * var(--frame-padding-x))
+  );
+  height: calc(var(--rune-slot) + (2 * var(--frame-padding-y)));
+}
+
+/* Üveg/keret háttér */
+.runeDock {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+}
+
+/* Ha külön frame PNG-t használsz a Display-ben */
+.runeDock__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.9;
+}
+
+/* Belső rail — NÉV EGYEZIK a TSX-szel! */
+.runeDock__rail {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: 1fr;
+  gap: 0;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--rune-slots) * var(--rune-slot) + (var(--rune-slots) - 1) * var(--rune-gap));
+  height: var(--rune-slot);
+}
+
+.runeSlot,
+.runeImg {
+  width: var(--rune-slot);
+  height: var(--rune-slot);
+}
+
+.runeSlot {
+  opacity: .35;
+  outline: 1px dashed rgba(255,255,255,.2);
+  border-radius: 8px;
+}
+
+.runeImg {
+  object-fit: contain;
+  image-rendering: auto;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.45));
+  user-select: none;
+  pointer-events: none;
+
+  /* ⬇️ animáció a delay-hez */
+  opacity: 0;
+  transform: scale(0.8);
+  animation-name: runeFadeIn;
+  animation-duration: 0.6s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+@keyframes runeFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* PORTÁL MÓD (usePortal = true) — viewport-koordináták */
+.isPortal {
+  position: fixed;
+
+  left: calc(
+    var(--ns-content-x) + (var(--ns-content-w) / 2)
+    + var(--rune-offset-x, 0px)
+  ) !important;
+
+  /* hiányzó + jel pótolva */
+  top: calc(
+    var(--ns-content-y) + var(--ns-content-h)
+    + var(--rune-offset-y, 42px)
+  ) !important;
+
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 5;
+}
