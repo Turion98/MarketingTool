@@ -1,0 +1,6 @@
+  feat/something                  [m c7b4be7 [[34morigin/feat/something[m: ahead 1] refactor: UX layout átszervezés (ActionBar, DecorBackground, MediaFrame, InteractionDock, NarrativePanel, ProgressStrip külön SCSS)
+  main                            [m 7e5814f [[34morigin/main[m] Update frontend submodule pointer + analytics logs
+  safety/now-                     [m 7e5814f Update frontend submodule pointer + analytics logs
+  safety/now-20250929-110903      [m 9f8b349 [[34morigin/safety/now-20250929-110903[m: ahead 5] chore: remove .gitmodules
+  safety/overwrite-               [m c7b4be7 refactor: UX layout átszervezés (ActionBar, DecorBackground, MediaFrame, InteractionDock, NarrativePanel, ProgressStrip külön SCSS)
+* [32msafety/overwrite-20250930-103102[m b13e9fb [[34morigin/safety/overwrite-20250930-103102[m] chore: RuneDockDisplay – sync after submodule flatten

@@ -1,7 +1,7 @@
 "use client";
 import React, { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import styles from "./BrickTopOverlay.module.scss";
+import styles from "../BrickTopOverlay.module.scss";
 
 export type Rect = { x: number; y: number; width: number; height: number };
 
