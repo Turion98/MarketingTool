@@ -1,0 +1,111 @@
+/* Külső színpad */
+.imageStage {
+  --stage-w: clamp(320px, 62vw, 960px);
+  --stage-ratio: 16 / 9; /* mindig 16:9 */
+
+  position: relative;
+  width: var(--stage-w);
+  aspect-ratio: var(--stage-ratio);
+  margin: 0 auto;
+}
+
+/* Belső konténer */
+.imageContainer {
+  position: absolute;
+  top: -8%;
+  left: 15%;
+  transform: translateX(-50%);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+
+  /* Innentől fix margók a frame.png belső ablakához */
+  --inset-top: 12.69%;
+  --inset-right: 8.86%;
+  --inset-bottom: 12.11%;
+  --inset-left: 6.23%;
+  --img-fit: contain; /* hogy a kép mindig beleférjen */
+}
+
+/* Keret + viewport */
+.innerFrame {
+  position: absolute;
+  inset: 0;
+}
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 10; /* legalul */
+}
+
+/* LOGÓ – keret fölött, kép alatt */
+.logoUnderlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+
+  .logoImage {
+    max-width: 12%;
+    height: auto;
+    opacity: 0.9;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+    transform-origin: center center;
+    animation: logoPulseGlow 10s ease-in-out infinite;
+  }
+}
+
+/* Pulzáló arany köd animáció */
+@keyframes logoPulseGlow {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px rgba(242, 184, 91, 0.3))
+            drop-shadow(0 0 8px rgba(242, 184, 91, 0.2));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 8px rgba(242, 184, 91, 0.6))
+            drop-shadow(0 0 10px rgba(242, 184, 91, 0.4))
+            drop-shadow(0 0 14px rgba(242, 184, 91, 0.25));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px rgba(242, 184, 91, 0.3))
+            drop-shadow(0 0 8px rgba(242, 184, 91, 0.2));
+  }
+}
+
+.innerViewport {
+  position: absolute;
+  top: var(--inset-top);
+  right: var(--inset-right);
+  bottom: var(--inset-bottom);
+  left: var(--inset-left);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  z-index: 30; /* legfelül */
+}
+
+/* Kép */
+.generatedImage {
+  width: 80%;
+  height: 100%;
+  object-fit: var(--img-fit);
+  opacity: 0;
+  position: relative;
+  z-index: 30;
+  padding-left: 3%;
+}
+
+.fadeIn {
+  opacity: 1;
+  transition: opacity 400ms ease;
+}

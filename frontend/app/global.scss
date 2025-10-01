@@ -1,0 +1,32 @@
+:root {
+  /* Ide tedd a JELENLEGI base64-es kurzorodat: */
+  --cursor-default: url("data:image/png;base64, ...AElFTkSuQmCC") 0 0, auto;
+  /* Ha aktív/hover verziód is van, ide teheted külön; ha nincs, maradhat ugyanaz: */
+  --cursor-active: var(--cursor-default);
+}
+
+/* 1) Mindenhol alapból ez legyen */
+html, body, #__next {
+  cursor: var(--cursor-default);
+}
+
+/* 2) Ne változtassa meg semmi véletlenül: öröklünk */
+* { cursor: inherit; }
+
+/* 3) Kattinthatók/hover állapot: ugyanaz a kurzor */
+a, button, [role="button"],
+input[type="button"], input[type="submit"],
+[tabindex]:not([tabindex="-1"]),
+.clickable, [data-clickable="true"] {
+  cursor: var(--cursor-active) !important;
+}
+
+/* 4) (Opcionális) I-beam visszaállítása inputoknál – ha MINDENHOL ugyanazt akarod, töröld ezt a blokkot */
+input, textarea, [contenteditable="true"] {
+  cursor: text !important;
+}
+
+/* 5) (Opcionális) tiltott állapot */
+:disabled, [aria-disabled="true"] {
+  cursor: not-allowed !important;
+}

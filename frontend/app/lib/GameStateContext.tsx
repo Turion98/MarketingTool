@@ -1,0 +1,930 @@
+// /lib/GameStateContext.tsx
+"use client";
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+
+import {
+  initAnalyticsForStory,
+  getOrCreateSessionId,
+  setStoryMeta,
+  getOrCreateUserId,
+} from "./analytics";
+
+/** —————————————————————————————————————
+ * Next switch típus
+ * ————————————————————————————————————— */
+type NextSwitch =
+  | string
+  | { switch: string; cases: Record<string, string>; default?: string };
+
+/** —————————————————————————————————————
+ * Oldal adat típus (backend normalizált válasza)
+ * ————————————————————————————————————— */
+type PageData = {
+  id: string;
+  type?: string;
+  startPageId?: string;
+  text?: string | Array<any>;
+  next?: NextSwitch;
+  choices?: any[];
+  layout?: any;
+  imagePrompt?: string | null;
+  imageTiming?: {
+    generate?: boolean;
+    preloadNextPages?: string[];
+    delayMs?: number;
+    mode?: "draft" | "refine";
+  };
+  imageParams?: Record<string, any>;
+  audio?: any;
+  replayImage?: any;
+  replayOverlay?: any;
+  voicePrompt?: {
+    prompt: string;
+    voice?: string;
+    style?: string;
+  } | null;
+  styleProfile?: Record<string, any>;
+  sfx?: { file: string; time: number }[];
+  fragmentsGlobal?: Record<string, any>;
+  unlockFragments?: string[];
+  fragmentRefs?: Array<{ id: string; prefix?: string; suffix?: string }>;
+  fragmentRecall?:
+    | { id?: string; textFallback?: string }
+    | Array<{ id?: string; textFallback?: string }>;
+};
+
+/** —————————————————————————————————————
+ * Fragment
+ * ————————————————————————————————————— */
+export type FragmentData = {
+  text?: string;
+  image?: any;
+  replayImageId?: string;
+  createdAt?: number;
+};
+
+type FragmentBank = Record<string, FragmentData>;
+
+/** —————————————————————————————————————
+ * Progress típusok (JSON nélkül is működik)
+ * ————————————————————————————————————— */
+type ProgressDisplay = {
+  value: number; // 0..1
+  label?: string;
+  milestones: Array<{ x: number; label?: string }>;
+};
+
+/** —————————————————————————————————————
+ * Kontextus típus
+ * ————————————————————————————————————— */
+type GameStateContextType = {
+  voiceApiKey?: string;
+  setVoiceApiKey?: (key: string) => void;
+  imageApiKey?: string;
+  setImageApiKey?: (key: string) => void;
+  isLoading: boolean;
+  setIsLoading: (value: boolean) => void;
+
+  unlockedFragments: string[];
+  setUnlockedFragments: (tags: string[]) => void;
+  unlockFragment: (idOrIds: string | string[]) => void;
+  hasUnlocked: (id: string) => boolean;
+
+  fragments: Record<string, FragmentData>;
+  addFragment: (id: string, data: FragmentData) => void;
+
+  globalFragments: FragmentBank;
+
+  /** flags/locks */
+  flags: Set<string>;
+  setFlag: (id: string) => void;
+  clearFlag: (id: string) => void;
+  hasFlag: (id: string) => boolean;
+
+  /** globals (pl. route_ch3) */
+  globals: Record<string, string>;
+  setGlobal: (key: string, value: string) => void;
+  setStorySrc?: (src: string) => void;
+
+  /** 🔹 Rúna: flagId → mentett PNG URL (persistált) */
+  imagesByFlag: Record<string, string>;
+  setRuneImage: (flagId: string, url: string) => void;
+  clearRuneImage: (flagId: string) => void;
+
+  currentPageId: string;
+  setCurrentPageId: (id: string) => void;
+  currentPageData?: PageData | null;
+  goToNextPage: (nextPageId: string) => void;
+
+  /** 🔹 Analytics azonosítók */
+  storyId?: string;          // stabil azonosító a kampányhoz
+  sessionId?: string;       // kliens-oldali session (UUID/ULID)
+
+  globalError: string | null;
+  setGlobalError: (msg: string | null) => void;
+
+  isMuted: boolean;
+  setIsMuted: (value: boolean) => void;
+
+  audioRestartToken: number;
+  triggerAudioRestart: () => void;
+
+  resetGame: () => void;
+
+  registerAbort: (ac: AbortController) => void;
+  registerTimeout: (id: number) => void;
+  clearAllTimeouts?: () => void;
+  registerAudio: (el: HTMLAudioElement) => void;
+
+  /** 🔹 PROGRESS (JSON nélküli univerzális becslés) */
+  visitedPages: Set<string>;
+  progressValue: number;             // 0..1
+  progressDisplay: ProgressDisplay;  // milestones most üres
+};
+
+const GameStateContext = createContext<GameStateContextType>({} as GameStateContextType);
+
+/** —————————————————————————————————————
+ * LocalStorage kulcsok
+ * ————————————————————————————————————— */
+const LS_KEYS = Object.freeze({
+  voice: "voiceApiKey",
+  image: "imageApiKey",
+  page: "currentPageId",
+  muted: "isMuted",
+  unlocked: "unlockedFragments",
+  fragments: "fragmentsStore",
+  globalBank: "fragmentsGlobal",
+  flags: "flagsStore",
+  globals: "globalsStore",
+  runeImgs: "runeImagesByFlag",
+  storySrc: "storySrc",
+  storyTitle: "storyTitle",
+});
+
+/** —————————————————————————————————————
+ * Helper: Safe JSON parse
+ * ————————————————————————————————————— */
+function parseJSON<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    const v = JSON.parse(raw);
+    return (v ?? fallback) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/** —————————————————————————————————————
+ * Helper: PageId szanálás
+ * ————————————————————————————————————— */
+function sanitizePageId(x: string | null | undefined): string {
+  const v = (x ?? "").trim();
+  if (!v || v === "feedback" || v === "__END__") return "landing";
+  return v;
+}
+
+/** —————————————————————————————————————
+ * resolveNext segédfüggvény
+ * ————————————————————————————————————— */
+export function resolveNextFromPage(page?: PageData | null, g: Record<string, string> = {}) {
+  if (!page?.next) return null;
+  if (typeof page.next === "string") return page.next;
+
+  const sw = page.next as { switch: string; cases: Record<string, string>; default?: string };
+  const key = sw.switch;
+  const val = (g?.[key] ?? "").toString();
+  return sw.cases?.[val] ?? sw.default ?? null;
+}
+// Helper: storyId kinyerése (globals.storyId || file basename a storySrc-ből || storyTitle slug)
+function deriveStoryId(globals: Record<string, string>): string | undefined {
+  const direct = (globals as any)?.storyId;
+  if (direct && typeof direct === "string") return direct.trim() || undefined;
+
+  const src = (globals as any)?.storySrc || "";
+  if (src) {
+    try {
+      const last = src.split("/").pop() || "";
+      const base = last.replace(/\.[a-z0-9]+$/i, ""); // levágja a .json-t
+      if (base) return base;
+    } catch {}
+  }
+
+  const title = (globals as any)?.storyTitle;
+  if (title) {
+    return title.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");
+  }
+  return undefined;
+}
+
+
+/** —————————————————————————————————————
+ * PROGRESS: JSON nélküli becslés paraméterei
+ * —————————————————————————————————————
+ * A progress a meglátogatott egyedi oldalak számából dolgozik.
+ * Egy fix „előtte-még” puffer miatt a csík araszol, és
+ * 100%-ra ugrik, ha terminális oldal (nincs next és nincs choices).
+ */
+const PROGRESS_TAIL_BUFFER = 4; // ennyit „feltételezünk” még a végéig, amíg nem észlelünk befejezést
+
+export const GameStateProvider = ({ children }: { children: ReactNode }) => {
+  /** HYDRATION-GATE */
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  // SAFE DEFAULT state
+  const [voiceApiKey, setVoiceApiKeyState] = useState<string | undefined>(undefined);
+  const [imageApiKey, setImageApiKeyState] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [unlockedFragments, setUnlockedFragmentsState] = useState<string[]>([]);
+  const [fragments, setFragments] = useState<Record<string, FragmentData>>({});
+  const [globalFragments, setGlobalFragments] = useState<FragmentBank>({});
+  const [globals, setGlobals] = useState<Record<string, string>>({});
+
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [isMuted, setMuted] = useState<boolean>(false);
+  const [currentPageId, setCurrentPageIdState] = useState<string>("landing");
+
+  const [currentPageData, setCurrentPageData] = useState<PageData | null>(null);
+  const [audioRestartToken, setAudioRestartToken] = useState<number>(0);
+
+  const [flagsState, setFlagsState] = useState<Set<string>>(new Set());
+
+  /** ⬅️ ÚJ: runa képek map (flagId → png src) */
+  const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
+
+  // I/O erőforrások
+  const abortControllers = useRef<AbortController[]>([]);
+  const timeouts = useRef<number[]>([]);
+  const audioEls = useRef<HTMLAudioElement[]>([]);
+
+  const [storyId, setStoryId] = useState<string | undefined>(undefined);
+const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+
+  /** 🔹 PROGRESS state */
+  const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
+  const [progressValue, setProgressValue] = useState<number>(0);
+  const [progressDisplay, setProgressDisplay] = useState<ProgressDisplay>({
+    value: 0,
+    milestones: [],
+  });
+
+  /** HYDRATION utáni visszatöltés */
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      const v = localStorage.getItem(LS_KEYS.voice) ?? undefined;
+      const i = localStorage.getItem(LS_KEYS.image) ?? undefined;
+
+      const u = parseJSON<string[]>(localStorage.getItem(LS_KEYS.unlocked), []);
+      const f = parseJSON<Record<string, FragmentData>>(localStorage.getItem(LS_KEYS.fragments), {});
+      const g = parseJSON<FragmentBank>(localStorage.getItem(LS_KEYS.globalBank), {});
+      const fl = parseJSON<string[]>(localStorage.getItem(LS_KEYS.flags), []);
+      const gl = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.globals), {});
+      const rb = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.runeImgs), {});
+      const stSrc = localStorage.getItem(LS_KEYS.storySrc) ?? undefined;
+      const stTitle = localStorage.getItem(LS_KEYS.storyTitle) ?? undefined;
+
+      const m = localStorage.getItem(LS_KEYS.muted) === "true";
+      const rawP = localStorage.getItem(LS_KEYS.page) || "landing";
+      const p = sanitizePageId(rawP);
+
+      setVoiceApiKeyState(v);
+      setImageApiKeyState(i);
+      setUnlockedFragmentsState(Array.isArray(u) ? u.filter(Boolean) : []);
+      setFragments(f && typeof f === "object" ? f : {});
+      setGlobalFragments(g && typeof g === "object" ? g : {});
+      setGlobals(() => {
+        const base = (gl && typeof gl === "object") ? gl : {};
+        return {
+          ...base,
+          ...(stSrc ? { storySrc: stSrc } : {}),
+          ...(stTitle ? { storyTitle: stTitle } : {}),
+        };
+      });
+
+      setImagesByFlag(rb && typeof rb === "object" ? rb : {});
+      setMuted(!!m);
+      setCurrentPageIdState(p);
+      setFlagsState(new Set(Array.isArray(fl) ? fl.filter(Boolean) : []));
+
+      try {
+        localStorage.setItem(LS_KEYS.page, p);
+      } catch {}
+    } catch {
+      // swallow
+    }
+  }, [hydrated]);
+
+  /** 🔹 Analytics: storyId + sessionId előkészítés */
+useEffect(() => {
+  if (!hydrated) return;
+
+  // storyId feloldása a jelenlegi globals alapján
+  const sid = deriveStoryId(globals);
+  setStoryId(sid);
+
+  if (!sid) {
+    setSessionId(undefined);
+    return;
+  }
+
+  // init + sessionId beszerzés
+  try {
+    initAnalyticsForStory(sid);
+    const sess = getOrCreateSessionId(sid);
+    setSessionId(sess);
+
+    // opcionális meta feljegyzés (későbbi riportokhoz)
+const uid = getOrCreateUserId();
+setStoryMeta(sid, {
+  title: globals?.storyTitle || undefined,
+  src: globals?.storySrc || undefined,
+  userId: uid, // ⬅️ ide kerül a felhasználó azonosító
+});
+
+  } catch (e) {
+    console.warn("[analytics] init/session error", e);
+  }
+}, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId]);
+
+
+  /** Helpers */
+  const registerAbort = useCallback((ac: AbortController) => {
+    abortControllers.current.push(ac);
+  }, []);
+
+  const registerTimeout = useCallback((id: number) => {
+    timeouts.current.push(id);
+  }, []);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeouts.current.forEach((id) => {
+      try {
+        clearTimeout(id);
+      } catch {}
+    });
+    timeouts.current = [];
+  }, []);
+
+  const registerAudio = useCallback((el: HTMLAudioElement) => {
+    if (!audioEls.current.includes(el)) audioEls.current.push(el);
+  }, []);
+
+  const addFragment = useCallback((id: string, data: FragmentData) => {
+    if (!id) return;
+    setFragments((prev) => {
+      const next = {
+        ...prev,
+        [id]: {
+          ...(prev[id] ?? {}),
+          ...data,
+          createdAt: prev[id]?.createdAt ?? Date.now(),
+        },
+      };
+      try {
+        localStorage.setItem(LS_KEYS.fragments, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const setVoiceApiKey = useCallback((key: string) => {
+    setVoiceApiKeyState(key);
+    try {
+      localStorage.setItem(LS_KEYS.voice, key);
+    } catch {}
+  }, []);
+
+  const setImageApiKey = useCallback((key: string) => {
+    setImageApiKeyState(key);
+    try {
+      localStorage.setItem(LS_KEYS.image, key);
+    } catch {}
+  }, []);
+
+  const setUnlockedFragments = useCallback((tags: string[]) => {
+    const arr = Array.isArray(tags) ? tags.filter(Boolean) : [];
+    setUnlockedFragmentsState(arr);
+    try {
+      localStorage.setItem(LS_KEYS.unlocked, JSON.stringify(arr));
+    } catch {}
+  }, []);
+
+  /** UNLOCK + write-through bank update */
+  const unlockFragment = useCallback((idOrIds: string | string[]) => {
+    const ids = (Array.isArray(idOrIds) ? idOrIds : [idOrIds]).filter(Boolean);
+    if (!ids.length) return;
+
+    setUnlockedFragmentsState((prev) => {
+      const next = Array.from(new Set([...(prev ?? []), ...ids]));
+      try {
+        localStorage.setItem(LS_KEYS.unlocked, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    setGlobalFragments((prev) => {
+      const merged: FragmentBank = { ...prev };
+      ids.forEach((id) => {
+        if (!id) return;
+        if (!merged[id]) {
+          merged[id] = { createdAt: Date.now() };
+        }
+      });
+      try {
+        localStorage.setItem(LS_KEYS.globalBank, JSON.stringify(merged));
+      } catch {}
+      return merged;
+    });
+  }, []);
+
+  const hasUnlocked = useCallback(
+    (id: string) => !!id && Array.isArray(unlockedFragments) && unlockedFragments.includes(id),
+    [unlockedFragments]
+  );
+
+  /** FLAGS API */
+  const persistFlags = useCallback((s: Set<string>) => {
+    try {
+      localStorage.setItem(LS_KEYS.flags, JSON.stringify(Array.from(s)));
+    } catch {}
+  }, []);
+
+  const setFlag = useCallback(
+    (id: string) => {
+      if (!id) return;
+      setFlagsState((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        persistFlags(next);
+        return next;
+      });
+    },
+    [persistFlags]
+  );
+
+  const clearFlag = useCallback(
+    (id: string) => {
+      if (!id) return;
+      setFlagsState((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        persistFlags(next);
+        return next;
+      });
+    },
+    [persistFlags]
+  );
+
+  const hasFlag = useCallback((id: string) => flagsState.has(id), [flagsState]);
+
+  /** GLOBALS API */
+  const setGlobal = useCallback((key: string, value: string) => {
+    if (!key) return;
+    setGlobals((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        localStorage.setItem(LS_KEYS.globals, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  /** Convenience: storySrc setter */
+const setStorySrc = useCallback(
+  (src: string) => {
+    if (!src) return;
+
+    try { localStorage.setItem(LS_KEYS.storySrc, src); } catch {}
+    setGlobal("storySrc", src);
+
+    // 🔄 új sztori: progress reset
+    setVisitedPages(new Set());
+    setProgressValue(0);
+    setProgressDisplay({ value: 0, milestones: [] });
+
+    // 🔹 Analytics re-init (EZT tedd a callbacken belülre!)
+    const newGlobals = { ...globals, storySrc: src };
+    const newStoryId = deriveStoryId(newGlobals);
+    setStoryId(newStoryId);
+
+    if (newStoryId) {
+      try {
+        initAnalyticsForStory(newStoryId);
+        const sess = getOrCreateSessionId(newStoryId);
+        setSessionId(sess);
+
+        // Itt is a callback paramétert használd, nem a régi globals-t
+        setStoryMeta(newStoryId, {
+          title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
+          src, // ✅ helyes itt, mert létezik a paraméter
+          campaign: globals?.campaign || localStorage.getItem("campaign") || undefined,
+          userId: getOrCreateUserId(),
+        });
+      } catch (e) {
+        console.warn("[analytics] re-init/session error", e);
+      }
+    }
+  },
+  [setGlobal, globals] // ✅ kell a globals a deriveStoryId-hoz
+);
+
+
+
+  /** 🔹 Rúna képek API */
+  const setRuneImage = useCallback((flagId: string, url: string) => {
+    if (!flagId || !url) return;
+    setImagesByFlag((prev) => {
+      const next = { ...prev, [flagId]: url };
+      try {
+        localStorage.setItem(LS_KEYS.runeImgs, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const clearRuneImage = useCallback((flagId: string) => {
+    if (!flagId) return;
+    setImagesByFlag((prev) => {
+      if (!prev || !prev[flagId]) return prev;
+      const { [flagId]: _, ...rest } = prev;
+      try {
+        localStorage.setItem(LS_KEYS.runeImgs, JSON.stringify(rest));
+      } catch {}
+      return rest;
+    });
+  }, []);
+
+  /** Page ID setter */
+  const setCurrentPageId = useCallback((id: string) => {
+    const safe = sanitizePageId(id);
+    setCurrentPageIdState((prev) => {
+      if (prev === safe) return prev;
+      try {
+        localStorage.setItem(LS_KEYS.page, safe);
+      } catch {}
+      return safe;
+    });
+  }, []);
+
+  const goToNextPage = useCallback(
+    (nextPageId: string) => {
+      setCurrentPageId(nextPageId);
+    },
+    [setCurrentPageId]
+  );
+
+  const setIsMuted = useCallback((value: boolean) => {
+    setMuted(value);
+    try {
+      localStorage.setItem(LS_KEYS.muted, String(value));
+    } catch {}
+  }, []);
+
+  const triggerAudioRestart = useCallback(() => {
+    setAudioRestartToken((t) => t + 1);
+  }, []);
+
+  /** Reset */
+  const resetGame = useCallback(() => {
+    abortControllers.current.forEach((ac) => {
+      try {
+        ac.abort();
+      } catch {}
+    });
+    abortControllers.current = [];
+
+    clearAllTimeouts();
+
+    audioEls.current.forEach((el) => {
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch {}
+    });
+    audioEls.current = [];
+
+    setUnlockedFragmentsState([]);
+    setFragments({});
+    setGlobalFragments({});
+    setGlobals({});
+    setFlagsState(new Set());
+    setImagesByFlag({});
+
+    setIsLoading(false);
+    setGlobalError(null);
+    setAudioRestartToken(0);
+    setCurrentPageData(null);
+    setCurrentPageIdState("landing");
+
+    // 🔄 progress reset
+    setVisitedPages(new Set());
+    setProgressValue(0);
+    setProgressDisplay({ value: 0, milestones: [] });
+
+    try {
+      localStorage.removeItem(LS_KEYS.unlocked);
+      localStorage.removeItem(LS_KEYS.fragments);
+      localStorage.removeItem(LS_KEYS.globalBank);
+      localStorage.removeItem(LS_KEYS.flags);
+      localStorage.removeItem(LS_KEYS.globals);
+      localStorage.removeItem(LS_KEYS.runeImgs);
+      localStorage.setItem(LS_KEYS.page, "landing");
+    } catch {}
+  }, [clearAllTimeouts]);
+
+  /** Oldal betöltése backendről + normalizálás */
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!currentPageId) return;
+
+    // ⛔ Sentinel oldalak → landingre állítjuk, és nem fetch-eljük
+    if (currentPageId === "feedback" || currentPageId === "__END__") {
+      const safe = "landing";
+      setCurrentPageIdState(safe);
+      try {
+        localStorage.setItem(LS_KEYS.page, safe);
+      } catch {}
+      return;
+    }
+
+    // ⛔ Landingnál nincs fetch – itt csak üres pageData + progress reset
+    if (currentPageId === "landing") {
+      setCurrentPageData(null);
+      setGlobalError(null);
+      setIsLoading(false);
+
+      setVisitedPages(new Set());
+      setProgressValue(0);
+      setProgressDisplay({ value: 0, milestones: [] });
+      return;
+    }
+
+    // Story forrás (globals → LS)
+    const storySrcFromGlobals = globals?.storySrc;
+    const storySrcFromLS =
+      typeof window !== "undefined" ? localStorage.getItem(LS_KEYS.storySrc) : null;
+    const storySrc = storySrcFromGlobals || storySrcFromLS || "";
+
+    // ⛔ Ha nincs storySrc, ne fetch-eljünk (különben 404)
+    if (!storySrc) {
+      setCurrentPageData(null);
+      setGlobalError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    clearAllTimeouts();
+    const ac = new AbortController();
+    registerAbort(ac);
+
+    (async () => {
+      try {
+        setIsLoading(true);
+
+        // Mindig /page/<id>?src=...
+        const url = `http://127.0.0.1:8000/page/${encodeURIComponent(
+          currentPageId
+        )}?src=${encodeURIComponent(storySrc)}`;
+
+        const response = await fetch(url, { signal: ac.signal });
+        if (!response.ok) {
+          setGlobalError(`Nem sikerült lekérni az oldalt (${currentPageId}).`);
+          setCurrentPageData(null);
+          return;
+        }
+
+        const raw = await response.json();
+
+        // Forrás kiválasztás és laposítás
+        const srcBank: any =
+          (raw && typeof raw === "object" && raw.fragmentsGlobal) ??
+          (raw && typeof raw === "object" && raw.fragments) ??
+          undefined;
+
+        const flatFragments: Record<string, any> =
+          srcBank && typeof srcBank === "object"
+            ? srcBank.recall || srcBank.saved || srcBank.fragments
+              ? {
+                  ...(srcBank.recall ?? {}),
+                  ...(srcBank.saved ?? {}),
+                  ...(srcBank.fragments ?? {}),
+                  ...(srcBank ?? {}),
+                }
+              : srcBank
+            : {};
+
+        const normalized: PageData = {
+          ...raw,
+          audio: {
+            ...raw?.audio,
+            text: typeof raw?.text === "string" ? raw.text : "",
+            background: raw?.audio?.background ?? raw?.audio?.bg ?? null,
+            mainNarration: raw?.audio?.mainNarration ?? raw?.audio?.main ?? null,
+            sidePreloadPages: raw?.audio?.sidePreloadPages ?? [],
+          },
+          voicePrompt: raw?.voicePrompt ?? raw?.tts ?? null,
+          fragmentsGlobal:
+            flatFragments && Object.keys(flatFragments).length
+              ? flatFragments
+              : undefined,
+        };
+
+        setCurrentPageData(normalized);
+        setGlobalError(null);
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Page fetch error:", err);
+          setGlobalError("Nem sikerült lekérni az oldalt a backendről.");
+          setCurrentPageData(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      try {
+        ac.abort();
+      } catch {}
+    };
+  }, [
+    hydrated,
+    currentPageId,
+    globals?.storySrc, // ⬅️ változás esetén újrafut
+    registerAbort,
+    clearAllTimeouts,
+  ]);
+
+  /** Merge a globál bankba + persist (additív) */
+  useEffect(() => {
+    if (!hydrated) return;
+    const bank = (currentPageData as any)?.fragmentsGlobal;
+    if (bank && typeof bank === "object") {
+      const casted: FragmentBank = {};
+      Object.keys(bank).forEach((k) => {
+        const o = bank[k] || {};
+        casted[k] = {
+          text: typeof o.text === "string" ? o.text : undefined,
+          replayImageId: typeof o.replayImageId === "string" ? o.replayImageId : undefined,
+        };
+      });
+      setGlobalFragments((prev) => {
+        const merged = { ...prev, ...casted };
+        try {
+          localStorage.setItem(LS_KEYS.globalBank, JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+    }
+  }, [hydrated, currentPageData?.fragmentsGlobal]);
+
+  /** Rehidratálás: oldalszintű fragmentek visszatöltése */
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!unlockedFragments?.length) return;
+    unlockedFragments.forEach((id) => {
+      if (!fragments[id] && globalFragments[id]) {
+        addFragment(id, {
+          text: globalFragments[id].text,
+          replayImageId: globalFragments[id].replayImageId,
+        });
+      }
+    });
+  }, [hydrated, unlockedFragments, fragments, globalFragments, addFragment, currentPageId]);
+
+  /** Oldal-szintű unlockFragments auto */
+  useEffect(() => {
+    if (!hydrated) return;
+    const ids = (currentPageData as any)?.unlockEnterFragments;
+    if (Array.isArray(ids) && ids.length) {
+      unlockFragment(ids);
+    }
+  }, [hydrated, currentPageId, currentPageData, unlockFragment]);
+
+  /** 🔹 PROGRESS: meglátogatott oldalak naplózása */
+  useEffect(() => {
+    if (!hydrated) return;
+    const id = currentPageId;
+    if (!id || id === "landing" || id === "feedback" || id === "__END__") return;
+    setVisitedPages((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, [hydrated, currentPageId]);
+
+  /** 🔹 PROGRESS: érték és display frissítése (JSON nélküli becslés) */
+useEffect(() => {
+  if (!hydrated) return;
+
+  const steps = visitedPages.size;
+
+  const hasChoices = Array.isArray(currentPageData?.choices) && (currentPageData?.choices?.length ?? 0) > 0;
+  const nextId = resolveNextFromPage(currentPageData, globals);
+  const isTerminal = !!currentPageData && !hasChoices && !nextId;
+
+  let value = 0;
+
+if (isTerminal) {
+  value = 1;
+} else if (steps <= 1) {
+  // Első oldal → 0%
+  value = 0;
+} else {
+  const effectiveSteps = steps - 1; // elsőt kivonjuk
+  const denom = effectiveSteps + PROGRESS_TAIL_BUFFER;
+  value = Math.min(1, effectiveSteps / denom);
+}
+
+  setProgressValue(value);
+  setProgressDisplay({
+    value,
+    milestones: [],
+    label: undefined,
+  });
+}, [hydrated, visitedPages, currentPageData, globals]);
+
+  return (
+    <GameStateContext.Provider
+      value={{
+        voiceApiKey,
+        setVoiceApiKey,
+        imageApiKey,
+        setImageApiKey,
+        isLoading,
+        setIsLoading,
+
+        unlockedFragments,
+        setUnlockedFragments,
+        unlockFragment,
+        hasUnlocked,
+
+        fragments,
+        addFragment,
+
+        globalFragments,
+
+        flags: flagsState,
+        setFlag,
+        clearFlag,
+        hasFlag,
+
+        globals,
+        setGlobal,
+        setStorySrc,
+
+        /** 🔹 Rúna képek */
+        imagesByFlag,
+        setRuneImage,
+        clearRuneImage,
+
+        currentPageId,
+        setCurrentPageId,
+        currentPageData,
+        goToNextPage,
+
+        globalError,
+        setGlobalError,
+
+        isMuted,
+        setIsMuted,
+
+        audioRestartToken,
+        triggerAudioRestart,
+
+        resetGame,
+        registerAbort,
+
+        registerTimeout,
+        clearAllTimeouts,
+
+        registerAudio,
+
+        /** 🔹 PROGRESS export */
+        visitedPages,
+        progressValue,
+        progressDisplay,
+
+        storyId,
+        sessionId,
+      }}
+    >
+      {children}
+    </GameStateContext.Provider>
+  );
+};
+
+export const useGameState = () => useContext(GameStateContext);

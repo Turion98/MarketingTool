@@ -1,0 +1,109 @@
+/* Alap konténer és parallax beállítás változatlan */
+.parallaxContainer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.4) 100%);
+    z-index: 50;
+    pointer-events: none;
+  }
+}
+
+.parallaxLayer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Háttér */
+.background {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: center;
+  background-color: #000;
+  z-index: 0;
+}
+
+/* === Rétegek === */
+
+/* Két oldali sziklafal (stone1) - JAVÍTOTT RESZPONZÍV LOGIKA */
+.stone1 {
+  top: 68%;
+  left: 50%;
+  width: 120%;      /* alap szélesség (közepes laptop) */
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+}
+
+/* Alsó szikla (stone2) változatlan */
+.stone2 {
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  width: 80%;
+  height: auto;
+  z-index: 6;
+}
+
+/* Torony */
+.tower {
+  position: absolute;
+  top: 55%;
+  left: 58%;
+  width: 25%;
+  height: auto;
+  z-index: 4;
+  filter: drop-shadow(12px 4px 8px rgba(42, 86, 101, 0.9));
+  transition: filter 0.3s ease-in-out;
+}
+
+/* Köd rétegek */
+.smoke1 { position: absolute; top: 75%; width: 100%; height: auto; z-index: 10; }
+.smoke2 { position: absolute; top: 75%; width: 100%; height: auto; z-index: 9; }
+.smoke3 { position: absolute; top: 35%; width: 100%; height: auto; z-index: 5; }
+.smoke4 { position: absolute; top: 55%; width: 100%; height: auto; opacity: 0.7; z-index: 7; }
+.smoke5 { position: absolute; top: 35%; width: 100%; height: auto; opacity: 1; z-index: 3; }
+
+/* --- Nagy desktop (>=1600px) --- */
+@media screen and (min-width: 1600px) {
+  .stone1 { width: 120%; top: 66%; }
+  .stone2 { top: 74%; width: 75%; }
+  .tower  { top: 54%; width: 20%; }
+  .smoke1 { top: 75%; height: 75%; }
+}
+
+/* --- Kis laptop (<=1366px) --- */
+@media screen and (max-width: 1366px) {
+  .stone1 { width: 100%; top: 69%; }
+  .stone2 { top: 76%; width: 82%; }
+  .tower  { top: 56%; width: 26%; }
+  .smoke1 { top: 71%; height: 82%; }
+}
+
+/* --- Kis kijelző (<=1024px) --- */
+@media screen and (max-width: 1024px) {
+  .stone1 { width: 100%; top: 72%; }
+  .stone2 { top: 78%; width: 88%; }
+  .tower  { top: 58%; width: 30%; }
+  .smoke1 { top: 100%; height: 88%; }
+}
+
+/* --- Tablet álló (<=768px) --- */
+@media screen and (max-width: 768px) {
+  .stone1 { width: 100%; top: 74%; }
+  .stone2 { top: 80%; width: 90%; }
+  .tower  { top: 60%; width: 32%; }
+  .smoke1 { top: 100%; height: 90%; }
+}

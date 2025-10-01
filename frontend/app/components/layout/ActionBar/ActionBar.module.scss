@@ -1,0 +1,108 @@
+:root {
+  --ab-bg-top: rgba(0, 0, 0, .45);
+  --ab-bg-bot: rgba(0, 0, 0, .60);
+  --ab-border: rgba(255, 255, 255, .16);
+  --ab-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+
+  --btn-bg-top: rgba(255, 255, 255, .12);
+  --btn-bg-bot: rgba(255, 255, 255, .06);
+  --btn-bg-top-disabled: rgba(255, 255, 255, .05);
+  --btn-bg-bot-disabled: rgba(255, 255, 255, .03);
+  --btn-border: rgba(255, 255, 255, .18);
+  --btn-shadow: 0 8px 22px rgba(0, 0, 0, .28);
+  --btn-color: #fff;
+
+  --btn-primary-glow: 0 0 0 0 rgba(255, 230, 120, .0);
+  --btn-primary-glow-active: 0 0 32px 4px rgba(255, 230, 120, .35);
+}
+
+.actionBar {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 999;
+
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+
+  border-radius: 14px;
+  border: 1px solid var(--ab-border);
+  background: linear-gradient(180deg, var(--ab-bg-top), var(--ab-bg-bot));
+  backdrop-filter: blur(8px);
+  box-shadow: var(--ab-shadow);
+
+  width: max-content;
+  max-width: 95vw;
+}
+
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  background: linear-gradient(180deg, var(--btn-bg-top), var(--btn-bg-bot));
+  color: var(--btn-color);
+
+  border: 1px solid var(--btn-border);
+  box-shadow: var(--btn-shadow);
+
+  font-size: 14px;
+  letter-spacing: .2px;
+  line-height: 1;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    background .2s ease,
+    opacity .2s ease,
+    filter .2s ease;
+
+  &:hover:not(:disabled) { filter: brightness(1.06); }
+  &:active:not(:disabled) { transform: translateY(1px) scale(.995); }
+  &:focus-visible { outline: 2px solid rgba(255, 255, 255, .5); outline-offset: 2px; }
+
+  &:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    background: linear-gradient(180deg, var(--btn-bg-top-disabled), var(--btn-bg-bot-disabled));
+    box-shadow: none;
+  }
+}
+
+/* kiemelt (Next) */
+.primary {
+  box-shadow: var(--btn-shadow), var(--btn-primary-glow);
+  &:not(:disabled):hover {
+    box-shadow: var(--btn-shadow), var(--btn-primary-glow-active);
+  }
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 520px) {
+  .actionBar { gap: 8px; padding: 8px; bottom: 14px; }
+  .btn { padding: 9px 10px; }
+  .label { display: none; }
+}
+
+/* ✅ helyi osztállyal kötjük az állapotot */
+.btn[data-state="muted"] {
+  filter: saturate(.8) opacity(.95);
+}

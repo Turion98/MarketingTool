@@ -1,0 +1,55 @@
+/* /components/BrickBottomOverlay.module.scss */
+
+.brickOverlay {
+  pointer-events: none;
+  box-sizing: border-box;
+
+  /* alapértékek – a TSX felülírhatja */
+  --brick-size: 94px;
+  --brick-offset-x: 10px;
+  --brick-offset-y: 0px;
+  --brick-z: 1;
+  --brick-src: none;
+
+  width: var(--brick-size);
+  height: var(--brick-size);
+
+  background-image: var(--brick-src);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* ===== PORTAL (viewport) mód ===== */
+.isPortal {
+  position: fixed;
+  z-index: var(--brick-z);
+
+  left: calc(var(--ns-content-x) + var(--ns-content-w) / 2 + var(--brick-offset-x));
+  transform: translateX(-50%);
+}
+
+.isPortal[data-pos="bottom"] {
+  top: calc(var(--ns-content-y) + var(--ns-content-h) + var(--brick-offset-y));
+}
+
+.isPortal[data-pos="top"] {
+  top: calc(var(--ns-content-y) - var(--brick-size) - var(--brick-offset-y));
+}
+
+/* ===== INLINE (NineSlicePanel backdrop) mód ===== */
+.isInline {
+  position: absolute;
+  left: calc(
+    var(--ns-bw-left) + var(--ns-pad-left) + (var(--ns-content-w) / 2) + var(--brick-offset-x)
+  );
+  transform: translateX(-50%);
+}
+
+.isInline[data-pos="bottom"] {
+  top: calc(var(--ns-bw-top) + var(--ns-pad-top) + var(--ns-content-h) + var(--brick-offset-y));
+}
+
+.isInline[data-pos="top"] {
+  top: calc(var(--ns-bw-top) + var(--ns-pad-top) - var(--brick-size) - var(--brick-offset-y));
+}

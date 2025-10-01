@@ -1,0 +1,56 @@
+:root {
+  --mf-shadow: 0 12px 32px rgba(0,0,0,.45);
+  --mf-radius: 12px;
+}
+
+.mediaFrame {
+  position: relative;
+  width: min(72vw, 980px);
+  margin: 8vh auto 4vh auto;
+  aspect-ratio: 16 / 9;
+
+  display: grid;
+  place-items: center;
+  z-index: 4;
+}
+
+.frameImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(var(--mf-shadow));
+}
+
+.inner {
+  position: absolute;
+  inset: 5% 6% 12% 6%; /* belső tartalmi keret */
+  overflow: hidden;
+  border-radius: var(--mf-radius);
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}
+
+.fadeIn {
+  opacity: 0;
+  animation: mfFadeIn .6s ease forwards;
+}
+
+@keyframes mfFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

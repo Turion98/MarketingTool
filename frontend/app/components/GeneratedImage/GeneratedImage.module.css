@@ -1,0 +1,26 @@
+@charset "UTF-8";
+.imageContainer {
+  position: relative;
+}
+
+.imageLoading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #888;
+}
+
+.generatedImage {
+  opacity: 0;
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 1rem;
+  display: block;
+  transition: opacity 1s ease-in-out;
+}
+
+/* ha fadeIn aktív */
+.fadeIn {
+  opacity: 1;
+}/*# sourceMappingURL=GeneratedImage.module.css.map */

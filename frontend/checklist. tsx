@@ -1,0 +1,27 @@
+# Előzetes hibaellenőrzési checklist (tesztüzem előtti)
+
+| #  | Terület                     | Feladat                                                                                          | Prioritás   | Fájl(ok) érintett | Felelős | Kész? |
+|----|----------------------------|--------------------------------------------------------------------------------------------------|-------------|-------------------|---------|-------|
+| 1  | JSON struktúra             | Minden `next` kulcs létező pageId-re mutasson                                                    | Kritikus    | reference_global.json, ch_landing_with_api_inputs.json |         |       |
+| 2  | JSON struktúra             | Döntési ágakban nincs üres `choices` tömb vagy hiányzó `next`                                   | Kritikus    | reference_global.json |         |       |
+| 3  | Fragment logika            | Minden fragment kulcshoz tartozik `imageId` és (ha van) `audioPrompt`                          | Kritikus    | LandingPage.tsx (FRAGMENT_DATA) |         |       |
+| 4  | JSON szintaxis             | JSON lint futtatása (vesszők, üres kulcsok)                                                      | Kritikus    | reference_global.json, ch_landing_with_api_inputs.json |         |       |
+| 5  | Komponens importok         | Minden komponens import helyes (`StoryPage`, `LandingPage`, `FragmentReplayOverlay` stb.)      | Kritikus    | StoryPage.tsx, LandingPage.tsx, TestApp.tsx |         |       |
+| 6  | useGameState context       | `currentPageData`, `unlockedFragments`, `setUnlockedFragments` definiálva és exportálva        | Kritikus    | GameStateContext.tsx |         |       |
+| 7  | Props ellenőrzés           | `StoryPage` → `onChoiceSelected`, `onSkip` típusok helyesek                                     | Kritikus    | StoryPage.tsx |         |       |
+| 8  | Voice API kulcs kezelése   | ElevenLabs kulcs inicializálás contextben                                                       | Magas       | GameStateContext.tsx |         |       |
+| 9  | Image API kulcs kezelése   | DALL·E/Leonardo kulcs inicializálás contextben                                                  | Magas       | GameStateContext.tsx |         |       |
+| 10 | Fallback hibaüzenet        | Üres API kulcs esetén felhasználóbarát hibaüzenet                                               | Magas       | GeneratedImage_with_fadein.tsx, AudioPlayer.tsx |         |       |
+| 11 | Generálás teszt            | Képgenerálás és hanggenerálás mock kulcs + mock válasz teszt                                   | Magas       | GeneratedImage_with_fadein.tsx, AudioPlayer.tsx |         |       |
+| 12 | Gombválasztás animáció     | Döntés után fény/motion effekt működik                                                          | Közepes     | ChoiceButtons.tsx, SkipButton.tsx |         |       |
+| 13 | Generálás átvezető animáció| LoadingOverlay aktív generálás alatt                                                            | Közepes     | LoadingOverlay.tsx |         |       |
+| 14 | Replay mód ellenőrzés      | Unlockolt fragmentek újrajátszása üres listánál sem dob hibát                                   | Közepes     | FragmentReplayOverlay.tsx |         |       |
+| 15 | Mobil reszponzivitás       | ParallaxBackground + overlayek kisebb képernyőn törésmentesek                                   | Közepes     | ParallaxBackground.tsx, replay_gallery.scss |         |       |
+| 16 | Network fallback           | API hiba esetén vizuális jelzés (“retry”)                                                       | Közepes     | PageTransitionManager.tsx, GeneratedImage_with_fadein.tsx |         |       |
+| 17 | Slow response kezelése     | Lassú válasz esetén ne üres képernyőt mutasson                                                  | Közepes     | LoadingOverlay.tsx |         |       |
+| 18 | Logolás                    | Hibák console vagy toast loggal megfogva                                                        | Közepes     | API hívásokat kezelő komponensek |         |       |
+
+**Prioritás színek:**  
+- **Kritikus** → ha hibás, megáll a játék vagy nem indul a generálás  
+- **Magas** → fontos, de fallback-elhető  
+- **Közepes** → UX, animáció és hibakezelés finomítás
