@@ -1,0 +1,8 @@
+# env files
+.env
+.env.*
+backend/.env
+frontend/.env.local
+# backups
+frontend_backup/
+frontend_backup**/
