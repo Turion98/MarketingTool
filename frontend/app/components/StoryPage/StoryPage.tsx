@@ -1730,9 +1730,6 @@ return (
 
     {/* ⬇️ Progress HUD */}
     <ProgressStrip value={progressDisplay.value ?? 0} />
-    <div className={style.progressLabel}>
-      {Math.round((progressDisplay.value ?? 0) * 100)}%
-    </div>
 
     <RestartButton />
 
@@ -1785,7 +1782,7 @@ return (
       <MediaFrame
         mode="image"
         imageProps={{
-          frameSrc: "/frame.png",
+          frameSrc: "/assets/frame.png",
           fadeIn: true,
           // loading: isLoading,
         }}

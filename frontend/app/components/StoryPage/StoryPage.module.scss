@@ -98,34 +98,13 @@ html, body {
 /* ──────────────────────────────
    TOP DOCK
    ────────────────────────────── */
-.textDockTop {
-  position: absolute;
-  left: 75%;
-  top: max(16px, env(safe-area-inset-top));
-  transform: translateX(-50%);
-  z-index: 8;
-  pointer-events: none;
-  contain: layout;
-  will-change: transform, top, left;
-}
+
 
 .textDockTop > * {
   pointer-events: auto;
 }
 
-.textbox-container {
-  position: relative;
-  display: grid;
-  align-items: start;
-  justify-items: center;
-  gap: 12px;
-  max-width: 926px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-  overflow: visible;
-  pointer-events: auto;
-}
+
 
 .textbox-container :global(.panel),
 .textbox-container :global(.panel .content) {

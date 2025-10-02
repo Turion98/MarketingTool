@@ -1,56 +1,84 @@
-:root {
-  --mf-shadow: 0 12px 32px rgba(0,0,0,.45);
-  --mf-radius: 12px;
-}
-
+/* MediaFrame.module.scss — FIXED */
 .mediaFrame {
   position: relative;
-  width: min(72vw, 980px);
-  margin: 8vh auto 4vh auto;
+  width: min(92vw, 1180px);
   aspect-ratio: 16 / 9;
 
-  display: grid;
-  place-items: center;
-  z-index: 4;
+  /* So z-index layering is deterministic inside this component */
+  isolation: isolate;
 }
 
+.mediaFrame img {
+  display: block;
+}
+
+/* FRAME (ALWAYS ON TOP OF CONTENT) */
 .frameImage {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-
+  /* We stretch to the container's exact aspect — the container already has 16/9.
+     If the PNG is also 16/9 this will not distort. If it differs, keep this and
+     export a 16/9 frame to avoid warping. */
+  object-fit: fill;
   pointer-events: none;
-  user-select: none;
-  filter: drop-shadow(var(--mf-shadow));
+  z-index: 3;
 }
 
-.inner {
+/* OPTIONAL LOGO (ABOVE CONTENT, BELOW FRAME IF NEEDED) */
+.logoUnderlay {
   position: absolute;
-  inset: 5% 6% 12% 6%; /* belső tartalmi keret */
-  overflow: hidden;
-  border-radius: var(--mf-radius);
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 1.2rem;
+  pointer-events: none;
+  z-index: 2;
 }
 
+.logoImage {
+  width: clamp(80px, 12%, 140px);
+  opacity: 0.9;
+}
+
+/* SAFE AREA WINDOW INSIDE THE FRAME */
+.inner {
+  /* Adjustable safe area (percentages of the container box) */
+  --inset-top: var(--mf-inset-top, 0%);
+  --inset-right: var(--mf-inset-right, 0%);
+  --inset-bottom: var(--mf-inset-bottom, 0%);
+  --inset-left: var(--mf-inset-left, 0%);
+
+  position: absolute;
+  top: var(--inset-top);
+  right: var(--inset-right);
+  bottom: var(--inset-bottom);
+  left: var(--inset-left);
+
+  /* Anything outside the window is clipped */
+  overflow: hidden;
+
+  /* Must sit below frame & logo */
+  z-index: 1;
+}
+
+/* CONTENT SLOT THAT HOSTS GeneratedImage (fills safe area) */
 .content {
+  position: relative;
   width: 100%;
   height: 100%;
-  opacity: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden; /* ensure images never bleed out */
 }
 
+/* Optional entrance animation for the whole frame */
 .fadeIn {
-  opacity: 0;
-  animation: mfFadeIn .6s ease forwards;
+  animation: mf-fade 300ms ease-out both;
 }
 
-@keyframes mfFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes mf-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
