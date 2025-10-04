@@ -5,6 +5,7 @@ import s from "./ProgressStrip.module.scss";
 export type ProgressStripProps = {
   /** value in [0..1] */
   value?: number;
+  className?: string;
 };
 
 const ProgressStrip: React.FC<ProgressStripProps> = ({ value = 0 }) => {

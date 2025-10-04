@@ -9,8 +9,9 @@ $gold: #f2b85b;
   padding: 2rem;
   color: #fff;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;  /* 🔹 vh helyett dvh a mobil keyboard bug elkerülésére */
+  overflow-x: hidden;
+  overflow-y: auto;    /* 🔹 engedjük a görgetést */
   font-family: var(--font-cormorant), serif;
 
   .typing-text {
@@ -37,6 +38,7 @@ $gold: #f2b85b;
   > * {
     position: relative;
     z-index: auto;
+    min-height: 0; /* 🔹 grid/flex children ne feszítsenek */
   }
 }
 
@@ -91,20 +93,20 @@ $gold: #f2b85b;
     }
   }
 }
-html, body { 
-  overflow-x: clip;
-   overflow-y: clip;
-  }
+
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0;
+}
+
 /* ──────────────────────────────
    TOP DOCK
    ────────────────────────────── */
-
-
 .textDockTop > * {
   pointer-events: auto;
 }
-
-
 
 .textbox-container :global(.panel),
 .textbox-container :global(.panel .content) {
@@ -116,7 +118,6 @@ html, body {
 .textbox-content {
   display: none !important;
 }
-
 
 /* ──────────────────────────────
    HÁTTÉR
@@ -138,7 +139,7 @@ html, body {
 }
 
 /* Progress HUD */
-.progressHud{
+.progressHud {
   position: fixed;
   left: 50%;
   top: 10px;
@@ -150,30 +151,29 @@ html, body {
   z-index: 1200;
   pointer-events: none; /* ne akadályozza a kattintást alatta */
 }
-.progressTrack{
+.progressTrack {
   position: relative;
   flex: 1 1 auto;
   height: 8px;
-  background: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.2) inset;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .2) inset;
 }
-.progressFill{
+.progressFill {
   height: 100%;
   width: 0%;
   transition: width 400ms ease;
   background: linear-gradient(90deg, #d4af37, #ffd479);
 }
-.progressLabel{
+.progressLabel {
   font-size: 12px;
   color: #fff;
   opacity: .9;
-  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
   min-width: 3ch;
   text-align: right;
 }
-
 
 .story-text {
   position: absolute;
@@ -198,7 +198,7 @@ html, body {
   left: 19.5%;
   top: 1%;
   transform: translateY(-50%);
-  width: clamp(320px, 40vw, 520px);
+  width: clamp(320px, 100%, 520px);
   max-width: 520px;
   z-index: 100;
   isolation: isolate;
@@ -337,14 +337,13 @@ html, body {
 }
 
 .muteButton {
-  /* 🔹 nincs absolute pozicionálás, a BrickTopOverlay középre rakja */
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: 100%;   /* brick belső szélességét kitölti */
-  height: 100%;  /* brick belső magasságát kitölti */
+  width: 100%;
+  height: 100%;
 
   background: transparent;
   border: none;
@@ -358,7 +357,7 @@ html, body {
   transition: transform .15s ease;
 
   &:hover {
-    transform: translateY(-2px); /* animáció mint Skip/Replay */
+    transform: translateY(-2px);
   }
 
   &:active {
@@ -378,7 +377,6 @@ html, body {
     filter: brightness(1.08);
   }
 }
-
 
 @keyframes fadeInOut {
   0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }

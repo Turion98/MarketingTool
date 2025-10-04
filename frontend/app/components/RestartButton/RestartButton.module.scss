@@ -1,7 +1,7 @@
 .restartButton {
   position: absolute;
-  bottom: 32%;
-  right: 32%;
+  bottom: 50%;
+  right: 22%;
   padding: 0.3rem 0.8rem;
   font-size: 1.2rem;
   font-weight: 800;
@@ -12,7 +12,7 @@
   color: #f2b85b;
   border: 2px solid #f2b85b;
   cursor: pointer;
-  z-index: 100002;
+  z-index: 900002;
   transition: all 0.5s ease-in-out;
 
   &:hover {

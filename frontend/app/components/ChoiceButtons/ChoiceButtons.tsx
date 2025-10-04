@@ -1,7 +1,7 @@
 // /components/ChoiceButtons/ChoiceButtons.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import style from "./ChoiceButtons.module.scss";
 import { useGameState } from "../../lib/GameStateContext";
 import { trackChoice, trackUiClick } from "../../lib/analytics";
@@ -39,6 +39,11 @@ type Props = {
   onChoiceSelected: (next: string, reward?: any, choiceObj?: Choice) => void;
 };
 
+/** Egyszerű segédfüggvény a className-ek összefűzésére */
+function cx(...v: Array<string | undefined | false | null>) {
+  return v.filter(Boolean).join(" ");
+}
+
 const ChoiceButtons: React.FC<Props> = ({
   choices,
   unlockedFragments,
@@ -53,6 +58,16 @@ const ChoiceButtons: React.FC<Props> = ({
   useEffect(() => {
     setAnimate(!!show);
   }, [show]);
+
+  const safeUnlocked = useMemo(
+    () => (Array.isArray(unlockedFragments) ? unlockedFragments : []),
+    [unlockedFragments]
+  );
+
+  const safeChoices = useMemo<Choice[]>(
+    () => (Array.isArray(choices) ? choices : []),
+    [choices]
+  );
 
   const pickFragmentIdFromActions = (choice: Choice): string | undefined => {
     if (!Array.isArray(choice.actions)) return undefined;
@@ -69,6 +84,7 @@ const ChoiceButtons: React.FC<Props> = ({
         (a as any)?.type === "unlockFragment" &&
         typeof (a as any)?.id === "string"
     ) as { type: string; id?: string } | undefined;
+
     return typed?.id;
   };
 
@@ -80,14 +96,16 @@ const ChoiceButtons: React.FC<Props> = ({
       fragmentId: choice.fragmentId ?? fragFromActions,
     };
 
-    // EREDETI LOGIKA
+    // Eredeti logika
     onChoiceSelected(ensuredChoice.next, ensuredChoice.reward, ensuredChoice);
 
-    // ANALITIKA – fail-safe
+    // Analitika – best-effort
     try {
       if (storyId && sessionId && currentPageId) {
         const label =
-          typeof ensuredChoice.text === "string" ? ensuredChoice.text : String(ensuredChoice.id ?? "");
+          typeof ensuredChoice.text === "string"
+            ? ensuredChoice.text
+            : String(ensuredChoice.id ?? "");
         trackChoice(
           String(storyId),
           String(sessionId),
@@ -101,11 +119,13 @@ const ChoiceButtons: React.FC<Props> = ({
     }
   };
 
-  const safeUnlocked = Array.isArray(unlockedFragments) ? unlockedFragments : [];
-
   return (
-    <div className={`${style.choiceButtons} ${animate ? style.visible : ""}`}>
-      {(choices ?? []).map((choice, index) => {
+    <nav
+      className={cx(style.choiceButtons, animate && style.visible)}
+      aria-label="Choices"
+      data-role="choices"
+    >
+      {safeChoices.map((choice, index) => {
         // lockedIf normalizálása tömbbé
         const lockedIfArr: string[] = Array.isArray(choice.lockedIf)
           ? choice.lockedIf.filter(Boolean)
@@ -115,13 +135,15 @@ const ChoiceButtons: React.FC<Props> = ({
 
         // Zár logika: ha bármelyik feltétel szerepel az unlockedFragments-ben, zárolt
         const isLocked = lockedIfArr.some((lock) => safeUnlocked.includes(lock));
-
         const disabled = !!choice.disabled || isLocked;
+
+        const key = (choice.id ?? `idx-${index}`).toString();
 
         return (
           <button
-            key={choice.id ?? index}
-            className={`${style.choiceButton} ${isLocked ? style.locked : ""}`}
+            key={key}
+            type="button"
+            className={cx(style.choiceButton, isLocked && style.locked)}
             onClick={() => !disabled && handleClick(choice)}
             // opcionális: ha zároltra kattint, logoljuk ui_click-ként
             onMouseDown={() => {
@@ -132,20 +154,28 @@ const ChoiceButtons: React.FC<Props> = ({
                     String(sessionId),
                     String(currentPageId),
                     "choice_locked",
-                    { choiceId: String(choice.id ?? index), reason: isLocked ? "lockedIf" : "disabled" }
+                    {
+                      choiceId: key,
+                      reason: isLocked ? "lockedIf" : "disabled",
+                    }
                   );
-                } catch {}
+                } catch {
+                  /* no-op */
+                }
               }
             }}
             disabled={disabled}
-            aria-disabled={disabled}
+            aria-disabled={disabled || undefined}
+            aria-label={isLocked ? `${choice.text} – zárolva` : choice.text}
             title={isLocked ? "Ez az út jelenleg zárolva" : ""}
+            data-choice-id={key}
+            data-locked={isLocked ? "true" : "false"}
           >
             {choice.text} {isLocked && "🔒"}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 };
 

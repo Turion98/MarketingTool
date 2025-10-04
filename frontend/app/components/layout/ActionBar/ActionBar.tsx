@@ -11,6 +11,7 @@ type ActionBarProps = {
   onReplay: () => void;
   muted: boolean;
   onToggleMute: () => void;
+  className?: string;
 };
 
 const Icon: React.FC<{ src: string; alt?: string }> = ({ src, alt = "" }) => (

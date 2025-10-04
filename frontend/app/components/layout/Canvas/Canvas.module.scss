@@ -1,0 +1,98 @@
+
+/* ====== Canvas.module.scss (végleges) ====== */
+
+.canvasWrap {
+  --app-page-bg: #06070a00;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100dvh;
+  background: var(--app-page-bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-block: clamp(12px, 2vw, 24px);
+}
+
+.canvasWrap.fullscreen {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.playfield {
+  --c-bg: var(--skin-bg, #0d0f13);
+  --c-fg: var(--skin-fg, #e6e6e6);
+  --c-border: var(--skin-border, #2a2f3a);
+  --c-radius: var(--skin-radius, 16px);
+  --c-pad: var(--skin-pad, 16px);
+  --c-maxw: var(--skin-maxw, 1180px);
+  --c-aspect: var(--skin-aspect, 16/9);
+  --gap: clamp(8px, 1.5cqi, 16px);
+  --bar-h: clamp(36px, 5cqi, 56px);
+
+  container-type: inline-size;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--c-maxw);
+  min-width: 0;
+  background: var(--c-bg);
+  color: var(--c-fg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  padding: var(--c-pad);
+  overflow: visible;
+  position: relative;
+  isolation: isolate;
+
+  display: grid;
+  grid-template-areas:
+    "topbar topbar"
+    "progress progress"
+    "media media"
+    "narr   dock"
+    "actionbar actionbar";
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: var(--bar-h) auto auto auto auto;
+  gap: var(--gap);
+  align-content: start;
+  justify-items: stretch;
+}
+
+.canvasWrap.fullscreen .playfield {
+  aspect-ratio: var(--c-aspect);
+  grid-template-rows: var(--bar-h) auto 1fr auto auto;
+  overflow: auto;
+}
+
+.areaTopbar { grid-area: topbar; min-height: 0; }
+.areaProgress { grid-area: progress; min-height: 0; }
+.areaMedia { grid-area: media; min-height: 0; }
+.areaNarr { grid-area: narr; min-height: 0; }
+.areaDock {
+  grid-area: dock;
+  min-height: 0;
+  align-self: center;
+  justify-self: center;
+}
+.areaAction { grid-area: actionbar; min-height: 0; }
+
+@container (max-width: 800px) {
+  .playfield {
+    grid-template-areas:
+      "topbar"
+      "progress"
+      "media"
+      "narr"
+      "dock"
+      "actionbar";
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--bar-h) auto auto auto auto auto;
+  }
+
+  .areaDock {
+    justify-self: center;
+    align-self: start;
+  }
+}

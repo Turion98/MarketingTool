@@ -1,105 +1,77 @@
-/* /components/ChoiceButtons.module.scss
-   A ChoiceButtons komponens gyökérdivje (style.choiceButtons) pozicionál.
-   Feltétel: a szülő (.storyPage) legyen position: relative; */
+/* ====== ChoiceButtons.module.scss (buttons only, no container panel) ====== */
 
-/* Könnyű testreszabás – csak ezeket a változókat állítsd: */
+/* TIPÓ/DIZÁJN tokenek a gombokra */
 :root {
-  --choice-maxw: 560px;
-  --choice-gap: 12px;
-  --choice-z: 1200;
+  --choice-font-size: 1.15rem;
+  --choice-radius: 14px;
+  --choice-pad-y: 0.75rem;
+  --choice-pad-x: 1.2rem;
 
-  /* ⬇ pozíció (alap: középre, alul) */
-  --choice-left: -270px;
-  --choice-bottom: -650px;
-  --choice-translate-x: -50%;
+  --choice-color: #fff;
+  --choice-bg-top: rgba(255,255,255,.12);
+  --choice-bg-bot: rgba(255,255,255,.06);
+  --choice-bg-top-disabled: rgba(255,255,255,.05);
+  --choice-bg-bot-disabled: rgba(255,255,255,.03);
+  --choice-border: rgba(255,255,255,.18);
+  --choice-shadow: 0 6px 18px rgba(0,0,0,.30);
 }
 
-/* Gombsor konténer – paneltől független dokk az oldal alján */
+/* A WRAPPERNEK NINCS SAJÁT HÁTTERE/KERETE/ÁRNYÉKA */
 .choiceButtons {
-  position: absolute;
-  left: var(--choice-left);
-  bottom: var(--choice-bottom);
-  transform: translateX(var(--choice-translate-x));
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;                /* minden gomb azonos szélesség */
-  gap: var(--choice-gap);
-  justify-content: flex-end;
-
-  width: min(92vw, var(--choice-maxw));
-  max-width: var(--choice-maxw);
-
-  z-index: var(--choice-z);
-  pointer-events: auto;
-
-  /* belépő animáció */
-  opacity: 0;
-  transition: opacity .35s ease-out, transform .2s ease-out;
+  display: contents; /* a wrapper teljesen eltűnik a layoutból */
 }
 
-/* Látható állapot – TSX-ben a show → visible */
-.visible { opacity: 1; }
-
-/* Egyes gombok */
+/* VALÓDI GOMB */
 .choiceButton {
-  position: relative;
-  display: block;
-  width: 100%;
-
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-
-  font-family: var(--font-cormorant, serif);
-  font-weight: 800;
-  font-size: 1.25rem;
-  letter-spacing: .08em;
-  text-align: center;
-
-  color: #f2b85b;
-  background: #1f3a3e;
-  border: 2px solid #f2b85b;
+  font-size: var(--choice-font-size);
+  line-height: 1.25;
+  color: var(--choice-color);
+  padding: var(--choice-pad-y) var(--choice-pad-x);
+  border-radius: var(--choice-radius);
+  border: 1px solid var(--choice-border);
+  background: linear-gradient(180deg, var(--choice-bg-top), var(--choice-bg-bot));
+  box-shadow: var(--choice-shadow);
 
   cursor: pointer;
   user-select: none;
-
-  /* belépő állapot (sorrendi animációhoz) */
+  transform: translateY(0);
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .25s ease, transform .25s ease;
-
-  &:hover {
-    /* nincs font-size növelés → nem ugrál a sor */
-    transform: translateY(0) scale(1.01);
-    box-shadow: 0 0 10px rgba(242,184,91,.5);
-    color: #f0b85b;
-  }
-
-  &:active:not(.locked) {
-    transform: translateY(0) scale(.97);
-    filter: brightness(.85);
-    transition: transform .08s ease, filter .08s ease;
-  }
-
-  &.locked {
-    opacity: .6;
-    cursor: not-allowed;
-    border-color: rgba(255,255,255,.25);
-    background: rgba(255,255,255,.08);
-  }
+  transition: opacity .25s ease, transform .25s ease, filter .12s ease, box-shadow .12s ease;
+  will-change: transform, opacity;
 }
 
-/* Egymás utáni felúszás – csak ha a parent .visible */
-.choiceButtons.visible .choiceButton:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: .12s; }
-.choiceButtons.visible .choiceButton:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: .24s; }
-.choiceButtons.visible .choiceButton:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: .36s; }
-.choiceButtons.visible .choiceButton:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: .48s; }
+.choiceButton:hover {
+  filter: brightness(1.06);
+}
 
-/* Reszponzív finomhangolás */
+.choiceButton:active {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+}
+
+.choiceButton[aria-disabled="true"],
+.choiceButton:disabled {
+  cursor: not-allowed;
+  border-color: var(--choice-border);
+  background: linear-gradient(180deg, var(--choice-bg-top-disabled), var(--choice-bg-bot-disabled));
+  filter: none;
+}
+
+/* belépő animáció (ha a parent .visible-t ad) */
+.choiceButtons.visible .choiceButton:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: .08s; }
+.choiceButtons.visible .choiceButton:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: .16s; }
+.choiceButtons.visible .choiceButton:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: .24s; }
+.choiceButtons.visible .choiceButton:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: .32s; }
+.choiceButtons.visible .choiceButton:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: .40s; }
+
 @media (max-width: 520px) {
-  .choiceButtons { gap: 10px; }
-  .choiceButton { font-size: 1.15rem; padding: .55rem .9rem; }
+  :root {
+    --choice-font-size: 1.05rem;
+    --choice-pad-y: 0.65rem;
+    --choice-pad-x: 1rem;
+  }
 }
-@media (min-width: 1024px) {
-  .choiceButtons { bottom: var(--choice-bottom); } /* hagyjuk a változót érvényesülni */
+
+@media (prefers-reduced-motion: reduce) {
+  .choiceButton { transition: none; }
 }

@@ -62,7 +62,8 @@ import MediaFrame from "../layout/MediaFrame/MediaFrame";
 import InteractionDock from "../layout/InteractionDock/InteractionDock";
 import ActionBar from "../layout/ActionBar/ActionBar";
 
-
+import Canvas from "../layout/Canvas/Canvas";
+import canvas from "../layout/Canvas/Canvas.module.scss";
 
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
@@ -1722,179 +1723,181 @@ _mustBeFn("SmokeField", SmokeField);
       </div>
     );
   }
+// ---- Normal render with Canvas + grid areas ----
 return (
   <div className={style.storyPage}>
     {analyticsSync}
     {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
-
-    {/* ⬇️ Progress HUD */}
-    <ProgressStrip value={progressDisplay.value ?? 0} />
-
-    <RestartButton />
-
-    <div className={style.storyBackground}>
-      <DecorBackground preset="subtle" />
-    </div>
+    {/* háttér külön rétegben */}
+    <div className={style.storyBackground}><DecorBackground preset="subtle" /></div>
 
     {isLoading && <LoadingOverlay />}
 
-    <div className={style.textDockTop} role="region" aria-label="Narration box">
-      <div className={`${style["textbox-container"]} ${expanded ? style.expanded : ""}`}>
-        <NarrativePanel
-          lines={blocks}
-          skipRequested={skipRequested}
-          replayTrigger={replayKey}
-          delayMs={DELAY_MS}
-          onReady={() => setSkipAvailable(true)}
-          onComplete={() => { setTypingDone(true); setShowChoices(true); }}
-          onMeasure={(m: Measure) => { setMeasure(m); }}
-          typingDone={typingDone}
-          lockedMeasure={lockedMeasure}
-          setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
-          firstLockTimerRef={firstLockTimer}
-          pageId={pageData.id}
-          backdrop={(
-            <>
-              <RuneDockOverlay
-                flagIds={unlockedRunes}
-                imagesByFlag={imagesByFlag}
-                usePortal
-                anchor={anchorPortal as any}
-                slotSize={RUNE.slot}
-                slots={RUNE.slots}
-                offsetX={RUNE.offsetX}
-                offsetY={RUNE.offsetY}
-              />
-              {/* (alsó brick dekor maradhat, ha akarod) */}
-              <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} position="bottom" />
-              <BrickBottomOverlay usePortal={true} anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
-            </>
-          )}
-        />
-
-        {/* ⬆️ KIVÉVE: BrickTopOverlay + Skip/Replay/Mute gombok – ezek most az ActionBar-ban lesznek */}
+    <Canvas>
+      {/* TOPBAR (helykitöltő, ha már van sajátod, tedd ide) */}
+      <div className={canvas.areaTopbar}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", height: "100%" }}>
+          <div style={{ fontWeight: 600 }}>LOGO</div>
+          <div style={{ justifySelf: "center" }}>RUNE DOCK</div>
+          <button style={{ justifySelf: "end" }}>CTA</button>
+        </div>
       </div>
-    </div>
 
-    {/* ⬇️ A képkocka akkor is látszik, ha nincs generálás (ch1_pg1, ch4_pg1, vagy ha van imageBox) */}
-    {showFrame && (
-      <MediaFrame
-        mode="image"
-        imageProps={{
-          frameSrc: "/assets/frame.png",
-          fadeIn: true,
-          // loading: isLoading,
-        }}
-      >
-        <GeneratedImage_with_fadein
-          pageId={pageData.id}
-          prompt={shouldGenerate ? pageData.imagePrompt : undefined}
-          params={stableParams}
-          imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
-          mode={pageData.imageTiming?.mode || "draft"}
-        />
-      </MediaFrame>
-    )}
+      {/* PROGRESS sáv a topbar alatt */}
+      <div className={canvas.areaProgress}>
+        <ProgressStrip value={progressDisplay.value ?? 0} />
+      </div>
 
-    {/* ✅ INTERAKCIÓ DOCK – puzzle-k vagy normál choices */}
-    {showChoices && !showEnd && (
-      <div className={style.choiceDockOutside}>
-
-        {/* #1: RIDDLE (egylépéses) */}
-        {isRiddlePage && (() => {
-          const r = pageData as unknown as PuzzleRiddle;
-          const dummyNext = (pageData as any)?.id ?? "";
-
-          const riddleChoices: Choice[] = r.options.map((label, idx) => ({
-            id: String(idx),
-            text: label,
-            next: dummyNext,
-          }));
-
-          return (
-            <ChoiceButtons
-              choices={riddleChoices}
-              unlockedFragments={[...unlockedPlus]}
-              onChoiceSelected={(_, choice) =>
-                handleRiddleAnswer(Number(choice?.id ?? -1))
-              }
-              show
+      {/* MEDIA-kocka (frame + generated image) */}
+      <div className={canvas.areaMedia}>
+        {showFrame && (
+          <MediaFrame
+            mode="image"
+            imageProps={{ frameSrc: "/assets/frame.png", fadeIn: true }}
+          >
+            <GeneratedImage_with_fadein
+              pageId={pageData.id}
+              prompt={shouldGenerate ? pageData.imagePrompt : undefined}
+              params={stableParams}
+              imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
+              mode={pageData.imageTiming?.mode || "draft"}
             />
-          );
-        })()}
-
-        {/* #2: RUNES (sorrend-kirakós) */}
-        {!isRiddlePage && isRunesPage && (() => {
-          const p = pageData as unknown as PuzzleRunesPage;
-          return (
-            <PuzzleRunes
-              options={p.options}
-              answer={p.answer}
-              maxAttempts={p.maxAttempts ?? 3}
-              onResult={(ok) => {
-                const branch = ok ? p.onSuccess : p.onFail;
-
-                // flags
-                const fl = branch?.setFlags;
-                if (Array.isArray(fl)) fl.forEach((f) => setFlag(f));
-                else if (fl && typeof fl === "object") {
-                  Object.entries(fl).forEach(([k, v]) => (v ? setFlag(k) : null));
-                }
-
-                // goto
-                const nx = branch?.goto;
-                if (nx && nx !== pageData?.id) {
-                  try { localStorage.setItem("currentPageId", nx); } catch {}
-                  goToNextPage(nx);
-                }
-              }}
-            />
-          );
-        })()}
-
-        {/* #3: DEFAULT CHOICES (ha nem puzzle) – InteractionDock */}
-        {!isRiddlePage && !isRunesPage && hasChoices && (
-          <InteractionDock
-            mode="default"
-            choices={patchedChoices.map((c:any) => ({
-              id: String(c.id),
-              label: String(c.text ?? c.label ?? c.id),
-              disabled: !!c.disabled,
-            }))}
-            onSelect={(choiceId: string) => {
-              const choice = patchedChoices.find((c:any) => String(c.id) === String(choiceId));
-              if (!choice) return;
-              handleChoice(String(choice.next ?? ""), choice.reward, choice as any);
-            }}
-          />
+          </MediaFrame>
         )}
       </div>
-    )}
 
-    {/* ⬇️ ÚJ: alsó ActionBar – Skip/Replay/Mute/Next */}
-    <ActionBar
-      canNext={!hasChoices && !!resolvedNext && showChoices && !showEnd}
-      onNext={handleNext}
-      canSkip={skipAvailable && !showEnd}
-      onSkip={() => {
-        setSkipRequested(true);
-        setTimeout(() => setSkipRequested(false), 0);
-      }}
-      canReplay={!showEnd}
-      onReplay={() => {
-        setSkipRequested(false);
-        setReplayKey((prev) => prev + 1);
-        triggerAudioRestart();
-      }}
-      muted={!!isMuted}
-      onToggleMute={() => {
-        const newMuted = !isMuted;
-        setIsMuted(newMuted);
-        try { setSfxMuted(newMuted); } catch {}
+      {/* NARRÁCIÓS panel (NineSlice content-anchorral, ide portoljuk az overlayeket) */}
+      <div className={canvas.areaNarr} role="region" aria-label="Narration box">
+        <div className={`${style["textbox-container"]} ${expanded ? style.expanded : ""}`}>
+          <NarrativePanel
+            lines={blocks}
+            skipRequested={skipRequested}
+            replayTrigger={replayKey}
+            delayMs={DELAY_MS}
+            onReady={() => setSkipAvailable(true)}
+            onComplete={() => { setTypingDone(true); setShowChoices(true); }}
+            onMeasure={(m: Measure) => { setMeasure(m); }}
+            typingDone={typingDone}
+            lockedMeasure={lockedMeasure}
+            setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
+            firstLockTimerRef={firstLockTimer}
+            pageId={pageData.id}
+            backdrop={(
+              <>
+                <RuneDockOverlay
+                  flagIds={unlockedRunes /* vagy unlockedRunes ha így nevezed */}
+                  imagesByFlag={imagesByFlag}
+                  usePortal
+                  anchor={anchorPortal as any}
+                  slotSize={RUNE.slot}
+                  slots={RUNE.slots}
+                  offsetX={RUNE.offsetX}
+                  offsetY={RUNE.offsetY}
+                />
+                <BrickBottomOverlay usePortal anchor={anchorPortal as any} position="bottom" />
+                <BrickBottomOverlay usePortal anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
+              </>
+            )}
+          />
+        </div>
+      </div>
+
+      {/* INTERAKCIÓS DOCK – puzzle/choices */}
+      <div className={canvas.areaDock}>
+        {showChoices && !showEnd && (
+          <>
+            {isRiddlePage && (() => {
+  const r = pageData as unknown as PuzzleRiddle;
+
+  // Közvetlen DockChoice[] (garantált string id)
+  const riddleDockChoices = r.options.map((label: string, idx: number) => ({
+    id: String(idx),
+    label: String(label),
+  }));
+
+  return (
+    <InteractionDock
+      mode="default"
+      choices={riddleDockChoices}
+      onSelect={(choiceId: string) => handleRiddleAnswer(Number(choiceId))}
+    />
+  );
+})()}
+
+{!isRiddlePage && isRunesPage && (() => {
+  const p = pageData as any;
+  return (
+    <PuzzleRunes
+      options={p.options}
+      answer={p.answer}
+      maxAttempts={p.maxAttempts ?? 3}
+      onResult={(ok) => {
+        const branch = ok ? p.onSuccess : p.onFail;
+        const fl = branch?.setFlags;
+        if (Array.isArray(fl)) fl.forEach((f: string) => setFlag(f));
+        else if (fl && typeof fl === "object") {
+          Object.entries(fl).forEach(([k, v]) => (v ? setFlag(k) : null));
+        }
+        const nx = branch?.goto;
+        if (nx && nx !== pageData?.id) {
+          try { localStorage.setItem("currentPageId", nx); } catch {}
+          goToNextPage(nx);
+        }
       }}
     />
+  );
+})()}
 
+{!isRiddlePage && !isRunesPage && Array.isArray(pageData.choices) && pageData.choices.length > 0 && (
+  <InteractionDock
+    mode="default"
+    choices={pageData.choices.map((c: any, idx: number) => ({
+      id: String(c?.id ?? idx), // <-- index fallback a stabil, egyedi key-hez
+      label: String(c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`),
+      disabled: !!c?.disabled,
+    }))}
+    onSelect={(choiceId: string) => {
+      // Ugyanazzal a fallback logikával keresünk vissza:
+      const choice = (pageData.choices ?? []).find((c: any, i: number) =>
+        String(c?.id ?? i) === String(choiceId)
+      );
+      if (!choice) return;
+      handleChoice(String(choice.next ?? ""), (choice as any).reward, choice as any);
+    }}
+  />
+)}
+</>
+)}
+</div>
+
+      {/* ACTION BAR – Skip/Replay/Mute/Next */}
+      <div className={canvas.areaAction}>
+        <ActionBar
+          canNext={!Array.isArray(pageData.choices) && !!resolvedNext && showChoices && !showEnd}
+          onNext={handleNext}
+          canSkip={skipAvailable && !showEnd}
+          onSkip={() => {
+            setSkipRequested(true);
+            setTimeout(() => setSkipRequested(false), 0);
+          }}
+          canReplay={!showEnd}
+          onReplay={() => {
+            setSkipRequested(false);
+            setReplayKey((prev) => prev + 1);
+            triggerAudioRestart();
+          }}
+          muted={!!isMuted}
+          onToggleMute={() => {
+            const newMuted = !isMuted;
+            setIsMuted(newMuted);
+            try { setSfxMuted(newMuted); } catch {}
+          }}
+        />
+      </div>
+    </Canvas>
+
+    {/* AUDIO és overlayek a Canvas alatt maradnak */}
     <AudioPlayer
       pageId={pageData.id}
       autoPlay
@@ -1911,13 +1914,6 @@ return (
       onNarrationStart={(t0: number) => setNarrationT0(t0)}
     />
 
-    {/* ⬆️ KIVÉVE: külön Next gomb blokk – ezt az ActionBar kezeli */}
-    {/* {!hasChoices && resolvedNext && resolvedNext !== pageData?.id && showChoices && !showEnd && (
-      <button className={style.nextButton + " " + (animateNext ? style.visible : "")} onClick={handleNext}>
-        Next
-      </button>
-    )} */}
-
     {showReward && (
       <RewardOverlay
         message="Memory unlocked!"
@@ -1933,7 +1929,6 @@ return (
       />
     )}
 
-    {/* Feedback overlay – teljes képernyőn, a végén jelenik meg */}
     {showEnd && (
       <FeedbackOverlay
         onRestart={() => {
@@ -1945,7 +1940,6 @@ return (
       />
     )}
 
-    {/* ⬇️ RuneSaveOverlay animáció (maradhat) */}
     {runeAnim && (
       <RuneSaveOverlay
         key={runeAnim.key}
@@ -1970,77 +1964,15 @@ return (
                 });
               }
             } catch {}
-            const rid0 = runeAnim.pendingRunes[0];
-            if (rid0 && runeAnim.savedPngUrl) {
-              setImagesByFlag((prev) => ({ ...prev, [rid0]: runeAnim.savedPngUrl! }));
-            }
           }
           setRuneAnim(null);
           const nx = pendingNextRef.current;
           pendingNextRef.current = null;
-          if (nx && nx !== pageData?.id) {
-            goToNextPage(nx);
-          }
+          if (nx && nx !== pageData?.id) goToNextPage(nx);
         }}
       />
     )}
-
-
-    {/* Rejtett dev-sor (csak fejlesztésben). Kattintásra nyílik. */}
-    {process.env.NODE_ENV === "development" && (
-      <div
-        onClick={() => setDevOpen((v) => !v)}
-        style={{
-          position: "absolute",
-          left: 8,
-          right: 8,
-          bottom: 118,
-          fontSize: 12,
-          lineHeight: "16px",
-          padding: devOpen ? "8px 10px" : "3px 6px",
-          borderRadius: 8,
-          background: "rgba(0,0,0,0.35)",
-          color: "#fff",
-          opacity: devOpen ? 1 : 0.4,
-          cursor: "pointer",
-          userSelect: "none",
-          backdropFilter: "blur(2px)",
-          transition: "all .15s ease",
-          zIndex: 9999,
-        }}
-        title="Dev cache info (katt a részletekhez)"
-      >
-        {devText || "Cache: —"}
-        {devOpen && (
-          <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); try { clearImageCache(); } catch {} }}
-              style={{
-                padding: "4px 8px",
-                borderRadius: 6,
-                border: "1px solid rgba(255,255,255,.3)",
-                background: "rgba(255,255,255,.08)",
-                color: "#fff",
-              }}
-            >
-              Clear image_
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); try { clearVoiceCache(); } catch {} }}
-              style={{
-                padding: "4px 8px",
-                borderRadius: 6,
-                border: "1px solid rgba(255,255,255,.3)",
-                background: "rgba(255,255,255,.08)",
-                color: "#fff",
-              }}
-            >
-              Clear voice_
-            </button>
-          </div>
-        )}
-      </div>
-    )}
   </div>
-);}
+);
+}
 export default StoryPage

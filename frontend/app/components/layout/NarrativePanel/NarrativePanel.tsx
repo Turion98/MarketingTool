@@ -50,12 +50,8 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
     <div className={s.textDockTop} role="region" aria-label="Narration box">
       <div className={s.textboxContainer}>
         <NineSlicePanel
-          src="/ui/textbox_9slice.png"
-          slice={{ top: 48, right: 43, bottom: 48, left: 43 }}
-          padding={{ top: 75, right: 55, bottom: 70, left: 65 }}
-          inner={{ width: 640, height: 381 }}
+          padding={{ top: 16, right: 16, bottom: 16, left: 16 }}
           trackScroll
-          animate
           onMeasure={(m: Measure) => {
             onMeasure(m);
             if (!lockedMeasure && firstLockTimerRef.current == null) {
@@ -70,6 +66,7 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
           backdrop={backdrop}
         >
           {lines.length > 0 ? (
+          <div className={s.textClamp}>
             <TypingText
               key={`tt_${pageId}`}
               lines={lines}
@@ -79,6 +76,7 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
               onReady={onReady}
               onComplete={onComplete}
             />
+            </div>
           ) : (
             <div />
           )}

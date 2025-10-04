@@ -1,6 +1,6 @@
 :root {
   /* könnyen skinezhető tokenek a doboz környezetéhez */
-  --np-maxw: 1200px;
+  --np-maxw: 1100px;
   --np-z: 5;
   --np-pad-x: 4vw;
   --np-pad-top: 6vh;
@@ -21,7 +21,10 @@
   width: 100%;
   max-width: var(--np-maxw);
   display: block;
-
+   min-width: 0;          /* grid/flex zsugorodás guard */
+  align-self: stretch;     /* grid/flex szülőben nyúljon ki */
+  justify-self: stretch;   /* grid esetén */
+  flex: 1 1 auto; 
   /* finom beléptető anim, ha kell */
   transform: translateY(0);
   animation: npFadeIn .25s ease both;

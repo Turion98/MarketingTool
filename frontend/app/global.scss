@@ -1,3 +1,7 @@
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
 :root {
   /* Ide tedd a JELENLEGI base64-es kurzorodat: */
   --cursor-default: url("data:image/png;base64, ...AElFTkSuQmCC") 0 0, auto;

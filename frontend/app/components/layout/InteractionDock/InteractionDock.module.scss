@@ -1,10 +1,9 @@
 :root {
-  /* skinezhető tokenek */
-  --dock-bg-top: rgba(0, 0, 0, .25);
-  --dock-bg-bot: rgba(0, 0, 0, .40);
-  --dock-border: rgba(255, 255, 255, .12);
   --dock-blur: 6px;
   --dock-shadow: 0 12px 32px rgba(0,0,0,.35);
+  --dock-border: rgba(255, 255, 255, .12);
+  --dock-bg-top: rgba(0, 0, 0, .25);
+  --dock-bg-bot: rgba(0, 0, 0, .40);
 
   --choice-bg-top: rgba(255, 255, 255, .12);
   --choice-bg-bot: rgba(255, 255, 255, .06);
@@ -22,41 +21,73 @@
   --wrapper-maxw: 1100px;
 }
 
+/* A wrapper ne tegyen hozzá vizuális réteget vagy layout-eltolást */
 .wrapper {
-  position: relative;
-  z-index: 6;
-
-  display: flex;
-  justify-content: center;
-
-  width: min(80vw, var(--wrapper-maxw));
-  margin: 2.5vh auto 4vh auto;
+  display: contents;
+  position: unset;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/* Alap: teljesen átlátszó dock – a gombok maradnak formázottak */
 .grid {
-  display: grid;
-  width: 100%;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 
+  width: min(100%, var(--wrapper-maxw));
+  margin-inline: auto;
+  min-width: 0;
+
+  gap: 16px;
+  padding: 12px;
+
+  /* NINCS külön felület */
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+
+  box-sizing: border-box;
+}
+
+/* Opcionálisan visszakapcsolható “frosted” felület */
+.grid[data-surface="frosted"] {
   backdrop-filter: blur(var(--dock-blur));
   background: linear-gradient(180deg, var(--dock-bg-top), var(--dock-bg-bot));
   border: 1px solid var(--dock-border);
   border-radius: 14px;
-  padding: 12px;
   box-shadow: var(--dock-shadow);
 }
 
+/* Ha a dock felület színe egyezzen a canvas-szal (és még mindig láthatatlan legyen): */
+.grid[data-surface="canvas"] {
+  background: var(--app-page-bg, transparent);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* Gombok */
 .choice {
   appearance: none;
   -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   cursor: pointer;
   outline: none;
 
   width: 100%;
+  min-height: 40px;
   text-align: center;
   color: var(--choice-color);
+  font: inherit;
   font-size: var(--choice-font);
   letter-spacing: .2px;
 
@@ -74,12 +105,8 @@
     background .2s ease,
     opacity .2s ease;
 
-  &:hover:not(:disabled) {
-    filter: brightness(1.06);
-  }
-  &:active:not(:disabled) {
-    transform: translateY(1px) scale(.995);
-  }
+  &:hover:not(:disabled) { filter: brightness(1.06); }
+  &:active:not(:disabled) { transform: translateY(1px) scale(.995); }
   &:focus-visible {
     outline: 2px solid rgba(255,255,255,.5);
     outline-offset: 2px;
@@ -93,29 +120,19 @@
       var(--choice-bg-top-disabled),
       var(--choice-bg-bot-disabled)
     );
-    box-shadow: none;
   }
 }
 
-/* kompaktabb mobilon */
 @media (max-width: 520px) {
   :root {
     --choice-font: 15px;
     --choice-padding-y: 12px;
     --choice-padding-x: 14px;
   }
-  .grid {
-    gap: 10px;
-    padding: 10px;
-  }
+  .grid { gap: 14px; padding: 10px; }
 }
 
-/* extra sűrű mód (ha később kell): .wrapper[data-mode="dense"] */
-.wrapper[data-mode="dense"] .grid {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-}
-.wrapper[data-mode="dense"] .choice {
-  --choice-font: 15px;
-  --choice-padding-y: 10px;
-  --choice-padding-x: 12px;
+@media (prefers-reduced-motion: reduce) {
+  .choice { transition: none; }
+  .grid { transition: none; }
 }

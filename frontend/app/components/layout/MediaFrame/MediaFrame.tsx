@@ -10,6 +10,7 @@ type MediaFrameImageProps = {
   frameSrc?: string;
   /** Optional: some callers passed fadeIn here; keep for backward-compat */
   fadeIn?: boolean;
+  className?: string;
 };
 
 type MediaFrameProps = {
