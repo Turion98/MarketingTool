@@ -1,98 +1,92 @@
+/* ===== Canvas.module.scss (MEDIA ROW GROWS; NO CROP) ===== */
 
-/* ====== Canvas.module.scss (végleges) ====== */
+:root { --ab-height: clamp(44px, 6cqi, 64px); }
 
 .canvasWrap {
-  --app-page-bg: #06070a00;
+  --app-page-bg: var(--skin-bg, #0d0f13);
+  position: fixed;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 100dvh;
+  width: 100vw;
+  height: 100svh;
   background: var(--app-page-bg);
   overflow-y: auto;
   overflow-x: hidden;
-  padding-block: clamp(12px, 2vw, 24px);
 }
 
-.canvasWrap.fullscreen {
-  height: 100dvh;
-  min-height: 100dvh;
-  overflow: hidden;
+.canvasInner {
+  inline-size: min(96vw, 1280px);
+  margin-inline: auto;
+  padding: clamp(12px, 2cqi, 20px);
 }
 
+/* ===== GRID (alap: mobil – minden egymás alatt) ===== */
 .playfield {
-  --c-bg: var(--skin-bg, #0d0f13);
-  --c-fg: var(--skin-fg, #e6e6e6);
-  --c-border: var(--skin-border, #2a2f3a);
-  --c-radius: var(--skin-radius, 16px);
-  --c-pad: var(--skin-pad, 16px);
-  --c-maxw: var(--skin-maxw, 1180px);
-  --c-aspect: var(--skin-aspect, 16/9);
-  --gap: clamp(8px, 1.5cqi, 16px);
-  --bar-h: clamp(36px, 5cqi, 56px);
-
-  container-type: inline-size;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: var(--c-maxw);
-  min-width: 0;
-  background: var(--c-bg);
-  color: var(--c-fg);
-  border: 1px solid var(--c-border);
-  border-radius: var(--c-radius);
-  padding: var(--c-pad);
-  overflow: visible;
-  position: relative;
-  isolation: isolate;
-
   display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto auto auto auto;
   grid-template-areas:
-    "topbar topbar"
-    "progress progress"
-    "media media"
-    "narr   dock"
-    "actionbar actionbar";
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: var(--bar-h) auto auto auto auto;
-  gap: var(--gap);
-  align-content: start;
+    "topbar"
+    "progress"
+    "media"
+    "narr"
+    "dock"
+    "action";
+  gap: clamp(8px, 1.6cqi, 16px);
+  align-items: start;
   justify-items: stretch;
 }
 
-.canvasWrap.fullscreen .playfield {
-  aspect-ratio: var(--c-aspect);
-  grid-template-rows: var(--bar-h) auto 1fr auto auto;
-  overflow: auto;
-}
-
-.areaTopbar { grid-area: topbar; min-height: 0; }
-.areaProgress { grid-area: progress; min-height: 0; }
-.areaMedia { grid-area: media; min-height: 0; }
-.areaNarr { grid-area: narr; min-height: 0; }
-.areaDock {
+/* Területek – ezek a StoryPage-ben vannak használva */
+.areaTopbar   { grid-area: topbar;    align-self: center; }
+.areaProgress { grid-area: progress; }
+.areaMedia    { grid-area: media;     align-self: start; overflow: visible; }
+.areaNarr     { grid-area: narr;      align-self: start; }
+.areaDock     {
   grid-area: dock;
-  min-height: 0;
-  align-self: center;
-  justify-self: center;
+  /* kérés szerint cellán belül középre */
+  display: grid;
+  place-items: center;
 }
-.areaAction { grid-area: actionbar; min-height: 0; }
+.areaAction   { grid-area: action; }
 
-@container (max-width: 800px) {
-  .playfield {
+/* Média ne vágódjon: */
+.areaMedia .mediaFrame { aspect-ratio: auto; overflow: visible; }
+.areaMedia img,
+.areaMedia video,
+.areaMedia canvas {
+  object-fit: contain;
+  object-position: center;
+  max-inline-size: 100%;
+}
+
+/* Sticky util pl. progresshez, ha kell */
+.stickyBar { position: sticky; top: 0; z-index: 10; }
+
+/* XS finomítás */
+@media (max-width: 640px) {
+  .canvasInner {
+    inline-size: 100%;
+    padding: clamp(8px, 3cqi, 16px);
+  }
+  .canvasGrid { gap: clamp(6px, 2cqi, 12px); }
+}
+
+/* >= TABLET/DESKTOP: narr (bal) + dock (jobb) egymás mellett */
+@media (min-width: 768px) {
+  .canvasGrid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto auto; /* topbar, progress, media, content-row, action */
     grid-template-areas:
-      "topbar"
-      "progress"
-      "media"
-      "narr"
-      "dock"
-      "actionbar";
-    grid-template-columns: 1fr;
-    grid-template-rows: var(--bar-h) auto auto auto auto auto;
+      "topbar    topbar"
+      "progress  progress"
+      "media     media"
+      "narr      dock"
+      "action    action";
   }
 
-  .areaDock {
-    justify-self: center;
-    align-self: start;
-  }
+  /* Ha a Dock keskenyebb, maradjon középen a cellájában */
+  .areaDock { place-items: center; }
 }

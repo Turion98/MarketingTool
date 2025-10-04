@@ -1,23 +1,30 @@
+/* ===== GLOBAL FIX – teljes viewport, nincs felső/alsó rés ===== */
+
 html {
   scrollbar-gutter: stable both-edges;
 }
 
 :root {
-  /* Ide tedd a JELENLEGI base64-es kurzorodat: */
   --cursor-default: url("data:image/png;base64, ...AElFTkSuQmCC") 0 0, auto;
-  /* Ha aktív/hover verziód is van, ide teheted külön; ha nincs, maradhat ugyanaz: */
   --cursor-active: var(--cursor-default);
 }
 
-/* 1) Mindenhol alapból ez legyen */
+/* Alap kurzor + teljes kifeszítés + nincs külső scroll */
 html, body, #__next {
   cursor: var(--cursor-default);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #06070a;     /* egyezik a canvas hátterével */
+  overflow: hidden;         /* NINCS külső görgetés */
 }
 
-/* 2) Ne változtassa meg semmi véletlenül: öröklünk */
+/* Öröklődjön mindenhová a kurzor */
 * { cursor: inherit; }
 
-/* 3) Kattinthatók/hover állapot: ugyanaz a kurzor */
+/* Kattinthatók */
 a, button, [role="button"],
 input[type="button"], input[type="submit"],
 [tabindex]:not([tabindex="-1"]),
@@ -25,12 +32,34 @@ input[type="button"], input[type="submit"],
   cursor: var(--cursor-active) !important;
 }
 
-/* 4) (Opcionális) I-beam visszaállítása inputoknál – ha MINDENHOL ugyanazt akarod, töröld ezt a blokkot */
+/* I-beam a szövegmezőknél (ha kell) */
 input, textarea, [contenteditable="true"] {
   cursor: text !important;
 }
 
-/* 5) (Opcionális) tiltott állapot */
+/* Tiltott állapot */
 :disabled, [aria-disabled="true"] {
   cursor: not-allowed !important;
+}
+
+/* Flex-lánc: a main = teljes viewport */
+body {
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: none;   /* gumi-scroll tiltás */
+  min-height: 100svh;          /* iOS safe viewport */
+}
+
+#__next {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+main {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;                /* tényleg 1:1 a viewporttal */
+  min-height: 0;               /* belső scrollhoz fontos */
 }

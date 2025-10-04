@@ -42,7 +42,7 @@ import NarrativePanel from "../layout/NarrativePanel/NarrativePanel";
 
 // ⬇️ típus egységesítés a contexttel
 import type { FragmentData } from "../../lib/GameStateContext";
-import RuneDockOverlay from "../labs/RuneDockOverlay/RuneDockOverlay";
+import RuneDockDisplay from "../runes/RuneDockDisplay"
 import BrickBottomOverlay from "../labs/BrickBottomOverlay/BrickBottomOverlay";
 import { flushSync } from "react-dom";
 import { resolveNextFromPage } from "../../lib/GameStateContext";
@@ -64,6 +64,7 @@ import ActionBar from "../layout/ActionBar/ActionBar";
 
 import Canvas from "../layout/Canvas/Canvas";
 import canvas from "../layout/Canvas/Canvas.module.scss";
+import HeaderBar from "../layout/HeaderBar/HeaderBar";
 
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
@@ -1563,6 +1564,10 @@ const unlockedRunes = useMemo(
   () => Array.from(flags ?? new Set<string>()).filter(isRuneId),
   [flags]
 );
+const showRuneDock = useMemo(
+  () => (unlockedRunes?.length ?? 0) > 0,   // vagy később kampány-configból
+  [unlockedRunes]
+);
 
 // ⬇️ ÚJ: ikonképek előtöltése a némítás gombhoz
 useEffect(() => {
@@ -1622,7 +1627,7 @@ const _mustBeFn = (n: string, v: any) => {
   if (t !== "function") { console.error(`[BAD] ${n}:`, v); throw new Error(`${n} is ${t}`); }
 };
 _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
-_mustBeFn("RuneDockOverlay", RuneDockOverlay);
+_mustBeFn("RuneDockdisplay", RuneDockDisplay);
 _mustBeFn("NineSlicePanel", NineSlicePanel);
 _mustBeFn("GeneratedImage_with_fadein", GeneratedImage_with_fadein);
 _mustBeFn("AudioPlayer", AudioPlayer);
@@ -1735,26 +1740,36 @@ return (
     {isLoading && <LoadingOverlay />}
 
     <Canvas>
-      {/* TOPBAR (helykitöltő, ha már van sajátod, tedd ide) */}
-      <div className={canvas.areaTopbar}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", height: "100%" }}>
-          <div style={{ fontWeight: 600 }}>LOGO</div>
-          <div style={{ justifySelf: "center" }}>RUNE DOCK</div>
-          <button style={{ justifySelf: "end" }}>CTA</button>
-        </div>
-      </div>
+  {/* ===== TOPBAR (fix header szekció) ===== */}
+  <div className={canvas.areaTopbar}>
+  <HeaderBar
+    variant="transparent"
+    elevated
+    left={<span className={style.logoText}>LOGO</span>}
+    center={
+      showRuneDock && (
+        <RuneDockDisplay
+          flagIds={unlockedRunes}
+          imagesByFlag={imagesByFlag}
+          delayMs={0}
+        />
+      )
+    }
+    right={<button className={style.cta}>CTA</button>}
+  />
+</div>
 
-      {/* PROGRESS sáv a topbar alatt */}
-      <div className={canvas.areaProgress}>
-        <ProgressStrip value={progressDisplay.value ?? 0} />
-      </div>
+  {/* ===== PROGRESS sáv a topbar alatt ===== */}
+  <div className={canvas.areaProgress}>
+    <ProgressStrip value={progressDisplay.value ?? 0} />
+  </div>
+
 
       {/* MEDIA-kocka (frame + generated image) */}
       <div className={canvas.areaMedia}>
         {showFrame && (
           <MediaFrame
             mode="image"
-            imageProps={{ frameSrc: "/assets/frame.png", fadeIn: true }}
           >
             <GeneratedImage_with_fadein
               pageId={pageData.id}
@@ -1785,16 +1800,6 @@ return (
             pageId={pageData.id}
             backdrop={(
               <>
-                <RuneDockOverlay
-                  flagIds={unlockedRunes /* vagy unlockedRunes ha így nevezed */}
-                  imagesByFlag={imagesByFlag}
-                  usePortal
-                  anchor={anchorPortal as any}
-                  slotSize={RUNE.slot}
-                  slots={RUNE.slots}
-                  offsetX={RUNE.offsetX}
-                  offsetY={RUNE.offsetY}
-                />
                 <BrickBottomOverlay usePortal anchor={anchorPortal as any} position="bottom" />
                 <BrickBottomOverlay usePortal anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
               </>

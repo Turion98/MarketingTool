@@ -1,8 +1,8 @@
 // /components/SkipButton/SkipButton.tsx
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "./SkipButton.module.scss";
-import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick } from "../../lib/analytics";
+import { useGameState } from "../../../lib/GameStateContext";
+import { trackUiClick } from "../../../lib/analytics";
 
 interface SkipButtonProps {
   active: boolean;
@@ -12,7 +12,6 @@ interface SkipButtonProps {
 export default function SkipButton({ active, onSkip }: SkipButtonProps) {
   const [animate, setAnimate] = useState(false);
 
-  // analitika kontextus
   const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
 
   useEffect(() => {
@@ -25,10 +24,7 @@ export default function SkipButton({ active, onSkip }: SkipButtonProps) {
   }, [active]);
 
   const handleClick = useCallback(() => {
-    // eredeti működés
     onSkip();
-
-    // analitika – UI kattintás
     try {
       if (storyId && sessionId && currentPageId) {
         trackUiClick(
@@ -52,12 +48,7 @@ export default function SkipButton({ active, onSkip }: SkipButtonProps) {
       aria-label="Skip"
       title="Skip"
     >
-      <img
-        src="/ui/skip.png"
-        alt=""
-        className={styles.icon}
-        draggable={false}
-      />
+      <span className={styles.label}>Skip</span>
     </button>
   );
 }

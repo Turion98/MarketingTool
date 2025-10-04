@@ -1,95 +1,66 @@
-/* ===== MediaFrame.module.scss — FIXED ===== */
+/* ===== MediaFrame.module.scss (NO CROP, AUTO-HEIGHT) =====
+ * Goals:
+ *  - Never cut the bitmap: use object-fit: contain.
+ *  - Let the content define its own height; do NOT force aspect-ratio.
+ *  - Keep things centered and responsive; no overflow clipping.
+ */
 
 .mediaFrame {
+  /* Container simply takes the available width and lets height grow with content */
   position: relative;
-  width: 100%;
-  max-width: 1100px;
-  aspect-ratio: 16 / 9;
-
-  /* Z-index layering belül determinisztikus legyen */
-  isolation: isolate;
-
-  /* fontos a grid layout + középre igazítás */
   display: grid;
   place-items: center;
-
-  min-height: 0;
-  min-width: 0;
+  inline-size: 100%;
+  max-inline-size: var(--mf-max-w, 1180px);
+  block-size: auto;
+  overflow: visible; /* important: no clipping */
+  /* Remove any inherited aspect-ratio constraints */
+  aspect-ratio: auto;
 }
 
-.mediaFrame img {
-  display: block;
-}
-
-/* FRAME (mindig a tartalom fölött) */
-.frameImage {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  /* A konténer már tartja a 16/9-et.
-     Ha a PNG is 16/9, nincs torzítás. */
-  object-fit: fill;
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* LOGO (tartalom felett, de a keret alatt) */
-.logoUnderlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: end center;
-  padding-bottom: 1.2rem;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.logoImage {
-  width: clamp(80px, 12%, 140px);
-  opacity: 0.9;
-}
-
-/* SAFE AREA — a keret belső ablakának kijelölése */
+/* Optional inner wrapper used by the component */
+.content,
 .inner {
-  --inset-top: var(--mf-inset-top, 0%);
-  --inset-right: var(--mf-inset-right, 0%);
-  --inset-bottom: var(--mf-inset-bottom, 0%);
-  --inset-left: var(--mf-inset-left, 0%);
-
-  position: absolute;
-  top: var(--inset-top);
-  right: var(--inset-right);
-  bottom: var(--inset-bottom);
-  left: var(--inset-left);
-
-  /* Tartalom a safe area-n belül marad */
-  overflow: hidden;
-  z-index: 1;
-
-  min-height: 0;
-  min-width: 0;
-
-  display: grid;
-  place-items: center;
-}
-
-/* CONTENT SLOT — ide kerül a GeneratedImage */
-.content {
   position: relative;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  overflow: hidden; /* kép ne lógjon ki */
+  inline-size: 100%;
+  block-size: auto;     /* allow natural height */
+  overflow: visible;
 }
 
-/* Fade-in animáció az egész frame-re */
-.fadeIn {
-  animation: mf-fade 300ms ease-out both;
+/* Ensure the bitmap scales to width and keeps full content visible */
+.mediaFrame img,
+.mediaFrame canvas {
+  display: block;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  block-size: auto;           /* natural height from intrinsic ratio */
+  object-fit: contain;        /* show the whole image */
+  object-position: center;
 }
 
-@keyframes mf-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* For videos, prefer width-based scaling as well */
+.mediaFrame video {
+  display: block;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  block-size: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* If there's a decorative frame PNG, ensure it doesn't clip content */
+.frameImage,
+.logoUnderlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+/* Safe-area wrapper (if used) should not crop; default to no insets */
+.inner {
+  --inset-top: 0;
+  --inset-right: 0;
+  --inset-bottom: 0;
+  --inset-left: 0;
+  padding: var(--inset-top) var(--inset-right) var(--inset-bottom) var(--inset-left);
 }

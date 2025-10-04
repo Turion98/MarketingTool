@@ -1,7 +1,7 @@
 // /components/RuneDockDisplay.tsx
 "use client";
 import React from "react";
-import style from "./labs/RuneDockOverlay/RuneDockOverlay.module.scss";
+import style from "./RuneDockDisplay.module.scss";
 
 export type RuneKey = "cross" | "branch" | "shield";
 
@@ -13,7 +13,7 @@ type Props = {
   assets?: Partial<Record<RuneKey, string>>;
   order?: RuneKey[];
   ariaLabel?: string;
-  /** Új: késleltetés ms-ben (pl. 500) */
+  /** Késleltetés ms-ben (pl. 500). 0 = nincs késleltetés */
   delayMs?: number;
 };
 
@@ -75,7 +75,7 @@ export default function RuneDockDisplay({
   assets,
   order = DEFAULT_ORDER,
   ariaLabel = "Rune dock",
-  delayMs = 5500,
+  delayMs = 0,
 }: Props) {
   const fromFlags = mapFlagsToKeys(flagIds);
   const fromPaths = detectUnlockedFromPaths(runes);
@@ -95,7 +95,7 @@ export default function RuneDockDisplay({
         draggable={false}
       />
       <div className={style.runeDock__rail}>
-        {order.map((key, i) => {
+        {order.map((key) => {
           const isUnlocked = active.includes(key);
           const savedSrc =
             isUnlocked && keyToFlag[key] ? imagesByFlag[keyToFlag[key] as string] : undefined;
@@ -107,7 +107,7 @@ export default function RuneDockDisplay({
               src={src}
               alt={`${key} rune`}
               className={`${style.runeImg} ${style.runeImgDelayed}`}
-              style={{ animationDelay: "3s"}} // ⬅️ egyszerű késleltetés
+              style={delayMs ? { animationDelay: `${Math.max(0, delayMs)}ms` } : undefined}
               draggable={false}
               role="listitem"
               data-slot-key={key}

@@ -12,6 +12,7 @@ type MeasureBox = {
   dpr: number;
 };
 
+// Kept for API compatibility, but not rendered anymore
 type UnderlayOpts = {
   enabled?: boolean;
   opacity?: number;
@@ -27,9 +28,9 @@ type Props = {
   trackScroll?: boolean;
   /** Visszamérés (panel + content) – layoutot NEM befolyásoljuk vele */
   onMeasure?: (m: MeasureBox) => void;
-  /** Opcionális belső fedőréteg (content alatt) */
+  /** Opcionális belső fedőréteg (content alatt) – NEM rendereljük többé */
   underlay?: UnderlayOpts;
-  /** Opcionális háttérelem a content mögé */
+  /** Opcionális háttérelem a content mögé – NEM rendereljük többé */
   backdrop?: React.ReactNode;
 
   /** Z-index és stacking context kontroll (szülő scope-on belül) */
@@ -43,7 +44,9 @@ export default function NineSlicePanel({
   children,
   trackScroll = false,
   onMeasure,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   underlay,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   backdrop,
   zIndex = 1,
   isolate = true,
@@ -131,21 +134,6 @@ export default function NineSlicePanel({
     zIndex,
   };
 
-  const underlayEnabled = !!underlay?.enabled;
-  const underlayStyle: React.CSSProperties | undefined = underlayEnabled
-    ? {
-        position: "absolute",
-        top: `var(--ns-pad-top)`,
-        right: `var(--ns-pad-right)`,
-        bottom: `var(--ns-pad-bottom)`,
-        left: `var(--ns-pad-left)`,
-        background: underlay?.background ?? "rgba(0,0,0,0.12)",
-        opacity: underlay?.opacity ?? 1,
-        pointerEvents: "none",
-        zIndex: 1,
-      }
-    : undefined;
-
   return (
     <div
       ref={rootRef}
@@ -154,8 +142,7 @@ export default function NineSlicePanel({
       role="group"
       aria-label="Panel"
     >
-      {underlayEnabled && <div style={underlayStyle} aria-hidden />}
-      {backdrop && <div className={s.backdrop} aria-hidden>{backdrop}</div>}
+      {/* backdrop és underlay teljesen eltávolítva */}
       <div ref={contentRef} className={s.content}>
         {children}
       </div>

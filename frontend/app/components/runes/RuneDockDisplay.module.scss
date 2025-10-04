@@ -1,0 +1,51 @@
+/* components/runes/RuneDockDisplay.module.scss */
+.runeDock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  /* NINCS position: fixed/absolute! */
+}
+
+.runeDock__rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.runeDock__frame {
+  height: 24px;
+  opacity: .75;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.runeImg {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.runeImgDelayed {
+  animation: fadeIn .35s ease-out both;
+}
+
+.runeSlot {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  opacity: .35;
+  outline: 1px dashed rgba(255,255,255,.25);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

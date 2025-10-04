@@ -1,6 +1,7 @@
 "use client";
-import React, { KeyboardEvent } from "react";
+import React, { KeyboardEvent, useState } from "react";
 import s from "./ActionBar.module.scss";
+import RestartButton from "../../RestartButton/RestartButton";
 
 type ActionBarProps = {
   canNext: boolean;
@@ -14,10 +15,6 @@ type ActionBarProps = {
   className?: string;
 };
 
-const Icon: React.FC<{ src: string; alt?: string }> = ({ src, alt = "" }) => (
-  <img className={s.icon} src={src} alt={alt} />
-);
-
 const ActionBar: React.FC<ActionBarProps> = ({
   canNext,
   onNext,
@@ -27,7 +24,10 @@ const ActionBar: React.FC<ActionBarProps> = ({
   onReplay,
   muted,
   onToggleMute,
+  className,
 }) => {
+  const [open, setOpen] = useState(false); // mobil drawer állapot
+
   const onKeyActivate =
     (cb: () => void, disabled?: boolean) =>
     (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -39,66 +39,94 @@ const ActionBar: React.FC<ActionBarProps> = ({
     };
 
   return (
-    <div
-      className={s.actionBar}
-      role="toolbar"
-      aria-label="Story controls"
-      data-testid="action-bar"
-    >
+    <>
+      {/* Mobilon látható “megnyitás” gomb (asztalin elrejtve) */}
       <button
         type="button"
-        className={s.btn}
-        disabled={!canSkip}
-        onClick={onSkip}
-        onKeyDown={onKeyActivate(onSkip, !canSkip)}
-        aria-label="Skip typing"
+        className={s.mobileToggle}
+        aria-label="Open actions"
+        aria-controls="actionbar"
+        aria-expanded={open}
+        onClick={() => setOpen(v => !v)}
       >
-        <Icon src="/icons/skip.svg" />
-        <span className={s.label}>Skip</span>
+        Actions
       </button>
 
-      <button
-        type="button"
-        className={s.btn}
-        disabled={!canReplay}
-        onClick={onReplay}
-        onKeyDown={onKeyActivate(onReplay, !canReplay)}
-        aria-label="Replay"
+      <aside
+        id="actionbar"
+        className={[
+          s.actionBar,
+          open ? s.open : "",
+          className ?? "",
+        ].join(" ")}
+        role="complementary"
+        aria-label="Actions sidebar"
+        data-testid="action-bar"
       >
-        <Icon src="/icons/replay.svg" />
-        <span className={s.label}>Replay</span>
-      </button>
+        {/* Fejléc + mobilon zárás */}
+        <div className={s.header}>
+          <span className={s.title}>Actions</span>
+          <button
+            type="button"
+            className={s.close}
+            onClick={() => setOpen(false)}
+            aria-label="Close actions"
+          >
+            Close
+          </button>
+        </div>
 
-      <button
-        type="button"
-        className={s.btn}
-        onClick={onToggleMute}
-        onKeyDown={onKeyActivate(onToggleMute)}
-        aria-label={muted ? "Unmute" : "Mute"}
-        data-state={muted ? "muted" : "unmuted"}
-      >
-        <Icon
-          src={
-            muted
-              ? "/icons/rune_sound_off_128_transparent.png"
-              : "/icons/rune_sound_on_128_transparent.png"
-          }
-        />
-        <span className={s.label}>{muted ? "Muted" : "Sound"}</span>
-      </button>
+        <div className={s.group}>
+          <button
+            type="button"
+            className={s.btn}
+            disabled={!canSkip}
+            onClick={onSkip}
+            onKeyDown={onKeyActivate(onSkip, !canSkip)}
+            aria-label="Skip typing"
+          >
+            <span className={s.label}>Skip</span>
+          </button>
 
-      <button
-        type="button"
-        className={`${s.btn} ${s.primary}`}
-        disabled={!canNext}
-        onClick={onNext}
-        onKeyDown={onKeyActivate(onNext, !canNext)}
-        aria-label="Next"
-      >
-        <Icon src="/icons/next.svg" />
-        <span className={s.label}>Next</span>
-      </button>
-    </div>
+          <button
+            type="button"
+            className={s.btn}
+            disabled={!canReplay}
+            onClick={onReplay}
+            onKeyDown={onKeyActivate(onReplay, !canReplay)}
+            aria-label="Replay"
+          >
+            <span className={s.label}>Replay</span>
+          </button>
+
+          <button
+            type="button"
+            className={s.btn}
+            onClick={onToggleMute}
+            onKeyDown={onKeyActivate(onToggleMute)}
+            aria-label={muted ? "Unmute" : "Mute"}
+            data-state={muted ? "muted" : "unmuted"}
+          >
+            <span className={s.label}>{muted ? "Muted" : "Sound"}</span>
+          </button>
+        </div>
+
+        <div className={s.group}>
+          <button
+            type="button"
+            className={`${s.btn} ${s.primary}`}
+            disabled={!canNext}
+            onClick={onNext}
+            onKeyDown={onKeyActivate(onNext, !canNext)}
+            aria-label="Next"
+          >
+            <span className={s.label}>Next</span>
+          </button>
+
+          <RestartButton className={s.btn} startPageId="landing" aria-label="Restart" />
+        </div>
+      </aside>
+    </>
   );
 };
 

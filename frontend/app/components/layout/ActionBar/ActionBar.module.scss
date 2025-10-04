@@ -1,108 +1,145 @@
 :root {
+  --ab-w: 120px;
+  --ab-gap: 10px;
+  --ab-pad: 12px;
+
   --ab-bg-top: rgba(0, 0, 0, .45);
   --ab-bg-bot: rgba(0, 0, 0, .60);
   --ab-border: rgba(255, 255, 255, .16);
   --ab-shadow: 0 16px 40px rgba(0, 0, 0, .45);
 
-  --btn-bg-top: rgba(255, 255, 255, .12);
-  --btn-bg-bot: rgba(255, 255, 255, .06);
-  --btn-bg-top-disabled: rgba(255, 255, 255, .05);
-  --btn-bg-bot-disabled: rgba(255, 255, 255, .03);
-  --btn-border: rgba(255, 255, 255, .18);
-  --btn-shadow: 0 8px 22px rgba(0, 0, 0, .28);
-  --btn-color: #fff;
-
-  --btn-primary-glow: 0 0 0 0 rgba(255, 230, 120, .0);
-  --btn-primary-glow-active: 0 0 32px 4px rgba(255, 230, 120, .35);
+  --btn-h: 40px;
+  --btn-radius: 12px;
 }
 
+/* ===== Sidebar (jobb oldal) ===== */
 .actionBar {
   position: fixed;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  z-index: 999;
+  top: 12px;
+  right: 12px;
+  height: auto;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+
+  width: var(--ab-w);
+  z-index: 30;
 
   display: flex;
-  gap: 10px;
-  padding: 10px;
+  flex-direction: column;
+  gap: var(--ab-gap);
 
-  border-radius: 14px;
+  padding: var(--ab-pad);
   border: 1px solid var(--ab-border);
-  background: linear-gradient(180deg, var(--ab-bg-top), var(--ab-bg-bot));
-  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  background: linear-gradient(var(--ab-bg-top), var(--ab-bg-bot));
   box-shadow: var(--ab-shadow);
+  backdrop-filter: blur(6px);
 
-  width: max-content;
-  max-width: 95vw;
+  /* ⬇️ alapból elrejtve desktopon is, csak “open” esetben látszik */
+  transform: translateX(calc(100% + 12px));
+  transition: transform 0.25s ease;
+}
+.open {
+  transform: translateX(0);
 }
 
-.btn {
-  appearance: none;
-  -webkit-appearance: none;
+/* Fejléc + mobil close */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.title { font-weight: 600; }
+.close {
+  display: none;
+  border: 1px solid var(--ab-border);
+  background: transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
 
+/* Csoportok */
+.group {
+  display: grid;
+  gap: 8px;
+}
+.group:last-child { margin-bottom: 0; }
+
+/* Gombok */
+.btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-
-  padding: 10px 14px;
-  border-radius: 12px;
-
-  background: linear-gradient(180deg, var(--btn-bg-top), var(--btn-bg-bot));
-  color: var(--btn-color);
-
-  border: 1px solid var(--btn-border);
-  box-shadow: var(--btn-shadow);
-
-  font-size: 14px;
-  letter-spacing: .2px;
-  line-height: 1;
-
+  justify-content: center;
+  height: var(--btn-h);
+  padding: 0 12px;
+  border-radius: var(--btn-radius);
+  border: 1px solid var(--ab-border);
+  background: rgba(255,255,255,.08);
   cursor: pointer;
   user-select: none;
+}
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.primary { background: rgba(255,255,255,.16); }
 
-  transition:
-    transform .08s ease,
-    box-shadow .15s ease,
-    background .2s ease,
-    opacity .2s ease,
-    filter .2s ease;
+.btn img, .btn svg { display: none !important; }
+.label { line-height: 1; }
 
-  &:hover:not(:disabled) { filter: brightness(1.06); }
-  &:active:not(:disabled) { transform: translateY(1px) scale(.995); }
-  &:focus-visible { outline: 2px solid rgba(255, 255, 255, .5); outline-offset: 2px; }
+/* ===== Toggle gomb (desktopon is, mobilon is) ===== */
+.mobileToggle {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 31;
 
-  &:disabled {
-    opacity: .65;
-    cursor: not-allowed;
-    background: linear-gradient(180deg, var(--btn-bg-top-disabled), var(--btn-bg-bot-disabled));
-    box-shadow: none;
+  display: inline-flex;           /* szöveg biztosan látszik */
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ab-border);
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+
+  /* 🔧 kritikus felirat-fixek */
+  color: #fff;                    /* ne olvadjon bele a háttérbe */
+  -webkit-text-fill-color: #fff;  /* Safari */
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  line-height: 1;
+  text-indent: 0;                 /* ha korábban ikon miatt volt eltolva */
+  text-transform: none;
+  white-space: nowrap;
+
+  /* ha valami pseudo-ikon ráülne, nullázzuk */
+  &::before,
+  &::after {
+    content: none !important;
+    display: none !important;
   }
 }
 
-/* kiemelt (Next) */
-.primary {
-  box-shadow: var(--btn-shadow), var(--btn-primary-glow);
-  &:not(:disabled):hover {
-    box-shadow: var(--btn-shadow), var(--btn-primary-glow-active);
+
+/* ===== Mobil: off-canvas drawer ===== */
+@media (max-width: 768px) {
+  .actionBar {
+    right: 0;
+    top: 12px;
+    height: auto;
+    max-height: 82vh;
+    overflow: auto;
+
+    width: min(88vw, 80px);
+    border-radius: 12px 0 0 12px;
+    border-left: 1px solid var(--ab-border);
+    border-right: 0;
+    padding: 14px;
   }
-}
-
-.icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
-
-@media (max-width: 520px) {
-  .actionBar { gap: 8px; padding: 8px; bottom: 14px; }
-  .btn { padding: 9px 10px; }
-  .label { display: none; }
-}
-
-/* ✅ helyi osztállyal kötjük az állapotot */
-.btn[data-state="muted"] {
-  filter: saturate(.8) opacity(.95);
+  .close { display: inline-block; }
 }

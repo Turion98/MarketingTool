@@ -1,31 +1,20 @@
+/* Semleges alap: minden vizuált az ActionBar .btn adjon */
 .restartButton {
-  position: absolute;
-  bottom: 50%;
-  right: 22%;
-  padding: 0.3rem 0.8rem;
-  font-size: 1.2rem;
-  font-weight: 800;
-  font-family: var(--font-cormorant), serif;
-  letter-spacing: 0.1em;
-  border-radius: 8px;
-  background: #1F3A3E80;
-  color: #f2b85b;
-  border: 2px solid #f2b85b;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background: none;
+  border: none;
+  padding: 0;     /* paddinget az ActionBar .btn adja */
+  color: inherit;
+  font: inherit;
+  line-height: 1;
   cursor: pointer;
-  z-index: 900002;
-  transition: all 0.5s ease-in-out;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 0 10px rgba(242, 184, 91, 0.8);
-    transform: scale(1.005);
-    color: #f0b85b;
-    font-size: 1.3rem;
-    -webkit-text-stroke: 0.3px #ffffff95;
-  }
-
-  &:disabled {
-    background-color: #888;
-    animation: none;
+  /* Biztonsági fókusz – ha a szülő nem adná */
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, .5);
+    outline-offset: 2px;
   }
 }

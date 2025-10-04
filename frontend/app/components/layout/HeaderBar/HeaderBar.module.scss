@@ -1,0 +1,65 @@
+.headerBar {
+/* Grid 3 oszlop: left | center | right */
+display: grid;
+grid-template-columns: 1fr auto 1fr;
+align-items: center;
+gap: var(--header-gap, 12px);
+
+
+/* Magasság és belső térköz */
+min-height: var(--header-minh, 56px);
+padding: var(--header-pad-v, 8px) var(--header-pad-h, 12px);
+
+
+/* Háttér / üveg hatás */
+background: var(--header-bg, rgba(0,0,0,.25));
+border: 1px solid var(--header-border, rgba(255,255,255,.12));
+border-radius: var(--header-radius, 14px);
+-webkit-backdrop-filter: blur(var(--header-blur, 6px));
+backdrop-filter: blur(var(--header-blur, 6px));
+box-shadow: var(--header-shadow, 0 8px 24px rgba(0,0,0,.28));
+}
+/* Középső slot tényleg középre igazítva */
+.center {
+justify-self: center;
+}
+
+
+/* Jobb slot a jobb oldalra ragasztva */
+.right {
+justify-self: end;
+display: inline-flex;
+align-items: center;
+gap: var(--header-gap, 12px);
+}
+
+
+/* Bal slot balra igazítva */
+.left {
+justify-self: start;
+display: inline-flex;
+align-items: center;
+gap: var(--header-gap, 12px);
+}
+
+
+/* Változatok */
+.solid {
+background: var(--header-bg-solid, rgba(10,12,16,.85));
+}
+.transparent {
+background: var(--header-bg-trans, rgba(0,0,0,.18));
+}
+
+
+/* Sűrített (dense) mód) */
+.dense {
+min-height: var(--header-minh-dense, 44px);
+padding: var(--header-pad-v-dense, 6px) var(--header-pad-h, 12px);
+}
+
+
+/* Emelt (elevated) árnyék) */
+.elevated {
+box-shadow: var(--header-shadow-strong, 0 12px 32px rgba(0,0,0,.35));
+}
