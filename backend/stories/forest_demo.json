@@ -4,7 +4,25 @@
     "title": "Forest Demo",
     "description": "Egy rövid próbatörténet az erdőben.",
     "coverImage": "/assets/covers/forest.jpg",
-    "startPageId": "ch1_pg1"
+    "startPageId": "ch1_pg1",
+    "campaignId": "forest_demo",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Get the offer",
+        "urlTemplate": "https://example.com/offer?c={{campaignId}}&end={{nodeId}}"
+      },
+      "book_call": {
+        "kind": "link",
+        "label": "Foglalj hívást",
+        "urlTemplate": "https://cal.com/yourteam?ref={{campaignId}}"
+      },
+      "restart": {
+        "kind": "restart",
+        "label": "Játszd újra"
+      }
+    },
+    "endDefaultCta": "default"
   },
   "pages": {
     "ch1_pg1": {
@@ -13,11 +31,11 @@
       "choices": [
         {
           "text": "Tovább mész az ösvényen",
-          "nextPageId": "ch1_pg2"
+          "next": "ch1_pg2"
         },
         {
           "text": "Leülsz egy kőre pihenni",
-          "nextPageId": "ch1_pg3"
+          "next": "ch1_pg3"
         }
       ]
     },
@@ -27,7 +45,11 @@
       "choices": [
         {
           "text": "Visszamész",
-          "nextPageId": "ch1_pg1"
+          "next": "ch1_pg1"
+        },
+        {
+          "text": "Befejezed a túrát",
+          "next": "end"
         }
       ]
     },
@@ -37,9 +59,18 @@
       "choices": [
         {
           "text": "Folytatod az utat",
-          "nextPageId": "ch1_pg2"
+          "next": "ch1_pg2"
         }
       ]
+    },
+    "end": {
+      "id": "end",
+      "type": "end",
+      "title": "Köszönjük!",
+      "text": "Végigjátszottad az erdei demót.",
+      "endMeta": {
+        "cta": "book_call"
+      }
     }
   }
 }

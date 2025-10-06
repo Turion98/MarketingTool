@@ -1,247 +1,323 @@
-# backend/stories/router.py
+# =============================================================
+# Unified router.py — strict schema validation + canonicalizer
+# Keeps legacy helpers (size-limit read, cache clear hook, setup())
+# Endpoints:
+#   - POST /upload-story        (strict by default, supports warnOnly)
+#   - POST /stories/import      (alias; same pipeline)
+# Requires: CoreSchema.json (Draft-07) at:
+#   backend/schemas/CoreSchema.json
+# or set env CORE_SCHEMA_PATH.
+# =============================================================
+
+from __future__ import annotations
+
+import os
+import json
+from typing import Any, Dict, List, Optional, Callable
+
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
-from typing import Callable, Optional, Any, Dict, List
-import os, json, re
-from datetime import datetime
-
-# --- Opcionális régi validátor kompat (ha már használod máshol is) ---
-try:
-    from validators.story_validator import validate_story_dict  # legacy
-except Exception:
-    validate_story_dict = None  # nem kötelező, az új import endpoint nem ezt használja
-
-# --- ÚJ: schema + business rules + migrátor ---
-try:
-    from validation.schema_validator import validate_schema, version_whitelist_ok
-    from validation.business_rules import cross_field_checks
-    from migration.strip_legacy_ux import strip_legacy_ux
-except Exception:
-    # Ha a validation/migration modulok még nincsenek bemásolva:
-    validate_schema = None
-    version_whitelist_ok = None
-    cross_field_checks = None
-    strip_legacy_ux = None
+from jsonschema import Draft7Validator, FormatChecker
 
 router = APIRouter()
 
-_STORIES_DIR: Optional[str] = None
+# ---------- Config ----------
+STORIES_DIR = os.getenv(
+    "STORIES_DIR",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../stories"))
+)
+
+# Core schema útvonal (backend/schemas/CoreSchema.json)
+CORE_SCHEMA_PATH = os.getenv(
+    "CORE_SCHEMA_PATH",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../schemas", "CoreSchema.json"))
+)
+
+# ENV default bugfix: int() cannot parse "5_000_000" on some environments
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", "5000000"))  # ~5MB default
+
+# Ellenőrzés – logoljunk, ha valami hiányzik
+if not os.path.exists(CORE_SCHEMA_PATH):
+    print(f"[router] ⚠️ Core schema not found: {CORE_SCHEMA_PATH}")
+if not os.path.exists(STORIES_DIR):
+    print(f"[router] ⚠️ Stories directory not found: {STORIES_DIR}")
+
+# Optional hooks that might exist elsewhere in your codebase.
+# If not available, they degrade gracefully.
 _clear_story_cache: Optional[Callable[[], None]] = None
+_collect_meta: Optional[Callable[[str], Dict[str, Any]]] = None
 
-# --- Konfigurálható limitek/flag-ek (.env) ---
-_MAX_BYTES = int(os.getenv("STORY_MAX_BYTES", "2097152"))  # 2 MiB
-VALIDATE_MODE_DEFAULT = os.getenv("VALIDATE_MODE", "strict")  # strict|warnOnly
-ENABLE_STRIP_LEGACY_UX = os.getenv("ENABLE_STRIP_LEGACY_UX", "true").lower() == "true"
+try:
+    # If your project defines these somewhere, import them here:
+    # from .cache import clear_story_cache as _clear_story_cache
+    # from .utils import collect_meta as _collect_meta
+    pass
+except Exception:
+    pass
 
-def setup(stories_dir: str, clear_cache: Callable[[], None]) -> None:
-    """
-    Main-ból hívod: beállítja a stories könyvtárat és a cache-ürítést.
-    """
-    global _STORIES_DIR, _clear_story_cache
-    _STORIES_DIR = os.path.abspath(stories_dir)
-    _clear_story_cache = clear_cache
-    os.makedirs(_STORIES_DIR, exist_ok=True)
+# ---------- Schema load ----------
+try:
+    with open(CORE_SCHEMA_PATH, "r", encoding="utf-8") as f:
+        CORE_SCHEMA = json.load(f)
+    SCHEMA_VALIDATOR = Draft7Validator(CORE_SCHEMA, format_checker=FormatChecker())
+except Exception as e:
+    CORE_SCHEMA = None
+    SCHEMA_VALIDATOR = None
+    print(f"[router] ⚠️ CoreSchema init error: {e}")
 
-def _slug(s: str) -> str:
-    s = (s or "").strip().lower()
-    s = re.sub(r"[^a-z0-9_\-]+", "-", s)
-    return re.sub(r"-{2,}", "-", s).strip("-") or "story"
+# ---------- Utilities ----------
+async def _read_json_with_limit(file: Optional[UploadFile], body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if file is not None:
+        content = await file.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail=f"Payload too large (> {MAX_UPLOAD_BYTES} bytes)")
+        try:
+            return json.loads(content.decode("utf-8"))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+    if body is not None:
+        if not isinstance(body, dict):
+            raise HTTPException(status_code=400, detail="Body must be a JSON object")
+        return body
+    raise HTTPException(status_code=400, detail="No file or body provided")
+
+def _slug(txt: Optional[str]) -> str:
+    import re
+    if not txt:
+        return "story"
+    return re.sub(r"[^a-z0-9]+", "-", str(txt).lower()).strip("-")
 
 def _fname_for_id(story_id: str) -> str:
     return f"{story_id}.json"
 
-def _collect_meta(path: str) -> Dict[str, Any]:
+def _ensure_stories_dir() -> None:
+    os.makedirs(STORIES_DIR, exist_ok=True)
+
+# ---------- Canonicalizer ----------
+def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(data, dict):
+        return data
+
+    # (A) If "chapters" missing but "pages" is an object, convert to 1-chapter array
+    if "chapters" not in data and isinstance(data.get("pages"), dict):
+        pages_obj = data["pages"]
+        pages_arr = []
+        for pid, page in pages_obj.items():
+            if isinstance(page, dict) and "id" not in page:
+                page["id"] = pid
+            pages_arr.append(page)
+        data["chapters"] = [{
+            "id": data.get("storyId", "ch1"),
+            "title": data.get("title", ""),
+            "pages": pages_arr
+        }]
+        del data["pages"]
+
+    # (B) Normalize per-page fields
+    def fix_page(p: Dict[str, Any]):
+        if "nextPageId" in p and "next" not in p:
+            p["next"] = p.pop("nextPageId")
+        if isinstance(p.get("choices"), list):
+            for ch in p["choices"]:
+                if isinstance(ch, dict) and "nextPageId" in ch and "next" not in ch:
+                    ch["next"] = ch.pop("nextPageId")
+
+    chapters = data.get("chapters")
+    if isinstance(chapters, list):
+        for ch in chapters:
+            pages = ch.get("pages")
+            # Some legacy content might still use dict under chapters.pages
+            if isinstance(pages, dict):
+                arr = []
+                for pid, page in pages.items():
+                    if isinstance(page, dict) and "id" not in page:
+                        page["id"] = pid
+                    arr.append(page)
+                ch["pages"] = arr
+                pages = arr
+            if isinstance(pages, list):
+                for p in pages:
+                    if isinstance(p, dict):
+                        fix_page(p)
+
+    return data
+
+# ---------- Validator ----------
+def _validate_against_core_schema(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    if SCHEMA_VALIDATOR is None:
+        return [{"path": "", "message": "Core schema not initialized"}]
+    errors: List[Dict[str, Any]] = []
+    for err in SCHEMA_VALIDATOR.iter_errors(data):
+        path = "/".join([str(p) for p in err.path]) or ""
+        errors.append({
+            "path": path,
+            "message": err.message,
+            "keyword": err.validator,
+            "schemaPath": "/".join([str(p) for p in err.schema_path])
+        })
+    return errors
+
+# ---------- Optional semantic checks (graph, reachability, meta) ----------
+def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    problems: List[Dict[str, Any]] = []
+
+    # --- META szemantika ---
+    meta = data.get("meta") or {}
+    ctas = meta.get("ctaPresets") or {}
+    end_default = meta.get("endDefaultCta")
+    start_page = meta.get("startPageId")
+
+    # endDefaultCta: ha string, legyen a ctaPresets kulcsai között
+    if isinstance(end_default, str):
+        if not isinstance(ctas, dict) or end_default not in ctas:
+            problems.append({
+                "path": "meta.endDefaultCta",
+                "message": f"endDefaultCta='{end_default}' is not a key in meta.ctaPresets",
+                "keyword": "exists"
+            })
+
+    # CTA-k: ha kind=link, urlTemplate kezdődjön http/https-sel
+    if isinstance(ctas, dict):
+        for key, c in ctas.items():
+            if isinstance(c, dict) and c.get("kind") == "link":
+                url = c.get("urlTemplate")
+                if not (isinstance(url, str) and url.startswith(("http://", "https://"))):
+                    problems.append({
+                        "path": f"meta.ctaPresets.{key}.urlTemplate",
+                        "message": "urlTemplate must start with http:// or https://",
+                        "keyword": "format"
+                    })
+
+    # --- Page ID-k összegyűjtése ---
+    page_ids = set()
+    chapters = data.get("chapters", [])
+    if isinstance(chapters, list):
+        for ch in chapters:
+            pages = ch.get("pages", [])
+            if isinstance(pages, list):
+                for p in pages:
+                    if isinstance(p, dict) and "id" in p:
+                        page_ids.add(p["id"])
+
+    # startPageId: ha meg van adva, létezzen a pages között
+    if isinstance(start_page, str) and start_page not in page_ids:
+        problems.append({
+            "path": "meta.startPageId",
+            "message": f"startPageId '{start_page}' does not exist in chapters[].pages[].id",
+            "keyword": "exists"
+        })
+
+    # --- next/choices target ellenőrzések ---
+    targets: List[tuple] = []
+    if isinstance(chapters, list):
+        for ch in chapters:
+            pages = ch.get("pages", [])
+            if not isinstance(pages, list):
+                continue
+            for p in pages:
+                if not isinstance(p, dict):
+                    continue
+                nxt = p.get("next")
+                if isinstance(nxt, str):
+                    targets.append((p.get("id"), nxt, "page.next"))
+                for choice in p.get("choices", []) or []:
+                    if isinstance(choice, dict) and isinstance(choice.get("next"), str):
+                        targets.append((p.get("id"), choice["next"], "choice.next"))
+
+    for src, dst, kind in targets:
+        if dst not in page_ids:
+            problems.append({
+                "path": f"{src or ''} -> {dst}",
+                "message": f"Target page id '{dst}' does not exist",
+                "keyword": "exists"
+            })
+
+    return problems
+
+# ---------- Core pipeline ----------
+def _process_and_save_story(
+    data: Dict[str, Any],
+    overwrite: bool,
+    mode: str = "strict"
+) -> Dict[str, Any]:
+    # 1) Canonicalize legacy formats
+    data = _canonicalize_story(data)
+
+    # 2) Schema validation
+    schema_errors = _validate_against_core_schema(data)
+
+    # 3) Semantic checks (optional, extend as needed)
+    sem_errors = _semantic_checks(data)
+
+    errors = schema_errors + sem_errors
+    if mode == "strict" and errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+
+    # 4) Save
+    _ensure_stories_dir()
+    story_id = data.get("storyId") or _slug(data.get("title"))
+    if not story_id:
+        raise HTTPException(status_code=400, detail="Missing storyId/title")
+    dst_name = _fname_for_id(story_id)
+    dst_path = os.path.join(STORIES_DIR, dst_name)
+
+    existed_before = os.path.exists(dst_path)  # overwritten flag fix
+
+    if (not overwrite) and existed_before:
+        raise HTTPException(status_code=409, detail=f"Story already exists: {story_id}")
+
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open(dst_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save story: {e}")
+
+    # 5) Cache clear (if hook provided)
+    try:
+        if callable(_clear_story_cache):
+            _clear_story_cache()
     except Exception:
-        data = {}
-    meta = data.get("meta") if isinstance(data, dict) else {}
-    basename = os.path.basename(path)
-    story_id = (meta or {}).get("id") or os.path.splitext(basename)[0]
-    stat = os.stat(path)
-    created_iso = (meta or {}).get("createdAt") or datetime.fromtimestamp(stat.st_mtime).isoformat()
+        pass
+
+    # 6) Meta collect (if hook provided)
+    meta_info: Dict[str, Any] = {}
+    try:
+        if callable(_collect_meta):
+            meta_info = _collect_meta(dst_path) or {}
+    except Exception:
+        pass
+
     return {
+        "ok": True,
         "id": story_id,
-        "title": (meta or {}).get("title") or story_id,
-        "description": (meta or {}).get("description") or "",
-        "coverImage": (meta or {}).get("coverImage") or "",
-        "createdAt": created_iso,
-        "jsonSrc": f"/stories/{_fname_for_id(story_id)}",
+        "jsonSrc": f"/stories/{dst_name}",
+        "savedTo": dst_path,
+        "overwritten": bool(overwrite and existed_before),
+        "meta": meta_info,
+        "errors": errors if mode == "warnOnly" else []
     }
 
-@router.get("/stories")
-def list_stories() -> List[Dict[str, Any]]:
-    if not _STORIES_DIR:
-        raise HTTPException(status_code=500, detail="Stories dir not configured")
-    out: List[Dict[str, Any]] = []
-    for name in sorted(os.listdir(_STORIES_DIR)):
-        if not name.endswith(".json"):
-            continue
-        path = os.path.join(_STORIES_DIR, name)
-        if not os.path.isfile(path):
-            continue
-        out.append(_collect_meta(path))
-    return out
-
-# --- Közös JSON beolvasó, méretlimittel ---
-async def _read_json_with_limit(file: Optional[UploadFile], body: Optional[Dict[str, Any]]):
-    if file is not None:
-        raw = await file.read()
-        if len(raw) > _MAX_BYTES:
-            raise HTTPException(status_code=413, detail={"errors":[{"path":"","message":f"JSON túl nagy: {len(raw)} B (limit: {_MAX_BYTES} B)","keyword":"size"}]})
-        try:
-            return json.loads(raw.decode("utf-8"))
-        except Exception:
-            raise HTTPException(status_code=400, detail={"errors":[{"path":"","message":"Invalid JSON file","keyword":"parse"}]})
-    elif body is not None:
-        # becsült méret (serialize) – biztonság kedvéért
-        try:
-            raw = json.dumps(body, ensure_ascii=False).encode("utf-8")
-        except Exception:
-            raise HTTPException(status_code=400, detail={"errors":[{"path":"","message":"Body must be JSON object","keyword":"type"}]})
-        if len(raw) > _MAX_BYTES:
-            raise HTTPException(status_code=413, detail={"errors":[{"path":"","message":f"JSON túl nagy: {len(raw)} B (limit: {_MAX_BYTES} B)","keyword":"size"}]})
-        if not isinstance(body, dict):
-            raise HTTPException(status_code=400, detail={"errors":[{"path":"","message":"Body must be JSON object","keyword":"type"}]})
-        return body
-    else:
-        raise HTTPException(status_code=400, detail={"errors":[{"path":"","message":"No file or JSON body provided","keyword":"input"}]})
-
-# --- Csak validáció (legacy endpoint a jelenlegi frontendhez) ---
-@router.post("/validate-story")
-async def validate_story_endpoint(
-    file: UploadFile = File(default=None),
-    body: Optional[Dict[str, Any]] = Body(default=None),
-):
-    if validate_story_dict is None:
-        raise HTTPException(status_code=500, detail="Validator module not available on server")
-    data = await _read_json_with_limit(file, body)
-    ok, errors, warnings = validate_story_dict(data)
-    if not ok:
-        raise HTTPException(status_code=400, detail={"errors": errors, "warnings": warnings})
-    return {"ok": True, "warnings": warnings}
-
-# --- Feltöltés (legacy flow: validáció + mentés) ---
+# ---------- Endpoints ----------
 @router.post("/upload-story", status_code=201)
 async def upload_story(
-    overwrite: bool = Query(default=False, description="Létező azonosító felülírása"),
+    overwrite: bool = Query(default=False, description="Overwrite existing story with same id"),
+    mode: str = Query(default="strict", pattern="^(strict|warnOnly)$"),
     file: UploadFile = File(default=None),
     body: Optional[Dict[str, Any]] = Body(default=None),
 ):
-    if not _STORIES_DIR:
-        raise HTTPException(status_code=500, detail="Stories dir not configured")
-    if validate_story_dict is None:
-        raise HTTPException(status_code=500, detail="Validator module not available on server")
-
     data = await _read_json_with_limit(file, body)
+    return _process_and_save_story(data, overwrite=overwrite, mode=mode)
 
-    # CoreSchema + szemantika (legacy modul)
-    ok, errors, warnings = validate_story_dict(data)
-    if not ok:
-        raise HTTPException(status_code=400, detail={"errors": errors, "warnings": warnings})
-
-    meta = data.get("meta") or {}
-    story_id = (meta.get("id") if isinstance(meta, dict) else None) or _slug(meta.get("title") if isinstance(meta, dict) else None) or data.get("storyId") or "story"
-
-    dst_name = _fname_for_id(story_id)
-    dst_path = os.path.join(_STORIES_DIR, dst_name)
-
-    if (not overwrite) and os.path.exists(dst_path):
-        raise HTTPException(status_code=409, detail=f"Story already exists: {story_id}")
-
-    try:
-        with open(dst_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Save failed: {e}")
-
-    try:
-        if _clear_story_cache:
-            _clear_story_cache()
-    except Exception:
-        pass
-
-    return {
-        "ok": True,
-        "id": story_id,
-        "jsonSrc": f"/stories/{dst_name}",
-        "meta": _collect_meta(dst_path),
-        "overwritten": overwrite and os.path.exists(dst_path),
-        "warnings": warnings,
-    }
-
-# === ÚJ FLOW: /api/stories/import ===
-# Migrátor (strip legacy UX) → JSON Schema (jsonschema) → verzió whitelist → business rules
 @router.post("/stories/import", status_code=201)
 async def import_story(
-    overwrite: bool = Query(default=False, description="Létező azonosító felülírása"),
-    mode: str = Query(default=VALIDATE_MODE_DEFAULT, pattern="^(strict|warnOnly)$"),
+    overwrite: bool = Query(default=False),
+    mode: str = Query(default="strict", pattern="^(strict|warnOnly)$"),
     file: UploadFile = File(default=None),
     body: Optional[Dict[str, Any]] = Body(default=None),
 ):
-    if not _STORIES_DIR:
-        raise HTTPException(status_code=500, detail="Stories dir not configured")
-    if not (validate_schema and version_whitelist_ok and cross_field_checks):
-        raise HTTPException(status_code=500, detail="Validation modules not available on server")
-
-    # 1) Beolvasás + méretlimit
     data = await _read_json_with_limit(file, body)
+    return _process_and_save_story(data, overwrite=overwrite, mode=mode)
 
-    # 2) Opcionális migráció (legacy UX kulcsok eltávolítása)
-    if ENABLE_STRIP_LEGACY_UX:
-        if not strip_legacy_ux:
-            raise HTTPException(status_code=500, detail="Migration module not available on server")
-        data = strip_legacy_ux(data)
-
-    # 3) Strict JSON Schema ellenőrzés
-    ok, schema_errs = validate_schema(data)
-
-    # 4) Sémaverzió whitelist
-    vok, vmsg = version_whitelist_ok(data)
-    if not vok:
-        schema_errs = schema_errs + [{"path": "schemaVersion", "message": vmsg, "keyword": "version", "schemaPath": "Core/VersionWhitelist"}]
-
-    # 5) Cross-field / referenciák csak akkor, ha a sémán átment
-    sem_errs: List[Dict[str, Any]] = []
-    if not schema_errs:
-        sem_errs = cross_field_checks(data)
-
-    # 6) Hibák/Warnok aggregálása
-    errors = (schema_errs or []) + (sem_errs or [])
-    warnings: List[str] = []
-
-    # 7) warnOnly vs strict
-    if (mode or "strict") == "strict" and errors:
-        raise HTTPException(status_code=400, detail={"errors": errors, "warnings": warnings})
-
-    # 8) Mentés
-    meta = data.get("meta") or {}
-    story_id = (meta.get("id") if isinstance(meta, dict) else None) or _slug(meta.get("title") if isinstance(meta, dict) else None) or data.get("storyId") or "story"
-    dst_name = _fname_for_id(story_id)
-    dst_path = os.path.join(_STORIES_DIR, dst_name)
-
-    if (not overwrite) and os.path.exists(dst_path):
-        raise HTTPException(status_code=409, detail=f"Story already exists: {story_id}")
-
-    try:
-        with open(dst_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Save failed: {e}")
-
-    try:
-        if _clear_story_cache:
-            _clear_story_cache()
-    except Exception:
-        pass
-
-    return {
-        "ok": True,
-        "id": story_id,
-        "jsonSrc": f"/stories/{dst_name}",
-        "meta": _collect_meta(dst_path),
-        "overwritten": overwrite and os.path.exists(dst_path),
-        "warnings": warnings,
-        # warnOnly módban visszaadjuk a hibákat is info jelleggel
-        "errors": errors if (mode or "strict") == "warnOnly" else [],
-    }
+# ---------- Optional: setup() for app include ----------
+def setup(app, prefix: str = ""):
+    app.include_router(router, prefix=prefix or "")
+    return router

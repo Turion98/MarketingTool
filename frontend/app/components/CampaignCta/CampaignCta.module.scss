@@ -1,0 +1,30 @@
+:root {
+  --cta-height: 48px;
+  --cta-radius: 14px;
+  --cta-color: #fff;
+  --cta-bg-top: #3a7bd5;
+  --cta-bg-bot: #00d2ff;
+  --cta-border: rgba(255,255,255,.18);
+  --cta-shadow: 0 10px 24px rgba(0,0,0,.35);
+  --cta-font: 16px;
+  --cta-padding: 0 18px;
+  --cta-transition: .2s ease;
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--cta-height);
+  padding: var(--cta-padding);
+  border-radius: var(--cta-radius);
+  border: 1px solid var(--cta-border);
+  color: var(--cta-color);
+  font-size: var(--cta-font);
+  cursor: pointer;
+  background: linear-gradient(to bottom, var(--cta-bg-top), var(--cta-bg-bot));
+  box-shadow: var(--cta-shadow);
+  transition: transform var(--cta-transition), filter var(--cta-transition);
+}
+.ctaBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.ctaBtn:active { transform: translateY(0); filter: brightness(.97); }

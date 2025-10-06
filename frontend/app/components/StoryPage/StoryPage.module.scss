@@ -384,3 +384,50 @@ body {
   80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
 }
+.endCtaOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* hogy ne zárja el a teljes képernyőt, csak a kártya legyen interaktív */
+}
+
+.endCtaCard {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, .55);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 16px;
+  padding: clamp(14px, 2cqi, 20px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(6px);
+  max-width: min(92vw, 560px);
+  width: max-content;
+}
+
+.endCtaTitle {
+  color: #fff;
+  font-size: clamp(16px, 2.2cqi, 20px);
+  text-align: center;
+  margin-bottom: clamp(8px, 1.6cqi, 12px);
+}
+
+.endCtaActions {
+  display: flex;
+  justify-content: center;
+}
+
+.endCtaButton {
+  height: 44px;
+  min-width: 180px;
+  padding: 0 clamp(14px, 2cqi, 18px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: #fff;
+  background: linear-gradient(to bottom, #3a7bd5, #00d2ff);
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+}
+.endCtaButton:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.endCtaButton:active { transform: translateY(0); filter: brightness(.97); }

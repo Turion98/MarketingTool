@@ -3,26 +3,45 @@
 import React from "react";
 import styles from "./Canvas.module.scss";
 
+/** 
+ * Canvas: slotos + visszafelé kompatibilis (children) API.
+ * - Ha bármely slot meg van adva, a grid-területeket rendereli.
+ * - Ha NINCS slot, akkor a régi viselkedéssel a children-t jeleníti meg.
+ */
 type CanvasProps = {
-  children: React.ReactNode;
+  topbar?: React.ReactNode;
+  progress?: React.ReactNode;
+  media?: React.ReactNode;
+  narr?: React.ReactNode;
+  dock?: React.ReactNode;
+  action?: React.ReactNode;
+
+  /** Régi API támogatásához meghagyjuk a children-t */
+  children?: React.ReactNode;
+
   /** Skin token override (inline style), opcionális */
   style?: React.CSSProperties;
   /** Extra class, opcionális */
   className?: string;
 };
 
-/** Egyszerű segédfüggvény a className-ek összefűzésére */
 function cx(...v: Array<string | undefined | false | null>) {
   return v.filter(Boolean).join(" ");
 }
 
-/**
- * Canvas
- * - A teljes játékfelület outer wrap-je (viewport szélesség, max szélesség, padding stb.)
- * - A belső .playfield grid (Media → Narrative → Choices) elrendezését a SCSS biztosítja.
- * - Nincs abszolút pozicionálás itt; minden komponens a "normál flow"-ban marad.
- */
-export default function Canvas({ children, style, className }: CanvasProps) {
+export default function Canvas({
+  topbar,
+  progress,
+  media,
+  narr,
+  dock,
+  action,
+  children,
+  style,
+  className,
+}: CanvasProps) {
+  const hasSlots = !!(topbar || progress || media || narr || dock || action);
+
   return (
     <main
       className={cx(styles.canvasWrap, className)}
@@ -31,7 +50,19 @@ export default function Canvas({ children, style, className }: CanvasProps) {
       aria-label="Interactive Story Canvas"
     >
       <div className={styles.playfield} role="group" aria-label="Playfield">
-        {children}
+        {hasSlots ? (
+          <>
+            <div className={styles.areaTopbar}>{topbar}</div>
+            <div className={styles.areaProgress}>{progress}</div>
+            <div className={styles.areaMedia}>{media}</div>
+            <div className={styles.areaNarr}>{narr}</div>
+            <div className={styles.areaDock}>{dock}</div>
+            <div className={styles.areaAction}>{action}</div>
+          </>
+        ) : (
+          // RÉGI: ha nincs slot, a children megy változatlanul
+          children
+        )}
       </div>
     </main>
   );

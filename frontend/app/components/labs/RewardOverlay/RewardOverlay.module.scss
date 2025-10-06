@@ -37,3 +37,10 @@
   from { opacity: 0.5; }
   to { opacity: 1; }
 }
+.ctaRow {
+  margin-top: clamp(12px, 2cqi, 20px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease forwards;
+}

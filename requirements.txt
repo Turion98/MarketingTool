@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+pydantic
+jsonschema>=4.21.0

@@ -1,409 +1,179 @@
 {
-  "$id": "https://qzera.dev/schemas/story/CoreSchema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Qzera Story Core Schema",
+  "$id": "https://questell.dev/schema/CoreSchema.v2.json",
+  "title": "Questell Core Story Schema (v2)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "storyId", "meta", "pages"],
+  "required": ["schemaVersion", "storyId", "chapters"],
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "title": "Schema version (SemVer)",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "SemVer for schema compatibility. Must match renderer major."
     },
-    "storyId": { "type": "string", "minLength": 1 },
-    "locale": { "type": "string", "minLength": 2 },
+    "storyId": {
+      "type": "string",
+      "pattern": "^[a-z0-9_\\-\\.]{3,64}$"
+    },
+    "title": {
+      "type": "string"
+    },
     "meta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "title": { "type": "string", "minLength": 1 },
-        "author": { "type": "string" },
+        "locale": { "type": "string" },
+
+        "id":        { "type": "string", "pattern": "^[a-z0-9_\\-\\.]{3,64}$" },
+        "title":     { "type": "string" },
         "description": { "type": "string" },
         "coverImage": { "type": "string" },
-        "tags": {
-          "type": "array",
-          "items": { "type": "string" }
+
+        "startPageId": { "type": "string", "pattern": "^[a-z0-9_\\-\\.]{2,64}$" },
+        "campaignId":  { "type": "string", "pattern": "^[a-z0-9_\\-\\.]{2,64}$" },
+
+        "ctaPresets": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/Cta" }
+        },
+
+        "endDefaultCta": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "$ref": "#/definitions/Cta" }
+          ]
         }
       }
     },
-    "engine": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "features": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "transition",
-              "voice",
-              "sfxPlaylist",
-              "layoutHints",
-              "globalUI",
-              "runes",
-              "fragments",
-              "puzzle"
-            ]
-          },
-          "uniqueItems": true
-        }
-      }
-    },
-
-
-    "fragments": {
-      "description": "Global fragment bank (optional).",
-      "type": "array",
-      "items": { "$ref": "#/$defs/FragmentDef" },
-      "uniqueItems": true
-    },
-
-
-    "pages": {
+    "chapters": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/Page" }
-    },
-
-
-    "layout": {},
-    "globalUI": {},
-
-
-    "x-notes": {},
-    "x-*": {}
+      "items": { "$ref": "#/definitions/Chapter" }
+    }
   },
-
-  "patternProperties": {
-    "^x-.*$": {}
-  },
-
-  "$defs": {
-    "Page": {
+  "definitions": {
+    "Cta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id"],
+      "required": ["kind", "label"],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-
-        "text": {
-          "oneOf": [
-            { "type": "string" },
-            {
-              "type": "array",
-              "items": { "type": "string" },
-              "minItems": 1
-            }
-          ]
-        },
-
-       
-        "next": { "$ref": "#/$defs/Next" },
-        "choices": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/Choice" }
-        },
-
-     
-        "fragments": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/FragmentRef" },
-          "uniqueItems": true
-        },
-        "runes": {
-          "type": "array",
-          "items": { "type": "string", "minLength": 1 },
-          "uniqueItems": true
-        },
-
-      
-        "voicePrompt": { "$ref": "#/$defs/VoicePrompt" },
-        "sfxPlaylist": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/SfxEvent" }
-        },
-
-     
-        "imagePrompt": { "$ref": "#/$defs/ImagePrompt" },
-        "imageTiming": { "$ref": "#/$defs/ImageTiming" },
-
-        
-        "reward": { "$ref": "#/$defs/Reward" },
-
-     
-        "type": {
-          "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall"],
-          "default": "default"
-        },
-
-        "layout": {},
-        "globalUI": {},
-
-     
-        "x-notes": {},
-        "x-*": {}
+        "kind": { "type": "string", "enum": ["link", "restart"] },
+        "label": { "type": "string", "minLength": 1 },
+        "urlTemplate": { "type": "string" }
       },
-
-      "patternProperties": {
-        "^x-.*$": {}
-      },
-
       "allOf": [
-       
         {
-          "if": { "properties": { "type": { "const": "transition" } } },
-          "then": { "$ref": "#/$defs/TransitionPage" }
-        },
-        {
-          "if": { "properties": { "type": { "const": "puzzle" } } },
-          "then": { "$ref": "#/$defs/PuzzlePage" }
-        },
-        {
-          "if": { "properties": { "type": { "const": "fragmentRecall" } } },
-          "then": { "$ref": "#/$defs/FragmentRecallPage" }
+          "if": { "properties": { "kind": { "const": "link" } }, "required": ["kind"] },
+          "then": { "required": ["urlTemplate"] }
         }
       ]
     },
 
-
-    "Next": {
-      "description": "Either a direct pageId (string) or a switch-based router object.",
-      "oneOf": [
-        { "type": "string", "minLength": 1 },
-        { "$ref": "#/$defs/NextSwitch" }
-      ]
-    },
-    "NextSwitch": {
+    "Chapter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["switch", "cases"],
+      "required": ["pages"],
       "properties": {
-        "switch": { "type": "string", "minLength": 1 },
-        "cases": {
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_\\-\\.]{2,64}$"
         },
-        "default": { "type": "string", "minLength": 1 }
+        "title": { "type": "string" },
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/Page" }
+        }
       }
     },
-
 
     "Choice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["label"],
+      "required": ["text", "next"],
       "properties": {
-        "label": { "type": "string", "minLength": 1 },
-        "nextPageId": { "type": "string", "minLength": 1 },
-        "lockedIf": { "type": "string" },
-        "actions": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/Action" }
-        },
-        "analytics": { "type": "object" },
-        "extras": { "type": "object" },
-        "x-*": {}
-      },
-      "patternProperties": {
-        "^x-.*$": {}
-      }
-    },
-
-    "Action": {
-      "type": "object",
-      "required": ["type"],
-      "oneOf": [
-        {
-          "properties": { "type": { "const": "setFlag" }, "flag": { "type": "string" }, "value": {} },
-          "required": ["type", "flag"]
-        },
-        {
-          "properties": { "type": { "const": "unlockFragment" }, "fragmentId": { "type": "string" } },
-          "required": ["type", "fragmentId"]
-        },
-        {
-          "properties": { "type": { "const": "lock" }, "key": { "type": "string" } },
-          "required": ["type", "key"]
-        },
-        {
-          "properties": { "type": { "const": "unlock" }, "key": { "type": "string" } },
-          "required": ["type", "key"]
-        }
-      ],
-      "additionalProperties": false
-    },
-
-    "Reward": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "setGlobal": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "locks": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        },
-        "unlocks": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        },
-        "unlockFragments": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        }
-      }
-    },
-
- 
-    "FragmentDef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id"],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "replayImage": { "type": "string" },
-        "extras": { "type": "object" },
-        "x-*": {}
-      },
-      "patternProperties": {
-        "^x-.*$": {}
-      }
-    },
-    "FragmentRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id"],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "extras": { "type": "object" }
-      }
-    },
-
-    
-    "VoicePrompt": {
-      "oneOf": [
-        { "type": "string" },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["text"],
-          "properties": {
-            "text": { "type": "string" },
-            "voice": { "type": "string" },
-            "lang": { "type": "string" }
-          }
-        }
-      ]
-    },
-
-    "SfxEvent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["atMs", "src"],
-      "properties": {
-        "atMs": { "type": "integer", "minimum": 0 },
-        "src": { "type": "string", "minLength": 1 },
-        "gainDb": { "type": "number" },
-        "duck": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "duckToDb": { "type": "number" },
-            "attackMs": { "type": "integer", "minimum": 0 },
-            "releaseMs": { "type": "integer", "minimum": 0 }
-          }
-        }
-      }
-    },
-
-    "ImagePrompt": {
-      "oneOf": [
-        { "type": "string" },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["prompt"],
-          "properties": {
-            "prompt": { "type": "string" },
-            "negative": { "type": "string" },
-            "styleProfile": { "type": "string" },
-            "seed": { "type": "integer" }
-          }
-        }
-      ]
-    },
-
-    "ImageTiming": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "generate": { "type": "boolean" },
-        "on": {
+        "id": {
           "type": "string",
-          "enum": ["pageEnter", "afterVoice"]
-        }
-      }
-    },
-
-    
-    "TransitionPage": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "transition": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["type"],
-          "properties": {
-            "type": { "type": "string", "enum": ["video", "fog", "cut"] },
-            "src": { "type": "string" },
-            "durationMs": { "type": "integer", "minimum": 0 }
-          }
-        }
-      }
-    },
-
-    "PuzzlePage": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "kind": { "type": "string", "enum": ["runes", "riddle"] },
-        "options": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 1
+          "pattern": "^[a-z0-9_\\-\\.]{2,64}$"
         },
-        "answer": { "type": "string" },
-        "maxAttempts": { "type": "integer", "minimum": 1 }
+        "text": { "type": "string", "minLength": 1 },
+        "next": {
+          "type": "string",
+          "pattern": "^[a-z0-9_\\-\\.]{2,64}$",
+          "description": "Target page.id within the same story"
+        }
       }
     },
 
-    "FragmentRecallPage": {
+    "PageBase": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
+      "required": ["id", "type"],
       "properties": {
-        "fragmentRecall": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_\\-\\.]{2,64}$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["narrative", "action", "end"]
+        },
+        "image": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["id"],
           "properties": {
-            "id": { "type": "string" },
-            "showImage": { "type": "boolean" }
+            "src": { "type": "string" },
+            "fit": {
+              "type": "string",
+              "enum": ["cover", "contain", "fill", "scale-down", "none"]
+            },
+            "alt": { "type": "string" }
           }
-        }
+        },
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "src": { "type": "string" },
+            "loop": { "type": "boolean" }
+          }
+        },
+        "text": { "type": "string" }
       }
+    },
+
+    "Page": {
+      "allOf": [
+        { "$ref": "#/definitions/PageBase" },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "type": { "const": "narrative" },
+                "choices": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "$ref": "#/definitions/Choice" }
+                }
+              },
+              "required": ["choices"]
+            },
+            {
+              "properties": {
+                "type": { "enum": ["narrative", "action"] },
+                "next": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_\\-\\.]{2,64}$"
+                }
+              },
+              "required": ["next"]
+            },
+            {
+              "properties": { "type": { "const": "end" } }
+            }
+          ]
+        }
+      ]
     }
   }
 }

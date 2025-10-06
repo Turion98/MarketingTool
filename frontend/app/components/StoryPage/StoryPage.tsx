@@ -63,8 +63,11 @@ import InteractionDock from "../layout/InteractionDock/InteractionDock";
 import ActionBar from "../layout/ActionBar/ActionBar";
 
 import Canvas from "../layout/Canvas/Canvas";
-import canvas from "../layout/Canvas/Canvas.module.scss";
 import HeaderBar from "../layout/HeaderBar/HeaderBar";
+
+import CampaignCta from "../CampaignCta/CampaignCta";
+import { resolveCta } from "../../core/cta/ctaResolver"; // ha nálad 'lib/cta', írd át
+import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
@@ -425,8 +428,6 @@ const normalizeIdList = (v: unknown): string[] => {
   const [devOpen, setDevOpen] = useState(false);
   const [devText, setDevText] = useState<string>("");
 
-  // ⬇️ ÚJ: feedback overlay nyitó flag
-  const [showEnd, setShowEnd] = useState(false);
   // ⬇️ gépelés állapota a lock oldásához
 const [typingDone, setTypingDone] = useState(false);
 
@@ -1011,17 +1012,48 @@ useEffect(() => {
   const choices = useMemo(() => pageData?.choices ?? [], [pageData?.choices]);
   const hasChoices = choices.length > 0;
 
-  /** ⬇️ ÚJ: choice patch – az epilógus „Vége” gomb (id: end_game) next helyett sentinelt kap */
-  const patchedChoices = useMemo(() => {
-    if (!hasChoices) return choices;
-    return choices.map((c: any) => {
-      if (c?.id === "end_game") {
-        return { ...c, next: "__END__" };
-      }
-      return c;
-    });
-  }, [choices, hasChoices]);
 
+// ⬇️ END oldal jelző (egységes végpont)
+// A story JSON-ban: { "id": "end", "type": "end", ... }
+const isEndNode = useMemo(() => pageData?.type === "end", [pageData?.type]);
+
+// --- END CTA context ---
+const endCtaContext: CtaContext = useMemo(() => ({
+  campaignId: derivedStoryId || "unknown_campaign",
+  nodeId: pageData?.id || currentPageId || "unknown_node",
+  sessionId: derivedSessionId || undefined,
+  lang: (globals as any)?.lang ?? undefined,
+  abVariant: (globals as any)?.abVariant ?? null,
+  path: typeof window !== "undefined" ? window.location.pathname : undefined,
+}), [derivedStoryId, pageData?.id, currentPageId, derivedSessionId, (globals as any)?.lang, (globals as any)?.abVariant]);
+
+// --- Node → Campaign → Engine default sorrend ---
+const nodeEndMetaCta = useMemo(
+  () => (pageData as any)?.endCta ?? (pageData as any)?.cta ?? undefined,
+  [pageData]
+);
+
+const campaignCfg: CampaignConfig | undefined = useMemo(() => {
+  const g: any = globals || {};
+  if (g.campaign) return g.campaign as CampaignConfig; // ha van dedikált campaign config
+  const presets = g.ctaPresets || g.campaignCtaPresets || undefined;
+  const endDefaultCta = g.endDefaultCta || g.campaignEndDefaultCta || undefined;
+  if (!derivedStoryId && !presets && !endDefaultCta) return undefined;
+  return {
+    campaignId: derivedStoryId || "unknown_campaign",
+    ctaPresets: presets,
+    endDefaultCta,
+  };
+}, [globals, derivedStoryId]);
+
+const engineDefaultEndCta = useMemo(() => (
+  { kind: "restart", label: "Play again" } as const
+), []);
+
+const resolvedEndCta = useMemo(() =>
+  resolveCta(nodeEndMetaCta, campaignCfg, engineDefaultEndCta, endCtaContext),
+  [nodeEndMetaCta, campaignCfg, engineDefaultEndCta, endCtaContext]
+);
 
 
 /** ⬇️ ÚJ: többes fragmentRecall támogatás – visszatér: string[] (safe) */
@@ -1073,10 +1105,6 @@ const resolvedNext = useMemo(() => {
   );
 }, [pageData, globals]);
 
-const canNext = useMemo(
-  () => !hasChoices && !!resolvedNext && showChoices && !showEnd,
-  [hasChoices, resolvedNext, showChoices, showEnd]
-);
 
 useEffect(() => {
   try {
@@ -1284,14 +1312,6 @@ const handleChoice = useCallback(
       choiceObj,
       fragmentId: choiceObj?.fragmentId,
     });
-
-    // --- END / epilógus sentinel ---
-    if (next === "__END__" || next === "end_game") {
-      try { stopAllSfx(); } catch {}
-      setIsMuted(true);
-      setShowEnd(true);
-      return;
-    }
 
      // 🔑 ÚJ: reward.setGlobal támogatás
     if (reward?.setGlobal && typeof reward.setGlobal === "object") {
@@ -1627,7 +1647,7 @@ const _mustBeFn = (n: string, v: any) => {
   if (t !== "function") { console.error(`[BAD] ${n}:`, v); throw new Error(`${n} is ${t}`); }
 };
 _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
-_mustBeFn("RuneDockdisplay", RuneDockDisplay);
+_mustBeFn("RuneDockDisplay", RuneDockDisplay);
 _mustBeFn("NineSlicePanel", NineSlicePanel);
 _mustBeFn("GeneratedImage_with_fadein", GeneratedImage_with_fadein);
 _mustBeFn("AudioPlayer", AudioPlayer);
@@ -1739,168 +1759,198 @@ return (
 
     {isLoading && <LoadingOverlay />}
 
-    <Canvas>
-  {/* ===== TOPBAR (fix header szekció) ===== */}
-  <div className={canvas.areaTopbar}>
-  <HeaderBar
-    variant="transparent"
-    elevated
-    left={<span className={style.logoText}>LOGO</span>}
-    center={
-      showRuneDock && (
-        <RuneDockDisplay
-          flagIds={unlockedRunes}
-          imagesByFlag={imagesByFlag}
-          delayMs={0}
-        />
-      )
-    }
-    right={<button className={style.cta}>CTA</button>}
-  />
-</div>
-
-  {/* ===== PROGRESS sáv a topbar alatt ===== */}
-  <div className={canvas.areaProgress}>
-    <ProgressStrip value={progressDisplay.value ?? 0} />
-  </div>
-
-
-      {/* MEDIA-kocka (frame + generated image) */}
-      <div className={canvas.areaMedia}>
-        {showFrame && (
-          <MediaFrame
-            mode="image"
-          >
-            <GeneratedImage_with_fadein
-              pageId={pageData.id}
-              prompt={shouldGenerate ? pageData.imagePrompt : undefined}
-              params={stableParams}
-              imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
-              mode={pageData.imageTiming?.mode || "draft"}
-            />
-          </MediaFrame>
-        )}
-      </div>
-
-      {/* NARRÁCIÓS panel (NineSlice content-anchorral, ide portoljuk az overlayeket) */}
-      <div className={canvas.areaNarr} role="region" aria-label="Narration box">
-        <div className={`${style["textbox-container"]} ${expanded ? style.expanded : ""}`}>
-          <NarrativePanel
-            lines={blocks}
-            skipRequested={skipRequested}
-            replayTrigger={replayKey}
-            delayMs={DELAY_MS}
-            onReady={() => setSkipAvailable(true)}
-            onComplete={() => { setTypingDone(true); setShowChoices(true); }}
-            onMeasure={(m: Measure) => { setMeasure(m); }}
-            typingDone={typingDone}
-            lockedMeasure={lockedMeasure}
-            setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
-            firstLockTimerRef={firstLockTimer}
-            pageId={pageData.id}
-            backdrop={(
-              <>
-                <BrickBottomOverlay usePortal anchor={anchorPortal as any} position="bottom" />
-                <BrickBottomOverlay usePortal anchor={anchorPortal as any} src="/ui/brick.png" position="top" />
-              </>
-            )}
+<Canvas
+  /* ===== TOPBAR (fix header szekció) ===== */
+  topbar={
+    <HeaderBar
+      variant="transparent"
+      elevated
+      left={<span className={style.logoText}>LOGO</span>}
+      center={
+        showRuneDock && (
+          <RuneDockDisplay
+            flagIds={unlockedRunes}
+            imagesByFlag={imagesByFlag}
+            delayMs={0}
           />
-        </div>
-      </div>
-
-      {/* INTERAKCIÓS DOCK – puzzle/choices */}
-      <div className={canvas.areaDock}>
-        {showChoices && !showEnd && (
-          <>
-            {isRiddlePage && (() => {
-  const r = pageData as unknown as PuzzleRiddle;
-
-  // Közvetlen DockChoice[] (garantált string id)
-  const riddleDockChoices = r.options.map((label: string, idx: number) => ({
-    id: String(idx),
-    label: String(label),
-  }));
-
-  return (
-    <InteractionDock
-      mode="default"
-      choices={riddleDockChoices}
-      onSelect={(choiceId: string) => handleRiddleAnswer(Number(choiceId))}
+        )
+      }
+      right={null}
     />
-  );
-})()}
+  }
 
-{!isRiddlePage && isRunesPage && (() => {
-  const p = pageData as any;
-  return (
-    <PuzzleRunes
-      options={p.options}
-      answer={p.answer}
-      maxAttempts={p.maxAttempts ?? 3}
-      onResult={(ok) => {
-        const branch = ok ? p.onSuccess : p.onFail;
-        const fl = branch?.setFlags;
-        if (Array.isArray(fl)) fl.forEach((f: string) => setFlag(f));
-        else if (fl && typeof fl === "object") {
-          Object.entries(fl).forEach(([k, v]) => (v ? setFlag(k) : null));
-        }
-        const nx = branch?.goto;
-        if (nx && nx !== pageData?.id) {
-          try { localStorage.setItem("currentPageId", nx); } catch {}
-          goToNextPage(nx);
-        }
-      }}
-    />
-  );
-})()}
+  /* ===== PROGRESS sáv a topbar alatt ===== */
+  progress={<ProgressStrip value={progressDisplay.value ?? 0} />}
 
-{!isRiddlePage && !isRunesPage && Array.isArray(pageData.choices) && pageData.choices.length > 0 && (
-  <InteractionDock
-    mode="default"
-    choices={pageData.choices.map((c: any, idx: number) => ({
-      id: String(c?.id ?? idx), // <-- index fallback a stabil, egyedi key-hez
-      label: String(c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`),
-      disabled: !!c?.disabled,
-    }))}
-    onSelect={(choiceId: string) => {
-      // Ugyanazzal a fallback logikával keresünk vissza:
-      const choice = (pageData.choices ?? []).find((c: any, i: number) =>
-        String(c?.id ?? i) === String(choiceId)
-      );
-      if (!choice) return;
-      handleChoice(String(choice.next ?? ""), (choice as any).reward, choice as any);
-    }}
-  />
-)}
-</>
-)}
-</div>
-
-      {/* ACTION BAR – Skip/Replay/Mute/Next */}
-      <div className={canvas.areaAction}>
-        <ActionBar
-          canNext={!Array.isArray(pageData.choices) && !!resolvedNext && showChoices && !showEnd}
-          onNext={handleNext}
-          canSkip={skipAvailable && !showEnd}
-          onSkip={() => {
-            setSkipRequested(true);
-            setTimeout(() => setSkipRequested(false), 0);
-          }}
-          canReplay={!showEnd}
-          onReplay={() => {
-            setSkipRequested(false);
-            setReplayKey((prev) => prev + 1);
-            triggerAudioRestart();
-          }}
-          muted={!!isMuted}
-          onToggleMute={() => {
-            const newMuted = !isMuted;
-            setIsMuted(newMuted);
-            try { setSfxMuted(newMuted); } catch {}
-          }}
+  /* ===== MEDIA-kocka (frame + generated image) ===== */
+  media={
+    showFrame ? (
+      <MediaFrame mode="image">
+        <GeneratedImage_with_fadein
+          pageId={pageData.id}
+          prompt={shouldGenerate ? pageData.imagePrompt : undefined}
+          params={stableParams}
+          imageTiming={{ ...stableImageTiming, generate: shouldGenerate }}
+          mode={pageData.imageTiming?.mode || "draft"}
         />
-      </div>
-    </Canvas>
+      </MediaFrame>
+    ) : null
+  }
+
+  /* ===== NARRÁCIÓS panel ===== */
+  narr={
+    <div
+      className={`${style["textbox-container"]} ${
+        expanded ? style.expanded : ""
+      }`}
+      role="region"
+      aria-label="Narration box"
+    >
+      <NarrativePanel
+        lines={blocks}
+        skipRequested={skipRequested}
+        replayTrigger={replayKey}
+        delayMs={DELAY_MS}
+        onReady={() => setSkipAvailable(true)}
+        onComplete={() => {
+          setTypingDone(true);
+          setShowChoices(true);
+        }}
+        onMeasure={(m: Measure) => {
+          setMeasure(m);
+        }}
+        typingDone={typingDone}
+        lockedMeasure={lockedMeasure}
+        setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
+        firstLockTimerRef={firstLockTimer}
+        pageId={pageData.id}
+        backdrop={
+          <>
+            <BrickBottomOverlay
+              usePortal
+              anchor={anchorPortal as any}
+              position="bottom"
+            />
+            <BrickBottomOverlay
+              usePortal
+              anchor={anchorPortal as any}
+              src="/ui/brick.png"
+              position="top"
+            />
+          </>
+        }
+      />
+    </div>
+  }
+
+  /* ===== INTERAKCIÓS DOCK – puzzle/choices ===== */
+  dock={
+    showChoices &&  !isEndNode ? (
+      <>
+        {isRiddlePage &&
+          (() => {
+            const r = pageData as unknown as PuzzleRiddle;
+            const riddleDockChoices = r.options.map(
+              (label: string, idx: number) => ({
+                id: String(idx),
+                label: String(label),
+              })
+            );
+            return (
+              <InteractionDock
+                mode="default"
+                choices={riddleDockChoices}
+                onSelect={(choiceId: string) =>
+                  handleRiddleAnswer(Number(choiceId))
+                }
+              />
+            );
+          })()}
+
+        {!isRiddlePage &&
+          isRunesPage &&
+          (() => {
+            const p = pageData as any;
+            return (
+              <PuzzleRunes
+                options={p.options}
+                answer={p.answer}
+                maxAttempts={p.maxAttempts ?? 3}
+                onResult={(ok) => {
+                  const branch = ok ? p.onSuccess : p.onFail;
+                  const fl = branch?.setFlags;
+                  if (Array.isArray(fl)) fl.forEach((f: string) => setFlag(f));
+                  else if (fl && typeof fl === "object") {
+                    Object.entries(fl).forEach(([k, v]) => v && setFlag(k));
+                  }
+                  const nx = branch?.goto;
+                  if (nx && nx !== pageData?.id) {
+                    try {
+                      localStorage.setItem("currentPageId", nx);
+                    } catch {}
+                    goToNextPage(nx);
+                  }
+                }}
+              />
+            );
+          })()}
+
+        {!isRiddlePage &&
+          !isRunesPage &&
+          Array.isArray(pageData.choices) &&
+          pageData.choices.length > 0 && (
+            <InteractionDock
+              mode="default"
+              choices={pageData.choices.map((c: any, idx: number) => ({
+                id: String(c?.id ?? idx),
+                label: String(
+                  c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`
+                ),
+                disabled: !!c?.disabled,
+              }))}
+              onSelect={(choiceId: string) => {
+                const choice = (pageData.choices ?? []).find(
+                  (c: any, i: number) => String(c?.id ?? i) === String(choiceId)
+                );
+                if (!choice) return;
+                handleChoice(
+                  String(choice.next ?? ""),
+                  (choice as any).reward,
+                  choice as any
+                );
+              }}
+            />
+          )}
+      </>
+    ) : null
+  }
+
+  /* ===== ACTION BAR – Skip/Replay/Mute/Next ===== */
+  action={
+    <ActionBar
+  canNext={!Array.isArray(pageData.choices) && !!resolvedNext && showChoices && !isEndNode}
+  onNext={handleNext}
+  canSkip={skipAvailable && !isEndNode}
+  onSkip={() => {
+    setSkipRequested(true);
+    setTimeout(() => setSkipRequested(false), 0);
+  }}
+  canReplay={!isEndNode}
+  onReplay={() => {
+    setSkipRequested(false);
+    setReplayKey((prev) => prev + 1);
+    triggerAudioRestart();
+  }}
+  muted={!!isMuted}
+  onToggleMute={() => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    try { setSfxMuted(newMuted); } catch {}
+  }}
+/>
+
+  }
+/>
 
     {/* AUDIO és overlayek a Canvas alatt maradnak */}
     <AudioPlayer
@@ -1934,16 +1984,6 @@ return (
       />
     )}
 
-    {showEnd && (
-      <FeedbackOverlay
-        onRestart={() => {
-          try { stopAllSfx(); } catch {}
-          localStorage.removeItem("currentPageId");
-          window.location.href = "/";
-        }}
-        show
-      />
-    )}
 
     {runeAnim && (
       <RuneSaveOverlay
@@ -1977,6 +2017,18 @@ return (
         }}
       />
     )}
+    {/* ==== END OLDAL CTA (átmeneti, nem inline stílus) ==== */}
+{isEndNode && (
+  <div className={style.endCtaOverlay}>
+    <div className={style.endCtaCard}>
+      <div className={style.endCtaTitle}>Köszönjük, végigjátszottad a kampányt!</div>
+      <div className={style.endCtaActions}>
+        <CampaignCta cta={resolvedEndCta} context={endCtaContext} />
+      </div>
+    </div>
+  </div>
+)}
+
   </div>
 );
 }

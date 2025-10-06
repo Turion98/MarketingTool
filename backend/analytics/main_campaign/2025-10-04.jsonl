@@ -1428,3 +1428,13 @@
 {"id": "e_9d5oxi5ugqbmgceltu0", "t": "page_exit", "ts": 1759590254664, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 79133, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
 {"_type": "batch_header", "ts": "2025-10-04T15:04:38.997883Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
 {"id": "e_9d5oxi5ugqbmgceltu0", "t": "page_exit", "ts": 1759590254664, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 79133, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
+{"_type": "batch_header", "ts": "2025-10-04T15:08:26.272687Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
+{"id": "e_0mp8roeriy4hmgcer246", "t": "page_exit", "ts": 1759590498678, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 244014, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
+{"_type": "batch_header", "ts": "2025-10-04T15:11:40.935024Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
+{"id": "e_1hmffwvh5qzmgceuue8", "t": "page_exit", "ts": 1759590675296, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 176617, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
+{"_type": "batch_header", "ts": "2025-10-04T15:11:40.973217Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
+{"id": "e_1hmffwvh5qzmgceuue8", "t": "page_exit", "ts": 1759590675296, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 176617, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
+{"_type": "batch_header", "ts": "2025-10-04T15:32:51.958515Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
+{"id": "e_25mqoefjl4bmgcfmauo", "t": "page_exit", "ts": 1759591956336, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 1281038, "userId": "u_5tgv9wdq6lvmfxluvsm"}}
+{"_type": "batch_header", "ts": "2025-10-04T15:32:51.958897Z", "storyId": "main_campaign", "userId": "u_5tgv9wdq6lvmfxluvsm", "device": {}, "count": 1}
+{"id": "e_25mqoefjl4bmgcfmauo", "t": "page_exit", "ts": 1759591956336, "storyId": "main_campaign", "sessionId": "sess_j8g2es0cp8mg1yhxd6", "pageId": "ch1_pg3", "refPageId": null, "props": {"dwellMs": 1281038, "userId": "u_5tgv9wdq6lvmfxluvsm"}}

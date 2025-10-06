@@ -285,8 +285,8 @@ app.include_router(feedback_router, prefix="/api")
 
 # === Stories router bekötése (lista + feltöltés) ===
 from storysvc import router as stories_router
-stories_router.setup(stories_dir=STORIES_DIR, clear_cache=_load_story.cache_clear)
 app.include_router(stories_router.router, prefix="/api")
+
 
 
 # --- Statikus mappák ---
