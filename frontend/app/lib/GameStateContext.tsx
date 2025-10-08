@@ -111,8 +111,8 @@ type GameStateContextType = {
   hasFlag: (id: string) => boolean;
 
   /** globals (pl. route_ch3) */
-  globals: Record<string, string>;
-  setGlobal: (key: string, value: string) => void;
+  globals: Record<string, any>;
+  setGlobal: (key: string, value: any) => void;
   setStorySrc?: (src: string) => void;
 
   /** 🔹 Rúna: flagId → mentett PNG URL (persistált) */
@@ -206,7 +206,7 @@ export function resolveNextFromPage(page?: PageData | null, g: Record<string, st
   return sw.cases?.[val] ?? sw.default ?? null;
 }
 // Helper: storyId kinyerése (globals.storyId || file basename a storySrc-ből || storyTitle slug)
-function deriveStoryId(globals: Record<string, string>): string | undefined {
+function deriveStoryId(globals: Record<string, any>): string | undefined {
   const direct = (globals as any)?.storyId;
   if (direct && typeof direct === "string") return direct.trim() || undefined;
 
@@ -249,7 +249,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [unlockedFragments, setUnlockedFragmentsState] = useState<string[]>([]);
   const [fragments, setFragments] = useState<Record<string, FragmentData>>({});
   const [globalFragments, setGlobalFragments] = useState<FragmentBank>({});
-  const [globals, setGlobals] = useState<Record<string, string>>({});
+  const [globals, setGlobals] = useState<Record<string, any>>({});
 
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isMuted, setMuted] = useState<boolean>(false);
@@ -290,7 +290,7 @@ const [sessionId, setSessionId] = useState<string | undefined>(undefined);
       const f = parseJSON<Record<string, FragmentData>>(localStorage.getItem(LS_KEYS.fragments), {});
       const g = parseJSON<FragmentBank>(localStorage.getItem(LS_KEYS.globalBank), {});
       const fl = parseJSON<string[]>(localStorage.getItem(LS_KEYS.flags), []);
-      const gl = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.globals), {});
+      const gl = parseJSON<Record<string, any>>(localStorage.getItem(LS_KEYS.globals), {});
       const rb = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.runeImgs), {});
       const stSrc = localStorage.getItem(LS_KEYS.storySrc) ?? undefined;
       const stTitle = localStorage.getItem(LS_KEYS.storyTitle) ?? undefined;
@@ -490,7 +490,7 @@ setStoryMeta(sid, {
   const hasFlag = useCallback((id: string) => flagsState.has(id), [flagsState]);
 
   /** GLOBALS API */
-  const setGlobal = useCallback((key: string, value: string) => {
+  const setGlobal = useCallback((key: string, value: any) => {
     if (!key) return;
     setGlobals((prev) => {
       const next = { ...prev, [key]: value };
@@ -501,20 +501,48 @@ setStoryMeta(sid, {
     });
   }, []);
 
-  /** Convenience: storySrc setter */
+/** Convenience: storySrc setter */
 const setStorySrc = useCallback(
   (src: string) => {
     if (!src) return;
 
+    // forrás elmentése
     try { localStorage.setItem(LS_KEYS.storySrc, src); } catch {}
     setGlobal("storySrc", src);
+
+    // ✅ Meta-prefetch: töltsük be a story JSON-t és tegyük be OBJektumként a globals-ba
+    try {
+      const metaUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
+      fetch(metaUrl)
+        .then(r => r.json())
+        .then(story => {
+          if (story?.meta) {
+            // fontos: NEM stringként, hanem objektumként adjuk a globals-hoz
+            setGlobal("meta", story.meta);
+
+            // gyors eléréshez felrakjuk a kulcs elemeket is
+            if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
+            if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
+            if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
+            if (story.meta?.id) setGlobal("storyId", story.meta.id);
+
+            // opcionális: cache-eld LS-be is a meta-t (teljes globals-t úgyis elmentjük külön)
+            try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+
+            console.log("[GameState] Meta loaded:", story.meta);
+          }
+        })
+        .catch(err => console.warn("[GameState] meta load error", err));
+    } catch (err) {
+      console.warn("[GameState] meta prefetch failed", err);
+    }
 
     // 🔄 új sztori: progress reset
     setVisitedPages(new Set());
     setProgressValue(0);
     setProgressDisplay({ value: 0, milestones: [] });
 
-    // 🔹 Analytics re-init (EZT tedd a callbacken belülre!)
+    // 🔹 Analytics re-init
     const newGlobals = { ...globals, storySrc: src };
     const newStoryId = deriveStoryId(newGlobals);
     setStoryId(newStoryId);
@@ -525,10 +553,9 @@ const setStorySrc = useCallback(
         const sess = getOrCreateSessionId(newStoryId);
         setSessionId(sess);
 
-        // Itt is a callback paramétert használd, nem a régi globals-t
         setStoryMeta(newStoryId, {
           title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
-          src, // ✅ helyes itt, mert létezik a paraméter
+          src, // itt a paraméter a biztos
           campaign: globals?.campaign || localStorage.getItem("campaign") || undefined,
           userId: getOrCreateUserId(),
         });
@@ -537,7 +564,7 @@ const setStorySrc = useCallback(
       }
     }
   },
-  [setGlobal, globals] // ✅ kell a globals a deriveStoryId-hoz
+  [setGlobal, globals] // kell a deriveStoryId-hoz
 );
 
 
@@ -742,6 +769,39 @@ const setStorySrc = useCallback(
         };
 
         setCurrentPageData(normalized);
+        setCurrentPageData(normalized);
+
+// ⬇️ Meta backfill: MINDIG frissítjük a meta-t az aktuális storySrc alapján
+try {
+  const metaSrc = (globals?.storySrc || localStorage.getItem(LS_KEYS.storySrc) || "")
+    .replace(/^\/?stories\//, "/stories/"); // kis normalizálás
+
+  if (metaSrc) {
+    const full = metaSrc.startsWith("http")
+      ? metaSrc
+      : `http://127.0.0.1:8000${metaSrc}`;
+
+    fetch(full)
+      .then(r => r.json())
+      .then(story => {
+        if (story?.meta) {
+          setGlobal("meta", story.meta);
+          if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
+          if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
+          if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
+          if (story.meta?.id) setGlobal("storyId", story.meta.id);
+
+          // opcionális: cache frissítése
+          try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+
+          console.log("[GameState] Meta refreshed:", story.meta);
+        }
+      })
+      .catch(err => console.warn("[GameState] meta refresh error", err));
+  }
+} catch {}
+
+
         setGlobalError(null);
       } catch (err: any) {
         if (err?.name !== "AbortError") {

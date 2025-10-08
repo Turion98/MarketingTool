@@ -1,37 +1,62 @@
-import { CtaConfig, CampaignConfig, CtaContext } from "./ctaTypes";
+import { CtaConfig, CtaContext, CampaignConfig } from "./ctaTypes";
 
-const tokenize = (tpl: any, ctx: CtaContext): any => {
-  if (typeof tpl === "string") {
-    return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => (ctx as any)[k] ?? "");
-  }
-  if (tpl && typeof tpl === "object") {
-    const out: any = Array.isArray(tpl) ? [] : {};
-    for (const k in tpl) out[k] = tokenize(tpl[k], ctx);
-    return out;
-  }
-  return tpl;
-};
+// Minimál sablonhelyettesítés – {{key}} → context[key]
+function interpolate(s: string, ctx: Record<string, any>): string {
+  if (!s) return s;
+  return s.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    (ctx && ctx[k] != null) ? String(ctx[k]) : ""
+  );
+}
 
+/**
+ * nodeEndMeta: pl. { cta: "google" } vagy { cta: { kind:"link", ... } }
+ * campaignCfg: { campaignId, ctaPresets, endDefaultCta }
+ * engineDefault: pl. { kind:"restart", label:"Play again" }
+ */
 export function resolveCta(
-  nodeEndMetaCta: string | CtaConfig | undefined,
+  nodeEndMeta: any,
   campaignCfg: CampaignConfig | undefined,
   engineDefault: CtaConfig,
   ctx: CtaContext
 ): CtaConfig {
-  // 1) node override
-  if (nodeEndMetaCta) {
-    if (typeof nodeEndMetaCta === "string") {
-      const preset = campaignCfg?.ctaPresets?.[nodeEndMetaCta];
-      if (preset) return tokenize({ ...preset, presetKey: nodeEndMetaCta }, ctx);
-    } else {
-      return tokenize(nodeEndMetaCta, ctx);
+  const presets = campaignCfg?.ctaPresets ?? {};
+  const endDefaultKey = campaignCfg?.endDefaultCta;
+
+  // 1) Node preferencia
+  const nodeCta = nodeEndMeta?.cta ?? nodeEndMeta;
+  if (nodeCta) {
+    // a) ha string, presetet keresünk
+    if (typeof nodeCta === "string") {
+      const p = (presets as any)[nodeCta];
+      if (p) {
+        return {
+          ...p,
+          // fontos: minden opcionális mezőt is engedjünk át
+          label: p.label ?? "Continue",
+          urlTemplate: p.urlTemplate ? interpolate(p.urlTemplate, ctx) : p.urlTemplate,
+          presetKey: nodeCta,
+        } as CtaConfig;
+      }
+    }
+    // b) ha objektum, közvetlenül használjuk (interpoláció, ha van template)
+    if (typeof nodeCta === "object") {
+      const out = { ...nodeCta } as any;
+      if (out.urlTemplate) out.urlTemplate = interpolate(out.urlTemplate, ctx);
+      return out as CtaConfig;
     }
   }
-  // 2) campaign default
-  const defKey = campaignCfg?.endDefaultCta;
-  if (defKey && campaignCfg?.ctaPresets?.[defKey]) {
-    return tokenize({ ...campaignCfg.ctaPresets![defKey], presetKey: defKey }, ctx);
+
+  // 2) Campaign default preset (ha van)
+  if (endDefaultKey && (presets as any)[endDefaultKey]) {
+    const p = (presets as any)[endDefaultKey];
+    return {
+      ...p,
+      label: p.label ?? "Continue",
+      urlTemplate: p.urlTemplate ? interpolate(p.urlTemplate, ctx) : p.urlTemplate,
+      presetKey: endDefaultKey,
+    } as CtaConfig;
   }
-  // 3) engine default
-  return tokenize(engineDefault, ctx);
+
+  // 3) Engine default
+  return engineDefault;
 }

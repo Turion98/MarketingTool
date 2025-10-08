@@ -317,6 +317,45 @@ async def import_story(
     data = await _read_json_with_limit(file, body)
     return _process_and_save_story(data, overwrite=overwrite, mode=mode)
 
+@router.get("/stories")
+def list_stories():
+    """
+    Lists all story JSON files under STORIES_DIR.
+    Returns meta info if available.
+    """
+    if not os.path.isdir(STORIES_DIR):
+        raise HTTPException(status_code=500, detail=f"Stories directory not found: {STORIES_DIR}")
+
+    out: list[dict[str, any]] = []
+    for fn in os.listdir(STORIES_DIR):
+        if not fn.lower().endswith(".json"):
+            continue
+        full = os.path.join(STORIES_DIR, fn)
+        try:
+            with open(full, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            meta = data.get("meta", {})
+            out.append({
+                "id": meta.get("id") or os.path.splitext(fn)[0],
+                "title": meta.get("title") or os.path.splitext(fn)[0],
+                "description": meta.get("description") or "",
+                "coverImage": meta.get("coverImage") or "",
+                "jsonSrc": f"/stories/{fn}",
+                "startPageId": meta.get("startPageId") or "ch1_pg1",
+                "createdAt": meta.get("createdAt") or "",
+            })
+        except Exception as e:
+            out.append({
+                "id": os.path.splitext(fn)[0],
+                "title": fn,
+                "error": str(e),
+                "jsonSrc": f"/stories/{fn}",
+            })
+
+    # rendezés név szerint
+    out.sort(key=lambda x: x["title"].lower())
+    return out
+
 # ---------- Optional: setup() for app include ----------
 def setup(app, prefix: str = ""):
     app.include_router(router, prefix=prefix or "")

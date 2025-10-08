@@ -1,8 +1,26 @@
 import { CtaConfig, CtaContext } from "./ctaTypes";
-import { trackUiClick } from "../../lib/analytics"; // meglévő analitika hívód
+import { trackUiClick } from "../../lib/analytics";
 
-// bővíthető registry custom CTA-hoz:
-const customRegistry: Record<string, (cfg: CtaConfig, ctx: CtaContext) => Promise<void> | void> = {};
+function isExternal(url: string): boolean {
+  try {
+    const u = new URL(url, window.location.href);
+    return u.origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+function triggerDownload(url: string, filename?: string, rel?: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  if (filename === true as any) a.setAttribute("download", "");
+  else if (typeof filename === "string") a.setAttribute("download", filename);
+  if (rel) a.setAttribute("rel", rel);
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
 export function registerCustomCta(
   id: string,
@@ -11,120 +29,63 @@ export function registerCustomCta(
   customRegistry[id] = fn;
 }
 
-// belső analitika wrapper – egységesítve a CTA eseményekhez
-function track(name: string, ctx: CtaContext, meta: Record<string, any> = {}) {
-  try {
-    const campaignId = ctx.campaignId ?? "unknown_campaign";
-    const sessionId  = ctx.sessionId  ?? "unknown_session";
-    const pageId     = ctx.nodeId     ?? "unknown_node";
-    trackUiClick(
-      campaignId,
-      sessionId,
-      pageId,
-      name,                          // pl. "cta_click" | "cta_result"
-      meta
-    );
-  } catch {
-    // swallow – analitika hiba ne törje a CTA-t
-  }
-}
+// bővíthető registry custom CTA-hoz:
+const customRegistry: Record<string, (cfg: CtaConfig, ctx: CtaContext) => Promise<void> | void> = {};
 
-export async function dispatchCta(cfg: CtaConfig, ctx: CtaContext): Promise<void> {
-  // kattintás log
-  track("cta_click", ctx, {
-    kind: cfg.kind,
-    presetKey: (cfg as any).presetKey ?? null,
-    label: (cfg as any).label ?? null,
-  });
-
+export async function dispatchCta(cfg: CtaConfig, ctx: CtaContext) {
   try {
+    // alap analitika – opcionális
+    try {
+      trackUiClick(
+        ctx.campaignId ?? "unknown_campaign",
+        ctx.sessionId ?? "sess_unknown",
+        ctx.nodeId ?? "unknown_node",
+        `cta:${(cfg as any).presetKey ?? cfg.kind}`,
+        { kind: cfg.kind }
+      );
+    } catch {}
+
     switch (cfg.kind) {
       case "link": {
         const url = (cfg as any).urlTemplate as string;
-        const target = (cfg as any).target ?? "_top";
-        if (typeof window !== "undefined" && typeof window.open === "function") {
-          const w = window.open(url, target);
-          // biztonság kedvéért noopener/noreferrer (target=_blank esetén)
-          if (w && target === "_blank") {
-            try { (w as any).opener = null; } catch {}
-          }
-        }
+        const explicitTarget = (cfg as any).target as string | undefined;
+
+        // Dispatcherben konzervatív default: ha nincs target,
+        // belsőnél _self, külsőnél _blank (mint a gombban).
+        const target = explicitTarget ?? (isExternal(url) ? "_blank" : "_self");
+
+        window.open(url, target);
         return;
       }
 
       case "download": {
         const url = (cfg as any).urlTemplate as string;
-        const filename = (cfg as any).filename ?? "";
-        if (typeof document !== "undefined") {
-          const a = document.createElement("a");
-          a.href = url;
-          if (filename) a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        }
-        return;
-      }
-
-      case "webhook": {
-        const endpoint = (cfg as any).endpoint as string;
-        const method = String((cfg as any).method ?? "POST").toUpperCase();
-        const payload = (cfg as any).payloadTemplate ?? {};
-        const started = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-
-        const res = await fetch(endpoint, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: method === "POST" || method === "PUT" || method === "PATCH"
-            ? JSON.stringify(payload)
-            : undefined
-        });
-
-        const ended = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-        track("cta_result", ctx, {
-          status: res.status,
-          ok: res.ok,
-          latencyMs: Math.round(ended - started),
-        });
-        return;
-      }
-
-      case "share": {
-        const text = (cfg as any).textTemplate ?? "";
-        const url = (cfg as any).urlTemplate ?? (typeof location !== "undefined" ? location.href : "");
-        if (typeof navigator !== "undefined" && (navigator as any).share) {
-          await (navigator as any).share({ text, url });
-        } else if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(url);
-          // opcionális UX: toast/alert
-          try { alert("Link copied to clipboard"); } catch {}
-        }
+        const filename = (cfg as any).filename as string | undefined;
+        const rel = (cfg as any).rel as string | undefined;
+        triggerDownload(url, filename, rel);
         return;
       }
 
       case "restart": {
-        // engine reset / routing – projekted szerint
-        if (typeof window !== "undefined") {
-          window.location.reload();
-        }
+        // ide jöhet a restart logika, ha van
+        // pl.: window.location.reload();
+        window.location.reload();
         return;
       }
 
-      case "custom": {
-        const id = (cfg as any).actionId as string;
+      default: {
+        // custom CTA-k
+        const id = (cfg as any).id || (cfg as any).presetKey || cfg.kind;
         const fn = customRegistry[id];
         if (fn) {
           await fn(cfg, ctx);
-        } else {
-          console.warn("Unknown custom CTA:", id);
+          return;
         }
+        console.warn("[CTA] Unknown kind and no custom handler:", cfg);
         return;
       }
     }
-  } catch (e: any) {
-    track("cta_result", ctx, {
-      status: "error",
-      errorMessage: String(e?.message ?? e),
-    });
+  } catch (err) {
+    console.error("[CTA] dispatch error:", err);
   }
 }

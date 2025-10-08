@@ -20,6 +20,12 @@
       "restart": {
         "kind": "restart",
         "label": "Játszd újra"
+      },
+      "google": {
+        "kind": "link",
+        "label": "Jutalom",
+        "urlTemplate": "https://www.google.com",
+        "target": "_blank"
       }
     },
     "endDefaultCta": "default"
@@ -69,7 +75,7 @@
       "title": "Köszönjük!",
       "text": "Végigjátszottad az erdei demót.",
       "endMeta": {
-        "cta": "book_call"
+        "cta": "google"
       }
     }
   }

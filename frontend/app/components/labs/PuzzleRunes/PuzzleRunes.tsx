@@ -1,134 +1,131 @@
 "use client";
 import React, { useRef, useState } from "react";
-import { useGameState } from "../../../lib/GameStateContext";
-import { trackPuzzleTry, trackPuzzleResult, trackUiClick } from "../../../lib/analytics";
+import { trackPuzzleResult } from "../../../lib/analytics";
 
-export default function PuzzleRunes({
-  options, answer, maxAttempts = 3,
-  onResult,
-}: {
+type PuzzleRunesProps = {
   options: string[];
   answer: string[];
   maxAttempts?: number;
   onResult: (ok: boolean) => void;
-}) {
+
+  // ⬇️ kötelező az analytics miatt:
+  storyId: string;
+  sessionId: string;
+  pageId: string;
+  puzzleId: string;
+
+  // ⬇️ skin/layout
+  className?: string;
+  buttonClassName?: string;
+};
+
+export default function PuzzleRunes({
+  options,
+  answer,
+  maxAttempts = 3,
+  onResult,
+  storyId,
+  sessionId,
+  pageId,
+  puzzleId,
+  className,
+  buttonClassName,
+}: PuzzleRunesProps) {
   const [picked, setPicked] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
+ const t0Ref = useRef<number>(
+  typeof performance !== "undefined" && typeof performance.now === "function"
+    ? performance.now()
+    : Date.now()
+);
 
-  // Kontekstus az analitikához
-  const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
+  const pick = (id: string) =>
+    !picked.includes(id) && setPicked((p) => [...p, id]);
 
-  // Időmérés (az első interakciótól számítva)
-  const startedAt = useRef<number | null>(null);
-  const ensureStart = () => { if (startedAt.current == null) startedAt.current = Date.now(); };
+  const undo = (id: string) =>
+    setPicked((p) => p.filter((x) => x !== id));
 
-  const puzzleId = `${String(currentPageId || "unknown")}:runes`;
-
-  const pick = (s: string) => {
-    ensureStart();
-    setPicked((p) => (p.includes(s) ? p : [...p, s]));
-    // opcionális kattintás log
-    try {
-      if (storyId && sessionId && currentPageId) {
-        trackUiClick(String(storyId), String(sessionId), String(currentPageId), "runes_pick", { symbol: s });
-      }
-    } catch {}
-  };
-
-  const undo = () => {
-    setPicked((p) => p.slice(0, -1));
-    try {
-      if (storyId && sessionId && currentPageId) {
-        trackUiClick(String(storyId), String(sessionId), String(currentPageId), "runes_undo");
-      }
-    } catch {}
-  };
-
-  const reset = () => {
-    setPicked([]);
-    try {
-      if (storyId && sessionId && currentPageId) {
-        trackUiClick(String(storyId), String(sessionId), String(currentPageId), "runes_reset");
-      }
-    } catch {}
-  };
+  const reset = () => setPicked([]);
 
   const submit = () => {
-    ensureStart();
-    const attemptNo = attempts + 1;
+    const ok =
+      picked.length === answer.length &&
+      picked.every((x, i) => x === answer[i]);
 
-    const ok = picked.length === answer.length && picked.every((v, i) => v === answer[i]);
+    const now = (() => { try { return performance.now(); } catch { return Date.now(); } })();
+    const durationMs = Math.max(0, now - (t0Ref.current || now));
 
-    // TRY
-    try {
-      if (storyId && sessionId && currentPageId) {
-        trackPuzzleTry(
-          String(storyId),
-          String(sessionId),
-          String(currentPageId),
-          puzzleId,
-          attemptNo,
-          { pickedLen: picked.length, expectedLen: answer.length, maxAttempts }
-        );
-      }
-    } catch {}
+    // ⬇️ HELYES HÍVÁS – minden kötelező paraméterrel
+    trackPuzzleResult(
+      storyId,
+      sessionId,
+      pageId,
+      puzzleId,
+      ok,
+      attempts + 1,
+      durationMs,
+      { size: options.length } // extra (opcionális)
+    );
 
-    // RESULT
-    const durationMs = Math.max(0, (Date.now() - (startedAt.current ?? Date.now())));
-    try {
-      if (storyId && sessionId && currentPageId) {
-        trackPuzzleResult(
-          String(storyId),
-          String(sessionId),
-          String(currentPageId),
-          puzzleId,
-          !!ok,
-          attemptNo,
-          durationMs,
-          { picked: picked.join("|") }
-        );
-      }
-    } catch {}
-
-    if (!ok) setAttempts((a) => a + 1);
+    setAttempts((n) => n + 1);
     onResult(ok);
   };
 
-  const disabled = picked.length === answer.length;
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2 justify-center">
-        {options.map((o) => (
+    <div className={className} role="group" aria-label="Runák kirakó">
+      <div role="list" aria-label="Elérhető runák">
+        {options.map((id) => {
+          const selected = picked.includes(id);
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => pick(id)}
+              disabled={selected || picked.length >= answer.length}
+              className={buttonClassName}
+              aria-pressed={selected}
+              data-selected={selected}
+            >
+              {id}
+            </button>
+          );
+        })}
+      </div>
+
+      <div role="list" aria-label="Kiválasztott sorrend">
+        {picked.map((id) => (
           <button
-            key={o}
+            key={`picked-${id}`}
             type="button"
-            disabled={picked.includes(o) || disabled}
-            onClick={() => pick(o)}
-            className="btn"
+            onClick={() => undo(id)}
+            className={buttonClassName}
+            data-rune-picked="true"
           >
-            {o}
+            {id} ✕
           </button>
         ))}
       </div>
 
-      <div className="flex items-center gap-2 justify-center">
-        <span>Kiválasztva:</span>
-        {picked.map((p, i) => (
-          <span key={p + i} className="px-2 py-1 rounded-md border">{p}</span>
-        ))}
-        <button type="button" onClick={undo} disabled={picked.length === 0}>Vissza</button>
-        <button type="button" onClick={reset} disabled={picked.length === 0}>Törlés</button>
-      </div>
-
-      <div className="flex items-center gap-3 justify-center">
+      <div>
         <button
           type="button"
           onClick={submit}
           disabled={picked.length !== answer.length}
+          className={buttonClassName}
+          data-action="submit"
         >
           Ellenőrzés
         </button>
+
+        <button
+          type="button"
+          onClick={reset}
+          className={buttonClassName}
+          data-action="reset"
+        >
+          Reset
+        </button>
+
         <span>Próbálkozás: {attempts}/{maxAttempts}</span>
       </div>
     </div>

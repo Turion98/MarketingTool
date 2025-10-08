@@ -68,6 +68,7 @@ import HeaderBar from "../layout/HeaderBar/HeaderBar";
 import CampaignCta from "../CampaignCta/CampaignCta";
 import { resolveCta } from "../../core/cta/ctaResolver"; // ha nálad 'lib/cta', írd át
 import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
+import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
@@ -94,6 +95,19 @@ function explodeTextToBlocks(s?: string | null): string[] {
     .map((p) => p.trim())
     .filter(Boolean);
 }
+
+// KÉP/ASSET útvonal normalizáló (logo-hoz)
+function normalizeAssetUrl(raw?: string | null): string | null {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  if (/^https?:\/\//i.test(s)) return s;       // abszolút URL
+  if (s.startsWith("/")) return s;              // /assets/...
+  if (s.startsWith("assets/")) return "/" + s;  // assets/... -> /assets/...
+  // egyébként tételezzük fel, hogy az assets alatt van
+  return "/assets/" + s.replace(/^assets\//, "");
+}
+
 
 /** Egységes tokenfeloldás a {fragment:ID} mintákhoz, ref prefix/suffix támogatással + globál fallback */
 function resolveFragmentTokens(
@@ -1028,32 +1042,90 @@ const endCtaContext: CtaContext = useMemo(() => ({
 }), [derivedStoryId, pageData?.id, currentPageId, derivedSessionId, (globals as any)?.lang, (globals as any)?.abVariant]);
 
 // --- Node → Campaign → Engine default sorrend ---
-const nodeEndMetaCta = useMemo(
-  () => (pageData as any)?.endCta ?? (pageData as any)?.cta ?? undefined,
-  [pageData]
-);
+const nodeEndMeta = useMemo(() => {
+  const em = (pageData as any)?.endMeta;
+  if (em) return em;
+  const legacy = (pageData as any)?.endCta ?? (pageData as any)?.cta;
+  return legacy ? { cta: legacy } : undefined;
+}, [pageData]);
 
 const campaignCfg: CampaignConfig | undefined = useMemo(() => {
   const g: any = globals || {};
-  if (g.campaign) return g.campaign as CampaignConfig; // ha van dedikált campaign config
-  const presets = g.ctaPresets || g.campaignCtaPresets || undefined;
-  const endDefaultCta = g.endDefaultCta || g.campaignEndDefaultCta || undefined;
-  if (!derivedStoryId && !presets && !endDefaultCta) return undefined;
-  return {
-    campaignId: derivedStoryId || "unknown_campaign",
-    ctaPresets: presets,
-    endDefaultCta,
-  };
-}, [globals, derivedStoryId]);
+
+  // 🔎 1) Meta kandidátok – sok helyen megpróbáljuk megtalálni
+  const metaCandidates = [
+    (pageData as any)?.meta,
+    g.meta,
+    g.campaign?.meta,
+    g.story?.meta,
+    (g as any).storyMeta,
+    g.source?.meta,
+    g.storyConfig?.meta,
+    g.loadedStory?.meta,
+    g.storyData?.meta,
+    g.storyJson?.meta,
+  ].filter(Boolean) as Array<Record<string, any>>;
+
+  // 🔎 2) Először olyan meta kell, ahol van ctaPresets; ha nincs, akkor bármelyik meta jó
+  const metaWithPresets = metaCandidates.find(m => m?.ctaPresets);
+  const metaFromSources = metaWithPresets ?? metaCandidates[0] ?? null;
+
+  // 🔁 3) Ha találtunk értelmezhető meta-t, írjuk vissza a globálba is (stabilizálás)
+  if (metaFromSources && !g.meta) {
+    try {
+      (globals as any).meta = metaFromSources;
+    } catch {}
+  }
+
+  // 🧩 4) Presetek és default kulcs több lehetséges helyről
+  const presets =
+    metaFromSources?.ctaPresets ??
+    g.ctaPresets ??
+    g.campaignCtaPresets ??
+    g.story?.ctaPresets ??
+    undefined;
+
+  const endDefaultCta =
+    metaFromSources?.endDefaultCta ??
+    g.endDefaultCta ??
+    g.campaignEndDefaultCta ??
+    g.story?.endDefaultCta ??
+    undefined;
+
+  // 🏷️ 5) Campaign ID fallback lánc
+  const campaignId =
+    metaFromSources?.campaignId ??
+    g.campaignId ??
+    g.story?.campaignId ??
+    derivedStoryId ??
+    "unknown_campaign";
+
+  // 🧯 6) Ha semmi releváns nincs, ne adjunk vissza üres configot
+  if (!campaignId && !presets && !endDefaultCta) return undefined;
+
+  // (Opcionális diagnosztika)
+  if (!presets) {
+    console.warn("[CTA] No ctaPresets found in any meta source. Falling back to engine default.");
+  }
+
+  return { campaignId, ctaPresets: presets, endDefaultCta };
+}, [pageData, globals, derivedStoryId]);
+
+
 
 const engineDefaultEndCta = useMemo(() => (
   { kind: "restart", label: "Play again" } as const
 ), []);
 
-const resolvedEndCta = useMemo(() =>
-  resolveCta(nodeEndMetaCta, campaignCfg, engineDefaultEndCta, endCtaContext),
-  [nodeEndMetaCta, campaignCfg, engineDefaultEndCta, endCtaContext]
+
+const resolvedEndCta = useMemo(
+  () => resolveCta(nodeEndMeta, campaignCfg, engineDefaultEndCta, endCtaContext),
+  [nodeEndMeta, campaignCfg, engineDefaultEndCta, endCtaContext]
 );
+
+console.log("nodeEndMeta =", nodeEndMeta);
+console.log("campaignCfg =", campaignCfg);
+console.log("resolvedEndCta =", resolvedEndCta);
 
 
 /** ⬇️ ÚJ: többes fragmentRecall támogatás – visszatér: string[] (safe) */
@@ -1104,6 +1176,39 @@ const resolvedNext = useMemo(() => {
     (typeof pageData?.next === "string" ? pageData.next : null)
   );
 }, [pageData, globals]);
+
+// --- META (title, logo) forrás: pageData.meta -> globals.meta -> globals.campaign.meta
+const meta = useMemo(() => {
+  const m =
+    (pageData as any)?.meta ??
+    (globals as any)?.meta ??
+    (globals as any)?.campaign?.meta ??
+    null;
+  return m;
+}, [pageData, globals]);
+
+// --- TITLE priorizálás: meta.title -> globals.storyTitle -> pageData.title -> derivedStoryId
+const titleText = useMemo(() => {
+  return (
+    meta?.title ??
+    (globals as any)?.storyTitle ??
+    (pageData as any)?.title ??
+    derivedStoryId
+  );
+}, [meta?.title, (globals as any)?.storyTitle, (pageData as any)?.title, derivedStoryId]);
+
+// --- LOGO priorizálás: meta.logo -> globals.logo -> fallback
+const logoUrl = useMemo(() => {
+  const raw = (meta?.logo as string | undefined) ?? ((globals as any)?.logo as string | undefined) ?? null;
+  const url = normalizeAssetUrl(raw);
+  if (!url) {
+    // opcionális: fejlesztői figyelmeztetés
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("No logo in meta/globals; using default_logo.png");
+    }
+  }
+  return url ?? "/assets/default_logo.png";
+}, [meta?.logo, (globals as any)?.logo]);
 
 
 useEffect(() => {
@@ -1755,7 +1860,7 @@ return (
     {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
     {/* háttér külön rétegben */}
-    <div className={style.storyBackground}><DecorBackground preset="subtle" /></div>
+    <div className={style.storyBackground}><DecorBackground preset="none" /></div>
 
     {isLoading && <LoadingOverlay />}
 
@@ -1765,8 +1870,9 @@ return (
     <HeaderBar
       variant="transparent"
       elevated
-      left={<span className={style.logoText}>LOGO</span>}
-      center={
+      left={<img src={logoUrl} alt="Logo" style={{ height: "32px" }} />}
+      center={<h1>{titleText}</h1>}
+      right={
         showRuneDock && (
           <RuneDockDisplay
             flagIds={unlockedRunes}
@@ -1775,7 +1881,6 @@ return (
           />
         )
       }
-      right={null}
     />
   }
 
@@ -1873,25 +1978,36 @@ return (
             const p = pageData as any;
             return (
               <PuzzleRunes
-                options={p.options}
-                answer={p.answer}
-                maxAttempts={p.maxAttempts ?? 3}
-                onResult={(ok) => {
-                  const branch = ok ? p.onSuccess : p.onFail;
-                  const fl = branch?.setFlags;
-                  if (Array.isArray(fl)) fl.forEach((f: string) => setFlag(f));
-                  else if (fl && typeof fl === "object") {
-                    Object.entries(fl).forEach(([k, v]) => v && setFlag(k));
-                  }
-                  const nx = branch?.goto;
-                  if (nx && nx !== pageData?.id) {
-                    try {
-                      localStorage.setItem("currentPageId", nx);
-                    } catch {}
-                    goToNextPage(nx);
-                  }
-                }}
-              />
+  options={p.options}
+  answer={p.answer}
+  maxAttempts={p.maxAttempts ?? 3}
+  className={dockStyles.grid}
+  buttonClassName={dockStyles.choice}
+  /* ⬇️ KÖTELEZŐ ANALYTICS AZONOSÍTÓK */
+  storyId={derivedStoryId || "default_story"}
+  sessionId={derivedSessionId || "sess_unknown"}
+  pageId={pageData.id}
+  puzzleId={p.id ?? `runes-${pageData.id}`}
+  onResult={(ok) => {
+    const branch = ok ? p.onSuccess : p.onFail;
+    if (!branch) return;
+
+    const fl = branch.setFlags;
+    if (Array.isArray(fl)) {
+      fl.forEach((f: string) => setFlag(f));
+    } else if (fl && typeof fl === "object") {
+      Object.entries(fl).forEach(([k, v]) => v && setFlag(k));
+    }
+
+    const nx = branch.goto;
+    if (nx && nx !== pageData?.id) {
+      try { localStorage.setItem("currentPageId", nx); } catch {}
+      goToNextPage(nx);
+    }
+  }}
+/>
+
+
             );
           })()}
 
