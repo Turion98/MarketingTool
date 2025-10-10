@@ -71,12 +71,14 @@ import CampaignCta from "../CampaignCta/CampaignCta";
 import { resolveCta } from "../../core/cta/ctaResolver"; // ha nálad 'lib/cta', írd át
 import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
-import canvasStyles from "../layout/Canvas/Canvas.module.scss"; // ÚJ
+import canvasStyles from "../layout/Canvas/Canvas.module.scss"; 
+import { loadTokens } from "../../lib/tokenLoader";
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
 const FADE_IN_MS = 600;
 const RUNE = { slot: 72, gap: 0, slots: 3, offsetX: 176, offsetY: 25 };
+const SKIN_LS_KEY = "skinByCampaignId";
 
 /** ---------- Fragment-kompozíció ---------- */
 type FragmentBank = Record<
@@ -524,6 +526,32 @@ const derivedStoryId = useMemo(() => {
     const base = (src.split("/").pop() || src).replace(/\.json$/i, "");
     if (base && !/^global$/i.test(base)) return base;
   }
+
+  // ⬇️ Aktív skin alkalmazása: ?skin=... elsőbbség, különben LS mapping a derivedStoryId-hez
+useEffect(() => {
+  if (!derivedStoryId) return;
+
+  // 1) query param elsőbbség
+  const qSkin = params.get("skin");
+
+  // 2) ha nincs query, nézzük a per-kampány mappingot LS-ben
+  let mapped: string | undefined;
+  try {
+    const raw = localStorage.getItem(SKIN_LS_KEY);
+    if (raw) {
+      const map = JSON.parse(raw) as Record<string, string>;
+      mapped = map[derivedStoryId];
+    }
+  } catch {
+    // ignore
+  }
+
+  const skinId = qSkin || mapped;
+  if (!skinId) return; // nincs explicit skin → maradnak a SCSS default tokenek
+
+  // 3) alkalmazás (cache-busting query)
+  loadTokens(`/skins/${skinId}.json?v=${Date.now()}`).catch(() => {});
+}, [derivedStoryId, params]);
 
   // 3) TITLE-ből (globals.storyTitle vagy ?title=...)
   const t = globals?.storyTitle || params.get("title") || undefined;
@@ -1865,11 +1893,12 @@ return (
     {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 
     {/* háttér külön rétegben */}
-    <div className={style.storyBackground}><DecorBackground preset="none" /></div>
+   
 
     {isLoading && <LoadingOverlay />}
 
 <Canvas
+  background={<DecorBackground preset="subtle" />}
   /* ===== TOPBAR (fix header szekció) ===== */
  topbar={
   <>

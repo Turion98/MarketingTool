@@ -1,0 +1,25 @@
+/* app/styles/tokens.base.css */
+:root {
+  /* Színtér (kampányonként felülírható a skin JSON-ból) */
+  --surface-0: #0d0f13;
+  --surface-1: color-mix(in oklch, white 6%, var(--surface-0));
+  --surface-2: color-mix(in oklch, white 10%, var(--surface-0));
+  --text-strong: #fff;
+  --text-soft: color-mix(in oklch, #fff 72%, var(--surface-0));
+  --text-muted: color-mix(in oklch, #fff 52%, var(--surface-0));
+  --brand-primary: #ffd56a;
+  --brand-accent: #ffc861;
+  --state-ok:#38d678; --state-warn:#ffb347; --state-err:crimson; --state-info:#5ab3ff;
+  --outline: color-mix(in oklch, #fff 16%, transparent);
+  --overlay: color-mix(in oklch, black 40%, transparent);
+
+  /* Tipó / sűrűség */
+  --font-ui: ui-sans-serif, system-ui, "Inter", "Roboto", sans-serif;
+  --font-decor: "Cinzel", serif;
+  --font-scale: 1;
+  --density: 1;
+  --radius-scale: 1;
+
+  /* Akcentus */
+  --accent-gradient: linear-gradient(90deg, #ffd75a 0%, #ffb347 100%);
+}

@@ -1,0 +1,12 @@
+{
+  "id": "forest_dark",
+  "title": "Forest Dark",
+  "version": 1,
+  "tokens": {
+    "--skin-bg": "#0d0f13",
+    "--skin-fg": "#ffffff",
+    "--brand-accent": "#ffc861",
+    "--header-pad-v": "8px",
+    "--logo-scale": "1.1"
+  }
+}

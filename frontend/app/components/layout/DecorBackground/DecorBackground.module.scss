@@ -1,7 +1,16 @@
 :root {
-  --bg-blur: 0px; /* szükség esetén növelhető */
+  --bg-color: transparent;
+  --bg-image: none; /* pl. url("/skins/luxe/bg.jpg") */
+  --bg-position: center center;
+  --bg-size: cover;
+  --bg-repeat: no-repeat;
+
+  --bg-overlay: none; /* pl. linear-gradient(...) */
+  --bg-overlay-opacity: 1;
+  --bg-blur: 0px;
 }
 
+/* ====== ALAPRÉTEG ====== */
 .storyBackground {
   position: absolute;
   inset: 0;
@@ -9,47 +18,84 @@
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  isolation: isolate; /* a füst rétegek blendingjéhez hasznos */
+  isolation: isolate;
 }
 
-.backgroundImage {
+/* ====== SKIN TOKEN VEZÉRELT CSS HÁTTÉR ====== */
+.cssBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  background-position: var(--bg-position);
+  background-size: var(--bg-size);
+  background-repeat: var(--bg-repeat);
+  filter: blur(var(--bg-blur));
+  transform: translateZ(0);
+}
+
+/* ====== KÉP ÉS VIDEÓ RÉTEG ====== */
+.backgroundImage,
+.backgroundVideo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 0;
   filter: blur(var(--bg-blur));
-  transform: translateZ(0); /* GPU hint */
+  transform: translateZ(0);
 }
 
-/* Preset variációk */
+/* ====== OVERLAY (színezés / gradient / blur) ====== */
+.backgroundOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--bg-overlay);
+  opacity: var(--bg-overlay-opacity);
+  backdrop-filter: blur(var(--bg-blur));
+}
+
+/* ====== PRESET VARIÁCIÓK ====== */
 .subtle {
-  /* finom sötétítés, hogy a UI elemek kontrasztosak legyenek */
   &::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(120% 90% at 50% 40%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .35) 100%);
+    background: radial-gradient(
+      120% 90% at 50% 40%,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.35) 100%
+    );
     mix-blend-mode: normal;
   }
 }
 
 .promo {
-  /* kicsit erősebb vignetta + enyhe színfokozás promó jelenetekre */
   &::after {
     content: "";
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(120% 90% at 50% 40%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, .45) 100%),
-      linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.25));
+      radial-gradient(
+        120% 90% at 50% 40%,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.45) 100%
+      ),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.25));
   }
-  .backgroundImage {
+
+  .backgroundImage,
+  .backgroundVideo {
     filter: saturate(1.06) contrast(1.04) blur(var(--bg-blur));
   }
 }
 
 .none {
-  /* nincs overlay; csak a háttérkép */
-  &::after { display: none; }
+  &::after {
+    display: none;
+  }
 }

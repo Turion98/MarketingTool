@@ -7,6 +7,7 @@ import { layers } from "@/app/components/LayersConfig";
 import styles from "./adventures.module.scss";
 import ReportDrawer from "../components/ReportDrawer/ReportDrawer";
 import ReportScheduleForm from "../components/ReportScheduleForm/ReportScheduleForm";
+import { loadTokens } from "@/app/lib/tokenLoader";
 
 type StoryMeta = {
   id: string;
@@ -17,6 +18,10 @@ type StoryMeta = {
   jsonSrc: string;        // pl. /stories/forest_v1.json
   startPageId?: string;   // ha később bevezetjük a metában
 };
+
+type SkinMeta = { id: string; title: string; preview?: string };
+
+const SKIN_LS_KEY = "skinByCampaignId";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
@@ -43,6 +48,10 @@ export default function AdventuresPage() {
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [scheduleFor, setScheduleFor] = useState<string | null>(null);
 
+  // ⬇️ Skin registry + per-kampány beállítások
+  const [skins, setSkins] = useState<SkinMeta[]>([]);
+  const [skinMap, setSkinMap] = useState<Record<string, string>>({});
+
   useEffect(() => {
     (async () => {
       try {
@@ -60,6 +69,40 @@ export default function AdventuresPage() {
       }
     })();
   }, []);
+
+  // ⬇️ Skin registry + LS visszatöltés
+  useEffect(() => {
+    fetch("/skins/registry.json", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => setSkins(Array.isArray(j?.skins) ? j.skins : []))
+      .catch(() => setSkins([]));
+
+    try {
+      const raw = localStorage.getItem(SKIN_LS_KEY);
+      if (raw) setSkinMap(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistSkin = (campaignId: string, skinId: string) => {
+    const next = { ...skinMap, [campaignId]: skinId };
+    setSkinMap(next);
+    try {
+      localStorage.setItem(SKIN_LS_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const applySkin = async (skinId?: string) => {
+    if (!skinId) return; // Default: ne írjunk felül semmit, marad a SCSS fallback
+    try {
+      await loadTokens(`/skins/${skinId}.json?v=${Date.now()}`);
+    } catch {
+      // ignore; ha nem sikerül, marad a jelenlegi stílus
+    }
+  };
 
   if (loading) {
     return (
@@ -110,6 +153,8 @@ export default function AdventuresPage() {
           const title = a.title || storyId;
           const blurb = a.description || "";
 
+          const selectedSkin = skinMap[storyId] || "";
+
           return (
             <article key={storyId} className={styles.card}>
               <div
@@ -121,6 +166,26 @@ export default function AdventuresPage() {
                 {blurb && <p>{blurb}</p>}
 
                 <div className={styles.actions}>
+                  {/* ⬇️ ÚJ: Skin dropdown */}
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span>Theme:</span>
+                    <select
+                      value={selectedSkin}
+                      onChange={async (e) => {
+                        const skinId = e.target.value;
+                        persistSkin(storyId, skinId);
+                        await applySkin(skinId); // élő előnézet az Adventures oldalon
+                      }}
+                    >
+                      <option value="">Default</option>
+                      {skins.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.title || s.id}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
                   <button
                     onClick={() => {
                       try {
@@ -128,12 +193,16 @@ export default function AdventuresPage() {
                         localStorage.setItem("currentPageId", startPageId);
                         localStorage.setItem("storyTitle", title);
                       } catch {}
+                      // opcionális: skin átadás query paramként is
+                      const skinPart = selectedSkin
+                        ? `&skin=${encodeURIComponent(selectedSkin)}`
+                        : "";
                       router.push(
                         `/story?src=${encodeURIComponent(
                           jsonSrc
                         )}&start=${encodeURIComponent(
                           startPageId
-                        )}&title=${encodeURIComponent(title)}`
+                        )}&title=${encodeURIComponent(title)}${skinPart}`
                       );
                     }}
                     disabled={!jsonSrc}

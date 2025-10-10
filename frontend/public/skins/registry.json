@@ -1,0 +1,6 @@
+{
+  "skins": [
+    { "id": "forest_dark", "title": "Forest Dark", "preview": "/assets/skins/forest_dark.png" },
+    { "id": "lux_gold", "title": "Lux Gold", "preview": "/assets/skins/lux_gold.png" }
+  ]
+}

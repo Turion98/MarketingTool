@@ -3,12 +3,15 @@
 import React from "react";
 import styles from "./Canvas.module.scss";
 
-/** 
+/**
  * Canvas: slotos + visszafelé kompatibilis (children) API.
  * - Ha bármely slot meg van adva, a grid-területeket rendereli.
  * - Ha NINCS slot, akkor a régi viselkedéssel a children-t jeleníti meg.
  */
 type CanvasProps = {
+  /** ÚJ: háttér slot (pl. <DecorBackground />) */
+  background?: React.ReactNode;
+
   topbar?: React.ReactNode;
   progress?: React.ReactNode;
   media?: React.ReactNode;
@@ -30,6 +33,7 @@ function cx(...v: Array<string | undefined | false | null>) {
 }
 
 export default function Canvas({
+  background,
   topbar,
   progress,
   media,
@@ -49,6 +53,17 @@ export default function Canvas({
       data-layout="media-narrative-choices"
       aria-label="Interactive Story Canvas"
     >
+      {/* ÚJ: háttér réteg a playfield mögött */}
+      {background && (
+        <div
+          className={styles.background}
+          aria-hidden
+          data-bg-present="1"
+        >
+          {background}
+        </div>
+      )}
+
       <div className={styles.playfield} role="group" aria-label="Playfield">
         {hasSlots ? (
           <>

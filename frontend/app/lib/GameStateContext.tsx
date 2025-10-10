@@ -169,6 +169,7 @@ const LS_KEYS = Object.freeze({
   runeImgs: "runeImagesByFlag",
   storySrc: "storySrc",
   storyTitle: "storyTitle",
+  skinMap: "skinByCampaignId",
 });
 
 /** —————————————————————————————————————

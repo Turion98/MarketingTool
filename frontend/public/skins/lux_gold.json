@@ -1,0 +1,12 @@
+{
+  "id": "lux_gold",
+  "title": "Lux Gold",
+  "version": 1,
+  "tokens": {
+    "--skin-bg": "#0b0e12",
+    "--skin-fg": "#ffffff",
+    "--brand-accent": "#ffd56a",
+    "--header-pad-v": "10px",
+    "--logo-scale": "1.2"
+  }
+}

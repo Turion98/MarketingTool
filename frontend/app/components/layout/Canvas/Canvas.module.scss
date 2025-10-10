@@ -46,6 +46,14 @@
   position: relative; /* overlay-hez kell */
 }
 
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none; /* háttér ne blokkoljon inputot */
+  /* ha kell: overflow: hidden; */
+}
+
 .areaProgress {
   grid-area: progress;
   height: var(--progress-height, 4px);

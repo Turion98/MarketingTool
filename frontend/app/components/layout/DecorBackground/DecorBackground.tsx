@@ -1,114 +1,81 @@
 "use client";
-import React from "react";
-import SmokeField from "../../SmokeField/SmokeField";
+
+import React, { useMemo } from "react";
 import s from "./DecorBackground.module.scss";
 
 export type DecorBackgroundProps = {
-  /** "none" | "subtle" | "promo" */
+  /** "none" | "subtle" | "promo" — vizuális preset */
   preset?: "none" | "subtle" | "promo";
-  /** háttérkép override (alap: /assets/background.1.png) */
+  /** Forrás. Lehet kép- vagy videó-URL. Ha nincs megadva, a skin tokenek döntenek (CSS réteg). */
   src?: string;
-  /** alt szöveg a háttérhez */
+  /** Ha videó: poszter képe (opcionális) */
+  poster?: string;
+  /** 'auto' (alap), 'css', 'image' vagy 'video' */
+  kind?: "auto" | "css" | "image" | "video";
+  /** alt szöveg, ha képet renderelünk */
   alt?: string;
+  /** Videó flag-ek (skinből is felülírhatók CSS-sel, de itt JS-ben is adhatók) */
+  loop?: boolean;
+  muted?: boolean;
+  autoplay?: boolean;
 };
+
+function guessKind(kind: DecorBackgroundProps["kind"], src?: string): "css" | "image" | "video" {
+  if (kind && kind !== "auto") return kind;
+  const s = (src || "").toLowerCase();
+  if (!s) return "css";
+  if (/\.(mp4|webm|ogg)(\?|#|$)/.test(s)) return "video";
+  return "image";
+}
 
 const DecorBackground: React.FC<DecorBackgroundProps> = ({
   preset = "subtle",
-  src = "/assets/background.1.png",
+  src,
+  poster,
+  kind = "auto",
   alt = "Background",
+  loop = true,
+  muted = true,
+  autoplay = true,
 }) => {
+  const resolvedKind = useMemo(() => guessKind(kind, src), [kind, src]);
+  const presetClass = preset === "promo" ? s.promo : preset === "none" ? s.none : s.subtle;
+
   return (
     <div
-      className={`${s.storyBackground} ${
-        preset === "promo" ? s.promo : preset === "none" ? s.none : s.subtle
-      }`}
+      className={`${s.storyBackground} ${presetClass}`}
       aria-hidden
+      data-bg-kind={resolvedKind}
+      data-bg-preset={preset}
     >
-      <img
-        src={src}
-        alt={alt}
-        className={s.backgroundImage}
-        fetchPriority="high"
-      />
+      {/* 1) Pure CSS háttér-réteg – SKIN TOKENEK irányítják */}
+      <div className={s.cssBg} />
 
-      {preset !== "none" && (
-        <SmokeField
-          globalScale={1.3}
-          layers={[
-            {
-              src: "/assets/smoke1.png",
-              speed: -14,
-              z: 1,
-              opacity: 0.22,
-              opacityAmplitude: 0.1,
-              opacityCycleTime: 23,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 18,
-              vertAmplitude: 42,
-              cycleTime: 10,
-            },
-            {
-              src: "/assets/smoke2.png",
-              speed: -18,
-              z: 2,
-              opacity: 0.24,
-              opacityAmplitude: 0.32,
-              opacityCycleTime: 31,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 26,
-              vertAmplitude: 56,
-              cycleTime: 10,
-            },
-            {
-              src: "/assets/smoke5.png",
-              speed: -30,
-              z: 3,
-              opacity: 0.16,
-              opacityAmplitude: 0.15,
-              opacityCycleTime: 29,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 32,
-              vertAmplitude: 18,
-              cycleTime: 13,
-            },
-            {
-              src: "/assets/smoke6.png",
-              speed: 18,
-              z: 4,
-              opacity: 0.08,
-              opacityAmplitude: 0.09,
-              opacityCycleTime: 37,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 38,
-              vertAmplitude: 24,
-              cycleTime: 10,
-            },
-            {
-              src: "/assets/smoke3.png",
-              speed: 22,
-              z: 5,
-              opacity: 0.28,
-              opacityAmplitude: 0.15,
-              opacityCycleTime: 41,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 28,
-              vertAmplitude: 22,
-              cycleTime: 15,
-            },
-            {
-              src: "/assets/smoke4.png",
-              speed: 20,
-              z: 6,
-              opacity: 0.34,
-              opacityAmplitude: 0.3,
-              cycleTime: 27,
-              scaleMultiplier: 1.3,
-              horizAmplitude: 34,
-              vertAmplitude: 20,
-            },
-          ]}
+      {/* 2) Média réteg szkinfüggetlenül (ha van explicit src) */}
+      {src && resolvedKind === "image" && (
+        <img
+          src={src}
+          alt={alt}
+          className={s.backgroundImage}
+          fetchPriority="high"
+          decoding="async"
         />
       )}
+
+      {src && resolvedKind === "video" && (
+        <video
+          className={s.backgroundVideo}
+          src={src}
+          poster={poster}
+          loop={loop}
+          muted={muted}
+          autoPlay={autoplay}
+          playsInline
+        />
+      )}
+
+      {/* 3) Opcionális overlay (színezés/blur/minta — skinből vezérelve) */}
+      <div className={s.backgroundOverlay} />
     </div>
   );
 };
