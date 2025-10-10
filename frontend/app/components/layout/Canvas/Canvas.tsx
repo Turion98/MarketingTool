@@ -52,8 +52,8 @@ export default function Canvas({
       <div className={styles.playfield} role="group" aria-label="Playfield">
         {hasSlots ? (
           <>
-            <div className={styles.areaTopbar}>{topbar}</div>
             <div className={styles.areaProgress}>{progress}</div>
+            <div className={styles.areaTopbar}>{topbar}</div>
             <div className={styles.areaMedia}>{media}</div>
             <div className={styles.areaNarr}>{narr}</div>
             <div className={styles.areaDock}>{dock}</div>

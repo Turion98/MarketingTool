@@ -19,6 +19,7 @@ from models.report_settings import ReportSettings
 from pathlib import Path
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 
@@ -253,6 +254,18 @@ from fastapi.responses import HTMLResponse, Response
 
 
 app = FastAPI()
+
+class NoCacheStoriesMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        path = request.url.path or ""
+        if path.startswith("/stories/") or path.startswith("/page/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        return response
+
+app.add_middleware(NoCacheStoriesMiddleware)
 
 @app.get("/api/story")
 def get_story(src: str = Query(default="story.json")):

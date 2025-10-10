@@ -1,22 +1,36 @@
 :root {
-  --ph-height: 8px;
-  --ph-radius: 6px;
-  --ph-track: rgba(255,255,255,.18);
+  --ph-height: 4px; /* vékonyabb csík */
+  --ph-radius: 0;
+  --ph-track: rgba(255,255,255,.15);
   --ph-fill: linear-gradient(90deg, #ffd75a 0%, #ffb347 100%);
   --ph-label-color: #fff;
   --ph-label-size: 14px;
 }
 
+/* Alap: teljes szélességű csík */
 .progressHud {
   position: relative;
-  width: min(70vw, 600px);
-  margin: 2vh auto;
+  width: 100%;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
   z-index: 5;
 }
 
+/* csak csík (bar mód) */
+.progressHud[data-variant="bar"] {
+  height: var(--ph-height);
+  justify-content: stretch;
+}
+
+/* HUD mód (ha százalékot is akarsz később) */
+.progressHud[data-variant="hud"] {
+  width: min(70vw, 600px);
+  margin: 2vh auto;
+}
+
+/* sáv és kitöltés */
 .progressTrack {
   flex: 1;
   height: var(--ph-height);
@@ -33,6 +47,7 @@
   transition: width .25s ease;
 }
 
+/* százalék-felirat csak HUD módban */
 .progressLabel {
   font-size: var(--ph-label-size);
   color: var(--ph-label-color);
@@ -41,11 +56,12 @@
   text-align: right;
 }
 
-/* mobil kompakt */
+/* mobilon minden verzió legyen teljes szélességű, kompakt */
 @media (max-width: 520px) {
   .progressHud {
     gap: 8px;
-    margin: 1.5vh auto;
+    margin: 0;
+    width: 100%;
   }
   .progressLabel {
     font-size: 13px;

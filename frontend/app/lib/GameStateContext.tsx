@@ -511,31 +511,28 @@ const setStorySrc = useCallback(
     setGlobal("storySrc", src);
 
     // ✅ Meta-prefetch: töltsük be a story JSON-t és tegyük be OBJektumként a globals-ba
-    try {
-      const metaUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
-      fetch(metaUrl)
-        .then(r => r.json())
-        .then(story => {
-          if (story?.meta) {
-            // fontos: NEM stringként, hanem objektumként adjuk a globals-hoz
-            setGlobal("meta", story.meta);
+try {
+  const baseUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
+  const cacheBust = baseUrl.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
+  const metaUrl = `${baseUrl}${cacheBust}`;
 
-            // gyors eléréshez felrakjuk a kulcs elemeket is
-            if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
-            if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
-            if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
-            if (story.meta?.id) setGlobal("storyId", story.meta.id);
-
-            // opcionális: cache-eld LS-be is a meta-t (teljes globals-t úgyis elmentjük külön)
-            try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
-
-            console.log("[GameState] Meta loaded:", story.meta);
-          }
-        })
-        .catch(err => console.warn("[GameState] meta load error", err));
-    } catch (err) {
-      console.warn("[GameState] meta prefetch failed", err);
-    }
+  fetch(metaUrl, { cache: "no-store" })
+    .then(r => r.json())
+    .then(story => {
+      if (story?.meta) {
+        setGlobal("meta", story.meta);
+        if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
+        if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
+        if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
+        if (story.meta?.id) setGlobal("storyId", story.meta.id);
+        try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+        console.log("[GameState] Meta loaded:", story.meta);
+      }
+    })
+    .catch(err => console.warn("[GameState] meta load error", err));
+} catch (err) {
+  console.warn("[GameState] meta prefetch failed", err);
+}
 
     // 🔄 új sztori: progress reset
     setVisitedPages(new Set());
@@ -777,11 +774,11 @@ try {
     .replace(/^\/?stories\//, "/stories/"); // kis normalizálás
 
   if (metaSrc) {
-    const full = metaSrc.startsWith("http")
-      ? metaSrc
-      : `http://127.0.0.1:8000${metaSrc}`;
+    const base = metaSrc.startsWith("http") ? metaSrc : `http://127.0.0.1:8000${metaSrc}`;
+    const bust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
+    const full = `${base}${bust}`;
 
-    fetch(full)
+    fetch(full, { cache: "no-store" })
       .then(r => r.json())
       .then(story => {
         if (story?.meta) {
@@ -790,10 +787,7 @@ try {
           if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
           if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
           if (story.meta?.id) setGlobal("storyId", story.meta.id);
-
-          // opcionális: cache frissítése
           try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
-
           console.log("[GameState] Meta refreshed:", story.meta);
         }
       })

@@ -69,7 +69,7 @@ import CampaignCta from "../CampaignCta/CampaignCta";
 import { resolveCta } from "../../core/cta/ctaResolver"; // ha nálad 'lib/cta', írd át
 import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
-
+import canvasStyles from "../layout/Canvas/Canvas.module.scss"; // ÚJ
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
@@ -1866,23 +1866,43 @@ return (
 
 <Canvas
   /* ===== TOPBAR (fix header szekció) ===== */
-  topbar={
+ topbar={
+  <>
     <HeaderBar
       variant="transparent"
       elevated
-      left={<img src={logoUrl} alt="Logo" style={{ height: "32px" }} />}
-      center={<h1>{titleText}</h1>}
+      left={<img src="assets/my_logo.png" alt="Logo" data-logo />}
+      center={<span data-header-title>{titleText}</span>}
       right={
-        showRuneDock && (
-          <RuneDockDisplay
-            flagIds={unlockedRunes}
-            imagesByFlag={imagesByFlag}
-            delayMs={0}
-          />
-        )
+        // Desktop: maradhat a Header jobb oldalán
+        showRuneDock ? (
+          <div className={canvasStyles.showOnlyDesktop}>
+            <RuneDockDisplay
+              flagIds={unlockedRunes}
+              imagesByFlag={imagesByFlag}
+              delayMs={0}
+            />
+          </div>
+        ) : null
       }
     />
-  }
+
+    {/* Mobil overlay: bal felső sarok, NEM része a Header layoutjának */}
+    {showRuneDock && (
+       <div
+    className={`${canvasStyles.runeDockTopRight} ${canvasStyles.showOnlyMobile} ${
+      showRuneDock ? canvasStyles.isVisible : ""
+    }`}
+  >
+        <RuneDockDisplay
+          flagIds={unlockedRunes}
+          imagesByFlag={imagesByFlag}
+          delayMs={0}
+        />
+      </div>
+    )}
+  </>
+}
 
   /* ===== PROGRESS sáv a topbar alatt ===== */
   progress={<ProgressStrip value={progressDisplay.value ?? 0} />}

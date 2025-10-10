@@ -28,8 +28,8 @@
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto auto auto auto;
   grid-template-areas:
+    "progress"   /* progress most a topbar fölé került */
     "topbar"
-    "progress"
     "media"
     "narr"
     "dock"
@@ -40,19 +40,31 @@
 }
 
 /* Területek – ezek a StoryPage-ben vannak használva */
-.areaTopbar   { grid-area: topbar;    align-self: center; }
-.areaProgress { grid-area: progress; }
-.areaMedia    { grid-area: media;     align-self: start; overflow: visible; }
-.areaNarr     { grid-area: narr;      align-self: start; }
-.areaDock     {
+.areaTopbar { 
+  grid-area: topbar;
+  align-self: center;
+  position: relative; /* overlay-hez kell */
+}
+
+.areaProgress {
+  grid-area: progress;
+  height: var(--progress-height, 4px);
+  position: relative;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+}
+
+.areaMedia  { grid-area: media; align-self: start; overflow: visible; }
+.areaNarr   { grid-area: narr;  align-self: start; }
+.areaDock   {
   grid-area: dock;
-  /* kérés szerint cellán belül középre */
   display: grid;
   place-items: center;
 }
-.areaAction   { grid-area: action; }
+.areaAction { grid-area: action; }
 
-/* Média ne vágódjon: */
+/* Média ne vágódjon */
 .areaMedia .mediaFrame { aspect-ratio: auto; overflow: visible; }
 .areaMedia img,
 .areaMedia video,
@@ -62,8 +74,51 @@
   max-inline-size: 100%;
 }
 
-/* Sticky util pl. progresshez, ha kell */
+/* Sticky util pl. progresshez */
 .stickyBar { position: sticky; top: 0; z-index: 10; }
+
+/* ===== RuneDock mobil overlay (jobb felső sarok) ===== */
+.runeDockTopRight {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 50;               /* emeld meg, hogy biztosan a header felett legyen */
+  transform: scale(var(--rune-scale, 0.85));
+  transform-origin: top right;
+
+  /* alapértelmezetten rejtve */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease, visibility 0s linear 160ms;
+}
+
+/* ha már van rúnád → látható és kattintható */
+.isVisible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 160ms ease;
+}
+
+/* Desktopon továbbra is a Header jobb oldalában jelenjen meg (lenti kód megtartva) */
+.showOnlyDesktop { display: none; }
+
+@media (min-width: 768px) {
+  .showOnlyDesktop { display: initial; }
+  /* a mobil overlayt nem kell rejteni, mert mobilon használjuk; desktopon úgysem ezt mutatjuk */
+}
+/* Csak mobilon látható elemek */
+.showOnlyMobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .showOnlyMobile {
+    display: none !important;
+  }
+}
+
 
 /* XS finomítás */
 @media (max-width: 640px) {
@@ -71,22 +126,49 @@
     inline-size: 100%;
     padding: clamp(8px, 3cqi, 16px);
   }
-  .canvasGrid { gap: clamp(6px, 2cqi, 12px); }
+  .playfield { gap: clamp(6px, 2cqi, 12px); }
 }
 
-/* >= TABLET/DESKTOP: narr (bal) + dock (jobb) egymás mellett */
+/* ===== TABLET / DESKTOP ===== */
 @media (min-width: 768px) {
-  .canvasGrid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto; /* topbar, progress, media, content-row, action */
+  /* egyoszlopos elrendezés (Narr → Dock → Action egymás alatt) */
+  .playfield {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto auto;
     grid-template-areas:
-      "topbar    topbar"
+      "progress"
+      "topbar"
+      "media"
+      "narr"
+      "dock"
+      "action";
+  }
+
+  .areaNarr,
+  .areaDock,
+  .areaAction {
+    grid-column: 1 / -1;
+  }
+
+  .areaDock { place-items: center; }
+
+  /* Overlay csak mobilon kell; desktopon rejtsük el */
+  .runeDockTopLeft { display: none; }
+  .showOnlyDesktop { display: initial; }
+}
+
+/* ===== (OPCIONÁLIS) LARGE DESKTOP — kétoszlopos mód, ha később akarod ===== */
+/*
+@media (min-width: 1024px) {
+  .playfield {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    grid-template-areas:
       "progress  progress"
+      "topbar    topbar"
       "media     media"
       "narr      dock"
       "action    action";
   }
-
-  /* Ha a Dock keskenyebb, maradjon középen a cellájában */
-  .areaDock { place-items: center; }
 }
+*/
