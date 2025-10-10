@@ -1,0 +1,240 @@
+/* ===========================
+   RiddleQuiz.module.scss
+   =========================== */
+
+.quizRoot {
+  /* ===== TOKENS (később skinből/brandből) ===== */
+  --rq-bg: color-mix(in oklch, white 6%, transparent);
+  --rq-bg-hover: color-mix(in oklch, var(--rq-accent, #ffc861) 8%, var(--rq-bg, transparent));
+  --rq-border: color-mix(in oklch, white 16%, transparent);
+  --rq-ok: var(--quiz-ok-color, #38d678);
+  --rq-err: color-mix(in oklch, crimson 88%, transparent);
+  --rq-accent: var(--brand-accent, #ffc861);
+
+  /* időzítések */
+  --rq-dur-in: 480ms;
+  --rq-dur-hover: 160ms;
+  --rq-dur-active: 100ms;
+  --rq-dur-commit: 300ms; /* TSX COMMIT_DELAY_MS-el egyezzen */
+  --rq-dur-fade: 960ms;
+  --rq-dur-fade-long: 600ms; /* unpicked elemekhez */
+  --rq-fade-delay: 120ms;    /* unpicked fade késleltetés */
+  --rq-dur-feedback: 800ms;  /* OK felirat animja */
+  --rq-dur-exit: 220ms;      /* wrapper kifade ideje (TSX-ből felülírható inline) */
+
+  /* easingek */
+  --rq-ease-in: cubic-bezier(.22, .61, .36, 1);
+  --rq-ease-out: cubic-bezier(.16, .84, .44, 1);
+  --rq-ease-emph: cubic-bezier(.2, .7, .2, 1);
+
+  /* scale-ek / shadow-k */
+  --rq-scale-hover: 1.02;
+  --rq-scale-active: .98;
+  --rq-scale-commit: 1.01;
+  --rq-scale-correct: 1.03;
+
+  --rq-shadow-rest: 0 0 0 rgba(0,0,0,0);
+  --rq-shadow-hover: 0 6px 20px color-mix(in oklch, var(--rq-accent) 16%, transparent);
+  --rq-shadow-correct: 0 10px 28px color-mix(in oklch, var(--rq-ok) 26%, transparent);
+  --rq-shadow-incorrect: 0 8px 24px color-mix(in oklch, crimson 24%, transparent);
+
+  /* unpicked halványítás mértéke döntés után */
+  --rq-unpicked-opacity: .45;
+
+  display: grid;
+  gap: 12px;
+
+  /* lágy mount (ne pattogjon) */
+  opacity: 0;
+  transform: translateY(6px);
+  animation: rqRootIn var(--rq-dur-in) var(--rq-ease-in) forwards;
+}
+
+@keyframes rqRootIn {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ======= EXIT FÁZIS – globális kifade ======= */
+.quizRoot[data-quiz-phase="exiting"] {
+  pointer-events: none;
+  animation: rqExit var(--rq-dur-exit) var(--rq-ease-out) both;
+}
+
+@keyframes rqExit {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(.995); }
+}
+
+/* ======= FEEDBACK (above) ======= */
+.feedbackOK {
+  color: var(--rq-ok);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  opacity: 0;
+  animation: fadeOK var(--rq-dur-feedback) var(--rq-ease-out) forwards; /* helyes szignatúra */
+  /* szándékosan háttér nélkül */
+}
+
+@keyframes fadeOK {
+  0%   { opacity: 0; transform: translateY(2px); }
+  18%  { opacity: 1; transform: translateY(0); }
+  82%  { opacity: 1; transform: translateY(0); }   /* tartás */
+  100% { opacity: 1; transform: translateY(0); }   /* NEM 0-ra esik vissza */
+}
+
+/* ======= KÉRDÉS ======= */
+.question {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* ======= LISTA ======= */
+.options {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* (ha kell külön az <li>-re) */
+.item {
+  list-style: none;
+}
+
+/* ======= GOMB ======= */
+.btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--rq-border);
+  background: var(--rq-bg);
+  color: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  /* alap átmenetek: mind „lágy” */
+  transition:
+    transform var(--rq-dur-hover) var(--rq-ease-emph),
+    border-color var(--rq-dur-hover) var(--rq-ease-out),
+    box-shadow var(--rq-dur-hover) var(--rq-ease-out),
+    background var(--rq-dur-hover) var(--rq-ease-out),
+    opacity var(--rq-dur-fade) var(--rq-ease-out),
+    filter var(--rq-dur-fade) var(--rq-ease-out);
+  box-shadow: var(--rq-shadow-rest);
+}
+
+/* HOVER: scale + finom árnyék + enyhe színváltás az alaphoz képest */
+.btn:enabled:hover {
+  transform: scale(var(--rq-scale-hover)) translateY(-1px);
+  border-color: color-mix(in oklch, var(--rq-accent) 42%, var(--rq-border));
+  box-shadow: var(--rq-shadow-hover);
+  background: var(--rq-bg-hover);
+}
+
+/* ACTIVE (mousedown): kicsi „lenyomás” */
+.btn:enabled:active {
+  transform: scale(var(--rq-scale-active));
+}
+
+/* PICKED állapot jelölése (TSX: .picked class) */
+.picked {
+  outline: 2px solid var(--rq-accent);
+  outline-offset: 0;
+}
+
+/* CORRECT / INCORRECT finomabb állapot-színek */
+.correct {
+  border-color: color-mix(in oklch, var(--rq-ok) 70%, transparent);
+}
+.incorrect {
+  border-color: color-mix(in oklch, crimson 60%, transparent);
+}
+
+/* ======= LOCKED fázis — katt után „commit” mikro-anim (csak a kiválasztotton) ======= */
+.quizRoot[data-quiz-phase="locked"] .btn.picked {
+  animation: rqCommit var(--rq-dur-commit) var(--rq-ease-emph) 1;
+}
+@keyframes rqCommit {
+  0%   { transform: scale(var(--rq-scale-active)); }
+  100% { transform: scale(var(--rq-scale-commit)); }
+}
+
+/* ======= EREDMÉNY: helyes válaszon kis „glow” és pulzus ======= */
+.quizRoot[data-quiz-phase="correct"] .btn.picked {
+  transform: scale(var(--rq-scale-correct));
+  box-shadow: var(--rq-shadow-correct);
+  border-color: color-mix(in oklch, var(--rq-ok) 80%, transparent);
+}
+
+/* ======= EREDMÉNY: téves válaszon finom „fakulás”, nem agresszív remegés ======= */
+.quizRoot[data-quiz-phase="incorrect"] .btn.picked {
+  box-shadow: var(--rq-shadow-incorrect);
+  filter: saturate(0.9);
+  border-color: color-mix(in oklch, crimson 70%, transparent);
+}
+
+/* ======= DÖNTÉS UTÁN – UNPICKED gombok lágy „háttérbe tolása”
+   :has() támogatott modern böngészőkben; ha van .picked, a többi halványul */
+.options:has(.picked) .btn:not(.picked) {
+  opacity: var(--rq-unpicked-opacity);
+  transform: translateY(0); /* stabil */
+  filter: saturate(0.85);
+  transition:
+    opacity var(--rq-dur-fade-long) var(--rq-ease-out) var(--rq-fade-delay),
+    filter var(--rq-dur-fade-long) var(--rq-ease-out) var(--rq-fade-delay);
+}
+
+/* ======= Címke ======= */
+.label {
+  pointer-events: none;
+  user-select: none;
+  display: inline-block;
+  flex: 1 1 auto;
+}
+
+/* inline felirat (háttér nélkül) a gomb jobb szélén */
+.feedbackOKInline {
+  color: var(--rq-ok);
+  font-weight: 700;
+  opacity: 0;
+  animation: fadeOKInline var(--rq-dur-feedback) var(--rq-ease-out) forwards; /* helyes szignatúra */
+}
+
+@keyframes fadeOKInline {
+  0%   { opacity: 0; transform: translateX(4px); }
+  18%  { opacity: 1; transform: translateX(0); }
+  82%  { opacity: 1; transform: translateX(0); }  /* tartás */
+  100% { opacity: 1; transform: translateX(0); }  /* NEM 0-ra esik vissza */
+}
+
+/* ======= DISABLED állapot =======
+   Fontos: NE módosítsuk vizuálisan, hogy ne legyen “snap” amikor a TSX letiltja a gombokat.
+   A vizuális halványítást fázis alapúan adjuk (ld. :has(.picked) blokk). */
+.btn:disabled {
+  cursor: not-allowed;
+  /* nincs opacity/filter/box-shadow módosítás */
+}
+
+/* ======= Reduced motion támogatás ======= */
+@media (prefers-reduced-motion: reduce) {
+  .quizRoot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .quizRoot[data-quiz-phase="exiting"] {
+    animation: none;
+    opacity: 1; /* vagy 0, ha azonnali váltást akarsz RM módban */
+  }
+  .btn,
+  .feedbackOK,
+  .feedbackOKInline {
+    transition: none;
+    animation: none;
+  }
+}

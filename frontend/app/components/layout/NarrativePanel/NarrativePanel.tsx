@@ -23,6 +23,7 @@ export type NarrativePanelProps = {
   setLockedMeasure: (m: Measure) => void;
   firstLockTimerRef: React.MutableRefObject<number | null>;
   backdrop?: React.ReactNode;
+  title?: string;  
 };
 
 /**
@@ -67,6 +68,16 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
         >
           {lines.length > 0 ? (
           <div className={s.textClamp}>
+            {/* ⬇️ Láthatatlan cím overlay a TypingText felett */}
+      {props.title ? (
+        <span
+          className={s.titleOverlay}
+          data-page-title-overlay
+          aria-hidden="true"
+        >
+          {props.title}
+        </span>
+      ) : null}
             <TypingText
               key={`tt_${pageId}`}
               lines={lines}

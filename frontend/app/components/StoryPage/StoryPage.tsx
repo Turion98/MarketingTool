@@ -49,6 +49,8 @@ import { resolveNextFromPage } from "../../lib/GameStateContext";
 import RuneSaveOverlay from "../labs/RuneSaveOverlay/RuneSaveOverlay";
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 import PuzzleRunes from "../labs/PuzzleRunes/PuzzleRunes";
+import RiddleQuiz from "../labs/RiddleQuiz/RiddleQuiz";
+
 import { useSearchParams } from "next/navigation";
 import {
    trackPageEnter, trackPageExit,
@@ -1169,6 +1171,19 @@ const blocks = useMemo(
 const isRiddlePage = useMemo(() => isRiddle(pageData), [pageData]);
 const isRunesPage  = useMemo(() => isRunes(pageData),  [pageData]);
 
+const riddleCorrectLabel = useMemo(() => {
+  // 1) page mezők (ha ilyet adsz a JSON-ban)
+  const fromPage = (pageData as any)?.correctLabel || (pageData as any)?.riddle?.correctLabel;
+  if (fromPage) return String(fromPage);
+
+  // 2) globál (ha később ide rakod, míg nincs token-lib)
+  const fromGlobals = (globals as any)?.riddleCorrectLabel || (globals as any)?.quiz?.labels?.correct;
+  if (fromGlobals) return String(fromGlobals);
+
+  // 3) alap
+  return "Helyes!";
+}, [pageData, globals]);
+
 // ⬇️ Feltételes next feloldása (pageData.next lehet string vagy NextSwitch)
 const resolvedNext = useMemo(() => {
   return (
@@ -1328,55 +1343,45 @@ useEffect(() => {
   return () => clearInterval(intervalId);
 }, []);
 
-const handleRiddleAnswer = useCallback(async (choiceIdx: number) => {
+const handleRiddleAnswer = useCallback((choiceIdx: number) => {
   const p = pageData as any as PuzzleRiddle;
   const isCorrect = choiceIdx === p.correctIndex;
-    const pageId = pageData?.id || currentPageId || "unknown";
-  const started = puzzleStartRef.current ?? Date.now();
-  const durationMs = Math.max(0, Date.now() - started);
-  try {
-  if (derivedStoryId && derivedSessionId && pageId) {
-    // próbálkozás (attempt=1 itt, ha számolod, ide add a ref-et)
-    trackPuzzleTry(derivedStoryId, derivedSessionId, pageId, String(pageId), 1, { puzzleKind: "riddle" });
 
-    // eredmény
-    trackPuzzleResult(
-      derivedStoryId, derivedSessionId, pageId, String(pageId),
-      isCorrect, 1, durationMs,
-      { puzzleKind: "riddle" }
-    );
-  }
-} catch {}
+  // 1) score → kézzel számoljuk (nem a {{ }} template-re hagyatkozunk)
+  const prevRaw = (globals as any)?.score;
+  const prevScore =
+    typeof prevRaw === "number" ? prevRaw :
+    Number.parseInt(String(prevRaw ?? "0"), 10) || 0;
+  const nextScore = prevScore + (isCorrect ? 1 : 0);
 
+  // 2) írd be a motor globáljaiba is, hogy a switch("score") lássa
+  flushSync(() => {
+    setGlobal("__isCorrect", isCorrect ? "true" : "false");
+    setGlobal("score", String(nextScore));
+  });
 
-  // setFlags (tömb vagy object)
+  // 3) opcionális: setFlags (ha van)
   const setFlags = p.onAnswer?.setFlags;
-  if (Array.isArray(setFlags)) {
-    setFlags.forEach((f) => setFlag(f));
-  } else if (setFlags && typeof setFlags === "object") {
-    Object.entries(setFlags).forEach(([k, v]) => v ? setFlag(k) : null);
+  if (Array.isArray(setFlags)) setFlags.forEach((f) => setFlag(f));
+  else if (setFlags && typeof setFlags === "object") {
+    Object.entries(setFlags).forEach(([k, v]) => v && setFlag(k));
   }
 
-  // setGlobals
-  const setGlobals = p.onAnswer?.setGlobals;
-  if (setGlobals && typeof setGlobals === "object") {
-    Object.entries(setGlobals).forEach(([k, v]) => setGlobal(k, String(v)));
-  }
-
-  // nextSwitch – __isCorrect kulccsal
+  // 4) következő oldal feloldása – add át a contextet __isCorrect + score
   const next =
     typeof p.onAnswer?.nextSwitch === "string"
-      ? p.onAnswer!.nextSwitch
+      ? p.onAnswer.nextSwitch
       : resolveNextFromPage(
           { next: p.onAnswer?.nextSwitch ?? { switch: "__isCorrect", cases: { true: null, false: null } } } as any,
-          { __isCorrect: String(isCorrect) }
+          { __isCorrect: isCorrect ? "true" : "false", score: String(nextScore) }
         );
 
   if (next && next !== pageData?.id) {
     try { localStorage.setItem("currentPageId", String(next)); } catch {}
     goToNextPage(String(next));
   }
-}, [pageData, setFlag, setGlobal, goToNextPage, derivedStoryId, derivedSessionId, currentPageId]);
+}, [pageData, globals, setGlobal, setFlag, goToNextPage]);
+
 
 // ⬇️ VÁLASZTÁS KEZELŐ – race fix-szel
 const handleChoice = useCallback(
@@ -1949,6 +1954,7 @@ return (
         setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
         firstLockTimerRef={firstLockTimer}
         pageId={pageData.id}
+        title={(pageData as any)?.title}
         backdrop={
           <>
             <BrickBottomOverlay
@@ -1973,24 +1979,35 @@ return (
     showChoices &&  !isEndNode ? (
       <>
         {isRiddlePage &&
-          (() => {
-            const r = pageData as unknown as PuzzleRiddle;
-            const riddleDockChoices = r.options.map(
-              (label: string, idx: number) => ({
-                id: String(idx),
-                label: String(label),
-              })
-            );
-            return (
-              <InteractionDock
-                mode="default"
-                choices={riddleDockChoices}
-                onSelect={(choiceId: string) =>
-                  handleRiddleAnswer(Number(choiceId))
-                }
-              />
-            );
-          })()}
+  (() => {
+    const r = pageData as unknown as PuzzleRiddle;
+    return (
+      <div className={dockStyles.grid}>
+        <RiddleQuiz
+          question={r.question /* ha inkább a narrációban van a kérdés, hagyd undefined */}
+          options={r.options}
+          correctIndex={r.correctIndex}
+
+          /* vizuális visszacsatolás – háttér nélküli felirat (egyelőre SCSS-ből) */
+          correctLabel={riddleCorrectLabel}
+          showCorrectLabel="above"
+
+          /* (elő)hang jelzés – most még opcionális; ha nincs lejátszó, ez kimaradhat */
+          onPlaySfx={(id) => {
+            try {
+              // ha van saját SFX buszod, itt szólítsd meg (pl. sfxBus.play(id))
+            } catch {}
+          }}
+
+          /* analitika + JSON onAnswer + navigáció: marad StoryPage-ben */
+          onResult={({ choiceIdx }) => {
+            handleRiddleAnswer(choiceIdx);
+          }}
+        />
+      </div>
+    );
+  })()}
+
 
         {!isRiddlePage &&
           isRunesPage &&
@@ -2001,6 +2018,8 @@ return (
   options={p.options}
   answer={p.answer}
   maxAttempts={p.maxAttempts ?? 3}
+  mode={p.mode ?? "ordered"}              // ÚJ
+  feedback={p.feedback ?? "reset"}
   className={dockStyles.grid}
   buttonClassName={dockStyles.choice}
   /* ⬇️ KÖTELEZŐ ANALYTICS AZONOSÍTÓK */

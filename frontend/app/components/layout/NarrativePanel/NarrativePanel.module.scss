@@ -42,3 +42,36 @@
     --np-pad-top: 4vh;
   }
 }
+.textClamp {
+  position: relative;
+  overflow: visible; /* hogy a felfelé lógó cím ne vágódjon le */
+}
+
+/* Látható cím a TypingText felett – stabil pozicionálás */
+.titleOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  /* Mobil: a saját magasság 50%-ával visszatoljuk */
+  transform: translateY(-100%);
+
+  /* Tipográfia – mobil */
+  font-weight: 700;
+  line-height: 1.1;
+  font-size: 28px;            /* mobil fontméret */
+  color: var(--skin-fg, #fff);
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  z-index: 2;
+
+  /* Ha nem akarod, hogy kattintható legyen: */
+  /* pointer-events: none; */
+
+  @media (min-width: 900px) {
+    /* Desktop: a saját magasság 100%-ával toljuk fel */
+    transform: translateY(-100%);
+    font-size: 22px;          /* desktop fontméret */
+  }
+}
+

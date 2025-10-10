@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "id": "frest_demo",
+    "title": "Riddle Demo",
+    "description": "Három kérdéses találós kérdés demó. Végén összesített értékeléssel és jutalom CTA-val.",
+    "coverImage": "/assets/covers/forest.jpg",
+    "startPageId": "r1",
+    "campaignId": "forest_demo",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Get the offer",
+        "urlTemplate": "https://example.com/offer?c={{campaignId}}&end={{nodeId}}"
+      },
+      "book_call": {
+        "kind": "link",
+        "label": "Foglalj hívást",
+        "urlTemplate": "https://cal.com/yourteam?ref={{campaignId}}"
+      },
+      "restart": {
+        "kind": "restart",
+        "label": "Játszd újra"
+      },
+      "google": {
+        "kind": "link",
+        "label": "Jutalom",
+        "urlTemplate": "https://www.google.com",
+        "target": "_blank"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": {
+    "r1": {
+      "id": "r1",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Kérdés 1",
+      "text": "Mi az: reggel négy lábon jár, délben kettőn, este háromon?",
+      "question": "Találd ki a találós kérdést!",
+      "options": [
+        "A Nap",
+        "Az ember",
+        "A macska",
+        "A szék"
+      ],
+      "correctIndex": 1,
+      "correctLabel": "Helyes!",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((__isCorrect===true||__isCorrect=='true')?1:0) }}"
+        },
+        "nextSwitch": {
+          "switch": "__isCorrect",
+          "cases": {
+            "true": "r2",
+            "false": "r2",
+            "__default": "r2"
+          }
+        }
+      }
+    },
+    "r2": {
+      "id": "r2",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Kérdés 2",
+      "text": "Mi az, ami mindig jön, de soha nem ér ide?",
+      "question": "Válaszd ki a helyes megoldást!",
+      "options": [
+        "A holnap",
+        "A tegnap",
+        "A szél",
+        "Az eső"
+      ],
+      "correctIndex": 0,
+      "correctLabel": "Helyes!",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((__isCorrect===true||__isCorrect=='true')?1:0) }}"
+        },
+        "nextSwitch": {
+          "switch": "__isCorrect",
+          "cases": {
+            "true": "r3",
+            "false": "r3",
+            "__default": "r3"
+          }
+        }
+      }
+    },
+    "r3": {
+      "id": "r3",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Kérdés 3",
+      "text": "Mi az, ami tele van lyukakkal, mégis megtartja a vizet?",
+      "question": "Utolsó kérdés!",
+      "options": [
+        "A szita",
+        "A szivacs",
+        "A háló",
+        "A felhő"
+      ],
+      "correctIndex": 1,
+      "correctLabel": "Helyes!",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + (__isCorrect=='true'?1:0) }}"
+        },
+        "nextSwitch": {
+          "switch": "score",
+          "cases": {
+            "0": "end_fail",
+            "1": "end_kiraly",
+            "2": "end_king",
+            "3": "end_king",
+            "__default": "end_kiraly"
+          }
+        }
+      }
+    },
+    "end_kiraly": {
+      "id": "end_kiraly",
+      "type": "end",
+      "title": "Király vagy!",
+      "text": "Legalább egy helyes választ adtál — szép munka!",
+      "endMeta": {
+        "cta": "google"
+      }
+    },
+    "end_king": {
+      "id": "end_king",
+      "type": "end",
+      "title": "KING 👑",
+      "text": "Kettő vagy annál több helyes válasz — igazi király vagy!",
+      "endMeta": {
+        "cta": "google"
+      }
+    },
+    "end_fail": {
+      "id": "end_fail",
+      "type": "end",
+      "title": "Köszönjük!",
+      "text": "Most nem jött össze. Próbáld újra — menni fog!",
+      "endMeta": {
+        "cta": "google"
+      }
+    }
+  }
+}

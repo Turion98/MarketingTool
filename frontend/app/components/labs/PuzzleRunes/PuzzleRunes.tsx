@@ -1,6 +1,12 @@
 "use client";
-import React, { useRef, useState } from "react";
+
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import clsx from "clsx";
+import styles from "./PuzzleRunes.module.scss";
 import { trackPuzzleResult } from "../../../lib/analytics";
+
+type PuzzleRunesMode = "ordered" | "set";
+type PuzzleRunesFeedback = "keep" | "reset";
 
 type PuzzleRunesProps = {
   options: string[];
@@ -17,7 +23,35 @@ type PuzzleRunesProps = {
   // ⬇️ skin/layout
   className?: string;
   buttonClassName?: string;
+
+  // ⬇️ ÚJ: működési módok
+  mode?: PuzzleRunesMode;          // "ordered" | "set" (default: "ordered")
+  feedback?: PuzzleRunesFeedback;  // "keep" | "reset" (csak set-módban értelmezett; default: "reset")
 };
+
+// ===== Riddle-hez igazított időzítések (tokenizálva CSS-ben is) =====
+const COMMIT_DELAY_MS = 300;  // „locked/commit” ablak (ugyanaz, mint Riddle)
+const FEEDBACK_HOLD_MS = 300; // rövid tartás a correct/incorrect állapothoz
+const EXIT_FADE_MS = 420;     // kifade idő — TS → CSS-nek átadjuk --pr-dur-exit-ként
+
+// Riddle mintájú exit-várakoztató (anim/transition end vagy timeout)
+function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      el.removeEventListener("animationend", onAnimEnd, true);
+      el.removeEventListener("transitionend", onTransEnd, true);
+      resolve();
+    };
+    const onAnimEnd = () => finish();
+    const onTransEnd = () => finish();
+    el.addEventListener("animationend", onAnimEnd, true);
+    el.addEventListener("transitionend", onTransEnd, true);
+    window.setTimeout(finish, timeoutMs + 80);
+  });
+}
 
 export default function PuzzleRunes({
   options,
@@ -30,61 +64,260 @@ export default function PuzzleRunes({
   puzzleId,
   className,
   buttonClassName,
+  mode = "ordered",
+  feedback = "reset",
 }: PuzzleRunesProps) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
- const t0Ref = useRef<number>(
-  typeof performance !== "undefined" && typeof performance.now === "function"
-    ? performance.now()
-    : Date.now()
-);
 
-  const pick = (id: string) =>
-    !picked.includes(id) && setPicked((p) => [...p, id]);
+  const [lockedCorrect, setLockedCorrect] = useState<Set<string>>(new Set());
+  const [wrongFlash, setWrongFlash] = useState<Set<string>>(new Set());
 
-  const undo = (id: string) =>
-    setPicked((p) => p.filter((x) => x !== id));
+  const t0Ref = useRef<number>(performance.now?.() ?? Date.now());
+  const flashTidRef = useRef<number | null>(null);
+  const firstPickDoneRef = useRef(false);
 
-  const reset = () => setPicked([]);
+  // ÚJ: Riddle-féle fázisgép
+  // "idle" → "locked" (commit) → "correct"/"incorrect" (rövid tartás) → "exiting" (kifade)
+  const [phase, setPhase] = useState<"idle" | "locked" | "correct" | "incorrect" | "exiting">("idle");
 
-  const submit = () => {
-    const ok =
-      picked.length === answer.length &&
-      picked.every((x, i) => x === answer[i]);
+  const maxPick = answer.length;
+  const answerSet = useMemo(() => new Set(answer), [answer]);
 
-    const now = (() => { try { return performance.now(); } catch { return Date.now(); } })();
-    const durationMs = Math.max(0, now - (t0Ref.current || now));
+  const canSubmit =
+    mode === "ordered"
+      ? picked.length === maxPick
+      : picked.length + lockedCorrect.size === maxPick;
 
-    // ⬇️ HELYES HÍVÁS – minden kötelező paraméterrel
-    trackPuzzleResult(
-      storyId,
-      sessionId,
-      pageId,
-      puzzleId,
-      ok,
-      attempts + 1,
-      durationMs,
-      { size: options.length } // extra (opcionális)
-    );
-
-    setAttempts((n) => n + 1);
-    onResult(ok);
+  const softResetWrongFlashSoon = () => {
+    if (flashTidRef.current != null) {
+      window.clearTimeout(flashTidRef.current);
+      flashTidRef.current = null;
+    }
+    flashTidRef.current = window.setTimeout(() => {
+      setWrongFlash(new Set());
+      flashTidRef.current = null;
+    }, 900);
   };
 
+  useEffect(() => {
+    return () => {
+      if (flashTidRef.current != null) {
+        window.clearTimeout(flashTidRef.current);
+        flashTidRef.current = null;
+      }
+    };
+  }, []);
+
+  // Interakciók
+  const pick = (id: string) => {
+    if (lockedCorrect.has(id)) return;
+    if (picked.includes(id)) return;
+    if (picked.length + lockedCorrect.size >= maxPick) return;
+
+    if (!firstPickDoneRef.current) {
+      firstPickDoneRef.current = true;
+      t0Ref.current = performance.now?.() ?? Date.now();
+    }
+    setPicked((p) => [...p, id]);
+  };
+
+  const undo = (id: string) => {
+    if (lockedCorrect.has(id)) return;
+    setPicked((p) => p.filter((x) => x !== id));
+  };
+
+  const hardReset = () => {
+    setPicked([]);
+    setLockedCorrect(new Set());
+    setWrongFlash(new Set());
+    firstPickDoneRef.current = false;
+    t0Ref.current = performance.now?.() ?? Date.now();
+    setPhase("idle"); // vissza nyugalmi állapotba
+  };
+
+  // Submit — a Riddle flow-ját követjük, de: SET+KEEP hibánál NINCS exiting
+  const submit = useCallback(() => {
+    if (!canSubmit || phase !== "idle") return;
+
+    // 1) LOCKED ablak (finom hover/active beérkezés)
+    setPhase("locked");
+
+    window.setTimeout(() => {
+      const now = performance.now?.() ?? Date.now();
+      const durationMs = Math.max(0, now - (t0Ref.current || now));
+
+      let ok = false;
+
+      if (mode === "ordered") {
+        ok = picked.length === maxPick && picked.every((x, i) => x === answer[i]);
+      } else {
+        const all = [...lockedCorrect, ...picked];
+        const uniqueAll = Array.from(new Set(all));
+        const correctCount = uniqueAll.filter((x) => answerSet.has(x)).length;
+        ok = correctCount === maxPick;
+
+        if (!ok) {
+          const wrong = picked.filter((x) => !answerSet.has(x));
+          if (wrong.length) {
+            setWrongFlash(new Set(wrong));
+            softResetWrongFlashSoon();
+          }
+        }
+      }
+
+      // 2) Jelöljük a végeredmény fázist vizuálisan
+      setPhase(ok ? "correct" : "incorrect");
+
+      // 3) Analitika – minden próbálkozásról log
+      try {
+        trackPuzzleResult(
+          storyId,
+          sessionId,
+          pageId,
+          puzzleId,
+          ok,
+          attempts + 1,
+          durationMs,
+          {
+            size: options.length,
+            mode,
+            pickedCount: picked.length,
+            keptCorrect: lockedCorrect.size,
+          }
+        );
+      } catch {}
+
+      // 4) Rövid tartás, majd:
+      //    - OK: exit + onResult(true)
+      //    - FAIL, de kifogyott a próba: exit + onResult(false)
+      //    - FAIL és SET+KEEP: NINCS exit; vissza idle-be, zárjuk a helyeseket
+      //    - FAIL és más ág (ordered vagy set+reset): marad az eddigi viselkedés (exit)
+      window.setTimeout(async () => {
+        const willExhaust = !ok && attempts + 1 >= maxAttempts;
+        const isSetKeep = mode === "set" && feedback === "keep";
+
+        if (ok || willExhaust || !isSetKeep) {
+          // ===== EXIT ÁG (helyes; vagy kifogyott; vagy nem keep) =====
+          const el = rootRef.current;
+          if (el) {
+            el.style.setProperty("--pr-dur-exit", `${EXIT_FADE_MS}ms`);
+            setPhase("exiting");
+            void el.offsetWidth; // reflow
+            await waitForExitAnimation(el, EXIT_FADE_MS);
+          } else {
+            await new Promise((r) => setTimeout(r, EXIT_FADE_MS));
+          }
+
+          if (ok) {
+            onResult(true);
+            return;
+          }
+
+          // Hibás, de nem fogyott ki: reseteljük a környezetet és engedjük a következő próbát.
+          setAttempts((prev) => {
+            const next = prev + 1;
+
+            if (mode === "set") {
+              if (feedback === "keep") {
+                // (elvileg ide most nem futunk be, mert isSetKeep == false eset)
+                const newlyCorrect = picked.filter((x) => answerSet.has(x));
+                if (newlyCorrect.length) {
+                  setLockedCorrect((prevSet) => new Set([...prevSet, ...newlyCorrect]));
+                }
+                setPicked([]);
+              } else {
+                hardReset();
+              }
+            } else {
+              setPicked([]);
+              firstPickDoneRef.current = false;
+              setPhase("idle");
+            }
+
+            if (next >= maxAttempts) {
+              onResult(false);
+            }
+            return next;
+          });
+        } else {
+          // ===== SET + KEEP HIBÁS ÁG: NINCS EXIT =====
+          setAttempts((prev) => {
+            const next = prev + 1;
+
+            // ami helyes volt a választásban, azt rögzítjük
+            const newlyCorrect = picked.filter((x) => answerSet.has(x));
+            if (newlyCorrect.length) {
+              setLockedCorrect((prevSet) => new Set([...prevSet, ...newlyCorrect]));
+            }
+
+            // ürítjük a még nem rögzített választásokat
+            setPicked([]);
+
+            // vissza interaktív állapotba – az opciók NEM tűnnek el
+            setPhase("idle");
+
+            if (next >= maxAttempts) {
+              // Ha itt fogyna ki (ritka edge), adjuk vissza a bukást.
+              onResult(false);
+            }
+            return next;
+          });
+        }
+      }, FEEDBACK_HOLD_MS);
+    }, COMMIT_DELAY_MS);
+  }, [
+    canSubmit,
+    phase,
+    mode,
+    feedback,
+    picked,
+    answer,
+    answerSet,
+    maxPick,
+    attempts,
+    storyId,
+    sessionId,
+    pageId,
+    puzzleId,
+    options.length,
+  ]);
+
+  // ===== Render =====
   return (
-    <div className={className} role="group" aria-label="Runák kirakó">
-      <div role="list" aria-label="Elérhető runák">
+    <div
+      ref={rootRef}
+      className={clsx(styles.root, className)}
+      // ugyanaz az adat-attribútumos fázisjelzés, mint a Riddle-ben
+      data-puzzle-phase={phase}
+      style={{ ["--pr-dur-exit" as any]: `${EXIT_FADE_MS}ms` }}
+      role="group"
+      aria-label="Runák kirakó"
+    >
+      {/* Elérhető runák */}
+      <div role="list" aria-label="Elérhető runák" className={styles.pool}>
         {options.map((id) => {
-          const selected = picked.includes(id);
+          const isLocked = lockedCorrect.has(id);
+          const isPicked = picked.includes(id);
+          const isWrong = wrongFlash.has(id);
+          const disabled =
+            isLocked ||
+            isPicked ||
+            (picked.length + lockedCorrect.size >= maxPick) ||
+            phase !== "idle";
+
           return (
             <button
               key={id}
               type="button"
               onClick={() => pick(id)}
-              disabled={selected || picked.length >= answer.length}
-              className={buttonClassName}
-              aria-pressed={selected}
-              data-selected={selected}
+              disabled={disabled}
+              className={clsx(styles.choice, buttonClassName)}
+              aria-pressed={isPicked || isLocked}
+              data-state={
+                isLocked ? "locked" : isWrong ? "wrong" : isPicked ? "picked" : "idle"
+              }
             >
               {id}
             </button>
@@ -92,26 +325,42 @@ export default function PuzzleRunes({
         })}
       </div>
 
-      <div role="list" aria-label="Kiválasztott sorrend">
+      {/* Kiválasztott / rögzített elemek */}
+      <div role="list" aria-label="Kiválasztott halmaz/sorrend" className={styles.pickedRow}>
+        {[...lockedCorrect].map((id) => (
+          <button
+            key={`locked-${id}`}
+            type="button"
+            disabled
+            className={clsx(styles.choice, buttonClassName)}
+            data-state="locked"
+            aria-label={`${id} rögzített (helyes)`}
+          >
+            {id} ✓
+          </button>
+        ))}
+
         {picked.map((id) => (
           <button
             key={`picked-${id}`}
             type="button"
             onClick={() => undo(id)}
-            className={buttonClassName}
-            data-rune-picked="true"
+            disabled={phase !== "idle"}
+            className={clsx(styles.choice, buttonClassName)}
+            data-state="picked"
           >
             {id} ✕
           </button>
         ))}
       </div>
 
-      <div>
+      {/* Vezérlők */}
+      <div className={styles.controls}>
         <button
           type="button"
           onClick={submit}
-          disabled={picked.length !== answer.length}
-          className={buttonClassName}
+          disabled={!canSubmit || phase !== "idle"}
+          className={clsx(styles.action, buttonClassName)}
           data-action="submit"
         >
           Ellenőrzés
@@ -119,14 +368,17 @@ export default function PuzzleRunes({
 
         <button
           type="button"
-          onClick={reset}
-          className={buttonClassName}
+          onClick={hardReset}
+          disabled={phase === "locked" || phase === "exiting"}
+          className={clsx(styles.action, buttonClassName)}
           data-action="reset"
         >
           Reset
         </button>
 
-        <span>Próbálkozás: {attempts}/{maxAttempts}</span>
+        <span className={styles.attempts}>
+          Próbálkozás: {attempts}/{maxAttempts}
+        </span>
       </div>
     </div>
   );

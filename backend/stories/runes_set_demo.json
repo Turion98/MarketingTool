@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "id": "runes_set_demo",
+    "title": "Runes Set Demo",
+    "description": "Teszt a halmaz-alapú rúna-puzzle logikához (keep/reset).",
+    "coverImage": "/assets/covers/forest.jpg",
+    "startPageId": "start",
+    "campaignId": "runes_set_demo",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Get the offer",
+        "urlTemplate": "https://example.com/offer?c={{campaignId}}&end={{nodeId}}"
+      },
+      "book_call": {
+        "kind": "link",
+        "label": "Foglalj hívást",
+        "urlTemplate": "https://cal.com/yourteam?ref={{campaignId}}"
+      },
+      "restart": {
+        "kind": "restart",
+        "label": "Játszd újra"
+      },
+      "google": {
+        "kind": "link",
+        "label": "Jutalom",
+        "urlTemplate": "https://www.google.com",
+        "target": "_blank"
+      }
+    },
+    "endDefaultCta": "google"
+  },
+  "pages": {
+    "start": {
+      "id": "start",
+      "title": "Halmaz logika teszt",
+      "text": "Válaszd ki, melyik set-módot szeretnéd tesztelni.",
+      "choices": [
+        {
+          "id": "go_keep",
+          "text": "SET + KEEP (jó elemek maradnak)",
+          "next": "p_set_keep"
+        },
+        {
+          "id": "go_reset",
+          "text": "SET + RESET (mindent újra)",
+          "next": "p_set_reset"
+        }
+      ]
+    },
+    "p_set_keep": {
+      "id": "p_set_keep",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "keep",
+      "prompt": "Válaszd ki a helyes 3 rúnát, sorrend mindegy. A jók megmaradnak.",
+      "options": [
+        "ᚠ",
+        "ᚢ",
+        "ᚦ",
+        "ᚨ",
+        "ᚱ",
+        "ᚲ"
+      ],
+      "answer": [
+        "ᚨ",
+        "ᚱ",
+        "ᚦ"
+      ],
+      "maxAttempts": 3,
+      "onSuccess": {
+        "goto": "success_keep",
+        "setFlags": [
+          "rune_set_keep_solved"
+        ]
+      },
+      "onFail": {
+        "goto": "fail_keep",
+        "setFlags": [
+          "rune_set_keep_failed"
+        ]
+      }
+    },
+    "success_keep": {
+      "id": "success_keep",
+      "title": "Siker (KEEP)",
+      "text": "Gratulálunk! A SET+KEEP puzzle megoldva.",
+      "choices": [
+        {
+          "text": "Tovább a RESET módhoz",
+          "next": "p_set_reset"
+        },
+        {
+          "text": "Befejezés",
+          "next": "end"
+        }
+      ]
+    },
+    "fail_keep": {
+      "id": "fail_keep",
+      "title": "Hiba (KEEP)",
+      "text": "Elfogytak a próbálkozások a SET+KEEP puzzle-ben.",
+      "choices": [
+        {
+          "text": "Újra próbálom (KEEP)",
+          "next": "p_set_keep"
+        },
+        {
+          "text": "Vissza a kezdőlapra",
+          "next": "start"
+        }
+      ]
+    },
+    "p_set_reset": {
+      "id": "p_set_reset",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "prompt": "Válaszd ki a helyes 3 rúnát, sorrend mindegy. Hibánál mindent újra kell választani.",
+      "options": [
+        "ᚠ",
+        "ᚢ",
+        "ᚦ",
+        "ᚨ",
+        "ᚱ",
+        "ᚲ"
+      ],
+      "answer": [
+        "ᚨ",
+        "ᚱ",
+        "ᚦ"
+      ],
+      "maxAttempts": 3,
+      "onSuccess": {
+        "goto": "success_reset",
+        "setFlags": [
+          "rune_set_reset_solved"
+        ]
+      },
+      "onFail": {
+        "goto": "fail_reset",
+        "setFlags": [
+          "rune_set_reset_failed"
+        ]
+      }
+    },
+    "success_reset": {
+      "id": "success_reset",
+      "title": "Siker (RESET)",
+      "text": "Gratulálunk! A SET+RESET puzzle megoldva.",
+      "choices": [
+        {
+          "text": "Vissza a KEEP módhoz",
+          "next": "p_set_keep"
+        },
+        {
+          "text": "Befejezés",
+          "next": "end"
+        }
+      ]
+    },
+    "fail_reset": {
+      "id": "fail_reset",
+      "title": "Hiba (RESET)",
+      "text": "Elfogytak a próbálkozások a SET+RESET puzzle-ben.",
+      "choices": [
+        {
+          "text": "Újra próbálom (RESET)",
+          "next": "p_set_reset"
+        },
+        {
+          "text": "Vissza a kezdőlapra",
+          "next": "start"
+        }
+      ]
+    },
+    "end": {
+      "id": "end",
+      "type": "end",
+      "title": "Köszönjük!",
+      "text": "Végigtesztelted a halmaz logikát.",
+      "endMeta": {
+        "cta": "google"
+      }
+    }
+  }
+}
