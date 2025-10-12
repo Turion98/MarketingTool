@@ -1,4 +1,5 @@
 /* ===== HeaderBar.module.scss (ALIGN + ELLIPSIS + LOGO FIT) ===== */
+/* A komponens kizárólag tokenekből dolgozik. A mobil-bridge itt, a fájl végén köt rá a -mobile aliasokra. */
 
 .headerBar {
   display: grid;
@@ -18,9 +19,16 @@
   box-shadow: var(--header-shadow, 0 8px 24px rgba(0,0,0,.28));
 }
 
-/* slotok */
-.left  { justify-self: start; display: inline-flex; align-items: center; gap: var(--header-gap, 12px); min-width: 0; }
-.center{
+/* ===== Slotok ===== */
+.left  {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--header-gap, 12px);
+  min-width: 0;
+}
+
+.center {
   justify-self: center;
   align-self: center;
   min-width: 0;
@@ -28,28 +36,40 @@
   text-align: center;
   overflow: hidden;
 }
+
 .center :where(h1,h2,h3,.title,.heading){
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.right { justify-self: end; display: inline-flex; align-items: center; gap: var(--header-gap, 12px); min-width: 0; }
 
-/* Változatok */
-.solid       { background: var(--header-bg-solid, rgba(10,12,16,.85)); }
-.transparent { background: var(--header-bg-trans, rgba(0,0,0,.18)); }
-.dense       { min-height: var(--header-minh-dense, 44px); padding: var(--header-pad-v-dense, 6px) var(--header-pad-h, 12px); }
-.elevated    { box-shadow: var(--header-shadow-strong, 0 12px 32px rgba(0,0,0,.35)); }
-
-/* ===== LOGO – kitölti a header belső magasságát, arányt tart ===== */
-.logoBox{
+.right {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
+  gap: var(--header-gap, 12px);
+  min-width: 0;
+}
+
+/* ===== Változatok ===== */
+.solid       { background: var(--header-bg-solid, rgba(10,12,16,.85)); }
+.transparent { background: var(--header-bg-trans, rgba(0,0,0,.18)); }
+.dense {
+  min-height: var(--header-minh-dense, 44px);
+  padding: var(--header-pad-v-dense, 6px) var(--header-pad-h, 12px);
+}
+.elevated    { box-shadow: var(--header-shadow-strong, 0 12px 32px rgba(0,0,0,.35)); }
+
+/* ===== LOGO – a belső magasságra skálázva, arányt tartva ===== */
+.logoBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end; /* ✅ optikai középhez húzva: jobbra a saját slotban */
 
   /* belső sor-magasság = header-minh - (2 * vertical padding) */
-  --_inner-line: calc(var(--header-minh, 105px) - (2 * var(--header-pad-v, 8px)));
+  --_inner-line: calc(var(--header-minh, 80px) - (2 * var(--header-pad-v, 8px)));
 
-  /* skála: ALAPBÓL 1 (teljes belmagasság) – szükség esetén pl. 0.9 */
+  /* skála: alapból 1 (teljes belmagasság); skin felülírhatja: --logo-scale */
   --_scale: var(--logo-scale, 1);
 
   /* végső magasság = belső magasság * scale */
@@ -58,42 +78,45 @@
   min-block-size: 0;
 
   /* opcionális vízszintes limit/illeszkedés */
-
   --logo-fit: var(--logo-fit, contain);
+
+/* ✅ kiszervezett optikai távolság */
+  padding-inline-start: var(--logo-pad-inline-start, clamp(14px, 0.8cqi, 12px));
 }
 
 .logoBox :where(img, svg){
   display: block;
   height: 100%;
   width: auto;
-  max-inline-size: var(--logo-max-w);
+  max-inline-size: var(--logo-max-w, 100%);
   object-fit: var(--logo-fit);
   image-rendering: auto;
-  max-inline-size: var(--logo-max-w, 100%);
 }
 
-/* ===== MOBIL: title két sloton (2–3. oszlop) középen ===== */
+/* ===== MOBIL: a cím két középső oszlopon terül szét ===== */
 @media (max-width: 640px) {
   .headerBar {
     /* 4 oszlop: [left] [title-1] [title-2] [right] */
     grid-template-columns: auto minmax(0,1fr) minmax(0,1fr) auto;
   }
-  .left  { grid-column: 1; }
-  .center{
+  .left   { grid-column: 1; }
+  .center {
     grid-column: 2 / 4;   /* a két középső oszlopon ül */
     justify-self: center; /* vízszintes közép a saját sávján belül */
     text-align: center;
   }
-  .right { grid-column: 4; }
+  .right  { grid-column: 4; }
 }
+
+/* ===== TITLE stílus (csak tokenekből) ===== */
 .center [data-header-title] {
   font-family: var(--header-title-font, var(--font-sans));
-  font-size: var(--header-title-size, clamp(1.5rem, 1cqi, 1.5rem));
+  font-size: var(--header-title-size);
   font-weight: var(--header-title-weight, 600);
   color: var(--header-title-color, var(--skin-fg, #fff));
   letter-spacing: var(--header-title-spacing, 0.04em);
   line-height: 1.2;
-  margin: 0 30px 0 0;
+  margin: var(--header-title-margin, 0 30px 0 0);
   text-align: center;
   display: inline-block;
   max-width: 100%;
@@ -101,7 +124,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* ===== RUNA BLOKK VISIBILITÁS ===== */
+
+/* ===== Rune blokk láthatóság ===== */
 /* Alapértelmezés: desktop látszik, mobil rejtve */
 .runesDesktop { display: inline-flex; align-items: center; gap: 8px; }
 .runesMobile  { display: none;       align-items: center; gap: 8px; }
@@ -110,4 +134,24 @@
 @media (max-width: 640px) {
   .runesDesktop { display: none; }
   .runesMobile  { display: inline-flex; }
+}
+
+@media (max-width: 640px) {
+  html[data-skin="legacy-default"],
+  body[data-skin="legacy-default"] {
+    /* Header (MOBILE TOKENS – nem a bázist írod át!) */
+    --header-gap-mobile: 10px;
+    --header-minh-mobile: 56px;   /* 10px helyett reális érték */
+    --header-pad-v-mobile: 6px;
+    --header-pad-h-mobile: 10px;
+
+    /* Title */
+    --header-title-size-mobile: 16px;
+    --header-title-spacing-mobile: 0.2px;
+    --header-title-margin-mobile: 0 16px 0 0;
+
+    /* Logo */
+    --logo-scale-mobile: .9;
+    --logo-max-w-mobile: 100%;
+  }
 }

@@ -1,14 +1,6 @@
-:root {
-  --bg-color: transparent;
-  --bg-image: none; /* pl. url("/skins/luxe/bg.jpg") */
-  --bg-position: center center;
-  --bg-size: cover;
-  --bg-repeat: no-repeat;
-
-  --bg-overlay: none; /* pl. linear-gradient(...) */
-  --bg-overlay-opacity: 1;
-  --bg-blur: 0px;
-}
+/* === DecorBackground.module.scss ===================================== */
+/* Csak olvas a skin tokenekből: --bg-color, --bg-image, --bg-overlay... */
+/* ===================================================================== */
 
 /* ====== ALAPRÉTEG ====== */
 .storyBackground {
@@ -18,7 +10,7 @@
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  isolation: isolate;
+  isolation: isolate; /* blendinghez */
 }
 
 /* ====== SKIN TOKEN VEZÉRELT CSS HÁTTÉR ====== */
@@ -26,12 +18,12 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-color: var(--bg-color);
-  background-image: var(--bg-image);
-  background-position: var(--bg-position);
-  background-size: var(--bg-size);
-  background-repeat: var(--bg-repeat);
-  filter: blur(var(--bg-blur));
+  background-color: var(--bg-color, transparent);
+  background-image: var(--bg-image, none);
+  background-position: var(--bg-position, center center);
+  background-size: var(--bg-size, cover);
+  background-repeat: var(--bg-repeat, no-repeat);
+  filter: blur(var(--bg-blur, 0px));
   transform: translateZ(0);
 }
 
@@ -44,7 +36,7 @@
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  filter: blur(var(--bg-blur));
+  filter: blur(var(--bg-blur, 0px));
   transform: translateZ(0);
 }
 
@@ -54,9 +46,9 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: var(--bg-overlay);
-  opacity: var(--bg-overlay-opacity);
-  backdrop-filter: blur(var(--bg-blur));
+  background: var(--bg-overlay, none);
+  opacity: var(--bg-overlay-opacity, 1);
+  backdrop-filter: blur(var(--bg-blur, 0px));
 }
 
 /* ====== PRESET VARIÁCIÓK ====== */
@@ -90,12 +82,10 @@
 
   .backgroundImage,
   .backgroundVideo {
-    filter: saturate(1.06) contrast(1.04) blur(var(--bg-blur));
+    filter: saturate(1.06) contrast(1.04) blur(var(--bg-blur, 0px));
   }
 }
 
 .none {
-  &::after {
-    display: none;
-  }
+  &::after { display: none; }
 }

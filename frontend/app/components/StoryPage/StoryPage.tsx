@@ -1903,6 +1903,7 @@ return (
  topbar={
   <>
     <HeaderBar
+     data-skin="legacy-default"
       variant="transparent"
       elevated
       left={<img src="assets/my_logo.png" alt="Logo" data-logo />}

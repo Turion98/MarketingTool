@@ -4,6 +4,7 @@ import { GameStateProvider } from "./lib/GameStateContext";
 import { StyleProfileProvider } from "./lib/StyleProfileContext"; // ✅ új import
 import { Cormorant_Garamond } from "next/font/google";
 import PaperEffect from "./components/filters/PaperEffect";
+import "@/styles/skins/legacy-default.css"; 
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -18,7 +19,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cormorant.variable}>
+    <html data-skin="legacy-default" lang="en" className={cormorant.variable}>
       <body>
         <GameStateProvider>
           <StyleProfileProvider> {/* ✅ Globális stílusprofil */}

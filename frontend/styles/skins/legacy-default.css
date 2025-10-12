@@ -1,0 +1,218 @@
+/* === Legacy Default Skin ================================================ */
+/* Aktiválás: <body data-skin="legacy-default"> …                           */
+/* A modulokban csak olvassunk: background: var(--skin-bg); stb.            */
+/* ========================================================================= */
+
+/* ✅ TÁMOGATJA: <html data-skin=…> és <body data-skin=…> aktiválást is */
+html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
+  /* ---- Alap / Core ---- */
+  --skin-bg: #0d0f13;
+  --skin-fg: #ffffff;
+  --brand-accent: #ffc861;
+
+  /* ---- Typo ---- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+               "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* ---- Canvas ---- */
+  --app-page-bg: var(--skin-bg);
+
+  /* ---- Canvas Layout (ÚJ) ---- */
+  --canvas-maxw: min(96vw, 1280px);
+  --canvas-pad: clamp(12px, 2cqi, 20px);
+  --canvas-gap: clamp(8px, 1.6cqi, 16px);
+  --canvas-xs-pad: clamp(8px, 3cqi, 16px);
+  --canvas-xs-gap: clamp(6px, 2cqi, 12px);
+
+  /* Progress/Sticky (ÚJ) */
+  --progress-sticky-top: 0px;
+
+  /* HUD igazítás (ÚJ, Canvas olvassa) */
+  --ab-height: clamp(44px, 6cqi, 64px);
+
+  /* ---- HeaderBar (alap tokenek) ---- */
+  --header-gap: 12px;
+  --header-minh: 80px;
+  --header-minh-dense: 56px;
+  --header-pad-v: 8px;
+  --header-pad-v-dense: 6px;
+  --header-pad-h: 12px;
+
+  --header-bg: rgba(0, 0, 0, .25);
+  --header-bg-trans: rgba(0, 0, 0, .25);
+  --header-bg-solid: rgba(0, 0, 0, .45);
+  --header-border: rgba(255, 255, 255, .12);
+  --header-radius: 14px;
+  --header-blur: 6px;
+  --header-shadow: 0 8px 28px rgba(0,0,0,.35);
+  --header-shadow-strong: 0 10px 36px rgba(0,0,0,.45);
+
+  --header-title-color: var(--skin-fg);
+  --header-title-font: var(--font-sans);
+  --header-title-size: 18px; /* ⇦ visszafelé kompatibilis alapméret */
+  --header-title-spacing: 0.2px;
+  --header-title-weight: 600;
+
+  /* Logo fit helpers (HeaderBar) – régi aliasok */
+  --logo-scale: 1;      /* ⇦ fallback alias (desktopra esik vissza) */
+  --logo-max-w: 100%;
+  --logo-fit: contain;
+
+  /* ---- Progress Strip / HUD ---- */
+  --progress-height: 4px;
+  --ph-height: 4px;
+  --ph-radius: 0;
+  --ph-track: rgba(255,255,255,.15);
+  --ph-fill: linear-gradient(90deg, #ffd75a 0%, #ffb347 100%);
+  --ph-label-color: #fff;
+  --ph-label-size: 14px;
+
+  /* ---- ActionBar ---- */
+  --ab-w: 120px;
+  --ab-gap: 10px;
+  --ab-pad: 12px;
+
+  --ab-bg-top: rgba(0, 0, 0, .45);
+  --ab-bg-bot: rgba(0, 0, 0, .60);
+  --ab-border: rgba(255, 255, 255, .16);
+  --ab-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+
+  --btn-h: 40px;
+  --btn-radius: 12px;
+
+  /* KIEGÉSZÍTÉS – pontos vizuál megtartása */
+  --ab-radius: 16px;
+  --ab-backdrop-blur: 6px;
+  --ab-z: 999930;
+  --ab-offset: 12px;
+
+  /* Mobil specifikus */
+  --ab-mobile-maxh: 82vh;
+  --ab-w-mobile: min(88vw, 80px);
+
+  /* Toggle gomb (mobil/desktop) */
+  --ab-toggle-bg: rgba(0,0,0,.55);
+  --ab-toggle-fg: #fff;
+  --ab-toggle-font-size: 14px;
+  --ab-toggle-font-weight: 600;
+  --ab-toggle-letter-spacing: .2px;
+  --ab-toggle-hover-bg: rgba(0,0,0,.65);
+  --ab-close-radius: 10px;
+  --ab-radius-mobile: 12px 0 0 12px;  
+
+  /* --- BTN interakciók (ActionBar) --- */
+  --btn-transition-dur: 120ms;
+  --btn-transition-ease: ease;
+  --btn-active-scale: 0.96;
+  --btn-active-brightness: 0.6;
+
+  /* normál gomb */
+  --btn-bg: rgba(255,255,255,.18);
+  --btn-bg-hover: rgba(255,255,255,.12);
+  --btn-fg: #fff;
+  --btn-border: var(--ab-border, rgba(255,255,255,.16));
+
+  /* primary gomb */
+  --btn-primary-bg: rgba(255,255,255,.16);
+  --btn-primary-bg-hover: rgba(255,255,255,.20);
+
+  /* ---- InteractionDock ---- */
+  --dock-blur: 6px;
+  --dock-shadow: 0 12px 32px rgba(0,0,0,.35);
+  --dock-border: rgba(255, 255, 255, .12);
+  --dock-bg-top: rgba(0, 0, 0, .25);
+  --dock-bg-bot: rgba(0, 0, 0, .40);
+
+  --choice-bg-top: rgba(255, 255, 255, .12);
+  --choice-bg-bot: rgba(255, 255, 255, .06);
+  --choice-bg-top-disabled: rgba(255, 255, 255, .05);
+  --choice-bg-bot-disabled: rgba(255, 255, 255, .03);
+  --choice-border: rgba(255, 255, 255, .18);
+  --choice-shadow: 0 6px 18px rgba(0,0,0,.30);
+  --choice-color: #fff;
+
+  --choice-font: 16px;
+  --wrapper-maxw: 980px;
+
+  /* ---- NarrativePanel ---- */
+  --np-maxw: 1100px;
+  --np-z: 5;
+  --np-pad-x: 4vw;
+  --np-pad-top: 6vh;
+  --np-gap: 10px;
+
+  /* ---- MediaFrame ---- */
+  --mf-max-w: 1180px;
+
+  /* ---- Decorative Background ---- */
+  --bg-color: transparent;
+  --bg-image: none;
+  --bg-position: center center;
+  --bg-size: cover;
+  --bg-repeat: no-repeat;
+
+  --bg-overlay: none;
+  --bg-overlay-opacity: 1;
+  --bg-blur: 0px;
+
+  /* ---- Helpers ---- */
+  --rune-scale: 1;      /* Canvas olvassa (mobil overlay skálázás) */
+  --progress-pct: 0%;
+
+  /* ---- HeaderBar (konzisztens tokenek) ---- */
+/* Alapértékek = desktop; mobilon alább media query-ben felülírjuk */
+--header-gap: 12px;
+
+--header-minh: 80px;
+--header-pad-v: 8px;
+--header-pad-h: 12px;
+
+--header-minh-dense: 56px;
+--header-pad-v-dense: 6px;
+
+--header-bg: rgba(0, 0, 0, .25);
+--header-bg-trans: rgba(0, 0, 0, .25);
+--header-bg-solid: rgba(0, 0, 0, .45);
+--header-border: rgba(255, 255, 255, .12);
+--header-radius: 14px;
+--header-blur: 6px;
+--header-shadow: 0 8px 28px rgba(0,0,0,.35);
+--header-shadow-strong: 0 10px 36px rgba(0,0,0,.45);
+
+/* Cím tipó (desktop alap) */
+--header-title-font: var(--font-sans);
+--header-title-color: var(--skin-fg);
+--header-title-weight: 600;
+--header-title-spacing: 0.2px;
+--header-title-size: 22px;        /* desktop méret */
+--header-title-margin: 0 30px 0 0;
+
+/* Logó illesztés */
+--logo-scale: 1.2;                  /* desktop skála */
+--logo-max-w: 100%;
+--logo-fit: contain;
+--logo-pad-inline-start: clamp(14px, 0.8cqi, 12px);
+}
+
+/* ===== Mobil token override – TOP-LEVEL @media, nem beágyazva ===== */
+@media (max-width: 640px) {
+  html[data-skin="legacy-default"],
+  body[data-skin="legacy-default"] {
+    /* Header */
+    --header-gap: 10px;
+    --header-minh: 56px;
+    --header-pad-v: 6px;
+    --header-pad-h: 10px;
+
+    /* Title */
+    --header-title-size: 20px;
+    --header-title-spacing: 0.2px;
+    --header-title-margin: 0 16px 0 0;
+
+    /* Logo */
+    --logo-scale: 1.6;
+    --logo-max-w: 100%;
+  }
+}
+

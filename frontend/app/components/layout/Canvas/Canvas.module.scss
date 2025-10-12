@@ -1,9 +1,31 @@
 /* ===== Canvas.module.scss (MEDIA ROW GROWS; NO CROP) ===== */
 
-:root { --ab-height: clamp(44px, 6cqi, 64px); }
+/* A legacy skin felülírhatja ezeket; itt adunk biztos fallbacket */
+:root,
+html[data-skin="legacy-default"],
+body[data-skin="legacy-default"] {
+  /* Desktop szélesség-korlátok (szabadon állítható skinből is) */
+  --canvas-minw-desktop: 820px;
+  --canvas-maxw-desktop: 1280px;
+
+  /* Padding/gap fallbackek (ha nincs legacyban definiálva) */
+  --canvas-pad: clamp(12px, 2cqi, 20px);
+  --canvas-gap: clamp(8px, 1.6cqi, 16px);
+  --canvas-xs-pad: clamp(8px, 3cqi, 16px);
+  --canvas-xs-gap: clamp(6px, 2cqi, 12px);
+
+  /* Progress sticky fallback */
+  --progress-sticky-top: 0px;
+}
+
+/* ❌ EDDIG: :root { --ab-height: clamp(44px, 6cqi, 64px); }
+   ✅ HELYETTE: olvasd a legacyból, fallbackkel ahol kell. */
 
 .canvasWrap {
-  --app-page-bg: var(--skin-bg, #0d0f13);
+  /* alap */
+  --_page-bg: var(--app-page-bg, var(--skin-bg, #0d0f13));
+  background: var(--_page-bg);
+
   position: fixed;
   inset: 0;
   display: flex;
@@ -11,97 +33,120 @@
   align-items: flex-start;
   width: 100vw;
   height: 100svh;
-  background: var(--app-page-bg);
   overflow-y: auto;
   overflow-x: hidden;
+
+  /* Stabilizálás: a belső növekedés ne dobja meg a külső layoutot */
+  contain: layout paint;
 }
 
+/* ✅ DESKTOPON: a .canvasInner NEM szab szélességet, csak középre igazít */
 .canvasInner {
-  inline-size: min(96vw, 1280px);
+  inline-size: auto;           /* kulcs: ne diktáljon szélességet desktopon */
+  max-inline-size: 100%;
   margin-inline: auto;
-  padding: clamp(12px, 2cqi, 20px);
+  padding: var(--canvas-pad);
+
+  display: grid;               /* a .playfield középre igazításához */
+  justify-items: center;
+  min-width: 0;                /* ne feszítse túl a szélességet a belső grid */
 }
 
 /* ===== GRID (alap: mobil – minden egymás alatt) ===== */
 .playfield {
   display: grid;
+
+  /* 🔒 DESKTOP kezdőszélesség: azonnal a minimumra áll,
+     nem nő “gépeléssel”/betöltéssel. A plafont a max szabja. */
+  inline-size: var(--canvas-minw-desktop);
+  max-inline-size: var(--canvas-maxw-desktop);
+
+  /* rács */
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto auto auto auto;
   grid-template-areas:
-    "progress"   /* progress most a topbar fölé került */
+    "progress"
     "topbar"
     "media"
     "narr"
     "dock"
     "action";
-  gap: clamp(8px, 1.6cqi, 16px);
+
+  gap: var(--canvas-gap);
   align-items: start;
   justify-items: stretch;
+
+  /* ne engedje, hogy gyerekek túlterjesszék */
+  min-width: 0;
 }
 
-/* Területek – ezek a StoryPage-ben vannak használva */
-.areaTopbar { 
+/* Területek */
+.areaTopbar {
   grid-area: topbar;
   align-self: center;
-  position: relative; /* overlay-hez kell */
+  position: relative;
+  min-width: 0;
 }
 
 .background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  pointer-events: none; /* háttér ne blokkoljon inputot */
-  /* ha kell: overflow: hidden; */
+  pointer-events: none;
+  /* opcionális: overflow: hidden; */
 }
 
+/* Progress */
 .areaProgress {
   grid-area: progress;
   height: var(--progress-height, 4px);
-  position: relative;
-  top: 0;
+  position: sticky;
+  top: var(--progress-sticky-top);
   width: 100%;
   z-index: 10;
 }
 
-.areaMedia  { grid-area: media; align-self: start; overflow: visible; }
-.areaNarr   { grid-area: narr;  align-self: start; }
-.areaDock   {
-  grid-area: dock;
-  display: grid;
-  place-items: center;
-}
-.areaAction { grid-area: action; }
+/* Média */
+.areaMedia  { grid-area: media; align-self: start; overflow: visible; min-width: 0; }
+.areaNarr   { grid-area: narr;  align-self: start; min-width: 0; }
+.areaDock   { grid-area: dock;  display: grid; place-items: center; min-width: 0; }
+.areaAction { grid-area: action; min-width: 0; }
 
-/* Média ne vágódjon */
-.areaMedia .mediaFrame { aspect-ratio: auto; overflow: visible; }
+/* A média ne tudja kifeszíteni a vásznat betöltés után sem */
+.areaMedia .mediaFrame {
+  aspect-ratio: var(--media-aspect, auto);
+  overflow: visible;
+}
+
 .areaMedia img,
 .areaMedia video,
 .areaMedia canvas {
   object-fit: contain;
   object-position: center;
   max-inline-size: 100%;
+  height: auto;
+  display: block;
+  contain: layout paint;
 }
 
-/* Sticky util pl. progresshez */
-.stickyBar { position: sticky; top: 0; z-index: 10; }
+/* Sticky util */
+.stickyBar { position: sticky; top: var(--progress-sticky-top); z-index: 10; }
 
 /* ===== RuneDock mobil overlay (jobb felső sarok) ===== */
 .runeDockTopRight {
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 50;               /* emeld meg, hogy biztosan a header felett legyen */
+  z-index: 50;
   transform: scale(var(--rune-scale, 0.85));
   transform-origin: top right;
 
-  /* alapértelmezetten rejtve */
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 160ms ease, visibility 0s linear 160ms;
 }
 
-/* ha már van rúnád → látható és kattintható */
 .isVisible {
   opacity: 1;
   visibility: visible;
@@ -109,37 +154,30 @@
   transition: opacity 160ms ease;
 }
 
-/* Desktopon továbbra is a Header jobb oldalában jelenjen meg (lenti kód megtartva) */
+/* Desktop only / Mobile only segédosztályok */
 .showOnlyDesktop { display: none; }
+@media (min-width: 768px) { .showOnlyDesktop { display: initial; } }
 
-@media (min-width: 768px) {
-  .showOnlyDesktop { display: initial; }
-  /* a mobil overlayt nem kell rejteni, mert mobilon használjuk; desktopon úgysem ezt mutatjuk */
-}
-/* Csak mobilon látható elemek */
-.showOnlyMobile {
-  display: block;
-}
+.showOnlyMobile { display: block; }
+@media (min-width: 768px) { .showOnlyMobile { display: none !important; } }
 
-@media (min-width: 768px) {
-  .showOnlyMobile {
-    display: none !important;
-  }
-}
-
-
-/* XS finomítás */
+/* 📱 MOBIL: mindig 100% széles vászon + kisebb paddings/gap */
 @media (max-width: 640px) {
   .canvasInner {
-    inline-size: 100%;
-    padding: clamp(8px, 3cqi, 16px);
+    inline-size: 100%;       /* mobilon a konténer 100% */
+    padding: var(--canvas-xs-pad);
   }
-  .playfield { gap: clamp(6px, 2cqi, 12px); }
+
+  .playfield {
+    inline-size: 100%;       /* mobilon a vászon is 100% */
+    min-inline-size: 100%;
+    max-inline-size: 100%;
+    gap: var(--canvas-xs-gap);
+  }
 }
 
 /* ===== TABLET / DESKTOP ===== */
 @media (min-width: 768px) {
-  /* egyoszlopos elrendezés (Narr → Dock → Action egymás alatt) */
   .playfield {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto auto auto;
@@ -154,29 +192,10 @@
 
   .areaNarr,
   .areaDock,
-  .areaAction {
-    grid-column: 1 / -1;
-  }
+  .areaAction { grid-column: 1 / -1; }
 
   .areaDock { place-items: center; }
 
-  /* Overlay csak mobilon kell; desktopon rejtsük el */
+  /* Ha lenne bal felső overlay változat, desktopon rejtheted: */
   .runeDockTopLeft { display: none; }
-  .showOnlyDesktop { display: initial; }
 }
-
-/* ===== (OPCIONÁLIS) LARGE DESKTOP — kétoszlopos mód, ha később akarod ===== */
-/*
-@media (min-width: 1024px) {
-  .playfield {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    grid-template-areas:
-      "progress  progress"
-      "topbar    topbar"
-      "media     media"
-      "narr      dock"
-      "action    action";
-  }
-}
-*/

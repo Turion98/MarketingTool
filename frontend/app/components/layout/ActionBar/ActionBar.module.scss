@@ -1,28 +1,20 @@
-:root {
-  --ab-w: 120px;
-  --ab-gap: 10px;
-  --ab-pad: 12px;
-
-  --ab-bg-top: rgba(0, 0, 0, .45);
-  --ab-bg-bot: rgba(0, 0, 0, .60);
-  --ab-border: rgba(255, 255, 255, .16);
-  --ab-shadow: 0 16px 40px rgba(0, 0, 0, .45);
-
-  --btn-h: 40px;
-  --btn-radius: 12px;
-}
+/* ===========================
+   ActionBar.module.scss
+   (legacy-default skin tokenekre épít)
+   =========================== */
 
 /* ===== Sidebar (jobb oldal) ===== */
 .actionBar {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  top: var(--ab-offset);
+  right: var(--ab-offset);
+
   height: auto;
-  max-height: calc(100vh - 24px);
+  max-height: calc(100vh - (var(--ab-offset) * 2));
   overflow: auto;
 
   width: var(--ab-w);
-  z-index: 999930;
+  z-index: var(--ab-z);
 
   display: flex;
   flex-direction: column;
@@ -30,20 +22,20 @@
 
   padding: var(--ab-pad);
   border: 1px solid var(--ab-border);
-  border-radius: 16px;
+  border-radius: var(--ab-radius);
+
   background: linear-gradient(var(--ab-bg-top), var(--ab-bg-bot));
   box-shadow: var(--ab-shadow);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(var(--ab-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--ab-backdrop-blur));
 
-  /* ⬇️ alapból elrejtve desktopon is, csak “open” esetben látszik */
-  transform: translateX(calc(100% + 12px));
-  transition: transform 0.25s ease;
+  /* alapból rejtve, open esetben csúszik be */
+  transform: translateX(calc(100% + var(--ab-offset)));
+  transition: transform var(--btn-transition-dur) var(--btn-transition-ease);
 }
-.open {
-  transform: translateX(0);
-}
+.open { transform: translateX(0); }
 
-/* Fejléc + mobil close */
+/* ===== Fejléc + mobil close ===== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -55,45 +47,80 @@
   display: none;
   border: 1px solid var(--ab-border);
   background: transparent;
-  border-radius: 10px;
+  border-radius: var(--ab-close-radius);
   padding: 6px 10px;
   cursor: pointer;
 }
 
-/* Csoportok */
+/* ===== Csoportok ===== */
 .group {
   display: grid;
   gap: 8px;
 }
 .group:last-child { margin-bottom: 0; }
 
-/* Gombok */
+/* ===== Gombok ===== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   height: var(--btn-h);
   padding: 0 12px;
   border-radius: var(--btn-radius);
-  border: 1px solid var(--ab-border);
-  background: rgba(255,255,255,.08);
+
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+
   cursor: pointer;
   user-select: none;
-}
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.primary { background: rgba(255,255,255,.16); }
 
-.btn img, .btn svg { display: none !important; }
+  transition:
+    transform var(--btn-transition-dur) var(--btn-transition-ease),
+    filter var(--btn-transition-dur) var(--btn-transition-ease),
+    background-color var(--btn-transition-dur) var(--btn-transition-ease),
+    border-color var(--btn-transition-dur) var(--btn-transition-ease);
+  will-change: transform, filter, background-color;
+
+  &:hover { background: var(--btn-bg-hover); }
+
+  &:active {
+    transform: scale(var(--btn-active-scale));
+    filter: brightness(var(--btn-active-brightness));
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in oklch, var(--brand-accent) 60%, white);
+    outline-offset: 2px;
+  }
+}
+
+.btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* primary variáns */
+.primary {
+  background: var(--btn-primary-bg);
+  &:hover { background: var(--btn-primary-bg-hover); }
+}
+
+/* ikonok rejtése (eredeti viselkedés) */
+.btn img,
+.btn svg { display: none !important; }
+
 .label { line-height: 1; }
 
-/* ===== Toggle gomb (desktopon is, mobilon is) ===== */
+/* ===== Toggle gomb (desktop/mobil) ===== */
 .mobileToggle {
   position: fixed;
-  right: 12px;
-  bottom: 12px;
+  right: var(--ab-offset);
+  bottom: var(--ab-offset);
   z-index: 431;
 
-  display: inline-flex;           /* szöveg biztosan látszik */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -102,41 +129,44 @@
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--ab-border);
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(6px);
+  background: var(--ab-toggle-bg);
+  backdrop-filter: blur(var(--ab-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--ab-backdrop-blur));
   cursor: pointer;
 
-  /* 🔧 kritikus felirat-fixek */
-  color: #fff;                    /* ne olvadjon bele a háttérbe */
-  -webkit-text-fill-color: #fff;  /* Safari */
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: .2px;
+  color: var(--ab-toggle-fg);
+  -webkit-text-fill-color: var(--ab-toggle-fg);
+  font-size: var(--ab-toggle-font-size);
+  font-weight: var(--ab-toggle-font-weight);
+  letter-spacing: var(--ab-toggle-letter-spacing);
   line-height: 1;
-  text-indent: 0;                 /* ha korábban ikon miatt volt eltolva */
+  text-indent: 0;
   text-transform: none;
   white-space: nowrap;
 
-  /* ha valami pseudo-ikon ráülne, nullázzuk */
-  &::before,
-  &::after {
-    content: none !important;
-    display: none !important;
+  transition:
+    transform var(--btn-transition-dur) var(--btn-transition-ease),
+    filter var(--btn-transition-dur) var(--btn-transition-ease),
+    background-color var(--btn-transition-dur) var(--btn-transition-ease);
+
+  &:hover { background: var(--ab-toggle-hover-bg); }
+  &:active {
+    transform: scale(var(--btn-active-scale));
+    filter: brightness(var(--btn-active-brightness));
   }
 }
-
 
 /* ===== Mobil: off-canvas drawer ===== */
 @media (max-width: 768px) {
   .actionBar {
     right: 0;
-    top: 12px;
+    top: var(--ab-offset);
     height: auto;
-    max-height: 82vh;
+    max-height: var(--ab-mobile-maxh);
     overflow: auto;
 
-    width: min(88vw, 80px);
-    border-radius: 12px 0 0 12px;
+    width: var(--ab-w-mobile);
+   border-radius: var(--ab-radius-mobile); /* tokenizált */
     border-left: 1px solid var(--ab-border);
     border-right: 0;
     padding: 14px;
