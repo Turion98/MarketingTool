@@ -93,6 +93,7 @@ body[data-skin="legacy-default"] {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  height: var(--doc-h, 100%);
   /* opcionális: overflow: hidden; */
 }
 

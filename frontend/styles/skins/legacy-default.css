@@ -69,7 +69,7 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
   --ph-label-size: 14px;
 
   /* ---- ActionBar ---- */
-  --ab-w: 120px;
+  --ab-w: 70px;
   --ab-gap: 10px;
   --ab-pad: 12px;
 
@@ -89,7 +89,7 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
 
   /* Mobil specifikus */
   --ab-mobile-maxh: 82vh;
-  --ab-w-mobile: min(88vw, 80px);
+  --ab-w-mobile: min(60vw, 60px);
 
   /* Toggle gomb (mobil/desktop) */
   --ab-toggle-bg: rgba(0,0,0,.55);
@@ -117,23 +117,76 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
   --btn-primary-bg: rgba(255,255,255,.16);
   --btn-primary-bg-hover: rgba(255,255,255,.20);
 
-  /* ---- InteractionDock ---- */
-  --dock-blur: 6px;
-  --dock-shadow: 0 12px 32px rgba(0,0,0,.35);
-  --dock-border: rgba(255, 255, 255, .12);
-  --dock-bg-top: rgba(0, 0, 0, .25);
-  --dock-bg-bot: rgba(0, 0, 0, .40);
 
-  --choice-bg-top: rgba(255, 255, 255, .12);
-  --choice-bg-bot: rgba(255, 255, 255, .06);
-  --choice-bg-top-disabled: rgba(255, 255, 255, .05);
-  --choice-bg-bot-disabled: rgba(255, 255, 255, .03);
-  --choice-border: rgba(255, 255, 255, .18);
-  --choice-shadow: 0 6px 18px rgba(0,0,0,.30);
-  --choice-color: #fff;
+/* ---- InteractionDock (LEGACY TOKENS) ---- */
+--dock-blur: 6px;
+--dock-shadow: 0 12px 32px rgba(0,0,0,.35);
+--dock-border: rgba(255, 255, 255, .12);
+--dock-bg-top: rgba(0, 0, 0, .25);
+--dock-bg-bot: rgba(0, 0, 0, .40);
 
-  --choice-font: 16px;
-  --wrapper-maxw: 980px;
+/* Wrapper szélesség */
+--wrapper-maxw: 1100px;
+
+/* Dock layout */
+--dock-gap: 16px;
+--dock-gap-mobile: 14px;
+--dock-pad: 12px;
+--dock-pad-mobile: 10px;
+--dock-z: 10;
+
+/* Motion & easing (Riddle-alap) */
+--dock-dur-in: 480ms;
+--dock-dur-hover: 160ms;
+--dock-dur-press: 100ms;
+--dock-dur-fade: 180ms;
+--dock-ease-out: cubic-bezier(.2, .8, .2, 1);
+--dock-ease-emph: cubic-bezier(.2, 0, 0, 1);
+
+/* Choice gomb felszín (alap) */
+--choice-color: #fff;
+--choice-border: rgba(255, 255, 255, .18);
+--choice-shadow: 0 6px 18px rgba(0,0,0,.30);
+--choice-bg-top: rgba(255, 255, 255, .12);
+--choice-bg-bot: rgba(255, 255, 255, .06);
+
+/* Disabled */
+--choice-bg-top-disabled: rgba(255, 255, 255, .05);
+--choice-bg-bot-disabled: rgba(255, 255, 255, .03);
+
+/* Hover állapot */
+--choice-border-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border));
+--choice-shadow-hover: 0 10px 24px rgba(0,0,0,.36);
+--choice-bg-top-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--choice-bg-top));
+--choice-bg-bot-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 8%,  var(--choice-bg-bot));
+
+/* Active/press */
+--choice-border-active: color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border));
+--choice-shadow-active: 0 6px 16px rgba(0,0,0,.44);
+--choice-bg-top-active: color-mix(in oklch, var(--brand-accent, #ffc861) 20%, var(--choice-bg-top));
+--choice-bg-bot-active: color-mix(in oklch, var(--brand-accent, #ffc861) 14%, var(--choice-bg-bot));
+
+/* Scale + focus */
+--choice-scale-hover: 1.02;
+--choice-scale-active: .995;
+--choice-focus-ring: 
+  0 0 0 2px color-mix(in oklch, white 50%, transparent),
+  0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent);
+
+/* Tipográfia, méretezés */
+--choice-font: 16px;
+--choice-font-mobile: 15px;
+
+/* Geometria */
+--choice-radius: 12px;
+--choice-padding-y: 14px;
+--choice-padding-x: 16px;
+--choice-padding-y-mobile: 12px;
+--choice-padding-x-mobile: 14px;
+
+/* Max szélesség a gombokra */
+--choice-maxw: 480px;
+
 
   /* ---- NarrativePanel ---- */
   --np-maxw: 1100px;
@@ -147,7 +200,15 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
 
   /* ---- Decorative Background ---- */
   --bg-color: transparent;
-  --bg-image: none;
+  --bg-image: linear-gradient(
+  135deg,
+  #ff0000 0%,
+  #ff7a00 16%,
+  #ffee00 32%,
+  #00ff85 48%,
+  #0095ff 64%,
+  #8f00ff 80%,
+  #ff00c8 100%);
   --bg-position: center center;
   --bg-size: cover;
   --bg-repeat: no-repeat;
@@ -187,9 +248,10 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
 --header-title-spacing: 0.2px;
 --header-title-size: 22px;        /* desktop méret */
 --header-title-margin: 0 30px 0 0;
+--header-title-shift: -25px;
 
 /* Logó illesztés */
---logo-scale: 1.2;                  /* desktop skála */
+--logo-scale: 1.3;                  /* desktop skála */
 --logo-max-w: 100%;
 --logo-fit: contain;
 --logo-pad-inline-start: clamp(14px, 0.8cqi, 12px);
@@ -211,7 +273,7 @@ html[data-skin="legacy-default"], body[data-skin="legacy-default"] {
     --header-title-margin: 0 16px 0 0;
 
     /* Logo */
-    --logo-scale: 1.6;
+    --logo-scale: 1.9;
     --logo-max-w: 100%;
   }
 }

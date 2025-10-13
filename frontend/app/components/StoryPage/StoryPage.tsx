@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useLayoutEffect, useRef } from "react";
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
 import TypingText from "../TypingText/TypingText";
 import GeneratedImage_with_fadein from "../GeneratedImage/GeneratedImage";
@@ -73,6 +73,7 @@ import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss"; 
 import { loadTokens } from "../../lib/tokenLoader";
+
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
@@ -403,9 +404,42 @@ const StoryPage: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const [showChoices, setShowChoices] = useState(false);
   const [animateNext, setAnimateNext] = useState(false);
-
+  const pageRootRef = useRef<HTMLDivElement>(null);
   // ⬇️ Egyedi rúna PNG-k: flagId -> pngUrl
 const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
+
+useLayoutEffect(() => {
+    const root = pageRootRef.current;
+    if (!root) return;
+
+    // Keressük meg a Canvas görgető konténerét (CSS Modules kompat: class*="canvasWrap")
+    const scrollEl = root.querySelector<HTMLElement>('[class*="canvasWrap"]');
+    if (!scrollEl) return;
+
+    const setDocH = () => {
+      // rAF: biztosan kész a layout
+      requestAnimationFrame(() => {
+        scrollEl.style.setProperty("--doc-h", `${scrollEl.scrollHeight}px`);
+      });
+    };
+
+    setDocH();
+
+    const ro = new ResizeObserver(setDocH);
+    ro.observe(scrollEl);
+
+    const mo = new MutationObserver(setDocH);
+    mo.observe(scrollEl, { childList: true, subtree: true, characterData: true });
+
+    const onResize = () => setDocH();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
 // (opcionális) betöltés/persist localStorage-ból
 useEffect(() => {
@@ -1888,7 +1922,7 @@ _mustBeFn("SmokeField", SmokeField);
   }
 // ---- Normal render with Canvas + grid areas ----
 return (
-  <div className={style.storyPage}>
+  <div ref={pageRootRef} className={style.storyPage}>
     {analyticsSync}
     {showAnalytics && <AnalyticsReport storyId={derivedStoryId} />}
 

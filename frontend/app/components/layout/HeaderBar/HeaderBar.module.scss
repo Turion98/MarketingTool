@@ -33,14 +33,14 @@
   align-self: center;
   min-width: 0;
   max-width: 100%;
-  text-align: center;
-  overflow: hidden;
+  text-align: start;
+  overflow: visible;
 }
 
 .center :where(h1,h2,h3,.title,.heading){
   white-space: nowrap;
   text-overflow: ellipsis;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .right {
@@ -121,8 +121,12 @@
   display: inline-block;
   max-width: 100%;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
+  --_title-shift: var(--header-title-shift, 0px);
+  transform: translateX(var(--_title-shift)) translateZ(0);
+  will-change: transform;
+  transform-origin: center;
 }
 
 /* ===== Rune blokk láthatóság ===== */
@@ -139,6 +143,7 @@
 @media (max-width: 640px) {
   html[data-skin="legacy-default"],
   body[data-skin="legacy-default"] {
+    
     /* Header (MOBILE TOKENS – nem a bázist írod át!) */
     --header-gap-mobile: 10px;
     --header-minh-mobile: 56px;   /* 10px helyett reális érték */
@@ -153,5 +158,6 @@
     /* Logo */
     --logo-scale-mobile: .9;
     --logo-max-w-mobile: 100%;
+    
   }
 }
