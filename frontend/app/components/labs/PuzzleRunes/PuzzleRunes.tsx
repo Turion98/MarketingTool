@@ -53,6 +53,22 @@ function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void>
   });
 }
 
+function HeartIcon({ filled = false, title }: { filled?: boolean; title?: string }) {
+  return (
+    <svg
+      aria-hidden={title ? undefined : true}
+      role={title ? "img" : "presentation"}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      className={filled ? styles.heartFilled : styles.heartOutline}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M12 21s-6.716-4.297-9.428-7.01C.858 12.275.5 10.59 1.2 9.108 2.33 6.73 5.47 6.062 7.4 7.904L12 12.25l4.6-4.346c1.93-1.842 5.07-1.174 6.2 1.204.7 1.482.342 3.167-1.372 4.882C18.716 16.703 12 21 12 21z" />
+    </svg>
+  );
+}
+
 export default function PuzzleRunes({
   options,
   answer,
@@ -376,9 +392,22 @@ export default function PuzzleRunes({
           Reset
         </button>
 
-        <span className={styles.attempts}>
-          Próbálkozás: {attempts}/{maxAttempts}
-        </span>
+        <span
+  className={styles.attempts}
+  aria-label={`Próbálkozások: ${attempts}/${maxAttempts}`}
+>
+  <img
+    src="/icons/heart.png"
+    alt=""
+    aria-hidden="true"
+    width="26px"
+    className={styles.heartIcon}
+  />
+
+  {/* a számláló változatlanul megmarad */}
+  {attempts}/{maxAttempts}
+</span>
+
       </div>
     </div>
   );

@@ -48,10 +48,10 @@
       "correctLabel": "Helyes!",
       "onAnswer": {
         "setGlobals": {
-          "score": "{{ (score||0) + ((__isCorrect===true||__isCorrect=='true')?1:0) }}"
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
         },
         "nextSwitch": {
-          "switch": "__isCorrect",
+          "switch": "correct",
           "cases": {
             "true": "r2",
             "false": "r2",
@@ -77,10 +77,10 @@
       "correctLabel": "Helyes!",
       "onAnswer": {
         "setGlobals": {
-          "score": "{{ (score||0) + ((__isCorrect===true||__isCorrect=='true')?1:0) }}"
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
         },
         "nextSwitch": {
-          "switch": "__isCorrect",
+          "switch": "correct",
           "cases": {
             "true": "r3",
             "false": "r3",
@@ -106,7 +106,7 @@
       "correctLabel": "Helyes!",
       "onAnswer": {
         "setGlobals": {
-          "score": "{{ (score||0) + (__isCorrect=='true'?1:0) }}"
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
         },
         "nextSwitch": {
           "switch": "score",

@@ -2048,6 +2048,7 @@ return (
     return (
       <div className={dockStyles.grid}>
         <RiddleQuiz
+          page={pageData}   
           question={r.question /* ha inkább a narrációban van a kérdés, hagyd undefined */}
           options={r.options}
           correctIndex={r.correctIndex}

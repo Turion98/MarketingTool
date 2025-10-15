@@ -60,6 +60,14 @@ type PageData = {
   fragmentRecall?:
     | { id?: string; textFallback?: string }
     | Array<{ id?: string; textFallback?: string }>;
+  onAnswer?: {
+    nextSwitch?: {
+      switch: string;
+      cases: Record<string, string>;
+      __default?: string;   // támogatjuk az __default kulcsot is
+      default?: string;     // és a default-ot is
+    };
+  };
 };
 
 /** —————————————————————————————————————
@@ -124,6 +132,9 @@ type GameStateContextType = {
   setCurrentPageId: (id: string) => void;
   currentPageData?: PageData | null;
   goToNextPage: (nextPageId: string) => void;
+  handleAnswer?: (page: PageData, res: { correct: boolean; choiceIdx: number; elapsedMs: number }) => void;
+
+
 
   /** 🔹 Analytics azonosítók */
   storyId?: string;          // stabil azonosító a kampányhoz
@@ -603,12 +614,54 @@ try {
     });
   }, []);
 
+  
+
   const goToNextPage = useCallback(
     (nextPageId: string) => {
       setCurrentPageId(nextPageId);
     },
     [setCurrentPageId]
   );
+
+  const handleAnswer = useCallback((page: PageData, res: { correct: boolean; choiceIdx: number; elapsedMs: number }) => {
+  if (!page) return;
+
+  // 1) Globálok frissítése (score, correct, choiceIdx, elapsedMs)
+  const prevScore = Number(globals?.score ?? 0) || 0;
+  const newScore = res.correct ? prevScore + 1 : prevScore;
+
+  setGlobal("correct", res.correct);
+  setGlobal("choiceIdx", res.choiceIdx);
+  setGlobal("elapsedMs", res.elapsedMs);
+  setGlobal("score", newScore);
+
+  // 2) onAnswer.nextSwitch feloldása (támogatja: "correct", "score" vagy bármely globál kulcs)
+  let nextId: string | null = null;
+  const ns = page?.onAnswer?.nextSwitch;
+  if (ns && typeof ns === "object") {
+    const key = ns.switch;
+    const probe =
+      key === "score"   ? String(newScore) :
+      key === "correct" ? String(res.correct) :
+      String((globals as any)?.[key] ?? "");
+
+    nextId =
+      (ns.cases && (ns.cases as any)[probe]) ??
+      (ns.cases && (ns.cases as any).__default) ??
+      ns.default ??
+      (page as any)?.next ??
+      null;
+  } else {
+    // Fallback: ha nincs onAnswer, essünk vissza a sima next-re
+    nextId = (page as any)?.next ?? null;
+  }
+
+  // 3) Navigáció
+  if (nextId) {
+    goToNextPage(nextId);
+  }
+}, [globals, setGlobal, goToNextPage]);
+
 
   const setIsMuted = useCallback((value: boolean) => {
     setMuted(value);
@@ -950,6 +1003,7 @@ if (isTerminal) {
         setCurrentPageId,
         currentPageData,
         goToNextPage,
+        handleAnswer,
 
         globalError,
         setGlobalError,

@@ -1,11 +1,5 @@
-:root {
-  /* könnyen skinezhető tokenek a doboz környezetéhez */
-  --np-maxw: 1100px;
-  --np-z: 5;
-  --np-pad-x: 4vw;
-  --np-pad-top: 6vh;
-  --np-gap: 10px;
-}
+/* ===== NarrativePanel.module.scss (LEGACY-TOKEN DRIVEN) ================== */
+/* Minden érték a legacy skin tokenjeiből jön. Ebben a modulban NINCS :root! */
 
 .textDockTop {
   position: relative;
@@ -15,33 +9,36 @@
 
   /* a teljes sáv, ahol a narrációs doboz ül */
   padding: var(--np-pad-top) var(--np-pad-x) 0 var(--np-pad-x);
+
+  /* háttér / vizuál itt általában átlátszó, a skin szabályozza, ha kell */
+  background: transparent;
 }
 
 .textboxContainer {
   width: 100%;
-  max-width: var(--np-maxw);
+  /* Igazítás a MediaFrame-hez: a kisebbik érvényesül */
+  max-width: min(var(--np-maxw), var(--np-maxw-sync-media));
   display: block;
-   min-width: 0;          /* grid/flex zsugorodás guard */
-  align-self: stretch;     /* grid/flex szülőben nyúljon ki */
-  justify-self: stretch;   /* grid esetén */
-  flex: 1 1 auto; 
-  /* finom beléptető anim, ha kell */
+
+  min-width: 0;          /* grid/flex zsugorodás guard */
+  align-self: stretch;   /* grid/flex szülőben nyúljon ki */
+  justify-self: stretch; /* grid esetén */
+  flex: 1 1 auto;
+
+  /* finom beléptető animáció */
   transform: translateY(0);
-  animation: npFadeIn .25s ease both;
+  animation: npFadeIn var(--np-fade-dur, .25s) ease both;
+
+  /* Belső optikai margó, hogy a szöveg ne “lóghasson” ki a kép síkján túl */
+  padding-left: var(--np-content-inset);
+  padding-right: var(--np-content-inset);
 }
 
 @keyframes npFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(var(--np-fade-shift, 6px)); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Mobil finomítások */
-@media (max-width: 600px) {
-  :root {
-    --np-pad-x: 3vw;
-    --np-pad-top: 4vh;
-  }
-}
 .textClamp {
   position: relative;
   overflow: visible; /* hogy a felfelé lógó cím ne vágódjon le */
@@ -54,24 +51,22 @@
   right: 0;
   top: 0;
 
-  /* Mobil: a saját magasság 50%-ával visszatoljuk */
-  transform: translateY(-100%);
+  /* Alap: desktop */
+  transform: translateY(calc(-1 * var(--np-title-shift, 100%)));
 
-  /* Tipográfia – mobil */
-  font-weight: 700;
-  line-height: 1.1;
-  font-size: 28px;            /* mobil fontméret */
-  color: var(--skin-fg, #fff);
-  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  font-weight: var(--np-title-weight, 700);
+  line-height: var(--np-title-lineh, 1.1);
+  font-size: var(--np-title-size, 22px);
+  color: var(--np-title-color, #fff);
+  text-shadow: var(--np-title-shadow, 0 1px 2px rgba(0,0,0,.35));
   z-index: 2;
-
-  /* Ha nem akarod, hogy kattintható legyen: */
-  /* pointer-events: none; */
-
-  @media (min-width: 900px) {
-    /* Desktop: a saját magasság 100%-ával toljuk fel */
-    transform: translateY(-100%);
-    font-size: 22px;          /* desktop fontméret */
-  }
+  /* pointer-events: none;  // ha nem kell kattinthatónak lennie */
 }
 
+/* Mobil finomítások — csak token-átvétel, nem fix érték! */
+@media (max-width: 900px) {
+  .titleOverlay {
+    transform: translateY(calc(-1 * var(--np-title-shift-mobile, var(--np-title-shift, 100%))));
+    font-size: var(--np-title-size-mobile, var(--np-title-size, 22px));
+  }
+}

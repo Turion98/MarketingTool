@@ -1,44 +1,50 @@
-/* ===== MediaFrame.module.scss (NO CROP, AUTO-HEIGHT) =====
+/* ===== MediaFrame.module.scss (NO CROP, AUTO-HEIGHT + FIT-CONTENT FRAME) =====
  * Goals:
  *  - Never cut the bitmap: use object-fit: contain.
- *  - Let the content define its own height; do NOT force aspect-ratio.
- *  - Keep things centered and responsive; no overflow clipping.
+ *  - Let the image define height/width naturally.
+ *  - Center everything and let frame hug the bitmap precisely.
+ *  - Fully token-driven via CSS variables (legacy skin írja felül).
  */
 
+/* === Core layout === */
 .mediaFrame {
-  /* Container simply takes the available width and lets height grow with content */
   position: relative;
   display: grid;
   place-items: center;
+
   inline-size: 100%;
   max-inline-size: var(--mf-max-w, 1180px);
   block-size: auto;
-  overflow: visible; /* important: no clipping */
-  /* Remove any inherited aspect-ratio constraints */
-  aspect-ratio: auto;
-}
 
-/* Optional inner wrapper used by the component */
-.content,
-.inner {
-  position: relative;
-  inline-size: 100%;
-  block-size: auto;     /* allow natural height */
   overflow: visible;
+  aspect-ratio: auto;
+  text-align: center;
+  padding: var(--mf-pad, 8px);
 }
 
-/* Ensure the bitmap scales to width and keeps full content visible */
+/* Content follows bitmap size (frame pontosan a bitmapet öleli) */
+.content {
+  position: relative;
+  display: inline-grid;      /* zsugorodik a kép méretére */
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  height: fit-content;
+  box-sizing: border-box;
+}
+
+/* Bitmap: teljes tartalom látszik */
 .mediaFrame img,
 .mediaFrame canvas {
   display: block;
   max-inline-size: 100%;
   inline-size: 100%;
-  block-size: auto;           /* natural height from intrinsic ratio */
-  object-fit: contain;        /* show the whole image */
+  block-size: auto;
+  object-fit: contain;
   object-position: center;
+  border-radius: var(--mf-radius, 14px);
 }
 
-/* For videos, prefer width-based scaling as well */
 .mediaFrame video {
   display: block;
   max-inline-size: 100%;
@@ -46,9 +52,10 @@
   block-size: auto;
   object-fit: contain;
   object-position: center;
+  border-radius: var(--mf-radius, 14px);
 }
 
-/* If there's a decorative frame PNG, ensure it doesn't clip content */
+/* Dekoratív rétegek nem fogják az egeret */
 .frameImage,
 .logoUnderlay {
   pointer-events: none;
@@ -56,11 +63,50 @@
   inset: 0;
 }
 
-/* Safe-area wrapper (if used) should not crop; default to no insets */
-.inner {
-  --inset-top: 0;
-  --inset-right: 0;
-  --inset-bottom: 0;
-  --inset-left: 0;
-  padding: var(--inset-top) var(--inset-right) var(--inset-bottom) var(--inset-left);
+/* Külső keret – pontosan a .content dobozt követi */
+.content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  /* fontos: a kép sarkával egyező sugár */
+  border-radius: var(--mf-radius, 14px);
+
+  border: var(--mf-border-w, 8px) solid var(--mf-border, rgba(255, 255, 255, 0.15));
+  background: var(--mf-bg, transparent);
+  box-shadow: var(--mf-shadow, 0 10px 20px rgba(0,0,0,0.35));
+  opacity: var(--mf-opacity, 1);
+
+  /* ne takarja a kattintható tartalmat */
+  pointer-events: none;
+  z-index: 1;
+
+  /* szépen vágja a háttérkitöltést a szegély belsejéhez */
+  background-clip: padding-box;
 }
+
+/* Belső overlay (fény, textúra, üveg) */
+.content::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  /* belső él egyenletesebb: a szegély beljebb tolva */
+  border-radius: calc(var(--mf-radius, 14px) - var(--mf-border-w, 8px));
+
+  /* “matt”/passepartout hatás a tényleges bitmap zsugorítása nélkül */
+  box-shadow: inset 0 0 0 var(--mf-inner-gap, 0px) var(--mf-inner-fill, transparent);
+
+  background: var(--mf-overlay, transparent);
+  mix-blend-mode: var(--mf-overlay-blend, normal);
+  opacity: var(--mf-overlay-opacity, 0);
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Ha a keretet a kép alá szeretnéd tenni, oldd fel az izolációt: */
+/*
+.mediaFrame { isolation: isolate; }
+.content::before, .content::after { z-index: -1; }
+*/

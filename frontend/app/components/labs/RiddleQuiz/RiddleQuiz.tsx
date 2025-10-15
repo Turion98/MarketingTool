@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import clsx from "clsx";
 import styles from "./RiddleQuiz.module.scss";
+import { useGameState } from "../../../lib/GameStateContext"; // ← ha más az útvonalad, igazítsd
 
 export type RiddleQuizResult = {
   correct: boolean;
@@ -11,6 +12,9 @@ export type RiddleQuizResult = {
 };
 
 export type RiddleQuizProps = {
+  /** (Opcionális) az aktuális PageData, hogy a motor tudjon léptetni onAnswer alapján */
+  page?: any;
+
   /** Opcionális — ha nem adod meg, a kérdés a Narration/Text blokkban lehet */
   question?: string;
   /** Kötelező — felkínált válaszlehetőségek */
@@ -29,7 +33,7 @@ export type RiddleQuizProps = {
   /** Külső className hozzáfűzése (wrapper) */
   className?: string;
 
-  /** Jelzés a motor felé (analitika, navigáció) */
+  /** Jelzés a motor/analitika felé */
   onResult?: (res: RiddleQuizResult) => void;
 
   /** Opcionális SFX jelzés */
@@ -37,9 +41,9 @@ export type RiddleQuizProps = {
 };
 
 // ===== Tokenizálható időzítések =====
-const COMMIT_DELAY_MS = 300;   // „locked” fázis ideje, mielőtt eldől a helyes/hibás
-const FEEDBACK_HOLD_MS = 300;  // rövid tartás, hogy lásd a correct/incorrect állapotot
-const EXIT_FADE_MS = 420;      // a globális kifade időtartama (CSS-sel is felülírható)
+const COMMIT_DELAY_MS = 300;
+const FEEDBACK_HOLD_MS = 700;
+const EXIT_FADE_MS = 420;
 
 // Segédfüggvény: megvárjuk az exit anim végét (animationend/transitionend vagy timeout)
 function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void> {
@@ -52,21 +56,16 @@ function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void>
       el.removeEventListener("transitionend", onTransEnd, true);
       resolve();
     };
-    const onAnimEnd = (e: Event) => {
-      // Ha több anim lenne, bármelyik befejezése elég a kifadéhoz
-      finish();
-    };
-    const onTransEnd = (e: Event) => {
-      // Ha csak opacity transition fut, ez is jó
-      finish();
-    };
+    const onAnimEnd = () => finish();
+    const onTransEnd = () => finish();
     el.addEventListener("animationend", onAnimEnd, true);
     el.addEventListener("transitionend", onTransEnd, true);
-    window.setTimeout(finish, timeoutMs + 80); // kis ráhagyás
+    window.setTimeout(finish, timeoutMs + 80);
   });
 }
 
 export default function RiddleQuiz({
+  page,
   question,
   options,
   correctIndex,
@@ -77,6 +76,7 @@ export default function RiddleQuiz({
   onResult,
   onPlaySfx,
 }: RiddleQuizProps) {
+  const { handleAnswer } = useGameState(); // ← motor-léptetés
   const rootRef = useRef<HTMLDivElement | null>(null);
   const t0Ref = useRef<number>(performance.now?.() ?? Date.now());
   const [picked, setPicked] = useState<number | null>(null);
@@ -94,11 +94,11 @@ export default function RiddleQuiz({
   const handlePick = useCallback((idx: number) => {
     if (!canInteract) return;
 
-    // 1) azonnali választás + "locked" (commit) fázis
+    // 1) azonnali választás + "locked" fázis
     setPicked(idx);
     setPhase("locked");
 
-    // 2) rövid commit-ablak, hogy a lenyomás/hover anim finoman „megérkezzen”
+    // 2) rövid commit-ablak
     window.setTimeout(() => {
       const now = performance.now?.() ?? Date.now();
       const elapsedMs = Math.max(0, now - t0Ref.current);
@@ -106,27 +106,36 @@ export default function RiddleQuiz({
 
       setPhase(isCorrect ? "correct" : "incorrect");
 
-      // SFX-ek a tényleges eredményhez időzítve
+      // SFX-ek
       if (isCorrect) onPlaySfx?.("quiz_correct");
       else onPlaySfx?.("quiz_incorrect");
 
-      // 3) rövid tartás, majd globális "exiting" kifade
+      // 3) feedback tartás → exiting → jelzés(ek)
       window.setTimeout(async () => {
         setPhase("exiting");
         const el = rootRef.current;
         if (el) {
-          // Várjuk a kifade végét (CSS anim/transition), aztán onResult
           await waitForExitAnimation(el, EXIT_FADE_MS);
         } else {
-          // ha nincs ref (nem várható), fallback timeout
           await new Promise((r) => setTimeout(r, EXIT_FADE_MS));
         }
-        onResult?.({ correct: isCorrect, choiceIdx: idx, elapsedMs });
+
+        const result = { correct: isCorrect, choiceIdx: idx, elapsedMs };
+
+        // ⬇️ 1) Külső callback (megmarad)
+        try {
+          onResult?.(result);
+        } finally {
+          // ⬇️ 2) Motor: onAnswer.nextSwitch feloldás + navigáció
+          if (handleAnswer && page) {
+            handleAnswer(page, result);
+          }
+        }
       }, FEEDBACK_HOLD_MS);
     }, COMMIT_DELAY_MS);
-  }, [canInteract, correctIndex, onResult, onPlaySfx]);
+  }, [canInteract, correctIndex, onResult, onPlaySfx, handleAnswer, page]);
 
-  // ARIA és a11y apróságok
+  // ARIA
   const listRole = useMemo<"listbox" | "group">(
     () => (options.length <= 4 ? "listbox" : "group"),
     [options.length]
@@ -136,14 +145,10 @@ export default function RiddleQuiz({
     <div
       ref={rootRef}
       className={clsx(styles.quizRoot, className)}
-      data-quiz-phase={phase}         // "idle" | "locked" | "correct" | "incorrect" | "exiting"
+      data-quiz-phase={phase}
       data-picked={picked ?? -1}
-      style={
-        // opcionális: a JS-ből is átadhatod az exit időt CSS-nek (felülírható a SCSS-ben tokennel)
-        { ["--rq-dur-exit" as any]: `${EXIT_FADE_MS}ms` }
-      }
+      style={{ ["--rq-dur-exit" as any]: `${EXIT_FADE_MS}ms` }}
     >
-      {/* felirat jó válasz esetén – háttér nélkül, csak tipó */}
       {showCorrectLabel === "above" && phase === "correct" && (
         <div className={styles.feedbackOK} aria-live="polite">
           {correctLabel}
@@ -169,7 +174,7 @@ export default function RiddleQuiz({
                   isIncorrect && styles.incorrect
                 )}
                 onClick={() => handlePick(idx)}
-                disabled={!canInteract}
+                data-disabled={!canInteract}
                 aria-pressed={isPicked}
                 data-idx={idx}
                 data-state={
@@ -181,7 +186,6 @@ export default function RiddleQuiz({
               >
                 <span className={styles.label}>{opt}</span>
 
-                {/* inline jó-válasz felirat, ha ezt kéred */}
                 {showCorrectLabel === "inline" && isCorrect && (
                   <span className={styles.feedbackOKInline} aria-hidden>
                     {correctLabel}

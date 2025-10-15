@@ -1,37 +1,101 @@
-/* PuzzleRunes.module.scss */
+/* ===========================
+   PuzzleRunes.module.scss
+   (Puzzle → Riddle → Choice aliasok; puzzle-specifikus állapotok)
+   =========================== */
 
 .root {
-  /* ===== TOKENS (RiddleQuiz-hez igazítva) ===== */
-  --pr-bg: color-mix(in oklch, white 6%, transparent);
-  --pr-bg-hover: color-mix(in oklch, var(--pr-accent, #ffc861) 8%, var(--pr-bg, transparent));
-  --pr-border: color-mix(in oklch, white 16%, transparent);
-  --pr-ok: var(--quiz-ok-color, #38d678);
-  --pr-err: color-mix(in oklch, crimson 88%, transparent);
-  --pr-accent: var(--brand-accent, #ffc861);
+  /* ===== FELSZÍN (konténer) – a Dock/Choice skinnel optikailag egységes ===== */
+  --pz-surface-radius: var(--puzzle-surface-radius, var(--riddle-radius, var(--choice-radius, 12px)));
+  --pz-surface-pad: var(--puzzle-surface-pad, clamp(8px, 2cqi, 12px));
+  --pz-surface-border: var(--puzzle-surface-border, var(--dock-border, var(--choice-border, rgba(255,255,255,.18))));
+  --pz-surface-shadow: var(--puzzle-surface-shadow, var(--dock-shadow, var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30))));
+  --pz-surface-bg-top: var(--puzzle-surface-bg-top, var(--dock-bg-top, var(--choice-bg-top, rgba(255,255,255,.12))));
+  --pz-surface-bg-bot: var(--puzzle-surface-bg-bot, var(--dock-bg-bot, var(--choice-bg-bot, rgba(255,255,255,.06))));
 
-  /* időzítések – RiddleQuiz szellemében */
-  --pr-dur-in: 480ms;
-  --pr-dur-hover: 160ms;
-  --pr-dur-active: 100ms;
-  --pr-dur-commit: 300ms; /* TSX commit/submit-re rezonál */
-  --pr-dur-fade: 960ms;
-  /* TSX-ből jöhet: style={{["--pr-dur-exit" as any]: `${EXIT_MS}ms`}} */
-  --pr-dur-exit: var(--pr-dur-fade);
+  /* ===== GOMB ALAP (Puzzle → Riddle/Choice aliasok) ===== */
+  --pz-btn-radius: var(--puzzle-btn-radius, var(--riddle-radius, var(--choice-radius, 12px)));
+  --pz-btn-pad-y: var(--puzzle-btn-pad-y, var(--riddle-pad-y, var(--choice-padding-y, 14px)));
+  --pz-btn-pad-x: var(--puzzle-btn-pad-x, var(--riddle-pad-x, var(--choice-padding-x, 16px)));
+  --pz-btn-font: var(--puzzle-btn-font, var(--riddle-font, var(--choice-font, 16px)));
+  --pz-btn-color: var(--puzzle-btn-color, var(--riddle-color, var(--choice-color, #fff)));
+
+  --pz-btn-bg-top: var(--puzzle-btn-bg-top, var(--riddle-bg-top, var(--choice-bg-top, rgba(255,255,255,.12))));
+  --pz-btn-bg-bot: var(--puzzle-btn-bg-bot, var(--riddle-bg-bot, var(--choice-bg-bot, rgba(255,255,255,.06))));
+  --pz-btn-bg-top-disabled: var(--puzzle-btn-bg-top-disabled, var(--riddle-bg-top-disabled, var(--choice-bg-top-disabled, rgba(255,255,255,.05))));
+  --pz-btn-bg-bot-disabled: var(--puzzle-btn-bg-bot-disabled, var(--riddle-bg-bot-disabled, var(--choice-bg-bot-disabled, rgba(255,255,255,.03))));
+  --pz-btn-border: var(--puzzle-btn-border, var(--riddle-border, var(--choice-border, rgba(255,255,255,.18))));
+  --pz-btn-shadow-rest: var(--puzzle-btn-shadow-rest, var(--riddle-shadow-rest, var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30))));
+
+  --pz-btn-border-hover: var(--puzzle-btn-border-hover, var(--riddle-border-hover, var(--choice-border-hover, color-mix(in oklch, var(--puzzle-accent, var(--brand-accent, #ffc861)) 42%, var(--pz-btn-border)))));
+  --pz-btn-shadow-hover: var(--puzzle-btn-shadow-hover, var(--riddle-shadow-hover, var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36))));
+  --pz-btn-border-active: var(--puzzle-btn-border-active, var(--riddle-border-active, var(--choice-border-active, color-mix(in oklch, var(--puzzle-accent, var(--brand-accent, #ffc861)) 56%, var(--pz-btn-border)))));
+  --pz-btn-shadow-active: var(--puzzle-btn-shadow-active, var(--riddle-shadow-active, var(--choice-shadow-active, 0 6px 16px rgba(0,0,0,.44))));
+
+  /* ===== Szemantikus színek / akcentusok ===== */
+  --pz-ok: var(--puzzle-ok, var(--riddle-ok, var(--quiz-ok-color, #38d678)));
+  --pz-err: var(--puzzle-err, var(--riddle-err, color-mix(in oklch, crimson 88%, transparent)));
+  --pz-accent: var(--puzzle-accent, var(--riddle-accent, var(--brand-accent, #ffc861)));
+
+  /* ===== Focus ring alias (skinből állítható) ===== */
+  --pz-ring-inner: var(--puzzle-ring-inner, var(--riddle-ring-inner, 0 0 0 2px color-mix(in oklch, white 50%, transparent)));
+  --pz-ring-outer: var(--puzzle-ring-outer, var(--riddle-ring-outer, 0 0 0 6px color-mix(in oklch, var(--pz-accent) 55%, transparent)));
+
+  /* ===== Success/Error (skinből egységes) ===== */
+  --pz-success-border: var(--puzzle-success-border, var(--riddle-success-border, #2ecc71));
+  --pz-success-glow:   var(--puzzle-success-glow,   var(--riddle-success-glow,   0 0 0 8px rgba(46, 204, 113, .35)));
+  --pz-success-shadow: var(--puzzle-success-shadow, var(--riddle-success-shadow, 0 10px 28px rgba(46, 204, 113, .22)));
+
+  --pz-error-border:   var(--puzzle-error-border,   var(--riddle-error-border,   #ff4d4f));
+  --pz-error-glow:     var(--puzzle-error-glow,     var(--riddle-error-glow,     0 0 0 8px rgba(255, 77, 79, .35)));
+  --pz-error-shadow:   var(--puzzle-error-shadow,   var(--riddle-error-shadow,   0 8px 24px rgba(255, 77, 79, .22)));
+
+  /* ===== Skálák & mozgás ===== */
+  --pz-scale-hover: var(--puzzle-scale-hover, var(--riddle-scale-hover, var(--choice-scale-hover, 1.02)));
+  --pz-scale-active: var(--puzzle-scale-active, var(--riddle-scale-active, var(--choice-scale-active, .995)));
+
+  --pz-dur-in: var(--puzzle-dur-in, var(--riddle-dur-in, 480ms));
+  --pz-dur-hover: var(--puzzle-dur-hover, var(--riddle-dur-hover, 160ms));
+  --pz-dur-active: var(--puzzle-dur-active, var(--riddle-dur-active, 100ms));
+  --pz-dur-commit: var(--puzzle-dur-commit, var(--riddle-dur-commit, 300ms));
+  --pz-dur-fade: var(--puzzle-dur-fade, var(--riddle-dur-fade, 960ms));
+  --pz-dur-exit: var(--puzzle-dur-exit, var(--riddle-dur-exit, 220ms));
+
+  --pz-ease-in: var(--puzzle-ease-in, var(--riddle-ease-in, cubic-bezier(.22,.61,.36,1)));
+  --pz-ease-out: var(--puzzle-ease-out, var(--riddle-ease-out, cubic-bezier(.16,.84,.44,1)));
+  --pz-ease-emph: var(--puzzle-ease-emph, var(--riddle-ease-emph, cubic-bezier(.2,.7,.2,1)));
+
+  /* ===== Rács / gap tokenek (skinelhető) ===== */
+  --pz-grid-min: var(--puzzle-grid-min, min(120px, 40cqi));
+  --pz-grid-min-selected: var(--puzzle-grid-min-selected, min(100px, 36cqi));
+  --pz-gap: var(--puzzle-gap, clamp(8px, 2cqi, 12px));
+  --pz-gap-tight: var(--puzzle-gap-tight, clamp(6px, 1.6cqi, 10px));
+
+  /* ===== Max szélesség & optikai igazítás (Narrative/MediaFrame-hez) ===== */
+  width: 100%;
+  max-width: min(var(--puzzle-maxw, var(--np-maxw, 1100px)),
+                 var(--np-maxw-sync-media, 1100px));
+  margin-inline: auto;
+  padding: var(--pz-surface-pad);
+  padding-inline: max(var(--pz-surface-pad), var(--np-content-inset, 0));
+  box-sizing: border-box;
 
   display: grid;
   gap: clamp(8px, 2cqi, 14px);
-  padding: clamp(8px, 2cqi, 12px);
-  background: var(--pr-bg);
-  border: 1px solid var(--pr-border);
-  border-radius: 12px;
+
+  background: linear-gradient(180deg, var(--pz-surface-bg-top), var(--pz-surface-bg-bot));
+  border: 1px solid var(--pz-surface-border);
+  border-radius: var(--pz-surface-radius);
+  box-shadow: var(--pz-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--dock-blur, 6px));
+  backdrop-filter: blur(var(--dock-blur, 6px));
 
   /* belépő (fade-in + finom felúszás) */
   opacity: 0;
   transform: translateY(4px);
-  animation: prFadeIn var(--pr-dur-in) ease-out both;
+  animation: pzFadeIn var(--pz-dur-in) var(--pz-ease-out) both;
 
-  /* exit transition mindig “éles” legyen */
-  transition: opacity var(--pr-dur-exit) ease-out;
+  /* exit transition */
+  transition: opacity var(--pz-dur-exit) var(--pz-ease-out);
   will-change: opacity;
 }
 
@@ -42,134 +106,165 @@
   pointer-events: none;
 }
 
-/* Az enter anim ne ütközzön az exittel */
 .root[data-puzzle-phase="locked"],
 .root[data-puzzle-phase="correct"],
 .root[data-puzzle-phase="incorrect"],
 .root[data-puzzle-phase="exiting"] {
   animation: none !important;
-  opacity: 1; /* kiinduló állapot az exithez */
+  opacity: 1;
 }
 
 .root[data-puzzle-phase="exiting"] {
-  opacity: 0;          /* csak az opacity változik, a transition az alapon van */
+  opacity: 0;
   pointer-events: none;
 }
 
 /* ===== listák ===== */
 .root > [role="list"] {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(120px, 40cqi), 1fr));
-  gap: clamp(8px, 2cqi, 12px);
+  grid-template-columns: repeat(auto-fill, minmax(var(--pz-grid-min), 1fr));
+  gap: var(--pz-gap);
 }
 
 .root > [aria-label="Kiválasztott halmaz/sorrend"],
 .root > [aria-label="Kiválasztott sorrend"] {
-  grid-template-columns: repeat(auto-fill, minmax(min(100px, 36cqi), 1fr));
-  gap: clamp(6px, 1.6cqi, 10px);
+  grid-template-columns: repeat(auto-fill, minmax(var(--pz-grid-min-selected), 1fr));
+  gap: var(--pz-gap-tight);
 }
 
 /* ===== vezérlősor ===== */
 .controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--puzzle-controls-gap, 10px);
   margin-top: 4px;
-  flex-wrap: wrap;
+  flex-wrap: var(--puzzle-controls-wrap, wrap);
 }
 
 .attempts {
-  margin-left: auto;
-  opacity: 0.8;
-  font-size: 0.95em;
+  position: absolute;
+  right: 7.5%;
+  bottom: -12.5%;
+  inline-size: var(--pz-attempts-w);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-/* ===== gombok (alap) ===== */
+
+/* ===== gombok (választók + akciók) ===== */
 .choice,
 .action {
-  --_pad-v: clamp(8px, 1.6cqi, 12px);
-  --_pad-h: clamp(10px, 2cqi, 16px);
-  --_radius: 10px;
-
   display: inline-flex;
   justify-content: center;
   align-items: center;
   text-align: center;
 
-  padding: var(--_pad-v) var(--_pad-h);
+  padding: var(--pz-btn-pad-y) var(--pz-btn-pad-x);
   min-height: 40px;
 
-  background: color-mix(in oklch, var(--pr-bg) 70%, transparent);
-  border: 1px solid var(--pr-border);
-  border-radius: var(--_radius);
-  color: var(--skin-fg, #fff);
+  background: linear-gradient(180deg, var(--pz-btn-bg-top), var(--pz-btn-bg-bot));
+  border: 1px solid var(--pz-btn-border);
+  border-radius: var(--pz-btn-radius);
+  color: var(--pz-btn-color);
+  font-size: var(--pz-btn-font);
+  line-height: 1.1;
 
   transition:
-    transform var(--pr-dur-active) ease,
-    background-color var(--pr-dur-hover) ease,
-    border-color var(--pr-dur-hover) ease,
-    box-shadow var(--pr-dur-hover) ease,
-    opacity var(--pr-dur-hover) ease;
+    transform var(--pz-dur-hover) var(--pz-ease-emph),
+    border-color var(--pz-dur-hover) var(--pz-ease-out),
+    box-shadow var(--pz-dur-hover) var(--pz-ease-out),
+    background var(--pz-dur-hover) var(--pz-ease-out),
+    opacity var(--pz-dur-fade) var(--pz-ease-out),
+    filter var(--pz-dur-fade) var(--pz-ease-out);
 
+  box-shadow: var(--pz-btn-shadow-rest);
   cursor: pointer;
   user-select: none;
-  will-change: transform, background-color, box-shadow;
+  will-change: transform, background, box-shadow, opacity, filter;
 }
 
 .choice:hover:not(:disabled),
 .action:hover:not(:disabled) {
-  background: var(--pr-bg-hover);
-  transform: translateY(-1px);
+  transform: scale(var(--pz-scale-hover)) translateY(-1px);
+  border-color: var(--pz-btn-border-hover);
+  box-shadow: var(--pz-btn-shadow-hover);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--pz-accent) 12%, var(--pz-btn-bg-top)) 0%,
+    color-mix(in oklch, var(--pz-accent) 8%,  var(--pz-btn-bg-bot)) 100%
+  );
 }
 
 .choice:active:not(:disabled),
 .action:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 0 0 0 color-mix(in oklch, black 0%, transparent);
+  transform: scale(var(--pz-scale-active));
+  border-color: var(--pz-btn-border-active);
+  box-shadow: var(--pz-btn-shadow-active);
 }
 
 .choice:focus-visible,
 .action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--pr-accent) 30%, transparent);
+  box-shadow:
+    var(--pz-btn-shadow-rest),
+    var(--pz-ring-inner),
+    var(--pz-ring-outer);
 }
 
 .choice:disabled,
 .action:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  background: linear-gradient(180deg, var(--pz-btn-bg-top-disabled), var(--pz-btn-bg-bot-disabled));
 }
 
 /* ===== állapotok: picked | locked | wrong ===== */
 .choice[data-state="picked"] {
-  background: color-mix(in oklch, var(--pr-accent) 16%, transparent);
-  border-color: color-mix(in oklch, var(--pr-accent) 60%, var(--pr-border));
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--pr-accent) 22%, transparent) inset;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--pz-accent) 16%, transparent),
+    color-mix(in oklch, var(--pz-accent) 10%, transparent)
+  );
+  border-color: color-mix(in oklch, var(--pz-accent) 60%, var(--pz-btn-border));
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--pz-accent) 22%, transparent) inset;
 }
 
 .choice[data-state="locked"] {
-  background: color-mix(in oklch, var(--pr-ok) 14%, transparent);
-  border-color: color-mix(in oklch, var(--pr-ok) 60%, var(--pr-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--pz-ok) 16%, transparent),
+    color-mix(in oklch, var(--pz-ok) 8%, transparent)
+  );
+  border-color: color-mix(in oklch, var(--pz-ok) 70%, var(--pz-btn-border));
   box-shadow:
-    0 0 0 1px color-mix(in oklch, var(--pr-ok) 28%, transparent) inset,
-    0 0 16px color-mix(in oklch, var(--pr-ok) 24%, transparent);
+    0 0 0 1px color-mix(in oklch, var(--pz-ok) 28%, transparent) inset,
+    0 0 16px color-mix(in oklch, var(--pz-ok) 24%, transparent);
   position: relative;
-  animation: prLockedPulse 1200ms ease-in-out infinite;
+  animation: pzLockedPulse 1200ms ease-in-out infinite;
 }
 
 .choice[data-state="wrong"] {
-  background: color-mix(in oklch, var(--pr-err) 12%, transparent);
-  border-color: color-mix(in oklch, var(--pr-err) 60%, var(--pr-border));
-  animation: prShake 220ms ease-in-out 0s 1, prWrongFlash 800ms ease-out both;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--pz-err) 14%, transparent),
+    color-mix(in oklch, var(--pz-err) 8%, transparent)
+  );
+  border-color: color-mix(in oklch, var(--pz-err) 70%, var(--pz-btn-border));
+  animation: pzShake 220ms var(--pz-ease-emph) 0s 1, pzWrongFlash 800ms var(--pz-ease-out) both;
 }
 
 /* ===== submit/reset finom eltérés ===== */
 [data-action="submit"].action:not(:disabled) {
   background: linear-gradient(0deg,
-    color-mix(in oklch, var(--pr-accent) 22%, transparent),
-    color-mix(in oklch, var(--pr-accent) 10%, transparent)
+    color-mix(in oklch, var(--pz-accent) 22%, transparent),
+    color-mix(in oklch, var(--pz-accent) 10%, transparent)
   );
-  border-color: color-mix(in oklch, var(--pr-accent) 65%, var(--pr-border));
+  border-color: color-mix(in oklch, var(--pz-accent) 65%, var(--pz-btn-border));
 }
 
 [data-action="reset"].action:not(:disabled) {
@@ -181,37 +276,40 @@
 /* ===== mobil-desktop finomhangolás ===== */
 @media (max-width: 640px) {
   .root {
-    border-radius: 10px;
-    padding: 8px;
+    border-radius: max(10px, calc(var(--pz-surface-radius) - 2px));
+    padding: max(8px, var(--pz-surface-pad));
   }
   .choice,
   .action {
-    font-size: 0.98rem;
+    font-size: var(--puzzle-btn-font-mobile, var(--riddle-font-mobile, var(--choice-font-mobile, var(--pz-btn-font))));
     min-height: 38px;
+    padding:
+      var(--puzzle-btn-pad-y-mobile, var(--riddle-pad-y-mobile, var(--choice-padding-y-mobile, var(--pz-btn-pad-y))))
+      var(--puzzle-btn-pad-x-mobile, var(--riddle-pad-x-mobile, var(--choice-padding-x-mobile, var(--pz-btn-pad-x))));
   }
 }
 
 @media (min-width: 641px) {
   .choice,
   .action {
-    font-size: 1rem;
+    font-size: var(--pz-btn-font);
     min-height: 42px;
   }
 }
 
 /* ===== animációk ===== */
-@keyframes prFadeIn {
+@keyframes pzFadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes prWrongFlash {
-  0%   { box-shadow: 0 0 0 0 color-mix(in oklch, var(--pr-err) 0%, transparent); }
-  30%  { box-shadow: 0 0 0 3px color-mix(in oklch, var(--pr-err) 36%, transparent); }
-  100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--pr-err) 0%, transparent); }
+@keyframes pzWrongFlash {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklch, var(--pz-err) 0%, transparent); }
+  30%  { box-shadow: 0 0 0 3px color-mix(in oklch, var(--pz-err) 36%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--pz-err) 0%, transparent); }
 }
 
-@keyframes prShake {
+@keyframes pzShake {
   0%   { transform: translateX(0); }
   25%  { transform: translateX(-3px); }
   50%  { transform: translateX(3px); }
@@ -219,11 +317,11 @@
   100% { transform: translateX(0); }
 }
 
-@keyframes prLockedPulse {
-  0%   { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pr-ok) 28%, transparent) inset,
-                      0 0 10px color-mix(in oklch, var(--pr-ok) 14%, transparent); }
-  50%  { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pr-ok) 34%, transparent) inset,
-                      0 0 18px color-mix(in oklch, var(--pr-ok) 26%, transparent); }
-  100% { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pr-ok) 28%, transparent) inset,
-                      0 0 10px color-mix(in oklch, var(--pr-ok) 14%, transparent); }
+@keyframes pzLockedPulse {
+  0%   { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pz-ok) 28%, transparent) inset,
+                      0 0 10px color-mix(in oklch, var(--pz-ok) 14%, transparent); }
+  50%  { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pz-ok) 34%, transparent) inset,
+                      0 0 18px color-mix(in oklch, var(--pz-ok) 26%, transparent); }
+  100% { box-shadow: 0 0 0 1px color-mix(in oklch, var(--pz-ok) 28%, transparent) inset,
+                      0 0 10px color-mix(in oklch, var(--pz-ok) 14%, transparent); }
 }

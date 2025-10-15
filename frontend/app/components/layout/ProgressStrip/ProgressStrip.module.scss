@@ -1,69 +1,88 @@
-:root {
-  --ph-height: 4px; /* vékonyabb csík */
-  --ph-radius: 0;
-  --ph-track: rgba(255,255,255,.15);
-  --ph-fill: linear-gradient(90deg, #ffd75a 0%, #ffb347 100%);
-  --ph-label-color: #fff;
-  --ph-label-size: 14px;
-}
+/* ===== ProgressHud.module.scss (LEGACY-TOKEN DRIVEN) ===================== */
+/* Változatok:
+    data-variant="bar"  → teljes szélességű csík
+    data-variant="hud"  → kompakt HUD, címkével
+   Opcionális:
+    data-sticky         → a csík rögzül a viewport tetejére (sticky)
+   A kitöltést a --progress-pct CSS változóval adod: 0%..100%
+*/
 
-/* Alap: teljes szélességű csík */
 .progressHud {
   position: relative;
   width: 100%;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  z-index: 5;
+  gap: var(--ph-gap, 12px);
+  z-index: var(--ph-z, 5);
+  /* Mobil token-bridge */
+  @media (max-width: 520px) {
+    gap: var(--ph-gap-mobile, var(--ph-gap, 12px));
+  }
 }
 
-/* csak csík (bar mód) */
+/* Sticky mód (opcionális) */
+.progressHud[data-sticky] {
+  position: sticky;
+  top: var(--ph-sticky-top, 0);
+  left: 0;
+  right: 0;
+}
+
+/* BAR variáns: teljes szélesség, csak csík */
 .progressHud[data-variant="bar"] {
-  height: var(--ph-height);
+  height: var(--ph-height, 4px);
   justify-content: stretch;
 }
 
-/* HUD mód (ha százalékot is akarsz később) */
+/* HUD variáns: max szélesség + címke */
 .progressHud[data-variant="hud"] {
-  width: min(70vw, 600px);
+  width: min(70vw, var(--ph-hud-maxw, 600px));
   margin: 2vh auto;
+  @media (max-width: 520px) {
+    width: var(--ph-hud-maxw-mobile, 100%);
+    margin: 0 auto;
+  }
 }
 
-/* sáv és kitöltés */
+/* Sáv + kitöltés */
 .progressTrack {
   flex: 1;
-  height: var(--ph-height);
-  background: var(--ph-track);
-  border-radius: var(--ph-radius);
+  height: var(--ph-height, 4px);
+  background: var(--ph-track, rgba(255,255,255,.15));
+  border-radius: var(--ph-radius, 0);
+  box-shadow: var(--ph-shadow, none);
   overflow: hidden;
+  /* A border-radius vizuálisan érvényesüljön kis magasságnál is */
+  mask-image: radial-gradient(#000 99%, #0000 100%);
 }
 
 .progressFill {
   height: 100%;
   width: var(--progress-pct, 0%);
-  background: var(--ph-fill);
-  border-radius: var(--ph-radius);
+  background: var(--ph-fill, linear-gradient(90deg, #ffd75a 0%, #ffb347 100%));
+  border-radius: var(--ph-radius, 0);
   transition: width .25s ease;
+  will-change: width;
 }
 
-/* százalék-felirat csak HUD módban */
+/* Címke (csak HUD-nál lesz használt) */
 .progressLabel {
-  font-size: var(--ph-label-size);
-  color: var(--ph-label-color);
+  font-size: var(--ph-label-size, 14px);
+  color: var(--ph-label-color, #fff);
   font-weight: 500;
   min-width: 38px;
   text-align: right;
+
+  @media (max-width: 520px) {
+    font-size: var(--ph-label-size-mobile, var(--ph-label-size, 14px));
+  }
 }
 
-/* mobilon minden verzió legyen teljes szélességű, kompakt */
+/* Mobil: kompakt, 100% szélesség */
 @media (max-width: 520px) {
   .progressHud {
-    gap: 8px;
     margin: 0;
     width: 100%;
-  }
-  .progressLabel {
-    font-size: 13px;
   }
 }
