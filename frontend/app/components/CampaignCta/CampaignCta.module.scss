@@ -1,30 +1,57 @@
-:root {
-  --cta-height: 48px;
-  --cta-radius: 14px;
-  --cta-color: #fff;
-  --cta-bg-top: #3a7bd5;
-  --cta-bg-bot: #00d2ff;
-  --cta-border: rgba(255,255,255,.18);
-  --cta-shadow: 0 10px 24px rgba(0,0,0,.35);
-  --cta-font: 16px;
-  --cta-padding: 0 18px;
-  --cta-transition: .2s ease;
-}
-
+/* NINCS :root – minden a legacy-ból jön */
 .ctaBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   height: var(--cta-height);
-  padding: var(--cta-padding);
+  min-width: var(--cta-minw, auto);
+  max-width: var(--cta-maxw, none);
+  padding: var(--cta-padding-y, 0) var(--cta-padding-x);
+  gap: var(--cta-gap);
+
   border-radius: var(--cta-radius);
   border: 1px solid var(--cta-border);
   color: var(--cta-color);
   font-size: var(--cta-font);
+  letter-spacing: var(--cta-letter-spacing, 0);
   cursor: pointer;
+
   background: linear-gradient(to bottom, var(--cta-bg-top), var(--cta-bg-bot));
   box-shadow: var(--cta-shadow);
-  transition: transform var(--cta-transition), filter var(--cta-transition);
+
+  transition:
+    transform var(--cta-transition-dur) var(--cta-transition-ease),
+    filter   var(--cta-transition-dur) var(--cta-transition-ease),
+    box-shadow var(--cta-transition-dur) var(--cta-transition-ease),
+    border-color var(--cta-transition-dur) var(--cta-transition-ease);
 }
-.ctaBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.ctaBtn:active { transform: translateY(0); filter: brightness(.97); }
+
+.ctaBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  border-color: var(--cta-border-hover);
+  box-shadow: var(--cta-shadow-hover);
+  background: linear-gradient(to bottom, var(--cta-bg-top-hover), var(--cta-bg-bot-hover));
+}
+
+.ctaBtn:active {
+  transform: translateY(0);
+  filter: brightness(.97);
+  border-color: var(--cta-border-active);
+  box-shadow: var(--cta-shadow-active);
+  background: linear-gradient(to bottom, var(--cta-bg-top-active), var(--cta-bg-bot-active));
+}
+
+.ctaBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--cta-shadow), var(--cta-ring);
+}
+
+/* Ikon slotok (ha használsz) */
+.ctaBtn__icon {
+  width: var(--cta-icon-size);
+  height: var(--cta-icon-size);
+  flex: 0 0 auto;
+  display: inline-block;
+}

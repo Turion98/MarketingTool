@@ -1,50 +1,129 @@
-/* components/runes/RuneDockDisplay.module.scss */
+/* =========================
+   RUNE DOCK – skin + kampány tokenekkel
+   ========================= */
+
 .runeDock {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: 10px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  gap: var(--rune-dock-gap, 6px);
+  padding: var(--rune-dock-pad, 4px 6px);
+  border-radius: var(--rune-dock-radius, 10px);
+  background: linear-gradient(
+    180deg,
+    var(--rune-dock-bg-top, rgba(255,255,255,.06)) 0%,
+    var(--rune-dock-bg-bot, rgba(255,255,255,.06)) 100%
+  );
+  border: 1px solid var(--rune-dock-border, rgba(255,255,255,.12));
+  -webkit-backdrop-filter: blur(var(--rune-dock-blur, 6px));
+  backdrop-filter: blur(var(--rune-dock-blur, 6px));
+  box-shadow: var(--rune-dock-shadow, none);
   /* NINCS position: fixed/absolute! */
 }
 
 .runeDock__rail {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--rune-rail-gap, 6px);
 }
 
-.runeDock__frame {
-  height: 24px;
-  opacity: .75;
-  user-select: none;
-  -webkit-user-drag: none;
+/* =========================
+   RUNE SLOTOK
+   ========================= */
+
+.runeSlot {
+  width: var(--rune-slot-size, 22px);
+  height: var(--rune-slot-size, 22px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--rune-slot-radius, 4px);
+  opacity: var(--rune-slot-opacity-rest, .35);
+  outline: var(--rune-slot-outline, 1px dashed rgba(255,255,255,.25));
+  transition:
+    opacity var(--rune-anim-dur, .25s) var(--rune-anim-ease, ease),
+    transform var(--rune-anim-dur, .25s) var(--rune-anim-ease, ease),
+    color var(--rune-anim-dur, .25s) var(--rune-anim-ease, ease);
+  color: var(--rune-slot-fg, rgba(255,255,255,.8));
 }
+
+/* Extra üres kocka eltüntetése */
+.runeSlot:empty {
+  display: none;
+}
+
+/* Késleltetett beúszás opcionális utility-hez */
+.runeImgDelayed,
+.runeSlot .runeImgDelayed {
+  animation: fadeIn var(--rune-anim-in-dur, .35s) ease-out both;
+}
+
+/* =========================
+   ÁLLAPOTOK
+   ========================= */
+
+/* Alap locked állapot halvány */
+.runeSlot[data-state="locked"] {
+  opacity: var(--rune-slot-opacity-locked, .05);
+  filter: var(--rune-slot-locked-filter, grayscale(.7));
+}
+
+/* Unlocked ikon */
+.runeSlot[data-state="unlocked"] {
+  opacity: var(--rune-slot-opacity-unlocked, 1);
+  outline: none;
+}
+
+/* Hover effekt csak az aktív ikonokra */
+.runeSlot[data-state="unlocked"]:hover {
+  transform:
+    translateY(var(--rune-slot-hover-translate-y, -1px))
+    scale(var(--rune-slot-hover-scale, 1.05));
+}
+
+/* =========================
+   SLOT-SZINTŰ TOKENEK (1–3)
+   ========================= */
+
+/* 1. slot */
+.runeSlot[data-slot-idx="1"][data-state="unlocked"] {
+  color: var(--rune-slot-1-color-active, #ffc861);
+}
+.runeSlot[data-slot-idx="1"][data-state="locked"] {
+  color: var(--rune-slot-1-color-locked, rgba(255,255,255,.25));
+}
+
+/* 2. slot */
+.runeSlot[data-slot-idx="2"][data-state="unlocked"] {
+  color: var(--rune-slot-2-color-active, #00ffd5);
+}
+.runeSlot[data-slot-idx="2"][data-state="locked"] {
+  color: var(--rune-slot-2-color-locked, rgba(255,255,255,.25));
+}
+
+/* 3. slot */
+.runeSlot[data-slot-idx="3"][data-state="unlocked"] {
+  color: var(--rune-slot-3-color-active, #ff5a5a);
+}
+.runeSlot[data-slot-idx="3"][data-state="locked"] {
+  color: var(--rune-slot-3-color-locked, rgba(255,255,255,.25));
+}
+
+/* =========================
+   IKONOK / KÉPEK
+   ========================= */
 
 .runeImg {
-  width: 22px;
-  height: 22px;
+  width: var(--rune-img-size, 22px);
+  height: var(--rune-img-size, 22px);
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
+  animation: fadeIn var(--rune-anim-in-dur, .35s) ease-out both;
 }
 
-.runeImgDelayed {
-  animation: fadeIn .35s ease-out both;
-}
-
-.runeSlot {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  opacity: .35;
-  outline: 1px dashed rgba(255,255,255,.25);
-}
-
+/* =========================
+   ANIMÁCIÓK
+   ========================= */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(2px); }
   to   { opacity: 1; transform: translateY(0); }

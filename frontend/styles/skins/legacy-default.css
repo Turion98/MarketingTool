@@ -57,7 +57,9 @@ body[data-skin="legacy-default"] {
   --header-bg: rgba(0, 0, 0, .25);
   --header-bg-trans: rgba(0, 0, 0, .25);
   --header-bg-solid: rgba(0, 0, 0, .45);
-  --header-border: rgba(255, 255, 255, .12);
+  --header-border: var(--contract-header-border-color, rgba(255,255,255,.12));
+  --header-border-style: var(--contract-header-border-style, solid);
+  --header-border-width: var(--contract-header-border-width, 1px);
   --header-radius: 14px;
   --header-blur: 6px;
   --header-shadow: 0 8px 28px rgba(0,0,0,.35);
@@ -73,7 +75,7 @@ body[data-skin="legacy-default"] {
   --header-title-shift: -25px;       /* optikai fel-/lejjebb tolás (transform nélkül) */
 
   /* Logó illesztés (desktop) */
-  --logo-scale: 1.3;
+  --logo-scale: 1.5;
   --logo-max-w: 100%;
   --logo-fit: contain;
   /* kért finomhangolás: */
@@ -184,7 +186,9 @@ body[data-skin="legacy-default"] {
 
   /* Choice gombok – alap */
   --choice-color: #fff;
-  --choice-border: rgba(255, 255, 255, .18);
+  --choice-border: var(--contract-choice-border-color, rgba(255,255,255,.18));
+  --choice-border-style: var(--contract-choice-border-style, solid);
+  --choice-border-width: var(--contract-choice-border-width, 1px);
   --choice-shadow: 0 6px 18px rgba(0,0,0,.30);
   --choice-bg-top: rgba(255, 255, 255, .12);
   --choice-bg-bot: rgba(255, 255, 255, .06);
@@ -225,6 +229,60 @@ body[data-skin="legacy-default"] {
 
   /* Max szélesség a gombokra */
   --choice-maxw: 480px;
+
+
+/* =========================================================================
+   RUNE DOCK (ikon-sín, 1–3 slot; a Choice/Dock vizuálhoz igazodik)
+   ========================================================================= */
+--rune-dock-gap: 6px;
+--rune-dock-pad: 4px 6px;
+--rune-dock-radius: 10px;
+
+--rune-dock-bg-top: rgba(255,255,255,.16);
+--rune-dock-bg-bot: rgba(255,255,255,.06);
+--rune-dock-border: var(--dock-border, rgba(255,255,255,.12));
+--rune-dock-shadow: none;
+--rune-dock-blur: var(--dock-blur, 6px);
+
+/* sín belső gap */
+--rune-rail-gap: 6px;
+
+/* slot geometria + baseline stílus */
+--rune-slot-size: 22px;
+--rune-slot-radius: 4px;
+--rune-slot-outline: 1px dashed rgba(255,255,255,.25);
+--rune-slot-fg: rgba(255,255,255,.8);
+
+/* állapot opacitások + lock hatás */
+--rune-slot-opacity-rest: .35;
+--rune-slot-opacity-unlocked: 1;
+--rune-slot-opacity-locked: .05;
+--rune-slot-locked-filter: grayscale(.7);
+
+/* hover mozgás */
+--rune-slot-hover-scale: 1.05;
+--rune-slot-hover-translate-y: -1px;
+
+/* ikonkép méret */
+--rune-img-size: 22px;
+
+/* animációk */
+--rune-anim-dur: .25s;
+--rune-anim-ease: ease;
+--rune-anim-in-dur: .35s;
+
+/* slot színek (felülírható kampány/skin szerint) */
+--rune-slot-1-color-active: #ffc861;
+--rune-slot-1-color-locked: rgba(255,255,255,.25);
+
+--rune-slot-2-color-active: #00ffd5;
+--rune-slot-2-color-locked: rgba(255,255,255,.25);
+
+--rune-slot-3-color-active: #ff5a5a;
+--rune-slot-3-color-locked: rgba(255,255,255,.25);
+
+
+
 
 /* =========================================================================
    RIDDLE QUIZ (örököl a Choice-ból; alias + riddle-specifikus tokenek)
@@ -443,6 +501,9 @@ body[data-skin="legacy-default"] {
   /* Finom belső margó, hogy a szöveg ne “lógjon ki” optikailag a kép síkjából */
   --np-content-inset: 0px; /* pl. 6px esetén kicsit beljebb kezd a szöveg */
 
+
+
+
   /* =========================================================================
      MEDIA FRAME (optikailag elegáns, diszkrét keret alap)
      ========================================================================= */
@@ -476,6 +537,55 @@ body[data-skin="legacy-default"] {
     );
   --mf-overlay-opacity: 0.35;
   --mf-overlay-blend: screen;
+
+
+
+  /* =========================================================================
+   CTA BUTTON (komponens kizárólag ezeket a tokeneket olvassa)
+   ========================================================================= */
+--cta-height: 48px;
+--cta-radius: 14px;
+
+--cta-font: 16px;
+--cta-font-mobile: 15px;
+--cta-letter-spacing: .2px;
+
+--cta-padding-x: 18px;         /* inline (bal-jobb) */
+--cta-padding-y: 0px;          /* blokk (fel-le); fix magasságnál 0 maradhat */
+--cta-gap: 10px;               /* ikon–szöveg távolság */
+--cta-icon-size: 18px;         /* ha van leading/trailing ikon */
+
+--cta-color: #fff;
+--cta-bg-top: #3a7bd5;
+--cta-bg-bot: #00d2ff;
+--cta-border: rgba(255,255,255,.18);
+--cta-shadow: 0 10px 24px rgba(0,0,0,.35);
+
+/* Hover/Active – finom accent-keverés a brandhez igazodva */
+--cta-bg-top-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 10%, var(--cta-bg-top));
+--cta-bg-bot-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 8%,  var(--cta-bg-bot));
+--cta-border-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 0%,  var(--cta-border));
+--cta-shadow-hover: 0 12px 28px rgba(0,0,0,.38);
+
+--cta-bg-top-active: color-mix(in oklch, var(--brand-accent, #ffc861) 16%, var(--cta-bg-top));
+--cta-bg-bot-active: color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--cta-bg-bot));
+--cta-border-active: color-mix(in oklch, var(--brand-accent, #ffc861) 0%,  var(--cta-border));
+--cta-shadow-active: 0 8px 18px rgba(0,0,0,.44);
+
+/* Focus ring (kettős) – egységes az Interaction Dock/Choice stílussal */
+--cta-ring:
+  0 0 0 2px color-mix(in oklch, white 50%, transparent),
+  0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent);
+
+/* Mozgás */
+--cta-transition-dur: 200ms;
+--cta-transition-ease: ease;
+
+/* Layout korlátok (opcionális) */
+--cta-maxw: 520px;
+--cta-minw: auto;
+--cta-align: center; /* left|center|right – ha a konténer olvassa */
+
 
   /* =========================================================================
      DECORATIVE BACKGROUND (globális háttér réteg; opcionális)
@@ -539,5 +649,13 @@ body[data-skin="legacy-default"] {
 
     /* Action Bar */
     --ab-w: var(--ab-w-mobile);
+
+    /* CTA – mobil */
+--cta-height: 46px;
+--cta-radius: 12px;
+--cta-font: var(--cta-font-mobile);
+--cta-padding-x: 16px;
+--cta-icon-size: 17px;
+
   }
 }

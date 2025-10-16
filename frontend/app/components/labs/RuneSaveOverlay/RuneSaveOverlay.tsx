@@ -5,11 +5,17 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./RuneSaveOverlay.module.scss";
-import { RUNE_ICON } from "../../../lib/runeIcons"; // flagId -> abszolút/relatív útvonal
+import Icon from "../../ui/Icon"; // ⬅️ ÚJ központi ikon
+import { IconKey } from "../../../lib/IconRegistry";
+// (meghagyjuk a régit fallbacknek, ha még létezik)
+import { RUNE_ICON } from "../../../lib/runeIcons";
 
 type Props = {
-  /** Elfogad flagId-t (pl. "rune_ch1") vagy közvetlen kép URL-t */
-  imageSrc: string;
+  /** ÚJ (preferált): ikon kulcs a registryből (pl. "cross" | "branch" | "shield") */
+  iconType?: IconKey | string;
+  /** Visszafelé kompatibilis: közvetlen kép URL vagy régi flagId */
+  imageSrc?: string;
+
   startSize?: number;
   centerOffsetX?: number;
   centerOffsetY?: number;
@@ -22,6 +28,7 @@ type Props = {
 };
 
 export default function RuneSaveOverlay({
+  iconType,
   imageSrc,
   startSize = 180,
   centerOffsetX = 0,
@@ -32,34 +39,23 @@ export default function RuneSaveOverlay({
   ease = "easeOut",
   onComplete,
 }: Props) {
-  // 1) Portal guard (SSR safe)
+  // Portal guard
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // 2) flagId -> asset feloldás (memo: inputtól függ)
-  const resolvedSrc = useMemo(() => {
-    const raw = (RUNE_ICON as any)[imageSrc] ?? imageSrc;
-    if (typeof window === "undefined") return raw;
-    try {
-      // Abszolút URL-t gyárt, ha relatív
-      return new URL(raw, window.location.origin).toString();
-    } catch {
-      return raw;
-    }
+  // Fallback: régi imageSrc → feloldott URL (ha nem registry kulcs)
+  const resolvedImgSrc = useMemo(() => {
+    const raw = imageSrc ? ((RUNE_ICON as any)[imageSrc] ?? imageSrc) : undefined;
+    if (!raw || typeof window === "undefined") return raw;
+    try { return new URL(raw, window.location.origin).toString(); } catch { return raw; }
   }, [imageSrc]);
 
-  // 3) Kép preload (egyszerű és biztos)
-  useEffect(() => {
-    const im = new Image();
-    im.src = resolvedSrc;
-  }, [resolvedSrc]);
-
-  // 4) Motion időarányok
+  // Motion időarányok
   const total = fadeInMs + holdMs + fadeOutMs;
   const t1 = fadeInMs / total;
   const t2 = (fadeInMs + holdMs) / total;
 
-  // 5) Egyszeri onComplete védelem
+  // Egyszeri onComplete
   const doneRef = useRef(false);
   const handleComplete = () => {
     if (doneRef.current) return;
@@ -67,25 +63,21 @@ export default function RuneSaveOverlay({
     try { onComplete?.(); } catch {}
   };
 
-  // 6) Reduced motion – kímélő mód: villanás + azonnali complete
+  // Reduced motion
   const prefersReduced = typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Reduced motion: rövid megjelenítés, majd complete
   useEffect(() => {
     if (!prefersReduced) return;
     const t = window.setTimeout(handleComplete, 200);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefersReduced]);
+  }, [prefersReduced]); // eslint-disable-line
 
   const node = (
     <AnimatePresence>
       <div
         className={styles?.overlayRoot || ""}
         style={{
-          // Fallback stílusok, ha nincs SCSS:
           position: styles?.overlayRoot ? undefined : "fixed",
           inset: styles?.overlayRoot ? undefined : 0,
           zIndex: styles?.overlayRoot ? undefined : 2000,
@@ -99,32 +91,35 @@ export default function RuneSaveOverlay({
         role="presentation"
       >
         {!prefersReduced && (
-          <motion.img
-            src={resolvedSrc}
-            alt=""                 // dekoratív
+          <motion.div
             className={styles?.runeImage || ""}
             style={{
               width: startSize,
               height: startSize,
-              // Fallback glow, ha nincs SCSS
               filter: styles?.runeImage ? undefined : "drop-shadow(0 0 12px rgba(255,230,140,.9))",
               userSelect: "none",
+              display: "grid",
+              placeItems: "center",
             }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: [0, 1, 1, 0], scale: [0.9, 1, 1, 1.05] }}
             exit={{ opacity: 0 }}
             transition={{ duration: total / 1000, ease, times: [0, t1, t2, 1] }}
             onAnimationComplete={handleComplete}
-            draggable={false}
-          />
+          >
+            {iconType
+              ? <Icon type={iconType} size={startSize} variant="active" aria-label="Rune saved" />
+              : resolvedImgSrc
+                ? <img src={resolvedImgSrc} alt="" width={startSize} height={startSize} draggable={false}/>
+                : null}
+          </motion.div>
         )}
         {prefersReduced && (
-          <img
-            src={resolvedSrc}
-            alt=""
-            style={{ width: startSize, height: startSize, userSelect: "none" }}
-            draggable={false}
-          />
+          iconType
+            ? <Icon type={iconType} size={startSize} variant="active" aria-label="Rune saved" />
+            : resolvedImgSrc
+              ? <img src={resolvedImgSrc} alt="" width={startSize} height={startSize} draggable={false}/>
+              : null
         )}
       </div>
     </AnimatePresence>

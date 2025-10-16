@@ -5,6 +5,7 @@ import { StyleProfileProvider } from "./lib/StyleProfileContext"; // ✅ új imp
 import { Cormorant_Garamond } from "next/font/google";
 import PaperEffect from "./components/filters/PaperEffect";
 import "@/styles/skins/legacy-default.css"; 
+import "@/styles/skins/legacy-contract-overlay.css";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
