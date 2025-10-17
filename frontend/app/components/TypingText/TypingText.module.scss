@@ -1,36 +1,20 @@
-/* TypingText.module.scss */
-
-.container {
-  position: static;
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;            /* paddinget a NineSlicePanel ad */
-  box-sizing: border-box;
-}
-
 .text {
-  white-space: pre-wrap; /* a \n megtartása */
+  white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
 
-  font-family: "Merriweather", serif;
-  font-size: 1rem;
-  line-height: 1.5rem;
-  color: #fff;
+  font-family: var(--tt-font-family, "Merriweather", serif);
+  font-size: var(--tt-font-size, 1rem);
+  line-height: var(--tt-line-height, 1.5rem);
+  color: var(--tt-color, #fff);
 
-  /* opcionális: simább görgetés közben is */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.cursor {
-  display: inline-block;
-  vertical-align: baseline;
-  animation: typingCursorBlink 1s step-end infinite;
-}
-
-@keyframes typingCursorBlink {
-  50% { opacity: 0; }
+@media (max-width: 640px) {
+  .text {
+    font-size: var(--tt-font-size-mobile, var(--tt-font-size));
+    line-height: var(--tt-line-height-mobile, var(--tt-line-height));
+  }
 }

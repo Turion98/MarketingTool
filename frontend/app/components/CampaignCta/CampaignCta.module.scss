@@ -1,5 +1,5 @@
-/* NINCS :root – minden a legacy-ból jön */
 .ctaBtn {
+  position: relative; /* overlay réteg miatt */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -11,13 +11,23 @@
   gap: var(--cta-gap);
 
   border-radius: var(--cta-radius);
-  border: 1px solid var(--cta-border);
+  /* NE SHORTHAND! Engedjük a szélesség/stílus tokeneket is: */
+  border-width: var(--cta-border-width, 1px);
+  border-style: var(--cta-border-style, solid);
+  border-color: var(--cta-border);
+
   color: var(--cta-color);
   font-size: var(--cta-font);
   letter-spacing: var(--cta-letter-spacing, 0);
   cursor: pointer;
 
-  background: linear-gradient(to bottom, var(--cta-bg-top), var(--cta-bg-bot));
+  /* Szögelt gradient is támogatott: */
+  background: linear-gradient(var(--cta-bg-angle, 180deg), var(--cta-bg-top), var(--cta-bg-bot));
+
+  /* Üvegesség, ha kérsz: */
+  -webkit-backdrop-filter: blur(var(--cta-backdrop-blur, 0px));
+  backdrop-filter: blur(var(--cta-backdrop-blur, 0px));
+
   box-shadow: var(--cta-shadow);
 
   transition:
@@ -27,31 +37,34 @@
     border-color var(--cta-transition-dur) var(--cta-transition-ease);
 }
 
+/* Overlay réteg – tényleg “élő” overlay beállításokhoz */
+.ctaBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--cta-overlay-color, transparent);
+  opacity: var(--cta-overlay-alpha, 0);
+  /* ha kell: mix-blend mód tokennel bővíthető */
+}
+
+/* Hover/active maradhat, csak a gradient is szögelt legyen egységesen: */
 .ctaBtn:hover {
   transform: translateY(-1px);
   filter: brightness(1.03);
   border-color: var(--cta-border-hover);
   box-shadow: var(--cta-shadow-hover);
-  background: linear-gradient(to bottom, var(--cta-bg-top-hover), var(--cta-bg-bot-hover));
+  background: linear-gradient(var(--cta-bg-angle, 180deg), var(--cta-bg-top-hover), var(--cta-bg-bot-hover));
 }
-
 .ctaBtn:active {
   transform: translateY(0);
   filter: brightness(.97);
   border-color: var(--cta-border-active);
   box-shadow: var(--cta-shadow-active);
-  background: linear-gradient(to bottom, var(--cta-bg-top-active), var(--cta-bg-bot-active));
+  background: linear-gradient(var(--cta-bg-angle, 180deg), var(--cta-bg-top-active), var(--cta-bg-bot-active));
 }
-
 .ctaBtn:focus-visible {
   outline: none;
   box-shadow: var(--cta-shadow), var(--cta-ring);
-}
-
-/* Ikon slotok (ha használsz) */
-.ctaBtn__icon {
-  width: var(--cta-icon-size);
-  height: var(--cta-icon-size);
-  flex: 0 0 auto;
-  display: inline-block;
 }

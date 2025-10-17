@@ -1,11 +1,7 @@
 /* ===========================
    InteractionDock.module.scss
-   (LEGACY‑TOKEN DRIVEN — tokens now live in legacy-default skin)
+   (LEGACY-TOKEN DRIVEN — tokens come from legacy-default skin)
    =========================== */
-
-/* NOTE:
-   All visual tokens are read from the legacy skin (html/body[data-skin]).
-   This module only contains minimal fallbacks via var(…, <fallback>) where necessary. */
 
 /* ===== Wrapper & grid ===== */
 .wrapper {
@@ -39,19 +35,12 @@
   /* entrance fade */
   opacity: 1;
   transform: none;
-  transition: opacity var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
-              transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
+  transition:
+    opacity var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
+    transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
 
-/* Optional frosted surface variant */
-.grid[data-surface="frosted"] {
-  background: linear-gradient(180deg, var(--dock-bg-top, rgba(0,0,0,.25)), var(--dock-bg-bot, rgba(0,0,0,.4)));
-  border: 1px solid var(--dock-border, rgba(255,255,255,.12));
-  border-radius: 16px;
-  -webkit-backdrop-filter: blur(var(--dock-blur, 6px));
-  backdrop-filter: blur(var(--dock-blur, 6px));
-  box-shadow: var(--dock-shadow, 0 12px 32px rgba(0,0,0,.35));
-}
+
 
 /* ===== Choice button ===== */
 .choice {
@@ -67,8 +56,17 @@
   padding: var(--choice-padding-y, 14px) var(--choice-padding-x, 16px);
 
   color: var(--choice-color, #fff);
-  background: linear-gradient(180deg, var(--choice-bg-top, rgba(255,255,255,.12)), var(--choice-bg-bot, rgba(255,255,255,.06)));
-  border: 1px solid var(--choice-border, rgba(255,255,255,.18));
+  background: linear-gradient(
+    180deg,
+    var(--choice-bg-top, rgba(255,255,255,.12)),
+    var(--choice-bg-bot, rgba(255,255,255,.06))
+  );
+
+  /* ---- Border: szétszedve, hogy a legacy width/style tokenek működjenek ---- */
+  border-color: var(--choice-border, rgba(255,255,255,.18));
+  border-style: var(--choice-border-style, solid);
+  border-width: var(--choice-border-width, 1px);
+
   border-radius: var(--choice-radius, 12px);
 
   text-align: center;
@@ -92,20 +90,29 @@
 /* Hover: scale + shadow + gradient shift */
 .choice:enabled:hover {
   transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
-  border-color: var(--choice-border-hover, color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255,255,255,.18))));
+  /* csak a színt írjuk át, hogy a width/style token maradjon */
+  border-color: var(
+    --choice-border-hover,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255,255,255,.18)))
+  );
   box-shadow: var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36));
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     var(--choice-bg-top-hover, color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--choice-bg-top, rgba(255,255,255,.12)))),
-    var(--choice-bg-bot-hover, color-mix(in oklch, var(--brand-accent, #ffc861) 8%, var(--choice-bg-bot, rgba(255,255,255,.06))))
+    var(--choice-bg-bot-hover, color-mix(in oklch, var(--brand-accent, #ffc861) 8%,  var(--choice-bg-bot, rgba(255,255,255,.06))))
   );
 }
 
 /* Active/press (touch-friendly) */
 .choice:enabled:active {
   transform: scale(var(--choice-scale-active, .995)) translateY(0);
-  border-color: var(--choice-border-active, color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border, rgba(255,255,255,.18))));
+  border-color: var(
+    --choice-border-active,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border, rgba(255,255,255,.18)))
+  );
   box-shadow: var(--choice-shadow-active, 0 6px 16px rgba(0,0,0,.44));
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     var(--choice-bg-top-active, color-mix(in oklch, var(--brand-accent, #ffc861) 20%, var(--choice-bg-top, rgba(255,255,255,.12)))),
     var(--choice-bg-bot-active, color-mix(in oklch, var(--brand-accent, #ffc861) 14%, var(--choice-bg-bot, rgba(255,255,255,.06))))
   );
@@ -117,13 +124,22 @@
   cursor: not-allowed;
   opacity: .55;
   filter: grayscale(.2) saturate(.8);
-  background: linear-gradient(180deg, var(--choice-bg-top-disabled, rgba(255,255,255,.05)), var(--choice-bg-bot-disabled, rgba(255,255,255,.03)));
+  background: linear-gradient(
+    180deg,
+    var(--choice-bg-top-disabled, rgba(255,255,255,.05)),
+    var(--choice-bg-bot-disabled, rgba(255,255,255,.03))
+  );
 }
 
 /* Focus visible ring */
 .choice:focus-visible {
   outline: none;
-  box-shadow: var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36)), var(--choice-focus-ring, 0 0 0 2px color-mix(in oklch, white 50%, transparent), 0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent));
+  box-shadow:
+    var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36)),
+    var(--choice-focus-ring,
+      0 0 0 2px color-mix(in oklch, white 50%, transparent),
+      0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent)
+    );
 }
 
 /* Compact rows (optional list mode) */
@@ -146,7 +162,8 @@
   }
   .choice {
     font-size: var(--choice-font-mobile, var(--choice-font, 16px));
-    padding: var(--choice-padding-y-mobile, var(--choice-padding-y, 14px)) var(--choice-padding-x-mobile, var(--choice-padding-x, 16px));
+    padding: var(--choice-padding-y-mobile, var(--choice-padding-y, 14px))
+             var(--choice-padding-x-mobile, var(--choice-padding-x, 16px));
   }
 }
 

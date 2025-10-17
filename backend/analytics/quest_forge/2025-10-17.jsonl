@@ -1,0 +1,12 @@
+{"_type": "batch_header", "ts": "2025-10-17T09:25:31.674409Z", "storyId": "quest_forge", "userId": "u_yab6wo7d6cmgun2a89", "device": {}, "count": 2}
+{"id": "e_mlp0g5p6ywemgun7nzk", "t": "page_enter", "ts": 1760693101616, "storyId": "quest_forge", "sessionId": "sess_k9mvb9gsx5mgun7ntp", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_yab6wo7d6cmgun2a89"}}
+{"id": "e_53j8tg6wtv9mgun7o0h", "t": "page_exit", "ts": 1760693101649, "storyId": "quest_forge", "sessionId": "sess_k9mvb9gsx5mgun7ntp", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 33, "userId": "u_yab6wo7d6cmgun2a89"}}
+{"_type": "batch_header", "ts": "2025-10-17T09:55:52.180025Z", "storyId": "quest_forge", "userId": "u_lz6e2o3qtqmguo9qoz", "device": {}, "count": 2}
+{"id": "e_hgaevqr35mfmguoa0b4", "t": "page_enter", "ts": 1760694890512, "storyId": "quest_forge", "sessionId": "sess_k9mvb9gsx5mgun7ntp", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_lz6e2o3qtqmguo9qoz"}}
+{"id": "e_knf9uszhwnhmguoa0c9", "t": "page_exit", "ts": 1760694890553, "storyId": "quest_forge", "sessionId": "sess_k9mvb9gsx5mgun7ntp", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 41, "userId": "u_lz6e2o3qtqmguo9qoz"}}
+{"_type": "batch_header", "ts": "2025-10-17T09:56:22.244920Z", "storyId": "quest_forge", "userId": "u_lz6e2o3qtqmguo9qoz", "device": {}, "count": 2}
+{"id": "e_soa23nvsv6fmguobbvy", "t": "page_enter", "ts": 1760694952174, "storyId": "quest_forge", "sessionId": "sess_uyuupqxcrcimguobbrl", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_lz6e2o3qtqmguo9qoz"}}
+{"id": "e_wxiq0n9875qmguobbwm", "t": "page_exit", "ts": 1760694952198, "storyId": "quest_forge", "sessionId": "sess_uyuupqxcrcimguobbrl", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 24, "userId": "u_lz6e2o3qtqmguo9qoz"}}
+{"_type": "batch_header", "ts": "2025-10-17T10:39:52.827934Z", "storyId": "quest_forge", "userId": "u_lz6e2o3qtqmguo9qoz", "device": {}, "count": 2}
+{"id": "e_c3lk53yuldmgupvcwr", "t": "page_enter", "ts": 1760697566235, "storyId": "quest_forge", "sessionId": "sess_3xx6lky5c9dmgupvcri", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_lz6e2o3qtqmguo9qoz"}}
+{"id": "e_ev8864a0ekhmgupvcxd", "t": "page_exit", "ts": 1760697566257, "storyId": "quest_forge", "sessionId": "sess_3xx6lky5c9dmgupvcri", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 22, "userId": "u_lz6e2o3qtqmguo9qoz"}}

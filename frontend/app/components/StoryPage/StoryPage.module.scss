@@ -13,35 +13,11 @@ $gold: #f2b85b;
   overflow-x: hidden;
   overflow-y: auto;    /* 🔹 engedjük a görgetést */
   font-family: var(--font-cormorant), serif;
-
-  .typing-text {
-    margin-bottom: 2rem;
-    max-width: 300px;
-    text-align: left;
-    z-index: 2001;
-  }
-
-  .reward-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.8);
-    padding: 2rem 4rem;
-    border-radius: 10px;
-    font-size: 1.5rem;
-    text-align: center;
-    color: #fff;
-    animation: fadeInOut 2s ease forwards;
-  }
-
-  > * {
-    position: relative;
-    z-index: auto;
-    min-height: 0; /* 🔹 grid/flex children ne feszítsenek */
-  }
 }
 
+/* ──────────────────────────────
+   PAGE INDICATOR
+   ────────────────────────────── */
 .page-indicator {
   position: absolute;
   top: 20px;
@@ -53,6 +29,9 @@ $gold: #f2b85b;
   z-index: 10;
 }
 
+/* ──────────────────────────────
+   OLDAL PROGRESS VONAL
+   ────────────────────────────── */
 .progress-container {
   position: absolute;
   bottom: 0;
@@ -71,6 +50,9 @@ $gold: #f2b85b;
   transition: width 0.3s ease-in-out;
 }
 
+/* ──────────────────────────────
+   STRUKTÚRA MAP
+   ────────────────────────────── */
 .structure-map {
   position: absolute;
   bottom: 40px;
@@ -94,6 +76,9 @@ $gold: #f2b85b;
   }
 }
 
+/* ──────────────────────────────
+   BODY SCROLL
+   ────────────────────────────── */
 html,
 body {
   overflow-x: hidden;
@@ -102,43 +87,8 @@ body {
 }
 
 /* ──────────────────────────────
-   TOP DOCK
+   PROGRESS HUD (felső)
    ────────────────────────────── */
-.textDockTop > * {
-  pointer-events: auto;
-}
-
-.textbox-container :global(.panel),
-.textbox-container :global(.panel .content) {
-  pointer-events: auto;
-}
-
-.textbox-background,
-.textbox-background.animate,
-.textbox-content {
-  display: none !important;
-}
-
-/* ──────────────────────────────
-   HÁTTÉR
-   ────────────────────────────── */
-.storyBackground {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: #000;
-  overflow: hidden;
-
-  .backgroundImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.95);
-  }
-}
-
-/* Progress HUD */
 .progressHud {
   position: fixed;
   left: 50%;
@@ -151,6 +101,7 @@ body {
   z-index: 1200;
   pointer-events: none; /* ne akadályozza a kattintást alatta */
 }
+
 .progressTrack {
   position: relative;
   flex: 1 1 auto;
@@ -160,12 +111,14 @@ body {
   overflow: hidden;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .2) inset;
 }
+
 .progressFill {
   height: 100%;
   width: 0%;
   transition: width 400ms ease;
   background: linear-gradient(90deg, #d4af37, #ffd479);
 }
+
 .progressLabel {
   font-size: 12px;
   color: #fff;
@@ -175,73 +128,9 @@ body {
   text-align: right;
 }
 
-.story-text {
-  position: absolute;
-  left: 40px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50%;
-  max-width: 400px;
-  font-size: 1.1rem;
-  line-height: 1.5;
-  color: white;
-  box-sizing: border-box;
-  z-index: 2003;
-}
-
 /* ──────────────────────────────
-   IMAGE + LOGO + FRAME
+   ANIMÁCIÓK
    ────────────────────────────── */
-.generated-image-container,
-.generatedImageContainer {
-  position: absolute;
-  left: 19.5%;
-  top: 1%;
-  transform: translateY(-50%);
-  width: clamp(320px, 100%, 520px);
-  max-width: 520px;
-  z-index: 100;
-  isolation: isolate;
-  background: transparent;
-
-  .logoUnderlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 10%;
-    z-index: 110;
-    pointer-events: none;
-  }
-
-  .logoImage {
-    width: clamp(80px, 22%, 280px);
-    height: auto;
-    max-width: 60%;
-    opacity: 0.75;
-    transform: translateZ(0);
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35));
-    animation: logoPulse 2.8s ease-in-out infinite;
-  }
-
-  .imageViewport {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-}
-
-.frameOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 90;
-  pointer-events: none;
-}
-
 @keyframes logoPulse {
   0%   { filter: drop-shadow(0 0 0 rgba($gold, 0)); }
   40%  { filter: drop-shadow(0 0 10px rgba($gold, 0.45)); }
@@ -257,177 +146,63 @@ body {
   }
 }
 
-/* ──────────────────────────────
-   Gombok
-   ────────────────────────────── */
-.nextButton {
-  position: absolute;
-  bottom: 18%;
-  left: 28%;
-  transform: translateX(-50%) translateY(10px);
-  opacity: 0;
-  padding: 0.5rem 2rem;
-  font-size: 1.4rem;
-  font-weight: 800;
-  font-family: var(--font-cormorant), serif;
-  letter-spacing: 0.1em;
-  border-radius: 8px;
-  background: #1F3A3E80;
-  color: #f2b85b;
-  border: 2px solid #f2b85b;
-  cursor: pointer;
-  z-index: 2;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-
-  &.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 0 10px rgba(242, 184, 91, 0.8);
-    transform: translateX(-50%) scale(1.005);
-    color: #f0b85b;
-    font-size: 1.5rem;
-    -webkit-text-stroke: 0.3px #ffffff95;
-  }
-
-  &:disabled {
-    background-color: #888;
-    animation: none;
-  }
-
-  &:active {
-    color: #1F3A3E50;
-  }
-}
-
-.replayButton {
-  position: absolute;
-  top: 8.5%;
-  right: 4.2%;
-  padding: 0.15rem 0.15rem;
-  font-size: 1.4rem;
-  font-weight: 800;
-  font-family: var(--font-cormorant), serif;
-  letter-spacing: 0.1em;
-  border-radius: 8px;
-  background: #1F3A3E01;
-  color: #f2b85b;
-  border: 2px solid #f2b85b01;
-  cursor: pointer;
-  z-index: 2001;
-  transition: all 0.5s ease-in-out;
-  transform: rotate(180deg);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 10px rgba(242, 184, 91, 0.8);
-    transform: scale(1.005);
-    color: #f0b85b;
-    font-size: 1.5rem;
-    -webkit-text-stroke: 0.3px #ffffff95;
-  }
-
-  &:disabled {
-    background-color: #888;
-    animation: none;
-  }
-}
-
-.muteButton {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  height: 100%;
-
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-
-  appearance: none;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-
-  transition: transform .15s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-.muteIcon {
-  width: 68px;
-  height: 68px;
-  pointer-events: none;
-  user-select: none;
-  transition: filter .15s ease;
-  opacity: 0.8;
-
-  .muteButton:hover & {
-    filter: brightness(1.08);
-  }
-}
-
 @keyframes fadeInOut {
   0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
   20%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
 }
+
+/* ──────────────────────────────
+   CTA OVERLAY (tokenizált)
+   ────────────────────────────── */
 .endCtaOverlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none; /* hogy ne zárja el a teljes képernyőt, csak a kártya legyen interaktív */
+
+  /* FONTOS: ne legyen globál blur a teljes oldalra */
+  background: transparent;
+  backdrop-filter: none;
+
+  /* csak a kártya legyen interaktív */
+  pointer-events: none;
 }
 
 .endCtaCard {
   pointer-events: auto;
-  background: rgba(0, 0, 0, .55);
-  border: 1px solid rgba(255, 255, 255, .2);
-  border-radius: 16px;
-  padding: clamp(14px, 2cqi, 20px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
-  backdrop-filter: blur(6px);
+
+  /* 🔸 kizárólag a kártyára hasson a blur */
+  backdrop-filter: blur(var(--cta-ol-blur, var(--cta-backdrop-blur, 6px)));
+  background: var(--cta-ol-bg, var(--cta-overlay-color, rgba(0, 0, 0, .55)));
+
+  /* stabil kompozíció */
+  isolation: isolate;
+  contain: paint;
+
+  border: var(--cta-ol-border-width, 1px)
+          var(--cta-ol-border-style, solid)
+          var(--cta-ol-border, rgba(255, 255, 255, .12));
+  border-radius: var(--cta-ol-radius, 16px);
+  padding: var(--cta-ol-pad, clamp(14px, 2cqi, 20px));
+  box-shadow: var(--cta-ol-shadow, 0 12px 28px rgba(0, 0, 0, .45));
   max-width: min(92vw, 560px);
   width: max-content;
 }
 
 .endCtaTitle {
-  color: #fff;
-  font-size: clamp(16px, 2.2cqi, 20px);
-  text-align: center;
+  color: var(--cta-ol-title-color, #ffffff50);
+  font-size: var(--cta-ol-title-size, clamp(16px, 2.2cqi, 20px));
+  font-weight: var(--cta-ol-title-weight, 600);
+  text-align: var(--cta-ol-title-align, center);
   margin-bottom: clamp(8px, 1.6cqi, 12px);
 }
 
 .endCtaActions {
   display: flex;
   justify-content: center;
+  gap: var(--cta-ol-gap, 10px);
 }
-
-.endCtaButton {
-  height: 44px;
-  min-width: 180px;
-  padding: 0 clamp(14px, 2cqi, 18px);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, .2);
-  color: #fff;
-  background: linear-gradient(to bottom, #3a7bd5, #00d2ff);
-  cursor: pointer;
-  transition: transform .2s ease, filter .2s ease;
-}
-.endCtaButton:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.endCtaButton:active { transform: translateY(0); filter: brightness(.97); }

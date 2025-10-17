@@ -164,18 +164,6 @@ body[data-skin="legacy-default"] {
      ========================================================================= */
   --wrapper-maxw: 1100px;
 
-  --dock-gap: 16px;
-  --dock-gap-mobile: 14px;
-  --dock-pad: 12px;
-  --dock-pad-mobile: 10px;
-  --dock-z: 10;
-
-  --dock-blur: 6px;
-  --dock-shadow: 0 12px 32px rgba(0,0,0,.35);
-  --dock-border: rgba(255, 255, 255, .12);
-  --dock-bg-top: rgba(0, 0, 0, .25);
-  --dock-bg-bot: rgba(0, 0, 0, .40);
-
   /* Motion & easing */
   --dock-dur-in: 480ms;
   --dock-dur-hover: 160ms;
@@ -239,10 +227,10 @@ body[data-skin="legacy-default"] {
 --rune-dock-radius: 10px;
 
 --rune-dock-bg-top: rgba(255,255,255,.16);
---rune-dock-bg-bot: rgba(255,255,255,.06);
---rune-dock-border: var(--dock-border, rgba(255,255,255,.12));
+--rune-dock-bg-bot: rgba(255,255,255,.16);
+--rune-dock-border: rgba(255,255,255,.92);
 --rune-dock-shadow: none;
---rune-dock-blur: var(--dock-blur, 6px);
+--rune-dock-blur: 6px;
 
 /* sín belső gap */
 --rune-rail-gap: 6px;
@@ -546,8 +534,8 @@ body[data-skin="legacy-default"] {
 --cta-height: 48px;
 --cta-radius: 14px;
 
---cta-font: 16px;
---cta-font-mobile: 15px;
+--cta-font: 12px;
+--cta-font-mobile: 10px;
 --cta-letter-spacing: .2px;
 
 --cta-padding-x: 18px;         /* inline (bal-jobb) */
@@ -555,11 +543,11 @@ body[data-skin="legacy-default"] {
 --cta-gap: 10px;               /* ikon–szöveg távolság */
 --cta-icon-size: 18px;         /* ha van leading/trailing ikon */
 
---cta-color: #fff;
---cta-bg-top: #3a7bd5;
+--cta-color: #ffffff;
+--cta-bg-top: #fff;
 --cta-bg-bot: #00d2ff;
---cta-border: rgba(255,255,255,.18);
---cta-shadow: 0 10px 24px rgba(0,0,0,.35);
+--cta-border: rgba(255,255,255,.98);
+--cta-shadow: 0 10px 24px rgba(255,0,0,.95);
 
 /* Hover/Active – finom accent-keverés a brandhez igazodva */
 --cta-bg-top-hover: color-mix(in oklch, var(--brand-accent, #ffc861) 10%, var(--cta-bg-top));
@@ -585,6 +573,63 @@ body[data-skin="legacy-default"] {
 --cta-maxw: 520px;
 --cta-minw: auto;
 --cta-align: center; /* left|center|right – ha a konténer olvassa */
+
+/* Üvegesség (blur) és szög */
+--cta-backdrop-blur: var(--contract-cta-backdrop-blur, 0px);
+--cta-bg-angle: var(--contract-cta-bg-angle, 180deg);
+
+/* Overlay réteg színei / áttetszősége */
+--cta-overlay-alpha: var(--contract-cta-overlay-alpha, 0);
+
+/* (opcionális) keverési mód, ha a design igényli */
+--cta-overlay-blend: var(--contract-cta-overlay-blend, normal);
+
+/* Biztonsági fallback a border-szélességre és stílusra */
+--cta-border-width: var(--contract-cta-border-width, 1px);
+--cta-border-style: var(--contract-cta-border-style, solid);
+
+/* =========================================================================
+     CTA OVERLAY (StoryPage végi kártya – háttér, tipó, szegélyek)
+     ========================================================================= */
+  /* háttér + blur */
+  --cta-ol-bg:  rgba(0, 0, 0, .55);
+  --cta-ol-blur: var(--cta-backdrop-blur, 6px);
+
+  /* szegélyek/forma/árnyék */
+  --cta-ol-border: rgba(255, 255, 255, .12);
+  --cta-ol-border-width: 1px;
+  --cta-ol-border-style: solid;
+  --cta-ol-radius: 16px;
+  --cta-ol-shadow: 0 12px 28px rgba(0, 0, 0, .45);
+
+  /* belső térköz */
+  --cta-ol-pad: clamp(14px, 2cqi, 20px);
+
+  /* tipográfia (cím) */
+  --cta-ol-title-color: #ffffff;
+  --cta-ol-title-size: clamp(16px, 2.2cqi, 20px);
+  --cta-ol-title-weight: 600;
+  --cta-ol-title-align: center;
+
+  /* akciózóna layout */
+  --cta-ol-gap: 10px;
+
+
+
+
+    /* =========================================================================
+     TYPING TEXT (Narrative szöveg / textbox)
+     ========================================================================= */
+  --tt-font-family: "Merriweather", serif;   /* alapértelmezett serif */
+  --tt-font-size: 1rem;                      /* desktop alapméret */
+  --tt-line-height: 1.5rem;
+  --tt-color:  #ffffff;
+
+  
+  /* Mobil override */
+  --tt-font-size-mobile: 0.95rem;
+  --tt-line-height-mobile: 1.35rem;
+
 
 
   /* =========================================================================
@@ -651,11 +696,15 @@ body[data-skin="legacy-default"] {
     --ab-w: var(--ab-w-mobile);
 
     /* CTA – mobil */
---cta-height: 46px;
+--cta-height: 36px;
 --cta-radius: 12px;
 --cta-font: var(--cta-font-mobile);
 --cta-padding-x: 16px;
 --cta-icon-size: 17px;
 
+  /* CTA OVERLAY – mobil finomítások */
+    --cta-ol-radius: 14px;
+    --cta-ol-title-size: clamp(15px, 2cqi, 18px);
+    --cta-ol-pad: clamp(12px, 2.4cqi, 18px);
   }
 }

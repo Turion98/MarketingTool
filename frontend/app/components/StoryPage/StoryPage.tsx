@@ -550,7 +550,7 @@ const showAnalytics = params.get("analytics") === "1";
 
 // --- Analytics ID-k (robosztus fallback) ---
 const derivedStoryId = useMemo(() => {
-  // 1) Kontextus: csak ha nem "Global"
+  // 1) Kontextus: csak ha nem "global"
   const ctx = (storyId || "").trim();
   if (ctx && !/^global$/i.test(ctx)) return ctx;
 
@@ -561,7 +561,18 @@ const derivedStoryId = useMemo(() => {
     if (base && !/^global$/i.test(base)) return base;
   }
 
-  // ⬇️ Aktív skin alkalmazása: ?skin=... elsőbbség, különben LS mapping a derivedStoryId-hez
+  // 3) TITLE-ből (globals.storyTitle vagy ?title=...)
+  const t = globals?.storyTitle || params.get("title") || undefined;
+  if (t) {
+    const slug = t.trim().toLowerCase().replace(/[^\w]+/g, "_").replace(/^_+|_+$/g, "");
+    if (slug) return slug;
+  }
+
+  // 4) Fallback
+  return "default_story";
+}, [storyId, globals?.storySrc, globals?.storyTitle, params]);
+
+// --- Aktív skin alkalmazása: ?skin=... elsőbbség, különben LS mapping a derivedStoryId-hez ---
 useEffect(() => {
   if (!derivedStoryId) return;
 
@@ -577,26 +588,16 @@ useEffect(() => {
       mapped = map[derivedStoryId];
     }
   } catch {
-    // ignore
+    /* no-op */
   }
 
   const skinId = qSkin || mapped;
-  if (!skinId) return; // nincs explicit skin → maradnak a SCSS default tokenek
+  if (!skinId) return; // nincs explicit skin → maradnak az alap tokenek
 
-  // 3) alkalmazás (cache-busting query)
+  // 3) alkalmazás (cache-busting query parammal)
   loadTokens(`/skins/${skinId}.json?v=${Date.now()}`).catch(() => {});
 }, [derivedStoryId, params]);
 
-  // 3) TITLE-ből (globals.storyTitle vagy ?title=...)
-  const t = globals?.storyTitle || params.get("title") || undefined;
-  if (t) {
-    const slug = t.trim().toLowerCase().replace(/[^\w]+/g, "_").replace(/^_+|_+$/g, "");
-    if (slug) return slug;
-  }
-
-  // 4) Fallback
-  return "default_story";
-}, [storyId, globals?.storySrc, globals?.storyTitle, params]);
 
 const derivedSessionId = useMemo(() => {
   if (sessionId) return sessionId;

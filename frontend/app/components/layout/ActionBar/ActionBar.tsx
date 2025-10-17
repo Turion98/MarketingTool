@@ -26,7 +26,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
   onToggleMute,
   className,
 }) => {
-  const [open, setOpen] = useState(false); // mobil drawer állapot
+  const [open, setOpen] = useState(false);
 
   const onKeyActivate =
     (cb: () => void, disabled?: boolean) =>
@@ -40,30 +40,28 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
   return (
     <>
-      {/* Mobilon látható “megnyitás” gomb (asztalin elrejtve) */}
-      <button
-        type="button"
-        className={s.mobileToggle}
-        aria-label="Open actions"
-        aria-controls="actionbar"
-        aria-expanded={open}
-        onClick={() => setOpen(v => !v)}
-      >
-        Actions
-      </button>
+      {/* 🔹 Sticky mobile toggle wrapper a dokumentum alján jobbra */}
+      <div className={s.mobileRow}>
+        <button
+          type="button"
+          className={s.mobileToggle}
+          aria-label="Open actions"
+          aria-controls="actionbar"
+          aria-expanded={open}
+          onClick={() => setOpen(v => !v)}
+        >
+          Actions
+        </button>
+      </div>
 
       <aside
         id="actionbar"
-        className={[
-          s.actionBar,
-          open ? s.open : "",
-          className ?? "",
-        ].join(" ")}
+        className={[s.actionBar, open ? s.open : "", className ?? ""].join(" ")}
         role="complementary"
         aria-label="Actions sidebar"
         data-testid="action-bar"
       >
-        {/* Fejléc + mobilon zárás */}
+        {/* 🔹 Sticky header */}
         <div className={s.header}>
           <span className={s.title}>Actions</span>
           <button
@@ -76,6 +74,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </button>
         </div>
 
+        {/* normál csoportok (scrollozódnak) */}
         <div className={s.group}>
           <button
             type="button"
@@ -111,7 +110,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </button>
         </div>
 
-        <div className={s.group}>
+        {/* 🔹 Sticky lábléc – itt vannak az elsődleges akciók */}
+        <div className={`${s.group} ${s.stickyFooter}`}>
           <button
             type="button"
             className={`${s.btn} ${s.primary}`}

@@ -18,7 +18,7 @@ const LandingPage: React.FC = () => {
     setImageApiKey,
     setGlobalError,
     setCurrentPageId,
-    setGlobal,  
+    setGlobal,
   } = useGameState();
 
   const [loading, setLoading] = useState(false);
@@ -27,31 +27,57 @@ const LandingPage: React.FC = () => {
 
   const router = useRouter();
 
+  /** 🔧 Ütközést okozó lokál kulcsok célzott törlése új kampány indítása előtt */
+  const resetStoryState = (hard = false) => {
+    try {
+      if (hard) {
+        // Teszt mód: mindent törlünk (API kulcsokat külön ezután állítjuk)
+        localStorage.clear();
+        return;
+      }
+      // Célzott reset – csak a játékmenet/memória:
+      [
+        "currentPageId",
+        "globalsStore",
+        "flagsStore",
+        "unlockedFragments",
+        "fragmentsStore",
+        "fragmentsGlobal",
+        "runeImagesByFlag",
+        "storyMetaCache",
+      ].forEach((k) => localStorage.removeItem(k));
+    } catch {}
+  };
+
   const saveApiKeysToLocal = () => {
     if (voiceApiKey) localStorage.setItem("voiceApiKey", voiceApiKey);
     if (imageApiKey) localStorage.setItem("imageApiKey", imageApiKey);
   };
 
-const goToFirstPage = async () => {
-  const defaultSrc = "/stories/global.json"; // ⬅️ ide írd a saját fő JSON-od
-  const firstPageId = "ch1_pg1";
-  const title = "Main Campaign";
+  const goToFirstPage = async () => {
+    const defaultSrc = "/stories/global.json"; // ⬅️ a fő JSON-od
+    const firstPageId = "ch1_pg1";
+    const title = "Main Campaign";
 
-  try {
-    localStorage.setItem("storySrc", defaultSrc);
-    localStorage.setItem("storyTitle", title);
-    localStorage.setItem("currentPageId", firstPageId);
-  } catch {}
+    // ✅ mindig tiszta állapotból induljunk
+    resetStoryState(false);
 
-  setGlobal?.("storySrc", defaultSrc);
-  setGlobal?.("storyTitle", title);
-  setCurrentPageId?.(firstPageId);
+    try {
+      localStorage.setItem("storySrc", defaultSrc);
+      localStorage.setItem("storyTitle", title);
+      localStorage.setItem("currentPageId", firstPageId);
+    } catch {}
 
-  router.push(
-    `/story?src=${encodeURIComponent(defaultSrc)}&start=${encodeURIComponent(firstPageId)}&title=${encodeURIComponent(title)}`
-  );
-};
+    setGlobal?.("storySrc", defaultSrc);
+    setGlobal?.("storyTitle", title);
+    setCurrentPageId?.(firstPageId);
 
+    router.push(
+      `/story?src=${encodeURIComponent(defaultSrc)}&start=${encodeURIComponent(
+        firstPageId
+      )}&title=${encodeURIComponent(title)}`
+    );
+  };
 
   const handleStart = async () => {
     if (!apiReady) {
@@ -64,14 +90,17 @@ const goToFirstPage = async () => {
   };
 
   const handleTestMode = async () => {
+    // 🔥 teljes reset – elkerüli a duplaforrás ütközést
+    resetStoryState(true);
+    // Teszt mód: API kulcsok üresen
     localStorage.setItem("voiceApiKey", "");
     localStorage.setItem("imageApiKey", "");
     await goToFirstPage();
   };
 
   const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
-  "http://127.0.0.1:8000";
+    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
+    "http://127.0.0.1:8000";
 
   // Kulcsok validálása
   const validateKeys = async () => {
@@ -115,7 +144,7 @@ const goToFirstPage = async () => {
       <div className={styles.landingContainer}>
         <ParallaxBackground layers={layers} />
 
-        {/* LOGO külön blokk */}
+        {/* LOGO */}
         <div className={styles.logoBlock}>
           <img src="/logo.png" alt="Game Logo" className={styles.logoImage} />
         </div>
@@ -123,8 +152,9 @@ const goToFirstPage = async () => {
         {/* DESCRIPTION */}
         <div className={styles.descriptionBlock}>
           <p className="text-zoomable">
-            Lépj be egy posztapokaliptikus világba, ahol a torony titka vár felfedezésre.
-            Döntéseid befolyásolják az utad, és minden választás nyomot hagy a történetedben.
+            Lépj be egy posztapokaliptikus világba, ahol a torony titka vár
+            felfedezésre. Döntéseid befolyásolják az utad, és minden választás
+            nyomot hagy a történetedben.
           </p>
         </div>
 
@@ -148,42 +178,43 @@ const goToFirstPage = async () => {
           />
         </div>
 
-        {/* VALIDÁCIÓS ÜZENETEK */}
+        {/* VALIDATION MESSAGES */}
         {!apiReady && (voiceApiKey || imageApiKey) && !validating && (
           <p className={styles.errorMessage}>
             A megadott API kulcsok érvénytelenek vagy hibásak.
           </p>
         )}
-
         {validating && (
           <p className={styles.validatingMessage}>Kulcsok ellenőrzése...</p>
         )}
 
-        {/* GOMBOK */}
+        {/* BUTTONS */}
         <button
           className={`${styles.startButton} globalStartButton`}
           onClick={handleStart}
           disabled={
             !apiReady ||
-    validating ||
-    loading ||
-    !voiceApiKey?.trim() ||
-    !imageApiKey?.trim()
+            validating ||
+            loading ||
+            !voiceApiKey?.trim() ||
+            !imageApiKey?.trim()
           }
-          >
+        >
           {loading ? "Indítás..." : "Enter the Tower"}
         </button>
 
         <button className={styles.testButton} onClick={handleTestMode}>
           Teszt mód (API nélkül)
         </button>
+
         <button
-  className={styles.adventuresButton}
-  onClick={() => router.push("/adventures")}
->
-  Adventures
-</button>
-<UploadStoryPanel />
+          className={styles.adventuresButton}
+          onClick={() => router.push("/adventures")}
+        >
+          Adventures
+        </button>
+
+        <UploadStoryPanel />
       </div>
     </>
   );
