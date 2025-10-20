@@ -1,0 +1,86 @@
+{
+  "id": "brand_chameleon",
+  "title": "Brand Chameleon",
+  "version": 1,
+  "tokens": {
+    "--brand-accent": "#ffc861",
+
+    "--contract-text-font-family": "var(--font-sans, ui-sans-serif)",
+    "--contract-text-font-size": "1rem",
+    "--contract-text-line-height": "1.5rem",
+    "--contract-text-color": "#f2f4f7",
+
+    "--contract-header-bg-color-top": "rgba(10,12,16,.75)",
+    "--contract-header-bg-color-bot": "rgba(6,8,10,.85)",
+    "--contract-header-bg-angle": "180deg",
+    "--contract-header-border-color": "rgba(255,200,97,.25)",
+    "--contract-header-border-width": "1px",
+    "--contract-header-border-style": "solid",
+    "--contract-header-radius": "14px",
+    "--contract-header-backdrop-blur": "10px",
+    "--contract-header-shadow-rest": "0 10px 32px rgba(0,0,0,.45)",
+    "--contract-header-shadow-hover": "0 14px 42px rgba(0,0,0,.55)",
+    "--contract-header-text-color": "#ffffff",
+
+    "--contract-header-title-font-size": "22px",
+    "--contract-header-title-weight": "600",
+    "--contract-header-title-color": "var(--brand-accent)",
+    "--contract-header-title-tracking": "0.3px",
+    "--contract-header-title-shift": "-20px",
+
+    "--contract-choice-bg-color-top": "rgba(255,255,255,.10)",
+    "--contract-choice-bg-color-bot": "rgba(255,255,255,.06)",
+    "--contract-choice-border-color": "color-mix(in oklch, var(--brand-accent) 60%, transparent)",
+    "--contract-choice-border-width": "1px",
+    "--contract-choice-border-style": "solid",
+    "--contract-choice-radius": "12px",
+    "--contract-choice-shadow-rest": "0 8px 22px rgba(0,0,0,.35)",
+    "--contract-choice-text-color": "#ffffff",
+
+    "--contract-actionbar-bg-color-top": "rgba(14,16,18,.6)",
+    "--contract-actionbar-bg-color-bot": "rgba(8,10,12,.8)",
+    "--contract-actionbar-border-color": "color-mix(in oklch, var(--brand-accent) 25%, transparent)",
+    "--contract-actionbar-border-style": "solid",
+    "--contract-actionbar-radius": "16px",
+    "--contract-actionbar-shadow-rest": "0 16px 40px rgba(0,0,0,.5)",
+    "--contract-actionbar-text-color": "#f2f4f7",
+
+    "--contract-cta-bg-color-top": "color-mix(in oklch, var(--brand-accent) 85%, white 5%)",
+    "--contract-cta-bg-color-bot": "color-mix(in oklch, var(--brand-accent) 60%, black 20%)",
+    "--contract-cta-bg-angle": "180deg",
+    "--contract-cta-border-color": "color-mix(in oklch, var(--brand-accent) 35%, transparent)",
+    "--contract-cta-border-width": "1px",
+    "--contract-cta-border-style": "solid",
+    "--contract-cta-radius": "14px",
+    "--contract-cta-shadow-rest": "0 12px 28px rgba(0,0,0,.4)",
+    "--contract-cta-text-color": "#0a0a0a",
+
+    "--contract-cta-overlay-bg-color": "rgba(12,14,16,.75)",
+    "--contract-cta-overlay-blur": "10px",
+    "--contract-cta-overlay-border-color": "color-mix(in oklch, var(--brand-accent) 40%, transparent)",
+    "--contract-cta-overlay-border-width": "1px",
+    "--contract-cta-overlay-border-style": "solid",
+    "--contract-cta-overlay-radius": "16px",
+    "--contract-cta-overlay-title-color": "#ffffff",
+
+    "--contract-bg-color": "#0b0c10",
+    "--contract-bg-overlay": "radial-gradient(900px 500px at 70% 10%, color-mix(in oklch, var(--brand-accent) 12%, transparent), transparent 60%)",
+    "--contract-bg-overlay-opacity": "1",
+    "--contract-bg-blur": "0px",
+
+    "--contract-rune-dock-bg-top": "rgba(255,255,255,.08)",
+    "--contract-rune-dock-bg-bot": "rgba(255,255,255,.06)",
+    "--contract-rune-dock-border": "color-mix(in oklch, var(--brand-accent) 35%, transparent)",
+    "--contract-rune-dock-shadow": "0 10px 24px rgba(0,0,0,.35)",
+
+    "--contract-rune-slot-1-color-active": "var(--brand-accent)",
+    "--contract-rune-slot-2-color-active": "var(--brand-accent)",
+    "--contract-rune-slot-3-color-active": "var(--brand-accent)"
+  },
+
+  "presets": {
+    "raiffeisen": { "--brand-accent": "#ffc700" },
+    "telekom":    { "--brand-accent": "#e20074" },
+    "heineken":   { "--brand-accent": "#008d36" }
+  }
+}

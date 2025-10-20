@@ -572,6 +572,47 @@ const derivedStoryId = useMemo(() => {
   return "default_story";
 }, [storyId, globals?.storySrc, globals?.storyTitle, params]);
 
+// Kampány-szintű ikoncsomag egységesítése (Overlay-hez igazítva)
+const runePackForDisplay = useMemo(() => {
+  const rp: any = globals?.runePack;
+  if (!rp || typeof rp !== "object") return undefined;
+
+  // TRIPLE mód?
+  const isTriple = rp.mode === "triple";
+
+  if (!isTriple) {
+    // SINGLE mód: elfogadjuk {icon}-t vagy {icons[0]}-t
+    const icon: string | undefined =
+      typeof rp.icon === "string"
+        ? rp.icon
+        : (Array.isArray(rp.icons) && typeof rp.icons?.[0] === "string")
+        ? rp.icons[0]
+        : undefined;
+
+    if (!icon) return undefined;
+
+    return {
+      mode: "single" as const,
+      icon,
+      palette: rp.palette,
+    };
+  }
+
+  // TRIPLE mód: első 3 érvényes string
+  const icons: string[] = Array.isArray(rp.icons)
+    ? rp.icons.filter((x: any) => typeof x === "string").slice(0, 3)
+    : [];
+
+  if (icons.length === 0) return undefined;
+
+  return {
+    mode: "triple" as const,
+    icons,
+    palette: rp.palette,
+  };
+}, [globals?.runePack]);
+
+
 // --- Aktív skin alkalmazása: ?skin=... elsőbbség, különben LS mapping a derivedStoryId-hez ---
 useEffect(() => {
   if (!derivedStoryId) return;
@@ -1950,6 +1991,7 @@ return (
             <RuneDockDisplay
               flagIds={unlockedRunes}
               imagesByFlag={imagesByFlag}
+              runePack={runePackForDisplay}
               delayMs={0}
             />
           </div>
@@ -1967,6 +2009,7 @@ return (
         <RuneDockDisplay
           flagIds={unlockedRunes}
           imagesByFlag={imagesByFlag}
+          runePack={runePackForDisplay}
           delayMs={0}
         />
       </div>

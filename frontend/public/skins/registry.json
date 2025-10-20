@@ -1,6 +1,10 @@
 {
   "skins": [
+    { "id": "contract_default", "title": "Contract (Default)", "preview": "/assets/skins/contract_default.png" },
+    { "id": "neon_fiesta", "title": "Neon Fiesta", "preview": "/assets/skins/neon_fiesta.png" },
     { "id": "forest_dark", "title": "Forest Dark", "preview": "/assets/skins/forest_dark.png" },
-    { "id": "lux_gold", "title": "Lux Gold", "preview": "/assets/skins/lux_gold.png" }
+    { "id": "lux_gold", "title": "Lux Gold", "preview": "/assets/skins/lux_gold.png" },
+    { "id": "aurora_pro", "title": "Aurora Pro", "preview": "/assets/skins/aurora_pro.png" },
+    { "id": "brand_chameleon", "title": "Brand Chameleon", "preview": "/assets/skins/brand_chameleon.png" }
   ]
 }

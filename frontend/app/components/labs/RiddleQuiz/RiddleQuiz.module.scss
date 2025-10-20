@@ -109,12 +109,20 @@
 }
 @keyframes rqExit { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(.995)} }
 
-/* ===== Kérdés ===== */
+/* ===== Kérdés (TITLE) ===== */
 .question{
   display: flex;
   justify-content: center;
-  font-weight: 600;
-  line-height: 1.35;
+
+  /* ÚJ: teljes tipó binding a contract/legacy aliasokra */
+  font-family: var(--quiz-title-font-family, inherit);
+  font-size: var(--quiz-title-size, 22px);
+  font-weight: var(--quiz-title-weight, 600);
+  line-height: var(--quiz-title-lineh, 1.35);
+  letter-spacing: var(--quiz-title-letter-spacing, .2px);
+  text-transform: var(--quiz-title-transform, none);
+  color: var(--quiz-title-color, currentColor);
+
   margin: 0;
   padding: 0;            /* inset a .quizRoot-on van */
   text-wrap: balance;    /* szebb törés (opcionális) */
@@ -234,6 +242,23 @@
 /* ===== Szövegek ===== */
 .label{ pointer-events:none; user-select:none; display:inline-block; flex:1 1 auto; }
 
+/* === Extra/megjegyzés (SUBTITLE/BODY) – ÚJ === */
+/* FIX: pure selector – minden attribútum-szelektor lokális osztály alatt */
+.quizRoot .extra,
+.quizRoot .note,
+.quizRoot .meta,
+.quizRoot [data-role="extra"] {
+  font-family: var(--quiz-extra-font-family, inherit);
+  font-size: var(--quiz-extra-size, 14px);
+  font-weight: var(--quiz-extra-weight, 400);
+  line-height: var(--quiz-extra-lineh, 1.4);
+  letter-spacing: var(--quiz-extra-letter-spacing, .1px);
+  font-style: var(--quiz-extra-style, normal);
+  color: var(--quiz-extra-color, currentColor);
+  text-align: var(--quiz-extra-align, center);
+  margin: 6px 0 0 0;
+}
+
 .feedbackOK{
   color: var(--rq-ok);
   font-weight:600;
@@ -275,6 +300,11 @@
     padding:
       var(--riddle-pad-y-mobile, var(--choice-padding-y-mobile, var(--rq-pad-y)))
       var(--riddle-pad-x-mobile, var(--choice-padding-x-mobile, var(--rq-pad-x)));
+  }
+
+  /* opcionális: mobil cím méret külön aliasról */
+  .question{
+    font-size: var(--quiz-title-size-mobile, var(--quiz-title-size, 22px));
   }
 }
 

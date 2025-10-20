@@ -631,6 +631,58 @@ body[data-skin="legacy-default"] {
   --tt-line-height-mobile: 1.35rem;
 
 
+/* =========================================================================
+   QUIZ TEXT (Riddle/Puzzle cim + extra/megjegyzés)
+   A komponensek ezeket a tokeneket olvassák:
+   - Title: var(--quiz-title-*)
+   - Extra: var(--quiz-extra-*)
+   ========================================================================= */
+
+/* TITLE (kérdéscím / puzzle-cím) */
+--quiz-title-font-family: var(--font-sans);
+--quiz-title-size: 22px;
+--quiz-title-weight: 700;
+--quiz-title-lineh: 1.25;
+--quiz-title-letter-spacing: .2px;
+--quiz-title-transform: none;
+--quiz-title-color: var(--skin-fg);
+
+/* EXTRA / NOTE (kiegészítő sorok) */
+--quiz-extra-font-family: var(--font-sans);
+--quiz-extra-size: 14px;
+--quiz-extra-weight: 400;
+--quiz-extra-lineh: 1.4;
+--quiz-extra-letter-spacing: .1px;
+--quiz-extra-style: normal;       /* normal | italic */
+--quiz-extra-color: color-mix(in oklch, var(--skin-fg) 82%, transparent);
+--quiz-extra-align: center;       /* left|center|right */
+
+/* opcionális mobil aliasok (komponensek figyelik) */
+--quiz-title-size-mobile: 20px;
+--quiz-extra-size-mobile: 13px;
+
+/* =========================================================================
+   CHOICE LABEL TEXT (választógomb felirat tipó kiterjesztés)
+   A jelenlegi komponensek a --choice-font és --choice-color-t biztosan olvassák,
+   a lentieket későbbre előkészítjük (szín/méret/stílus egységességhez).
+   ========================================================================= */
+--choice-text-weight: 600;
+--choice-text-letter-spacing: .1px;
+--choice-text-transform: none;    /* uppercase|lowercase|capitalize */
+--choice-text-color: var(--choice-color);
+
+/* =========================================================================
+   CTA OVERLAY – body/description szöveg tipó
+   (Cím tokenek már vannak: --cta-ol-title-*)
+   ========================================================================= */
+--cta-ol-body-font-family: var(--font-sans);
+--cta-ol-body-size: 14px;
+--cta-ol-body-lineh: 1.5;
+--cta-ol-body-weight: 400;
+--cta-ol-body-letter-spacing: .1px;
+--cta-ol-body-style: normal;
+--cta-ol-body-color: color-mix(in oklch, var(--skin-fg) 85%, transparent);
+--cta-ol-body-align: center;
 
   /* =========================================================================
      DECORATIVE BACKGROUND (globális háttér réteg; opcionális)
@@ -706,5 +758,17 @@ body[data-skin="legacy-default"] {
     --cta-ol-radius: 14px;
     --cta-ol-title-size: clamp(15px, 2cqi, 18px);
     --cta-ol-pad: clamp(12px, 2.4cqi, 18px);
+
+    /* QUIZ TEXT – mobil */
+--quiz-title-size: var(--quiz-title-size-mobile, 20px);
+--quiz-extra-size: var(--quiz-extra-size-mobile, 13px);
+
+/* CTA OVERLAY body – mobil finomítás */
+--cta-ol-body-size: 13px;
+--cta-ol-body-lineh: 1.45;
+
+/* CHOICE label – mobil (ha szükséges) */
+--choice-font-mobile: 15px; /* már létezik nálad; itt csak emlékeztető */
+
   }
 }

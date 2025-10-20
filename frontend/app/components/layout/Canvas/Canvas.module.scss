@@ -32,12 +32,13 @@ body[data-skin="legacy-default"] {
   justify-content: center;
   align-items: flex-start;
   width: 100vw;
-  height: 100svh;
+  height: 100dvh;
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
 
   /* Stabilizálás: a belső növekedés ne dobja meg a külső layoutot */
-  contain: layout paint;
+
 }
 
 /* ✅ DESKTOPON: a .canvasInner NEM szab szélességet, csak középre igazít */
@@ -89,11 +90,11 @@ body[data-skin="legacy-default"] {
 }
 
 .background {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  height: var(--doc-h, 100%);
+
   /* opcionális: overflow: hidden; */
 }
 

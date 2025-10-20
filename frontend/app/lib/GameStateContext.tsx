@@ -134,11 +134,9 @@ type GameStateContextType = {
   goToNextPage: (nextPageId: string) => void;
   handleAnswer?: (page: PageData, res: { correct: boolean; choiceIdx: number; elapsedMs: number }) => void;
 
-
-
   /** 🔹 Analytics azonosítók */
-  storyId?: string;          // stabil azonosító a kampányhoz
-  sessionId?: string;       // kliens-oldali session (UUID/ULID)
+  storyId?: string;
+  sessionId?: string;
 
   globalError: string | null;
   setGlobalError: (msg: string | null) => void;
@@ -158,8 +156,8 @@ type GameStateContextType = {
 
   /** 🔹 PROGRESS (JSON nélküli univerzális becslés) */
   visitedPages: Set<string>;
-  progressValue: number;             // 0..1
-  progressDisplay: ProgressDisplay;  // milestones most üres
+  progressValue: number;
+  progressDisplay: ProgressDisplay;
 };
 
 const GameStateContext = createContext<GameStateContextType>({} as GameStateContextType);
@@ -181,6 +179,8 @@ const LS_KEYS = Object.freeze({
   storySrc: "storySrc",
   storyTitle: "storyTitle",
   skinMap: "skinByCampaignId",
+  /** ⬇️ ÚJ: per-kampány rune választások */
+  runePackMap: "runePackByCampaignId",
 });
 
 /** —————————————————————————————————————
@@ -217,6 +217,7 @@ export function resolveNextFromPage(page?: PageData | null, g: Record<string, st
   const val = (g?.[key] ?? "").toString();
   return sw.cases?.[val] ?? sw.default ?? null;
 }
+
 // Helper: storyId kinyerése (globals.storyId || file basename a storySrc-ből || storyTitle slug)
 function deriveStoryId(globals: Record<string, any>): string | undefined {
   const direct = (globals as any)?.storyId;
@@ -226,7 +227,7 @@ function deriveStoryId(globals: Record<string, any>): string | undefined {
   if (src) {
     try {
       const last = src.split("/").pop() || "";
-      const base = last.replace(/\.[a-z0-9]+$/i, ""); // levágja a .json-t
+      const base = last.replace(/\.[a-z0-9]+$/i, "");
       if (base) return base;
     } catch {}
   }
@@ -238,15 +239,45 @@ function deriveStoryId(globals: Record<string, any>): string | undefined {
   return undefined;
 }
 
+/** —————————————————————————————————————
+ * RUNE PACK normalizálás/validáció
+ * ————————————————————————————————————— */
+const DEFAULT_RUNE_SINGLE = ["ring"];
+const DEFAULT_RUNE_TRIPLE = ["ring", "arc", "dot"];
+
+type RuneChoice = { mode: "single" | "triple"; icons: string[] };
+
+function normalizeRuneChoice(input?: Partial<RuneChoice> | null): RuneChoice {
+  const mode = input?.mode === "triple" ? "triple" : "single";
+  const raw = Array.isArray(input?.icons) ? input!.icons.filter(Boolean) : [];
+  if (mode === "single") {
+    return { mode, icons: (raw.length ? [raw[0]] : DEFAULT_RUNE_SINGLE) };
+  }
+  // triple
+  const icons = raw.slice(0, 3);
+  return { mode, icons: icons.length ? icons : DEFAULT_RUNE_TRIPLE };
+}
+
+function parseRuneChoiceFromQuery(): RuneChoice | null {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  const modeParam = (sp.get("runemode") || sp.get("runeMode") || "").toLowerCase();
+  const listParam = sp.get("runes") || "";
+  if (!modeParam && !listParam) return null;
+
+  const mode: "single" | "triple" = modeParam === "triple" ? "triple" : "single";
+  const icons = listParam
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return normalizeRuneChoice({ mode, icons });
+}
 
 /** —————————————————————————————————————
  * PROGRESS: JSON nélküli becslés paraméterei
- * —————————————————————————————————————
- * A progress a meglátogatott egyedi oldalak számából dolgozik.
- * Egy fix „előtte-még” puffer miatt a csík araszol, és
- * 100%-ra ugrik, ha terminális oldal (nincs next és nincs choices).
- */
-const PROGRESS_TAIL_BUFFER = 4; // ennyit „feltételezünk” még a végéig, amíg nem észlelünk befejezést
+ * ————————————————————————————————————— */
+const PROGRESS_TAIL_BUFFER = 4;
 
 export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   /** HYDRATION-GATE */
@@ -262,7 +293,17 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [fragments, setFragments] = useState<Record<string, FragmentData>>({});
   const [globalFragments, setGlobalFragments] = useState<FragmentBank>({});
   const [globals, setGlobals] = useState<Record<string, any>>({});
-
+    /** GLOBALS API — HOISTED (a használatok elé helyezve) */
+  const setGlobal = useCallback((key: string, value: any) => {
+    if (!key) return;
+    setGlobals((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        localStorage.setItem(LS_KEYS.globals, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isMuted, setMuted] = useState<boolean>(false);
   const [currentPageId, setCurrentPageIdState] = useState<string>("landing");
@@ -272,7 +313,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
   const [flagsState, setFlagsState] = useState<Set<string>>(new Set());
 
-  /** ⬅️ ÚJ: runa képek map (flagId → png src) */
+  /** ⬅️ Rúna képek map (flagId → png src) */
   const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
 
   // I/O erőforrások
@@ -281,7 +322,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const audioEls = useRef<HTMLAudioElement[]>([]);
 
   const [storyId, setStoryId] = useState<string | undefined>(undefined);
-const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
 
   /** 🔹 PROGRESS state */
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
@@ -339,37 +380,67 @@ const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   }, [hydrated]);
 
   /** 🔹 Analytics: storyId + sessionId előkészítés */
-useEffect(() => {
-  if (!hydrated) return;
+  useEffect(() => {
+    if (!hydrated) return;
 
-  // storyId feloldása a jelenlegi globals alapján
-  const sid = deriveStoryId(globals);
-  setStoryId(sid);
+    // storyId feloldása a jelenlegi globals alapján
+    const sid = deriveStoryId(globals);
+    setStoryId(sid);
 
-  if (!sid) {
-    setSessionId(undefined);
-    return;
-  }
+    if (!sid) {
+      setSessionId(undefined);
+      return;
+    }
 
-  // init + sessionId beszerzés
-  try {
-    initAnalyticsForStory(sid);
-    const sess = getOrCreateSessionId(sid);
-    setSessionId(sess);
+    // init + sessionId beszerzés
+    try {
+      initAnalyticsForStory(sid);
+      const sess = getOrCreateSessionId(sid);
+      setSessionId(sess);
 
-    // opcionális meta feljegyzés (későbbi riportokhoz)
-const uid = getOrCreateUserId();
-setStoryMeta(sid, {
-  title: globals?.storyTitle || undefined,
-  src: globals?.storySrc || undefined,
-  userId: uid, // ⬅️ ide kerül a felhasználó azonosító
-});
+      // opcionális meta feljegyzés
+      const uid = getOrCreateUserId();
+      setStoryMeta(sid, {
+        title: globals?.storyTitle || undefined,
+        src: globals?.storySrc || undefined,
+        userId: uid,
+      });
+    } catch (e) {
+      console.warn("[analytics] init/session error", e);
+    }
+  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId]);
 
-  } catch (e) {
-    console.warn("[analytics] init/session error", e);
-  }
-}, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId]);
+  /** 🔹 Runes: query → globals.runePack (elsőbbség) */
+  useEffect(() => {
+    if (!hydrated) return;
+    // ha már van runePack a globals-ban, nem írjuk felül
+    if ((globals as any)?.runePack) return;
 
+    const fromQuery = parseRuneChoiceFromQuery();
+    if (fromQuery) {
+      setGlobal("runePack", normalizeRuneChoice(fromQuery));
+      return;
+    }
+
+    // ha nincs query, jöhet LS per-kampány
+    const sid = deriveStoryId(globals);
+    if (!sid) {
+      // nincs story azonosító → default single
+      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+      return;
+    }
+    try {
+      const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
+      const saved = map?.[sid];
+      if (saved) {
+        setGlobal("runePack", normalizeRuneChoice(saved));
+      } else {
+        setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+      }
+    } catch {
+      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+    }
+  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId, setGlobal, globals]);
 
   /** Helpers */
   const registerAbort = useCallback((ac: AbortController) => {
@@ -501,82 +572,94 @@ setStoryMeta(sid, {
 
   const hasFlag = useCallback((id: string) => flagsState.has(id), [flagsState]);
 
-  /** GLOBALS API */
-  const setGlobal = useCallback((key: string, value: any) => {
-    if (!key) return;
-    setGlobals((prev) => {
-      const next = { ...prev, [key]: value };
+
+
+  /** Convenience: storySrc setter */
+  const setStorySrc = useCallback(
+    (src: string) => {
+      if (!src) return;
+
+      // forrás elmentése
+      try { localStorage.setItem(LS_KEYS.storySrc, src); } catch {}
+      setGlobal("storySrc", src);
+
+      // ✅ Meta-prefetch
       try {
-        localStorage.setItem(LS_KEYS.globals, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
+        const baseUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
+        const cacheBust = baseUrl.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
+        const metaUrl = `${baseUrl}${cacheBust}`;
 
-/** Convenience: storySrc setter */
-const setStorySrc = useCallback(
-  (src: string) => {
-    if (!src) return;
-
-    // forrás elmentése
-    try { localStorage.setItem(LS_KEYS.storySrc, src); } catch {}
-    setGlobal("storySrc", src);
-
-    // ✅ Meta-prefetch: töltsük be a story JSON-t és tegyük be OBJektumként a globals-ba
-try {
-  const baseUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
-  const cacheBust = baseUrl.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
-  const metaUrl = `${baseUrl}${cacheBust}`;
-
-  fetch(metaUrl, { cache: "no-store" })
-    .then(r => r.json())
-    .then(story => {
-      if (story?.meta) {
-        setGlobal("meta", story.meta);
-        if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
-        if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
-        if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
-        if (story.meta?.id) setGlobal("storyId", story.meta.id);
-        try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
-        console.log("[GameState] Meta loaded:", story.meta);
+        fetch(metaUrl, { cache: "no-store" })
+          .then(r => r.json())
+          .then(story => {
+            if (story?.meta) {
+              setGlobal("meta", story.meta);
+              if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
+              if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
+              if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
+              if (story.meta?.id) setGlobal("storyId", story.meta.id);
+              try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+              console.log("[GameState] Meta loaded:", story.meta);
+            }
+          })
+          .catch(err => console.warn("[GameState] meta load error", err));
+      } catch (err) {
+        console.warn("[GameState] meta prefetch failed", err);
       }
-    })
-    .catch(err => console.warn("[GameState] meta load error", err));
-} catch (err) {
-  console.warn("[GameState] meta prefetch failed", err);
-}
 
-    // 🔄 új sztori: progress reset
-    setVisitedPages(new Set());
-    setProgressValue(0);
-    setProgressDisplay({ value: 0, milestones: [] });
+      // 🔄 új sztori: progress reset
+      setVisitedPages(new Set());
+      setProgressValue(0);
+      setProgressDisplay({ value: 0, milestones: [] });
 
-    // 🔹 Analytics re-init
-    const newGlobals = { ...globals, storySrc: src };
-    const newStoryId = deriveStoryId(newGlobals);
-    setStoryId(newStoryId);
+      // 🔹 Analytics re-init
+      const newGlobals = { ...globals, storySrc: src };
+      const newStoryId = deriveStoryId(newGlobals);
+      setStoryId(newStoryId);
 
-    if (newStoryId) {
+      if (newStoryId) {
+        try {
+          initAnalyticsForStory(newStoryId);
+          const sess = getOrCreateSessionId(newStoryId);
+          setSessionId(sess);
+
+          setStoryMeta(newStoryId, {
+            title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
+            src,
+            campaign: globals?.campaign || localStorage.getItem("campaign") || undefined,
+            userId: getOrCreateUserId(),
+          });
+        } catch (e) {
+          console.warn("[analytics] re-init/session error", e);
+        }
+      }
+
+      // ⬇️ ÚJ: runePack azonnali visszaállítás (query → LS → default)
       try {
-        initAnalyticsForStory(newStoryId);
-        const sess = getOrCreateSessionId(newStoryId);
-        setSessionId(sess);
-
-        setStoryMeta(newStoryId, {
-          title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
-          src, // itt a paraméter a biztos
-          campaign: globals?.campaign || localStorage.getItem("campaign") || undefined,
-          userId: getOrCreateUserId(),
-        });
-      } catch (e) {
-        console.warn("[analytics] re-init/session error", e);
+        // 1) query elsőbbség
+        const fromQuery = parseRuneChoiceFromQuery();
+        if (fromQuery) {
+          setGlobal("runePack", normalizeRuneChoice(fromQuery));
+        } else {
+          // 2) LS per-kampány
+          const map = parseJSON<Record<string, RuneChoice>>(
+            localStorage.getItem(LS_KEYS.runePackMap),
+            {}
+          );
+          const sid = newStoryId || deriveStoryId({ storySrc: src }) || "";
+          const saved = sid ? map?.[sid] : undefined;
+          if (saved) {
+            setGlobal("runePack", normalizeRuneChoice(saved));
+          } else {
+            setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+          }
+        }
+      } catch {
+        setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
       }
-    }
-  },
-  [setGlobal, globals] // kell a deriveStoryId-hoz
-);
-
-
+    },
+    [setGlobal, globals]
+  );
 
   /** 🔹 Rúna képek API */
   const setRuneImage = useCallback((flagId: string, url: string) => {
@@ -614,8 +697,6 @@ try {
     });
   }, []);
 
-  
-
   const goToNextPage = useCallback(
     (nextPageId: string) => {
       setCurrentPageId(nextPageId);
@@ -624,44 +705,42 @@ try {
   );
 
   const handleAnswer = useCallback((page: PageData, res: { correct: boolean; choiceIdx: number; elapsedMs: number }) => {
-  if (!page) return;
+    if (!page) return;
 
-  // 1) Globálok frissítése (score, correct, choiceIdx, elapsedMs)
-  const prevScore = Number(globals?.score ?? 0) || 0;
-  const newScore = res.correct ? prevScore + 1 : prevScore;
+    // 1) Globálok frissítése
+    const prevScore = Number(globals?.score ?? 0) || 0;
+    const newScore = res.correct ? prevScore + 1 : prevScore;
 
-  setGlobal("correct", res.correct);
-  setGlobal("choiceIdx", res.choiceIdx);
-  setGlobal("elapsedMs", res.elapsedMs);
-  setGlobal("score", newScore);
+    setGlobal("correct", res.correct);
+    setGlobal("choiceIdx", res.choiceIdx);
+    setGlobal("elapsedMs", res.elapsedMs);
+    setGlobal("score", newScore);
 
-  // 2) onAnswer.nextSwitch feloldása (támogatja: "correct", "score" vagy bármely globál kulcs)
-  let nextId: string | null = null;
-  const ns = page?.onAnswer?.nextSwitch;
-  if (ns && typeof ns === "object") {
-    const key = ns.switch;
-    const probe =
-      key === "score"   ? String(newScore) :
-      key === "correct" ? String(res.correct) :
-      String((globals as any)?.[key] ?? "");
+    // 2) onAnswer.nextSwitch feloldása
+    let nextId: string | null = null;
+    const ns = page?.onAnswer?.nextSwitch;
+    if (ns && typeof ns === "object") {
+      const key = ns.switch;
+      const probe =
+        key === "score"   ? String(newScore) :
+        key === "correct" ? String(res.correct) :
+        String((globals as any)?.[key] ?? "");
 
-    nextId =
-      (ns.cases && (ns.cases as any)[probe]) ??
-      (ns.cases && (ns.cases as any).__default) ??
-      ns.default ??
-      (page as any)?.next ??
-      null;
-  } else {
-    // Fallback: ha nincs onAnswer, essünk vissza a sima next-re
-    nextId = (page as any)?.next ?? null;
-  }
+      nextId =
+        (ns.cases && (ns.cases as any)[probe]) ??
+        (ns.cases && (ns.cases as any).__default) ??
+        ns.default ??
+        (page as any)?.next ??
+        null;
+    } else {
+      nextId = (page as any)?.next ?? null;
+    }
 
-  // 3) Navigáció
-  if (nextId) {
-    goToNextPage(nextId);
-  }
-}, [globals, setGlobal, goToNextPage]);
-
+    // 3) Navigáció
+    if (nextId) {
+      goToNextPage(nextId);
+    }
+  }, [globals, setGlobal, goToNextPage]);
 
   const setIsMuted = useCallback((value: boolean) => {
     setMuted(value);
@@ -727,7 +806,7 @@ try {
     if (!hydrated) return;
     if (!currentPageId) return;
 
-    // ⛔ Sentinel oldalak → landingre állítjuk, és nem fetch-eljük
+    // ⛔ Sentinel oldalak → landing
     if (currentPageId === "feedback" || currentPageId === "__END__") {
       const safe = "landing";
       setCurrentPageIdState(safe);
@@ -737,7 +816,7 @@ try {
       return;
     }
 
-    // ⛔ Landingnál nincs fetch – itt csak üres pageData + progress reset
+    // ⛔ Landingnál nincs fetch
     if (currentPageId === "landing") {
       setCurrentPageData(null);
       setGlobalError(null);
@@ -749,13 +828,13 @@ try {
       return;
     }
 
-    // Story forrás (globals → LS)
+    // Story forrás
     const storySrcFromGlobals = globals?.storySrc;
     const storySrcFromLS =
       typeof window !== "undefined" ? localStorage.getItem(LS_KEYS.storySrc) : null;
     const storySrc = storySrcFromGlobals || storySrcFromLS || "";
 
-    // ⛔ Ha nincs storySrc, ne fetch-eljünk (különben 404)
+    // ⛔ Ha nincs storySrc, ne fetch-eljünk
     if (!storySrc) {
       setCurrentPageData(null);
       setGlobalError(null);
@@ -771,7 +850,6 @@ try {
       try {
         setIsLoading(true);
 
-        // Mindig /page/<id>?src=...
         const url = `http://127.0.0.1:8000/page/${encodeURIComponent(
           currentPageId
         )}?src=${encodeURIComponent(storySrc)}`;
@@ -820,35 +898,32 @@ try {
         };
 
         setCurrentPageData(normalized);
-        setCurrentPageData(normalized);
 
-// ⬇️ Meta backfill: MINDIG frissítjük a meta-t az aktuális storySrc alapján
-try {
-  const metaSrc = (globals?.storySrc || localStorage.getItem(LS_KEYS.storySrc) || "")
-    .replace(/^\/?stories\//, "/stories/"); // kis normalizálás
+        // Meta refresh (mindig)
+        try {
+          const metaSrc = (globals?.storySrc || localStorage.getItem(LS_KEYS.storySrc) || "")
+            .replace(/^\/?stories\//, "/stories/");
+          if (metaSrc) {
+            const base = metaSrc.startsWith("http") ? metaSrc : `http://127.0.0.1:8000${metaSrc}`;
+            const bust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
+            const full = `${base}${bust}`;
 
-  if (metaSrc) {
-    const base = metaSrc.startsWith("http") ? metaSrc : `http://127.0.0.1:8000${metaSrc}`;
-    const bust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
-    const full = `${base}${bust}`;
-
-    fetch(full, { cache: "no-store" })
-      .then(r => r.json())
-      .then(story => {
-        if (story?.meta) {
-          setGlobal("meta", story.meta);
-          if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
-          if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
-          if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
-          if (story.meta?.id) setGlobal("storyId", story.meta.id);
-          try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
-          console.log("[GameState] Meta refreshed:", story.meta);
-        }
-      })
-      .catch(err => console.warn("[GameState] meta refresh error", err));
-  }
-} catch {}
-
+            fetch(full, { cache: "no-store" })
+              .then(r => r.json())
+              .then(story => {
+                if (story?.meta) {
+                  setGlobal("meta", story.meta);
+                  if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
+                  if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
+                  if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
+                  if (story.meta?.id) setGlobal("storyId", story.meta.id);
+                  try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+                  console.log("[GameState] Meta refreshed:", story.meta);
+                }
+              })
+              .catch(err => console.warn("[GameState] meta refresh error", err));
+          }
+        } catch {}
 
         setGlobalError(null);
       } catch (err: any) {
@@ -870,7 +945,7 @@ try {
   }, [
     hydrated,
     currentPageId,
-    globals?.storySrc, // ⬅️ változás esetén újrafut
+    globals?.storySrc,
     registerAbort,
     clearAllTimeouts,
   ]);
@@ -935,35 +1010,33 @@ try {
   }, [hydrated, currentPageId]);
 
   /** 🔹 PROGRESS: érték és display frissítése (JSON nélküli becslés) */
-useEffect(() => {
-  if (!hydrated) return;
+  useEffect(() => {
+    if (!hydrated) return;
 
-  const steps = visitedPages.size;
+    const steps = visitedPages.size;
+    const hasChoices = Array.isArray(currentPageData?.choices) && (currentPageData?.choices?.length ?? 0) > 0;
+    const nextId = resolveNextFromPage(currentPageData, globals);
+    const isTerminal = !!currentPageData && !hasChoices && !nextId;
 
-  const hasChoices = Array.isArray(currentPageData?.choices) && (currentPageData?.choices?.length ?? 0) > 0;
-  const nextId = resolveNextFromPage(currentPageData, globals);
-  const isTerminal = !!currentPageData && !hasChoices && !nextId;
+    let value = 0;
 
-  let value = 0;
+    if (isTerminal) {
+      value = 1;
+    } else if (steps <= 1) {
+      value = 0;
+    } else {
+      const effectiveSteps = steps - 1;
+      const denom = effectiveSteps + PROGRESS_TAIL_BUFFER;
+      value = Math.min(1, effectiveSteps / denom);
+    }
 
-if (isTerminal) {
-  value = 1;
-} else if (steps <= 1) {
-  // Első oldal → 0%
-  value = 0;
-} else {
-  const effectiveSteps = steps - 1; // elsőt kivonjuk
-  const denom = effectiveSteps + PROGRESS_TAIL_BUFFER;
-  value = Math.min(1, effectiveSteps / denom);
-}
-
-  setProgressValue(value);
-  setProgressDisplay({
-    value,
-    milestones: [],
-    label: undefined,
-  });
-}, [hydrated, visitedPages, currentPageData, globals]);
+    setProgressValue(value);
+    setProgressDisplay({
+      value,
+      milestones: [],
+      label: undefined,
+    });
+  }, [hydrated, visitedPages, currentPageData, globals]);
 
   return (
     <GameStateContext.Provider

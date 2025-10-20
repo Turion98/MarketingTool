@@ -99,6 +99,35 @@
   will-change: opacity;
 }
 
+/* ======= QUIZ TEXT (TITLE & EXTRA) – tipó-binding (lokális .root alatt) ======= */
+.root .title,
+.root [data-role="title"] {
+  font-family: var(--quiz-title-font-family, inherit);
+  font-size: var(--quiz-title-size, 22px);
+  font-weight: var(--quiz-title-weight, 700);
+  line-height: var(--quiz-title-lineh, 1.25);
+  letter-spacing: var(--quiz-title-letter-spacing, .2px);
+  text-transform: var(--quiz-title-transform, none);
+  color: var(--quiz-title-color, currentColor);
+  text-align: center;
+  margin: 0;
+}
+
+.root .extra,
+.root .note,
+.root .meta,
+.root [data-role="extra"] {
+  font-family: var(--quiz-extra-font-family, inherit);
+  font-size: var(--quiz-extra-size, 14px);
+  font-weight: var(--quiz-extra-weight, 400);
+  line-height: var(--quiz-extra-lineh, 1.4);
+  letter-spacing: var(--quiz-extra-letter-spacing, .1px);
+  font-style: var(--quiz-extra-style, normal);
+  color: var(--quiz-extra-color, currentColor);
+  text-align: var(--quiz-extra-align, center);
+  margin-top: 6px;
+}
+
 /* PHASE KEZELÉS – commit/feedback alatt tiltás, exitnél kifade */
 .root[data-puzzle-phase="locked"],
 .root[data-puzzle-phase="correct"],
@@ -154,7 +183,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-
 
 /* ===== gombok (választók + akciók) ===== */
 .choice,
@@ -286,6 +314,12 @@
     padding:
       var(--puzzle-btn-pad-y-mobile, var(--riddle-pad-y-mobile, var(--choice-padding-y-mobile, var(--pz-btn-pad-y))))
       var(--puzzle-btn-pad-x-mobile, var(--riddle-pad-x-mobile, var(--choice-padding-x-mobile, var(--pz-btn-pad-x))));
+  }
+
+  /* FIX: pure selector – minden attribútum-szelektor lokális osztály alatt */
+  .root .title,
+  .root [data-role="title"] {
+    font-size: var(--quiz-title-size-mobile, var(--quiz-title-size, 22px));
   }
 }
 

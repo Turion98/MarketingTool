@@ -69,11 +69,32 @@
   position: absolute;
   inset: 0;
 
-  /* fontos: a kép sarkával egyező sugár */
+/* fontos: a kép sarkával egyező sugár */
   border-radius: var(--mf-radius, 14px);
 
-  border: var(--mf-border-w, 8px) solid var(--mf-border, rgba(255, 255, 255, 0.15));
-  background: var(--mf-bg, transparent);
+  /* 🔹 BONTOTT BORDER (új) */
+  /* fallback: ha nincs külön color/style, visszaesik a régi shorthandre */
+  border-width: var(--mf-border-w, 8px);
+  border-style: var(--mf-border-style, solid);
+  /* ha van külön szín, használd azt; különben a régi --mf-border (shorthand) színe*/
+  border-color: var(--mf-border-color, transparent);
+
+  /* 🔹 Kombinált/gradientes keret támogatás kétlayeres background trükkel:
+     - 1. réteg: border-hez renderelt gradient (border-box-ra klippelve)
+     - 2. réteg: belső háttérkitöltés (padding-box-ra klippelve) */
+  background:
+    var(--mf-border-gradient, transparent) border-box,
+    var(--mf-bg, transparent) padding-box;
+
+  /* Ha NEM gradient a keret, hanem sima szín:
+     - állítsd be a border-color-t (--mf-border-color),
+     - és tartsd a fenti background első rétegét 'transparent'-en. */
+
+  /* Opcionális border-image gradient fallback:
+     - Ha be van állítva, a böngésző támogatja, felül fogja írni a border-color-t */
+  border-image: var(--mf-border-image, none);
+  border-image-slice: 1;
+
   box-shadow: var(--mf-shadow, 0 10px 20px rgba(0,0,0,0.35));
   opacity: var(--mf-opacity, 1);
 
@@ -81,8 +102,8 @@
   pointer-events: none;
   z-index: 1;
 
-  /* szépen vágja a háttérkitöltést a szegély belsejéhez */
-  background-clip: padding-box;
+  /* a belső background szépen vágva maradjon a border belső élén */
+  background-clip: border-box, padding-box;
 }
 
 /* Belső overlay (fény, textúra, üveg) */

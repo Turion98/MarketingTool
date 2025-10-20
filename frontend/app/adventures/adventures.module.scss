@@ -14,3 +14,262 @@
 .cover { height: 160px; background-size: cover; background-position:center; }
 .body { padding:16px; display:flex; flex-direction:column; gap:10px; }
 .actions { display:flex; justify-content:flex-end; }
+/* ===== Adventures – stabil kártyaelrendezés, dropdown nem tolja szét ===== */
+
+/* A kártya teste rugalmas oszlop, az akciósor a kártya aljára tapad */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 220px;        /* opcionális: egységesebb kártyamagasság */
+}
+
+.actions {
+  margin-top: auto;         /* a gombsor mindig leül a kártya aljára */
+  display: flex;
+  flex-wrap: wrap;          /* kis szélességnél törhet */
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Egységes kontroll-méret, hogy ne ugráljanak egymáshoz képest */
+.actions select,
+.actions button,
+.actions input[type="radio"] {
+  height: 34px;
+}
+.actions select,
+.actions button {
+  border-radius: 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(0,0,0,.3);
+}
+.actions button:hover,
+.actions select:hover {
+  border-color: rgba(255,255,255,.3);
+  background: rgba(255,255,255,.06);
+}
+
+/* --- Runes blokk (legördülő többes választó) --- */
+
+.runes {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-width: 240px;         /* hogy a dropdown gomb ne törjön túl könnyen */
+}
+
+/* A menü saját réteget kap, így nem tolja szét a kártyát */
+.runeDropdown { position: relative; z-index: 3; } /* gomb + horgony */
+.runeDropdownButton {
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(0,0,0,.3);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: .2s;
+  white-space: nowrap;       /* cím ne törjön több sorba */
+}
+.runeDropdownButton:hover {
+  border-color: rgba(255,255,255,.3);
+  background: rgba(255,255,255,.06);
+}
+
+/* A legördülő panel abszolút, ezért NEM változtatja a kártya magasságát */
+.runeMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(320px, 80vw);
+  max-height: 50vh;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 12px;
+  background: linear-gradient(
+    var(--contract-overlay-top, rgba(0,0,0,.80)),
+    var(--contract-overlay-bot, rgba(0,0,0,.75))
+  );
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  backdrop-filter: blur(8px);
+  z-index: 100;              /* a kártya fölé kerüljön */
+}
+
+.runeMenuList { list-style: none; margin: 0; padding: 0; }
+.runeMenuItem { padding: 4px 2px; }
+
+.runeMenuItem label {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: .15s;
+}
+.runeMenuItem label:hover { background: rgba(255,255,255,.06); }
+
+.runeMenuItem input[type="checkbox"] {
+  width: 16px; height: 16px; cursor: pointer;
+}
+
+.labelText { font-size: 13px; opacity: .9; }
+
+.orderBadge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.35);
+}
+
+.disabled { opacity: .45; cursor: not-allowed; }
+
+.runeMenuFooter {
+  display: flex; justify-content: flex-end; gap: 8px; padding-top: 6px;
+}
+.closeBtn {
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px; border-radius: 8px; cursor: pointer;
+}
+.closeBtn:hover { background: rgba(255,255,255,.08); }
+
+/* --- Kártya stabilitás finomhangolás --- */
+
+/* A kártya tartalma ne “lökje” egymást: */
+.card {
+  contain: layout paint;     /* megakadályozza, hogy a lebegő menü újrarendezze a szomszédokat */
+}
+
+/* ————————————————————————————————
+   Rune Dropdown (portal menü + gomb)
+   ———————————————————————————————— */
+
+.runeDropdown {
+  position: relative;
+  z-index: 3;
+}
+
+.runeDropdownButton {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(20,22,28,.55);
+  color: #fff;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .25s ease;
+  white-space: nowrap;
+  box-shadow: 0 0 8px rgba(255,255,255,.04) inset;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+
+.runeDropdownButton:hover {
+  border-color: rgba(255,255,255,.35);
+  background: rgba(30,32,38,.70);
+  box-shadow: 0 0 12px rgba(255,255,255,.1) inset,
+              0 2px 8px rgba(0,0,0,.35);
+}
+
+/* aktív (nyitott) állapot */
+.runeDropdownButton[aria-expanded="true"] {
+  border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.15);
+  box-shadow: 0 0 16px rgba(255,255,255,.25) inset,
+              0 4px 12px rgba(0,0,0,.6);
+}
+
+/* ——— PORTAL-BA MOUNTOLT MENÜ ——— */
+
+.runeMenu {
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 12px;
+  background: rgba(18,19,24,.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 16px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.5) inset;
+  color: #fff;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.runeMenuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.runeMenuItem {
+  padding: 4px 2px;
+}
+
+.runeMenuItem label {
+  display: grid;
+  grid-template-columns: 20px 22px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.runeMenuItem label:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.iconPreview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.labelText {
+  font-size: 13px;
+  opacity: .9;
+}
+
+.orderBadge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.35);
+}
+
+.disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.runeMenuFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.closeBtn {
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(255,255,255,.08);
+}
+
+
+/* Kisebb képernyőn a gombsor ne nyúljon túl, inkább törjön új sorba */
+@media (max-width: 520px) {
+  .actions { justify-content: flex-start; }
+  .runes { min-width: 0; }
+}

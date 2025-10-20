@@ -40,7 +40,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
   return (
     <>
-      {/* 🔹 Sticky mobile toggle wrapper a dokumentum alján jobbra */}
+      {/* Mobil toggle – a viewport jobb alsó sarkában */}
       <div className={s.mobileRow}>
         <button
           type="button"
@@ -61,20 +61,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
         aria-label="Actions sidebar"
         data-testid="action-bar"
       >
-        {/* 🔹 Sticky header */}
-        <div className={s.header}>
-          <span className={s.title}>Actions</span>
-          <button
-            type="button"
-            className={s.close}
-            onClick={() => setOpen(false)}
-            aria-label="Close actions"
-          >
-            Close
-          </button>
-        </div>
-
-        {/* normál csoportok (scrollozódnak) */}
+        {/* TARTALMI GOMBOK */}
         <div className={s.group}>
           <button
             type="button"
@@ -110,8 +97,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </button>
         </div>
 
-        {/* 🔹 Sticky lábléc – itt vannak az elsődleges akciók */}
-        <div className={`${s.group} ${s.stickyFooter}`}>
+        {/* FOOTER – mindig a panel alján, nem absolute, így nem csúszik össze semmivel */}
+        <div className={s.footer}>
           <button
             type="button"
             className={`${s.btn} ${s.primary}`}
