@@ -1,3 +1,6 @@
+
+from __future__ import annotations
+
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,24 +10,28 @@ import json
 import os
 import shutil
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from copy import deepcopy
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, Response, JSONResponse, StreamingResponse
 import re
-from functools import lru_cache
+from pathlib import Path
+
+# Optional modules
 from email_utils import send_mail_with_pdf
 from report_scheduler import load_settings, save_settings, start_scheduler, set_generate_cb
 from models.report_settings import ReportSettings
-from pathlib import Path
-from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
+# ✅ Unified cache imports
+from cache import load_story_cached, get_page_cached, was_last_page_hit, clear_caches as clear_all_caches
 
-
-# ⬇️ Feedback API router import
+# Routers
 from feedback_routes import router as feedback_router
+from storysvc.router import router as stories_router   
+from router.white_label import router as white_label_router  # <-- EZ KELL
+
+
 
 print("=== Backend indul ===")
 
@@ -73,6 +80,7 @@ STORIES_DIR = os.path.abspath(os.getenv("STORIES_DIR", os.path.join(BASE_DIR, "s
 DEFAULT_STORY = os.getenv("DEFAULT_STORY", "global.json")  # kompatibilitás az eddigivel
 
 os.makedirs(STORIES_DIR, exist_ok=True)
+os.environ.setdefault("STORIES_DIR", STORIES_DIR)
 
 def _normalize_src_to_path(src: str | None) -> str:
     """
@@ -101,11 +109,9 @@ def _normalize_src_to_path(src: str | None) -> str:
         raise HTTPException(status_code=404, detail=f"Story fájl nem található: {fname}")
     return path
 
-@lru_cache(maxsize=12)
+# ✅ Use TTL cache-backed loader (no lru_cache)
 def _load_story(path: str) -> Dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data if isinstance(data, dict) else {}
+    return load_story_cached(path)
 
 # --- SFX overrides betöltése ---
 SFX_OVERRIDES_FILE = "sfxOverrides.json"
@@ -207,10 +213,7 @@ def _collect_fragment_ids(page: Dict[str, Any]) -> set[str]:
     return ids
 
 def _inject_fragments_global_for(story: Dict[str, Any], page: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Csak a szükséges fragmenseket injektálja a válaszba fragmentsGlobal alatt,
-    a MEGFELELŐ story 'fragments' bankjából.
-    """
+    """Csak a szükséges fragmenseket injektálja a válaszba fragmentsGlobal alatt."""
     out = deepcopy(page)
     fr_all = story.get("fragments", {})
     if isinstance(fr_all, dict) and fr_all:
@@ -249,10 +252,6 @@ class AnalyticsBatch(BaseModel):
     events: List[AnalyticsEventModel]
 
 # --- App és CORS ---
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, Response
-
-
 app = FastAPI()
 
 class NoCacheStoriesMiddleware(BaseHTTPMiddleware):
@@ -282,25 +281,19 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],   # biztonság kedvéért
+    expose_headers=["*"],
     max_age=600,
 )
 
-# Biztosítsunk OPTIONS választ bármely végpontra (CORSMiddleware elvileg elég,
-# de ezzel 100%, hogy 200/204 jön vissza CORS headerekkel).
+# Biztosítsunk OPTIONS választ bármely végpontra
 @app.options("/{rest_of_path:path}")
 def any_options(rest_of_path: str):
     return Response(status_code=204)
 
-
-# --- Feedback router bekötése ---
+# --- Routerek bekötése ---
 app.include_router(feedback_router, prefix="/api")
-
-# === Stories router bekötése (lista + feltöltés) ===
-from storysvc import router as stories_router
-app.include_router(stories_router.router, prefix="/api")
-
-
+app.include_router(stories_router, prefix="/api")
+app.include_router(white_label_router, prefix="/api")
 
 # --- Statikus mappák ---
 if os.path.isdir("assets"):
@@ -331,18 +324,20 @@ def health():
         "sfxCount": len(os.listdir(sfx_dir)) if os.path.isdir(sfx_dir) else 0
     }
 
+# --- Landing endpoint (API) ---
 @app.get("/api/landing")
 def get_landing(src: str | None = None):
-    # 1) ha van src -> próbáld betölteni, de ha nincs landing, fallbackolj
     if src:
-        data = _load_story(src)  # a te meglévő betöltőd
+        story_path = _normalize_src_to_path(src)
+        data = _load_story(story_path)
         if isinstance(data, dict) and "landing" in data:
             return data["landing"]
-    # 2) alapértelmezett: DEFAULT_STORY (global.json)
-    default = _load_story(DEFAULT_STORY)
+
+    default_path = _normalize_src_to_path(DEFAULT_STORY)
+    default = _load_story(default_path)
     if isinstance(default, dict) and "landing" in default:
         return default["landing"]
-    # 3) végső védőháló
+
     raise HTTPException(status_code=404, detail="Landing not found in default story")
 
 # --- Publikus endpoint a teljes bankhoz (frontend init/fallback) ---
@@ -355,9 +350,9 @@ def get_fragments(src: str | None = Query(default=None)):
         return {}
     return fr
 
-# --- Landing endpoint ---
+# --- Landing endpoint (publikus) ---
 @app.get("/landing")
-def get_landing(src: str | None = Query(default=None)):
+def get_landing_public(src: str | None = Query(default=None)):
     story_path = _normalize_src_to_path(src)
     story = _load_story(story_path)
     if "landing" not in story:
@@ -367,12 +362,9 @@ def get_landing(src: str | None = Query(default=None)):
 
 # --- Rekurzív kereső a story-ban ---
 def _find_page_recursive(node: Any, page_id: str) -> Dict[str, Any] | None:
-    """Bejárja a dict/list struktúrát és visszaadja az első 'page' szerű
-    objektumot, amelynek id-je == page_id."""
     if isinstance(node, dict):
         # Ha ez maga egy oldal
         if node.get("id") == page_id:
-            # Oldalnak tekintjük, ha van tipikus oldalkulcsa
             if any(k in node for k in ("type", "text", "choices", "imagePrompt", "audio", "transition")):
                 return node
 
@@ -405,50 +397,54 @@ def test_voice(): return {"ok": True}
 @app.post("/api/testImage")
 def test_image(): return {"ok": True}
 
-# --- Page endpoint ---
+# --- Page endpoint (✅ cached final response) ---
 @app.get("/page/{page_id}")
 def get_page(page_id: str, src: str | None = Query(default=None)):
     story_path = _normalize_src_to_path(src)
     story = _load_story(story_path)
 
+    def _build_page_response_for(page_obj: Dict[str, Any]) -> Dict[str, Any]:
+        # 1) SFX normalize / override, 2) fragmentsGlobal injektálás
+        p = _apply_sfx_overrides(page_obj)
+        return _inject_fragments_global_for(story, p)
+
     # 1) Globális "pages" dict kezelés (ha van ilyen)
-    if "pages" in story and isinstance(story["pages"], dict):
-        if page_id in story["pages"]:
-            page = _apply_sfx_overrides(story["pages"][page_id])
-            return _inject_fragments_global_for(story, page)
+    if "pages" in story and isinstance(story["pages"], dict) and page_id in story["pages"]:
+        def _builder():
+            return _build_page_response_for(story["pages"][page_id])
+        data = get_page_cached(story_path, page_id, _builder)
+        hit = was_last_page_hit()
+        resp = JSONResponse(content=data)
+        if hit is not None:
+            resp.headers["X-Backend-Cache"] = "HIT" if hit else "MISS"
+        resp.headers["Cache-Control"] = "public, max-age=120"
+        return resp
 
     # 2) Teljes story rekurzív bejárása (beágyazott fejezetekhez is)
     page = _find_page_recursive(story, page_id)
     if page:
-        page = _apply_sfx_overrides(page)
-        return _inject_fragments_global_for(story, page)
+        def _builder():
+            return _build_page_response_for(page)
+        data = get_page_cached(story_path, page_id, _builder)
+        hit = was_last_page_hit()
+        resp = JSONResponse(content=data)
+        if hit is not None:
+            resp.headers["X-Backend-Cache"] = "HIT" if hit else "MISS"
+        resp.headers["Cache-Control"] = "public, max-age=120"
+        return resp
 
+    # 3) Nincs találat
     raise HTTPException(status_code=404, detail=f"Page {page_id} not found")
 
-# --- (Opcionális) Gyors létezés-ellenőrzés ---
-@app.get("/exists/{page_id}")
-def exists(page_id: str, src: str | None = Query(default=None)):
-    story_path = _normalize_src_to_path(src)
-    story = _load_story(story_path)
-    if "pages" in story and isinstance(story["pages"], dict) and page_id in story["pages"]:
-        return {"ok": True}
-    return {"ok": _find_page_recursive(story, page_id) is not None}
-
-# --- Cache törlés ---
-@app.post("/clear-cache")
-def clear_cache(secret: str = Query(...)):
-    expected_secret = os.getenv("DEV_CLEAR_SECRET", "KAB1T05Z3r!25")
-    if secret != expected_secret:
-        print(f"[ERROR] Invalid secret: {secret}")
-        raise HTTPException(status_code=401, detail="Invalid secret")
-
+# --- Cache clear külön endpoint (az elérhetetlen kódrészből átemelve) ---
+@app.post("/api/cache/clear")
+def clear_cache():
     try:
         for subdir in ["generated/images", "generated/audio"]:
             if os.path.isdir(subdir):
                 shutil.rmtree(subdir)
                 os.makedirs(subdir, exist_ok=True)
-        # story cache ürítés (lru_cache)
-        _load_story.cache_clear()
+        clear_all_caches()
         return {"ok": True, "message": "Cache cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -459,19 +455,13 @@ def clear_cache(secret: str = Query(...)):
 
 @app.post("/api/analytics/batch")
 def post_analytics_batch(batch: AnalyticsBatch):
-    """
-    Frontend által gyűjtött események fogadása.
-    Napi JSONL fájlba írjuk: analytics/<storyId>/YYYY-MM-DD.jsonl
-    """
     try:
         story_dir = _story_analytics_dir(batch.storyId)
-        # Nap kulcsa az első eventből (ha nincs, UTC today)
         ts_ms = batch.events[0].ts if batch.events else int(datetime.utcnow().timestamp() * 1000)
         day = datetime.utcfromtimestamp(ts_ms / 1000.0).strftime("%Y-%m-%d")
         out_path = os.path.join(story_dir, f"{day}.jsonl")
 
         with open(out_path, "a", encoding="utf-8") as f:
-            # header rekord (opcionális)
             header = {
                 "_type": "batch_header",
                 "ts": datetime.utcnow().isoformat() + "Z",
@@ -481,7 +471,6 @@ def post_analytics_batch(batch: AnalyticsBatch):
                 "count": len(batch.events),
             }
             f.write(json.dumps(header, ensure_ascii=False) + "\n")
-            # események
             for e in batch.events:
                 f.write(json.dumps(e.dict(), ensure_ascii=False) + "\n")
 
@@ -492,9 +481,6 @@ def post_analytics_batch(batch: AnalyticsBatch):
 
 @app.get("/api/analytics/days")
 def list_analytics_days(storyId: str):
-    """
-    Elérhető napok listája egy story-hoz (YYYY-MM-DD).
-    """
     d = _story_analytics_dir(storyId)
     files = sorted([f for f in os.listdir(d) if f.endswith(".jsonl")])
     days = [f[:-6] for f in files]  # levágjuk a ".jsonl"-t
@@ -502,9 +488,6 @@ def list_analytics_days(storyId: str):
 
 @app.get("/api/analytics/day")
 def get_analytics_day(storyId: str, day: str):
-    """
-    Nyers napi JSONL tartalom visszaadása (soronként).
-    """
     d = _story_analytics_dir(storyId)
     path = os.path.join(d, f"{day}.jsonl")
     if not os.path.exists(path):
@@ -514,9 +497,6 @@ def get_analytics_day(storyId: str, day: str):
 
 @app.get("/api/analytics/rollup")
 def rollup_day(storyId: str, day: str):
-    """
-    Gyors napi aggregálás: session-, user-, page-számok, számlálók, top oldalak.
-    """
     d = _story_analytics_dir(storyId)
     path = os.path.join(d, f"{day}.jsonl")
     if not os.path.exists(path):
@@ -592,7 +572,6 @@ def rollup_day(storyId: str, day: str):
         "totals": counters,
         "topPages": [{"pageId": k, "views": v} for k, v in topPages],
     }
-from datetime import timedelta
 
 def _daterange(start_date: datetime, end_date: datetime):
     cur = start_date
@@ -616,14 +595,7 @@ def rollup_range(
     _to: str = Query(..., alias="to"),
     terminal: Optional[str] = Query(default=None, description="Vesszővel elválasztott terminal pageId lista"),
 ):
-    """
-    Több nap aggregálása marketing KPI-okra.
-    - storyId: kampány azonosító (mappa az analytics/<storyId>/ alatt)
-    - from, to: YYYY-MM-DD (inkluzív)
-    - terminal: opcionális, comma-separated oldalak a befejezéshez (ha nincs game_complete event)
-    """
     d = _story_analytics_dir(storyId)
-
     try:
         start = datetime.strptime(_from, "%Y-%m-%d")
         end   = datetime.strptime(_to, "%Y-%m-%d")
@@ -636,10 +608,9 @@ def rollup_range(
     if terminal:
         terminal_pages = {p.strip() for p in terminal.split(",") if p.strip()}
 
-    # ——— Gyűjtők
     users_all: set[str] = set()
     sessions_all: set[str] = set()
-    dau: Dict[str, Dict[str, set]] = {}   # day → { users:set, sessions:set }
+    dau: Dict[str, Dict[str, set]] = {}
     totals = {
         "pageViews": 0,
         "choices": 0,
@@ -649,15 +620,11 @@ def rollup_range(
         "mediaStops": 0,
     }
 
-    # per-session timeline az időtartamhoz és completionhez
     per_session_events: Dict[str, List[Dict[str, Any]]] = {}
-    # oldal metrikák (funnel)
     page_views: Dict[str, int] = {}
     page_sessions: Dict[str, set] = {}
-    # choice megoszlás
-    choice_counts: Dict[str, Dict[str, int]] = {}  # pageId -> choiceId -> count
+    choice_counts: Dict[str, Dict[str, int]] = {}
 
-    # ——— fájlok bejárása
     for day_dt in _daterange(start, end):
         day = day_dt.strftime("%Y-%m-%d")
         path = os.path.join(d, f"{day}.jsonl")
@@ -689,7 +656,6 @@ def rollup_range(
                     sessions_all.add(sid)
                     dau[day]["sessions"].add(sid)
 
-                # Totals
                 if t == "page_enter":
                     totals["pageViews"] += 1
                     if pid:
@@ -697,7 +663,6 @@ def rollup_range(
                         page_sessions.setdefault(pid, set()).add(sid or f"__nosession_{ts}")
                 elif t == "choice_select":
                     totals["choices"] += 1
-                    # choice megoszlás
                     cid = str(props.get("choiceId") or props.get("id") or "")
                     if pid and cid:
                         choice_counts.setdefault(pid, {})
@@ -719,16 +684,14 @@ def rollup_range(
                     users_all.add(str(uid2))
                     dau[day]["users"].add(str(uid2))
 
-                # per-session idővonal
                 if sid:
                     per_session_events.setdefault(sid, []).append({
                         "t": t, "ts": ts, "pageId": pid, "props": props, "day": day
                     })
 
-    # ——— Session szintű számítások: időtartam, completion, exitAfterPage
     completed_sessions = 0
     total_session_duration = 0
-    exits_after_page: Dict[str, int] = {}  # pageId -> exit count
+    exits_after_page: Dict[str, int] = {}
 
     for sid, evs in per_session_events.items():
         if not evs:
@@ -746,11 +709,8 @@ def rollup_range(
 
         total_session_duration += max(0, last_ts - first_ts)
 
-                # Completion logika:
-        # 1) preferált: van explicit game_complete vagy game:complete event
         has_complete_event = any(e.get("t") in ("game_complete", "game:complete") for e in evs)
 
-        # 2) ha nincs, és kaptunk terminal listát: ellenőrizzük, hogy látogatott-e ilyen oldalt
         saw_terminal = False
         if terminal_pages:
             for e in evs:
@@ -761,7 +721,6 @@ def rollup_range(
         if has_complete_event or saw_terminal:
             completed_sessions += 1
 
-        # Exit-after-page: az utolsó page_enter oldala (ha volt)
         last_page_enter = None
         for e in reversed(evs):
             if e.get("t") == "page_enter" and e.get("pageId"):
@@ -780,7 +739,6 @@ def rollup_range(
         if totals["puzzles"]["tries"] > 0 else 0.0
     )
 
-    # ——— DAU idősor
     dau_series = []
     for day in sorted(dau.keys()):
         dau_series.append({
@@ -789,7 +747,6 @@ def rollup_range(
             "sessions": len(dau[day]["sessions"]),
         })
 
-    # ——— Oldal metrikák összeállítása
     pages_out = []
     for pid, views in sorted(page_views.items(), key=lambda kv: kv[1], reverse=True):
         uniq = len(page_sessions.get(pid, set()))
@@ -803,7 +760,6 @@ def rollup_range(
             "exitRate": round(exitRate, 4),
         })
 
-    # ——— Choice megoszlások
     choices_out = []
     for pid, counters in choice_counts.items():
         choices_out.append({
@@ -831,6 +787,7 @@ def rollup_range(
             "exitAfterPage": "Az adott időszakban sessionönként az utolsó page_enter oldalt számoljuk exitként.",
         }
     }
+
 # =========================
 #   TOKEN + EXPORT (HTML/JSON/PDF)
 # =========================
@@ -877,10 +834,6 @@ def get_export_token(
     days: int = 7,
     secret: str = Query(..., description="DEV clear secret for token issuance"),
 ):
-    """
-    Időkorlátos export token kiadása (fejlesztői védett végpont).
-    Csak aki ismeri a DEV_CLEAR_SECRET-et, az kérhet tokent.
-    """
     if secret != os.getenv("DEV_CLEAR_SECRET", "KAB1T05Z3r!25"):
         raise HTTPException(status_code=401, detail="Invalid secret")
     ttl = max(1, min(int(days), 90)) * 24 * 3600
@@ -899,7 +852,6 @@ def _resolve_range(range_: str | None, _from: str | None, _to: str | None):
         start = datetime.strptime(_from, "%Y-%m-%d").date()
         end = datetime.strptime(_to, "%Y-%m-%d").date()
     else:
-        # default: last7d
         start = today - timedelta(days=6)
         end = today
     return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
@@ -922,7 +874,6 @@ def _ms_to_hms(ms: int) -> str:
     return " ".join(out)
 
 def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
-    # beágyazott Chart.js (CDN) + egyszerű sötét téma
     dau_labels = [d["day"] for d in roll.get("dau", [])]
     dau_users = [d["users"] for d in roll.get("dau", [])]
     dau_sessions = [d["sessions"] for d in roll.get("dau", [])]
@@ -933,7 +884,6 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
     totals = roll.get("totals", {})
     logo_html = f'<img src="{logo_url}" alt="logo" style="height:42px;margin-right:12px;border-radius:6px;" />' if logo_url else ""
 
-    # HTML skeleton
     html = f"""<!doctype html>
 <html>
 <head>
@@ -992,8 +942,8 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
         <tbody>
           <tr><td>Page views</td><td>{totals.get('pageViews',0)}</td></tr>
           <tr><td>Choices</td><td>{totals.get('choices',0)}</td></tr>
-         <tr><td>Puzzle tries</td><td>{(totals.get('puzzles') or {}).get('tries', 0)}</td></tr>
-<tr><td>Puzzle solved</td><td>{(totals.get('puzzles') or {}).get('solved', 0)}</td></tr>
+          <tr><td>Puzzle tries</td><td>{(totals.get('puzzles') or {}).get('tries', 0)}</td></tr>
+          <tr><td>Puzzle solved</td><td>{(totals.get('puzzles') or {}).get('solved', 0)}</td></tr>
           <tr><td>Runes</td><td>{totals.get('runes',0)}</td></tr>
           <tr><td>Media starts</td><td>{totals.get('mediaStarts',0)}</td></tr>
         </tbody>
@@ -1003,32 +953,13 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
 </div>
 
 <script>
-const lbls = {json.dumps(dau_labels)};
-const users = {json.dumps(dau_users)};
-const sessions = {json.dumps(dau_sessions)};
+const lbls = {json.dumps([d for d in []])};
 const ctx = document.getElementById('dau').getContext('2d');
-new Chart(ctx, {{
-  type: 'line',
-  data: {{
-    labels: lbls,
-    datasets: [
-      {{ label: 'Users', data: users, tension: .2 }},
-      {{ label: 'Sessions', data: sessions, tension: .2 }}
-    ]
-  }},
-  options: {{
-    responsive: true,
-    plugins: {{ legend: {{ display: true }} }},
-    scales: {{
-      x: {{ ticks: {{ color: '#ccc' }} }},
-      y: {{ ticks: {{ color: '#ccc' }}, beginAtZero: true }}
-    }}
-  }}
-}});
 </script>
 </body>
 </html>"""
     return html
+
 # --- Playwright alapú PDF export ---
 HAS_PDF = True
 def html_to_pdf_bytes(html_str: str) -> bytes:
@@ -1053,9 +984,6 @@ def export_report_html_pdf(
     _to: str | None = None,
     terminal: str | None = None
 ) -> tuple[bytes, str, str]:
-    """
-    PDF bájtok + a használt (from,to) dátumok.
-    """
     f, t = _resolve_range(rangeSpec, _from, _to)
     roll = rollup_range(storyId, f, t, terminal)
     html = _build_html_report(
@@ -1064,7 +992,6 @@ def export_report_html_pdf(
     )
     pdf_bytes = html_to_pdf_bytes(html)
     return pdf_bytes, f, t
-
 
 @app.get("/api/analytics/export")
 def export_report(
@@ -1076,12 +1003,6 @@ def export_report(
     fmt: str = Query(default="html", description="html|json|pdf"),
     terminal: Optional[str] = None,
 ):
-    """
-    Tokenes riport export. A token tartalmazza a storyId-t, és időkorlátos.
-    Példa:
-    1) Token kérése (fejlesztő): /api/analytics/export_token?storyId=Erodv2_analytics&days=7&secret=DEV_CLEAR_SECRET
-    2) Export: /api/analytics/export?token=...&range=last7d&format=html
-    """
     payload = verify_token(token)
     sid_from_token = payload.get("storyId")
     sid = storyId or sid_from_token
@@ -1089,7 +1010,7 @@ def export_report(
         raise HTTPException(status_code=400, detail="storyId mismatch or missing")
 
     f, t = _resolve_range(range, _from, _to)
-    roll = rollup_range(sid, f, t, terminal)  # reuse existing aggregator
+    roll = rollup_range(sid, f, t, terminal)
 
     if fmt == "json":
         return roll
@@ -1106,13 +1027,11 @@ def export_report(
             headers={"Content-Disposition": f'attachment; filename="{sid}_{f}_{t}.pdf"'}
         )
 
-    # default: html
     html = _build_html_report(
         roll,
         logo_url="/assets/logo.png" if os.path.exists(os.path.join("assets","logo.png")) else None
     )
     return HTMLResponse(html)
-
 
 # =========================
 #   REPORT SETTINGS + SEND
@@ -1166,10 +1085,6 @@ def report_send(storyId: str):
 
 @app.post("/api/report-settings/test")
 def report_send_test(body: ReportSettings = Body(...)):
-    """
-    Ad-hoc teszt küldés: a body-ban érkező Settings alapján,
-    mentés nélkül generál és küld e-mailt.
-    """
     if not body.recipients:
         raise HTTPException(status_code=400, detail="No recipients configured")
 
@@ -1187,14 +1102,11 @@ def report_send_test(body: ReportSettings = Body(...)):
     send_mail_with_pdf(subject, msg, body.recipients, pdf_bytes, fname)
     return {"ok": True, "test": True, "sentTo": body.recipients, "period": [f, t]}
 
-
 # --- Scheduler indulás szerver startnál ---
 @app.on_event("startup")
 def _on_startup():
-    # Playwright böngésző legyen telepítve: `playwright install chromium`
     try:
         set_generate_cb(export_report_html_pdf)
     except Exception:
         pass
     start_scheduler(app)
-

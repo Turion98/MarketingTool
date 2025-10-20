@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ParallaxBackground from "@/app/components/ParallaxBackground/ParallaxBackground";
 import { layers } from "@/app/components/LayersConfig";
@@ -9,9 +8,7 @@ import styles from "./adventures.module.scss";
 import ReportDrawer from "../components/ReportDrawer/ReportDrawer";
 import ReportScheduleForm from "../components/ReportScheduleForm/ReportScheduleForm";
 import { loadTokens } from "@/app/lib/tokenLoader";
-
-// Ikon registry kulcsaihoz
-import { ICON_REGISTRY } from "@/app/lib/IconRegistry";
+import CampaignCard, { type RuneChoice } from "./components/CampaignCard";
 
 type StoryMeta = {
   id: string;
@@ -25,15 +22,82 @@ type StoryMeta = {
 
 type SkinMeta = { id: string; title: string; preview?: string };
 
-// Rune választás per-kampány
-type RuneChoice = { mode: "single" | "triple"; icons: string[] };
-
 const SKIN_LS_KEY = "skinByCampaignId";
-const RUNE_LS_KEY = "runePackByCampaignId"; // per-campaign rune választás
+const RUNE_LS_KEY = "runePackByCampaignId";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
-  "http://127.0.0.1:8000";
+/* =========================
+   Többlépcsős történetlista betöltés
+   ========================= */
+
+function envBase() {
+  const v = process.env.NEXT_PUBLIC_API_BASE || "";
+  return v ? v.replace(/\/+$/, "") : "";
+}
+function curOrigin() {
+  return typeof window !== "undefined" ? window.location.origin.replace(/\/+$/, "") : "";
+}
+
+function buildStoryCandidates(): string[] {
+  const env = envBase();
+  const origin = curOrigin();
+  const dev = "http://127.0.0.1:8000";
+
+  const urls: string[] = [];
+  if (env) urls.push(`${env}/api/stories`);             // 1) explicit backend
+  if (origin) urls.push(`${origin}/api/stories`);       // 2) same-origin API (ha van proxy)
+  urls.push(`/stories/registry.json`);                  // 3) statikus fallback ugyanazon originről
+  urls.push(`${dev}/api/stories`);                      // 4) DEV backend
+  return Array.from(new Set(urls));
+}
+
+function normalizeStories(payload: any): StoryMeta[] | null {
+  // forma A: tömb
+  if (Array.isArray(payload)) return payload as StoryMeta[];
+  // forma B: { stories: [...] }
+  if (payload && Array.isArray(payload.stories)) return payload.stories as StoryMeta[];
+  return null;
+}
+
+async function tryFetch(url: string): Promise<StoryMeta[] | null> {
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) return null;
+  const j = await r.json();
+  const norm = normalizeStories(j);
+  if (!norm) return null;
+
+  // registry.json-ból hiányozhat a jsonSrc → képezzük le
+  return norm.map((s: any) => {
+    const id = s?.id || deriveStoryId(s);
+    const jsonSrc =
+      s?.jsonSrc ||
+      (typeof id === "string" && id ? `/stories/${id}.json` : undefined);
+    return { ...s, id, jsonSrc } as StoryMeta;
+  });
+}
+
+async function fetchStoriesWithMultiFallback(): Promise<StoryMeta[]> {
+  const urls = buildStoryCandidates();
+  let lastErr: any = null;
+  for (const u of urls) {
+    try {
+      const res = await tryFetch(u);
+      if (res && res.length) {
+        if (u.includes("127.0.0.1")) console.info("[Adventures] DEV fallback @", u);
+        if (u.endsWith("/stories/registry.json")) console.info("[Adventures] Static registry @", u);
+        return res;
+      }
+      console.warn("[Adventures] no data @", u);
+    } catch (e) {
+      lastErr = e;
+      console.warn("[Adventures] fetch error @", u, e);
+    }
+  }
+  throw lastErr || new Error("No story source succeeded");
+}
+
+/* =========================
+   Segédek
+   ========================= */
 
 function deriveStoryId(a: Partial<StoryMeta> & Record<string, any>): string {
   if (a?.id) return String(a.id);
@@ -45,43 +109,36 @@ function deriveStoryId(a: Partial<StoryMeta> & Record<string, any>): string {
   return "unknown";
 }
 
-// Default ikonok (fallback)
-const DEFAULT_SINGLE = ["ring"];
-const DEFAULT_TRIPLE = ["ring", "arc", "dot"];
+/* =========================
+   Komponens
+   ========================= */
 
 export default function AdventuresPage() {
   const router = useRouter();
+
+  // adat betöltés
   const [items, setItems] = useState<StoryMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  // modálisok
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [scheduleFor, setScheduleFor] = useState<string | null>(null);
 
-  // Skin registry + per-kampány beállítások
+  // skinek & kiválasztások
   const [skins, setSkins] = useState<SkinMeta[]>([]);
   const [skinMap, setSkinMap] = useState<Record<string, string>>({});
 
-  // Rune választások per-kampány
+  // runes per kampány
   const [runeMap, setRuneMap] = useState<Record<string, RuneChoice>>({});
 
-  // Legördülő menü nyitottsága (storyId szerint)
-  const [openRuneMenuFor, setOpenRuneMenuFor] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  // A legördülő portál pozíciója (gomb alá)
-  const [menuPos, setMenuPos] = useState<{ left: number; top: number } | null>(null);
-
-  // Ikon kulcsok a registry-ből
-  const iconKeys = useMemo(() => Object.keys(ICON_REGISTRY || {}), []);
-
+  // sztorik betöltése fallback lánccal
   useEffect(() => {
     (async () => {
       try {
         setErr(null);
         setLoading(true);
-        const r = await fetch(`${API_BASE}/api/stories`, { cache: "no-store" });
-        if (!r.ok) throw new Error(`GET /api/stories ${r.status}`);
-        const list = (await r.json()) as StoryMeta[];
+        const list = await fetchStoriesWithMultiFallback();
         setItems(Array.isArray(list) ? list : []);
       } catch (e: any) {
         setErr(e?.message || "Nem sikerült betölteni a sztorikat.");
@@ -92,7 +149,7 @@ export default function AdventuresPage() {
     })();
   }, []);
 
-  // Skin registry + LS visszatöltés + rune választások visszatöltése
+  // skinek + localStorage visszatöltés
   useEffect(() => {
     fetch("/skins/registry.json", { cache: "no-store" })
       .then((r) => r.json())
@@ -102,49 +159,21 @@ export default function AdventuresPage() {
     try {
       const raw = localStorage.getItem(SKIN_LS_KEY);
       if (raw) setSkinMap(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
 
     try {
       const rawR = localStorage.getItem(RUNE_LS_KEY);
       if (rawR) setRuneMap(JSON.parse(rawR));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, []);
 
-  // Kívülre kattintásra zárjuk a nyitott menüt
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!openRuneMenuFor) return;
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenRuneMenuFor(null);
-        setMenuPos(null);
-      }
-    }
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setOpenRuneMenuFor(null);
-        setMenuPos(null);
-      }
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onEsc);
-    };
-  }, [openRuneMenuFor]);
-
+  // persist helpers
   const persistSkin = (campaignId: string, skinId: string) => {
     const next = { ...skinMap, [campaignId]: skinId };
     setSkinMap(next);
     try {
       localStorage.setItem(SKIN_LS_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   };
 
   const persistRunes = (campaignId: string, choice: RuneChoice) => {
@@ -152,54 +181,24 @@ export default function AdventuresPage() {
     setRuneMap(next);
     try {
       localStorage.setItem(RUNE_LS_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   };
 
   const applySkin = async (skinId?: string) => {
     if (!skinId) return;
     try {
       await loadTokens(`/skins/${skinId}.json?v=${Date.now()}`);
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   };
 
-  // Kampányhoz aktuális rune choice (defaulttal)
-  const getChoice = (storyId: string): RuneChoice => {
-    const saved = runeMap[storyId];
-    if (saved?.mode === "single") {
-      return {
-        mode: "single",
-        icons: saved.icons?.length ? saved.icons.slice(0, 1) : DEFAULT_SINGLE,
-      };
-    }
-    if (saved?.mode === "triple") {
-      const picked = Array.isArray(saved.icons) ? saved.icons.slice(0, 3) : [];
-      return {
-        mode: "triple",
-        icons: picked.length ? picked : DEFAULT_TRIPLE,
-      };
-    }
-    return { mode: "single", icons: DEFAULT_SINGLE };
+  // prop-szintű handler a kártyáknak
+  const handleSkinChange = async (storyId: string, skinId: string) => {
+    persistSkin(storyId, skinId);
+    await applySkin(skinId); // élő előnézet
   };
 
-  // Kattintási sorrend szervezése (triple módban)
-  const toggleIcon = (storyId: string, key: string) => {
-    const prev = getChoice(storyId);
-    if (prev.mode === "single") {
-      persistRunes(storyId, { mode: "single", icons: [key] });
-      return;
-    }
-    const cur = [...prev.icons];
-    const idx = cur.indexOf(key);
-    if (idx >= 0) {
-      cur.splice(idx, 1);
-    } else {
-      if (cur.length < 3) cur.push(key);
-    }
-    persistRunes(storyId, { mode: "triple", icons: cur });
+  const handleRunesChange = (storyId: string, choice: RuneChoice) => {
+    persistRunes(storyId, choice);
   };
 
   if (loading) {
@@ -243,247 +242,32 @@ export default function AdventuresPage() {
         {items.map((a) => {
           const storyId = deriveStoryId(a);
           const cover =
-            a.coverImage ||
-            (a as any)?.meta?.coverImage ||
-            "/assets/covers/default.jpg";
+            a.coverImage || (a as any)?.meta?.coverImage || "/assets/covers/default.jpg";
           const jsonSrc = a.jsonSrc || `/stories/${storyId}.json`;
           const startPageId = a.startPageId || "ch1_pg1";
           const title = a.title || storyId;
           const blurb = a.description || "";
 
           const selectedSkin = skinMap[storyId] || "contract_default";
-
-          // aktuális rune choice
-          const choice = getChoice(storyId);
+          const runeChoice = runeMap[storyId] || { mode: "single", icons: ["ring"] };
 
           return (
-            <article key={storyId} className={styles.card}>
-              <div
-                className={styles.cover}
-                style={{ backgroundImage: `url(${cover})` }}
-              />
-              <div className={styles.body}>
-                <h2>{title}</h2>
-                {blurb && <p>{blurb}</p>}
-
-                <div className={styles.actions}>
-                  {/* Theme választó */}
-                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span>Theme:</span>
-                    <select
-                      value={selectedSkin}
-                      onChange={async (e) => {
-                        const skinId = e.target.value;
-                        persistSkin(storyId, skinId);
-                        await applySkin(skinId); // élő előnézet
-                      }}
-                      onFocus={async () => {
-                        if (selectedSkin) await applySkin(selectedSkin);
-                      }}
-                    >
-                      <option value="">Default</option>
-                      {skins.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.title || s.id}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  {/* Runes (Single / Triple) + legördülő többes választó */}
-                  <div className={styles.runes} style={{ display: "grid", gap: 8 }}>
-                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                      <span>Runes:</span>
-
-                      {/* módválasztó */}
-                      <label style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                        <input
-                          type="radio"
-                          name={`mode-${storyId}`}
-                          value="single"
-                          checked={choice.mode === "single"}
-                          onChange={() => {
-                            const next = choice.icons[0] ? [choice.icons[0]] : DEFAULT_SINGLE;
-                            persistRunes(storyId, { mode: "single", icons: next.slice(0, 1) });
-                          }}
-                        />
-                        Single
-                      </label>
-
-                      <label style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                        <input
-                          type="radio"
-                          name={`mode-${storyId}`}
-                          value="triple"
-                          checked={choice.mode === "triple"}
-                          onChange={() => {
-                            const cur = choice.icons.length ? choice.icons.slice(0, 3) : DEFAULT_TRIPLE;
-                            persistRunes(storyId, { mode: "triple", icons: cur });
-                          }}
-                        />
-                        Triple
-                      </label>
-
-                      {/* legördülő nyitógomb: jelzi a darabszámot és (ha 3-as) a sorrendet */}
-                      <div className={styles.runeDropdown}>
-                        <button
-                          type="button"
-                          className={styles.runeDropdownButton}
-                          onClick={(e) => {
-                            const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                            setMenuPos({
-                              left: Math.round(rect.left + window.scrollX),
-                              top: Math.round(rect.bottom + window.scrollY + 6),
-                            });
-                            setOpenRuneMenuFor((prev) => (prev === storyId ? null : storyId));
-                          }}
-                          aria-expanded={openRuneMenuFor === storyId}
-                          aria-haspopup="listbox"
-                          title="Válaszd ki az ikon(oka)t"
-                        >
-                          {choice.mode === "single"
-                            ? `Choose… (current: ${choice.icons[0] ?? DEFAULT_SINGLE[0]})`
-                            : `Choose… (${choice.icons.length}/3)`}
-                        </button>
-
-                        {openRuneMenuFor === storyId &&
-                          createPortal(
-                            <div
-                              ref={menuRef}
-                              className={styles.runeMenu}
-                              role="listbox"
-                              aria-multiselectable={choice.mode === "triple" ? true : undefined}
-                              style={{
-                                position: "fixed",
-                                left: menuPos?.left ?? 0,
-                                top: menuPos?.top ?? 0,
-                                width: "min(320px, 80vw)",
-                                maxHeight: "50vh",
-                                overflow: "auto",
-                                zIndex: 10000,
-                              }}
-                            >
-                              <ul className={styles.runeMenuList}>
-                                {iconKeys.map((key) => {
-                                  const IconComp = (ICON_REGISTRY as any)[key];
-                                  const activeIdx = choice.icons.indexOf(key);
-                                  const isActive = activeIdx >= 0;
-                                  const disabled =
-                                    choice.mode === "triple" &&
-                                    !isActive &&
-                                    choice.icons.length >= 3;
-
-                                  return (
-                                    <li key={key} className={styles.runeMenuItem}>
-                                      <label className={disabled ? styles.disabled : ""}>
-                                        <input
-                                          type="checkbox"
-                                          checked={isActive}
-                                          disabled={disabled && choice.mode === "triple"}
-                                          onChange={() => {
-                                            if (choice.mode === "single") {
-                                              // single: azonnali kizárólagosság és menü zárása
-                                              persistRunes(storyId, { mode: "single", icons: [key] });
-                                              setOpenRuneMenuFor(null);
-                                              setMenuPos(null);
-                                            } else {
-                                              // triple: push/eltávolítás a sorrend megőrzésével
-                                              toggleIcon(storyId, key);
-                                            }
-                                          }}
-                                        />
-
-                                        {/* IKON ELŐNÉZET */}
-                                        <span aria-hidden className={styles.iconPreview}>
-                                          {IconComp ? <IconComp style={{ width: 18, height: 18 }} /> : "•"}
-                                        </span>
-
-                                        <span className={styles.labelText}>{key}</span>
-
-                                        {choice.mode === "triple" && isActive && (
-                                          <span className={styles.orderBadge}>{activeIdx + 1}</span>
-                                        )}
-                                      </label>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-
-                              <div className={styles.runeMenuFooter}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenRuneMenuFor(null);
-                                    setMenuPos(null);
-                                  }}
-                                  className={styles.closeBtn}
-                                >
-                                  Done
-                                </button>
-                              </div>
-                            </div>,
-                            document.body
-                          )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Start */}
-                  <button
-                    onClick={() => {
-                      try {
-                        localStorage.setItem("storySrc", jsonSrc);
-                        localStorage.setItem("currentPageId", startPageId);
-                        localStorage.setItem("storyTitle", title);
-
-                        // Biztonság kedvéért külön is letesszük a CURRENT választást
-                        const c = getChoice(storyId);
-                        const all = { ...runeMap, [storyId]: c };
-                        localStorage.setItem(RUNE_LS_KEY, JSON.stringify(all));
-                      } catch {}
-
-                      // opcionális: átadás query paramként (megosztható link)
-                      const skinPart = selectedSkin
-                        ? `&skin=${encodeURIComponent(selectedSkin)}`
-                        : "";
-                      const c = getChoice(storyId);
-                      const runesPart =
-                        c.icons?.length
-                          ? `&runes=${encodeURIComponent(
-                              c.icons.join(",")
-                            )}&runemode=${c.mode}`
-                          : "";
-
-                      router.push(
-                        `/story?src=${encodeURIComponent(
-                          jsonSrc
-                        )}&start=${encodeURIComponent(
-                          startPageId
-                        )}&title=${encodeURIComponent(title)}${skinPart}${runesPart}`
-                      );
-                    }}
-                    disabled={!jsonSrc}
-                    title={!jsonSrc ? "Hiányzó jsonSrc" : ""}
-                  >
-                    Start
-                  </button>
-
-                  <button
-                    aria-label={`Open report for ${storyId}`}
-                    onClick={() => setReportFor(storyId)}
-                  >
-                    Report
-                  </button>
-
-                  <button
-                    aria-label={`Open schedule for ${storyId}`}
-                    onClick={() => setScheduleFor(storyId)}
-                  >
-                    Schedule
-                  </button>
-                </div>
-              </div>
-            </article>
+            <CampaignCard
+              key={storyId}
+              storyId={storyId}
+              title={title}
+              blurb={blurb}
+              cover={cover}
+              jsonSrc={jsonSrc}
+              startPageId={startPageId}
+              skins={skins}
+              selectedSkin={selectedSkin}
+              onChangeSkin={handleSkinChange}
+              runeChoice={runeChoice}
+              onChangeRunes={handleRunesChange}
+              onOpenReport={setReportFor}
+              onOpenSchedule={setScheduleFor}
+            />
           );
         })}
       </div>

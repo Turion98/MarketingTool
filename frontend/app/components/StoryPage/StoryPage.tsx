@@ -73,7 +73,7 @@ import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss"; 
 import { loadTokens } from "../../lib/tokenLoader";
-
+import { fetchPageJsonCached, prefetchPages } from "@/app/lib/story/fetchPageJson";
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
@@ -636,7 +636,7 @@ useEffect(() => {
   if (!skinId) return; // nincs explicit skin → maradnak az alap tokenek
 
   // 3) alkalmazás (cache-busting query parammal)
-  loadTokens(`/skins/${skinId}.json?v=${Date.now()}`).catch(() => {});
+ loadTokens(`/skins/${skinId}.json`, { ttlMs: 24 * 60 * 60_000 }).catch(() => {});
 }, [derivedStoryId, params]);
 
 
@@ -958,11 +958,7 @@ useEffect(() => {
   console.groupEnd();
 }, [pageData?.id, pageData?.fragmentRecall, fragments, globalFragments, unlockedFragments]);
 
-  // ⬇️ Ha NINCS mit renderelni (sem base, sem fragment), ne várjunk TypingText-re → mutasd a Next-et
-  useEffect(() => {
-    if (!pageData?.id) return;
-  }, [pageData?.id, pageData?.choices, registerTimeout]);
-// Side preload (voice + SFX + narráció) – **PATH NORMALIZÁLÁSSAL**
+ // Side preload (voice + SFX + narráció) – FE cache-szel (18 perc)
 useEffect(() => {
   if (!globals?.storySrc) return;
   if (!pageData?.audio?.sidePreloadPages?.length) return;
@@ -985,12 +981,11 @@ useEffect(() => {
     controllers.push(ac);
     registerAbort(ac);
 
-    // ⬅️ fontos: add src param!
-    fetch(
+    // ⬅️ fontos: src param + FE cache 18 percig
+    fetchPageJsonCached<any>(
       `http://127.0.0.1:8000/page/${pid}?src=${encodeURIComponent(globals.storySrc!)}`,
-      { signal: ac.signal }
+      { storyId: derivedStoryId, pageId: pid, ttlMs: 18 * 60_000, signal: ac.signal }
     )
-      .then((res) => res.json())
       .then((data) => {
         // Voice előtöltés (ha van)
         if (data?.voicePrompt) {
@@ -1067,57 +1062,50 @@ useEffect(() => {
       try { c.abort(); } catch {}
     });
   };
-}, [globals?.storySrc, pageData?.audio?.sidePreloadPages, registerAbort]);
+}, [globals?.storySrc, pageData?.audio?.sidePreloadPages, registerAbort, derivedStoryId]);
 
-
-  // preloadNextPages képek
-  useEffect(() => {
-      // ⛔ Guard
+// preloadNextPages képek – FE cache-szel (18 perc)
+useEffect(() => {
   if (!globals?.storySrc) return;
-    const ids = pageData?.imageTiming?.preloadNextPages;
-    if (!ids?.length) return;
+  const ids = pageData?.imageTiming?.preloadNextPages;
+  if (!ids?.length) return;
 
+  const controllers: AbortController[] = [];
 
+  ids.forEach(async (nextId: string) => {
+    const ac = new AbortController();
+    controllers.push(ac);
+    registerAbort(ac);
 
-    const controllers: AbortController[] = [];
-
-    ids.forEach(async (nextId: string) => {
-      const ac = new AbortController();
-      controllers.push(ac);
-      registerAbort(ac);
-
-      try {
-        const res = await fetch(
+    try {
+      const nextPageData = await fetchPageJsonCached<any>(
         `http://127.0.0.1:8000/page/${nextId}?src=${encodeURIComponent(globals.storySrc!)}`,
-        { signal: ac.signal }
+        { storyId: derivedStoryId, pageId: nextId, ttlMs: 18 * 60_000, signal: ac.signal }
       );
-        if (!res.ok) throw new Error(await res.text());
-        const nextPageData = await res.json();
 
-        if (nextPageData?.imagePrompt) {
-          await preloadImage(
-            nextPageData.id,
-            nextPageData.imagePrompt,
-            nextPageData.imageParams || {},
-            nextPageData.styleProfile || {},
-            "draft"
-          );
-        }
-      } catch (err: any) {
-        if (err?.name !== "AbortError") {
-          console.error(`Preload fetch error for ${nextId}`, err);
-        }
+      if (nextPageData?.imagePrompt) {
+        await preloadImage(
+          nextPageData.id,
+          nextPageData.imagePrompt,
+          nextPageData.imageParams || {},
+          nextPageData.styleProfile || {},
+          "draft"
+        );
       }
-    });
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.error(`Preload fetch error for ${nextId}`, err);
+      }
+    }
+  });
 
-    return () => {
-      controllers.forEach((c) => {
-        try {
-          c.abort();
-        } catch {}
-      });
-    };
-  }, [globals?.storySrc, pageData?.imageTiming?.preloadNextPages, registerAbort]);
+  return () => {
+    controllers.forEach((c) => {
+      try { c.abort(); } catch {}
+    });
+  };
+}, [globals?.storySrc, pageData?.imageTiming?.preloadNextPages, registerAbort, derivedStoryId]);
+
 
   useEffect(() => {
     if (showChoices) {

@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Callable
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
 from jsonschema import Draft7Validator, FormatChecker
-
+from cache import clear_caches as _clear_story_cache
 router = APIRouter()
 
 # ---------- Config ----------
