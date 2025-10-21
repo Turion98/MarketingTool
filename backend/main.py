@@ -274,16 +274,19 @@ def get_story(src: str = Query(default="story.json")):
     with open(base, "r", encoding="utf-8") as f:
         return json.load(f)
 
-# Engedjük a http(s)://localhost:PORT és http(s)://127.0.0.1:PORT összes kombinációját.
+# --- CORS: engedjük a WL root alatt a wildcardot is ---
+WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost").replace(".", r"\.")  # pl. "wl.yoursaas.com" -> "wl\.yoursaas\.com"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=rf"^https?://([a-z0-9\-]+\.)?({WL_ROOT}|localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=600,
 )
+
 
 # Biztosítsunk OPTIONS választ bármely végpontra
 @app.options("/{rest_of_path:path}")
@@ -293,7 +296,7 @@ def any_options(rest_of_path: str):
 # --- Routerek bekötése ---
 app.include_router(feedback_router, prefix="/api")
 app.include_router(stories_router, prefix="/api")
-app.include_router(white_label_router, prefix="/api")
+app.include_router(white_label_router) 
 
 # --- Statikus mappák ---
 if os.path.isdir("assets"):

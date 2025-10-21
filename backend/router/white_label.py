@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 import os, re
-from urllib.parse import quote_plus
 
 # ✅ TTL-based suggestion cache + HIT/MISS lekérdezés
 from cache import get_wl_suggest_cached, was_last_wl_hit
@@ -18,55 +17,47 @@ def slugify(name: str) -> str:
     s = re.sub(r"-+", "-", s).strip("-")
     return s or "brand"
 
-WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost")
-APP_BASE = os.getenv("APP_PUBLIC_BASE", "http://localhost:3000")  # csak fallback
-WL_SCHEME = os.getenv("WL_SCHEME", "https")  # dev-ben: "http"
+# WL gyökér domain és séma
+WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost")     # pl. "wl.yoursaas.com"
+WL_SCHEME = os.getenv("WL_SCHEME", "https")               # dev-ben lehet "http"
 
 class WLRequest(BaseModel):
     clientDomain: str
     campaignId: str
-    mode: str = "managed"  # "managed" | "cname"
-    # ⬇️ opcionális paraméterek a skinezéshez és a rúna-állapothoz
+    mode: str = "managed"          # "managed" | "cname"
+    # ⬇️ opcionális paraméterek csak továbbadásra a front felé (itt NEM használjuk)
     skin: Optional[str] = None
-    runes: Optional[str] = None         # pl. "ring,arc,dot"
-    runemode: Optional[str] = None      # "single" | "triple"
+    runes: Optional[str] = None
+    runemode: Optional[str] = None # "single" | "triple"
 
 class WLResponse(BaseModel):
     status: str
     brandId: str
     wlDomain: str
+    # Minimalista: csak az alap path-okat adjuk (a front épít query-t!)
     playUrl: str
     embedUrl: str
     verification: dict | None = None
-
-def _qs_from_req(req: WLRequest) -> str:
-    parts = []
-    if req.skin:
-        parts.append(f"skin={quote_plus(req.skin)}")
-    if req.runes:
-        parts.append(f"runes={quote_plus(req.runes)}")
-    if req.runemode:
-        parts.append(f"runemode={quote_plus(req.runemode)}")
-    return ("&" + "&".join(parts)) if parts else ""
 
 @router.post("/suggest", response_model=WLResponse)
 def suggest_white_label(req: WLRequest):
     """
     White-label javaslat (TTL-cache-elve).
     Cache-kulcs: clientDomain|campaignId|mode
-    A skin/runes paramétereket NEM tesszük a cache kulcsába, hanem a válaszban
-    mindig frissen fűzzük hozzá a Play/Embed URL-hez.
+    Minimalista visszatérés: csak a dedikált WL domain + alap /story és /embed útvonalak.
+    A front fogja összeállítani a teljes, önhordó linkeket (src/start/title/skin/runes...).
     """
-    brand = slugify(req.clientDomain)
     if req.mode not in ("managed", "cname"):
         raise HTTPException(400, "Invalid mode")
+
+    brand = slugify(req.clientDomain)
 
     def _build_base():
         if req.mode == "managed":
             wl_domain = f"{brand}.{WL_ROOT}"
             verification = None
         else:
-            # ajánlott kliens-aldomain minta
+            # Kliens CNAME ajánlás: story.<clientDomain> → <brand>.<WL_ROOT>
             wl_domain = (
                 f"story.{brand}.com"
                 if "." not in req.clientDomain
@@ -76,37 +67,29 @@ def suggest_white_label(req: WLRequest):
                 "type": "CNAME",
                 "host": wl_domain,
                 "value": f"{brand}.{WL_ROOT}",
-                "note": "Állíts be CNAME-et a kliens DNS-ben.",
+                "note": "Állíts be CNAME-et a kliens DNS-ben a dedikált hostra.",
             }
 
-        # ⬅️ A dedikált WL host alá építjük a paraméter nélküli alap linkeket
         base = f"{WL_SCHEME}://{wl_domain}"
-        play_base = f"{base}/story?c={req.campaignId}"         # NINCS &b=brand
-        embed_base = f"{base}/story?c={req.campaignId}&mode=embed"
-
+        # ❗ Itt NINCS campaignId és query string – a front tölti fel mindezt.
         return {
             "status": "ok",
             "brandId": brand,
             "wlDomain": wl_domain,
-            "playUrl": play_base,
-            "embedUrl": embed_base,
+            "playUrl": f"{base}/story",
+            "embedUrl": f"{base}/embed",
             "verification": verification,
         }
 
     # ⬇️ Cache-ből alap adatok
     data = get_wl_suggest_cached(req.clientDomain, req.campaignId, req.mode, _build_base)
 
-    # ⬇️ Friss query-string a skin/runes/runemode szerint (nem cache-elt)
-    qs = _qs_from_req(req)
-    play_url = data["playUrl"] + (qs if qs else "")
-    embed_url = data["embedUrl"] + (qs if qs else "")
-
     model = WLResponse(
         status=data["status"],
         brandId=data["brandId"],
         wlDomain=data["wlDomain"],
-        playUrl=play_url,
-        embedUrl=embed_url,
+        playUrl=data["playUrl"],     # nincs query – a front építi rá a paramokat
+        embedUrl=data["embedUrl"],   # nincs query – a front építi rá a paramokat
         verification=data.get("verification"),
     )
 
@@ -116,7 +99,6 @@ def suggest_white_label(req: WLRequest):
     if hit is not None:
         resp.headers["X-Backend-Cache"] = "HIT" if hit else "MISS"
     resp.headers["Cache-Control"] = "public, max-age=300"
-
     return resp
 
 # (OPCIONÁLIS) GET kompatibilitás a régebbi frontendhez:

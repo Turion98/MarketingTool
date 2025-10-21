@@ -18,17 +18,11 @@ type CampaignCardProps = {
   cover: string;
   jsonSrc: string;
   startPageId: string;
-
-  // skin
   skins: Array<{ id: string; title: string }>;
   selectedSkin?: string;
   onChangeSkin: (storyId: string, skinId: string) => Promise<void> | void;
-
-  // runes
   runeChoice: RuneChoice;
   onChangeRunes: (storyId: string, choice: RuneChoice) => void;
-
-  // extra akciók
   onOpenReport: (storyId: string) => void;
   onOpenSchedule: (storyId: string) => void;
 };
@@ -44,14 +38,11 @@ export default function CampaignCard({
   cover,
   jsonSrc,
   startPageId,
-
   skins,
   selectedSkin,
   onChangeSkin,
-
   runeChoice,
   onChangeRunes,
-
   onOpenReport,
   onOpenSchedule,
 }: CampaignCardProps) {
@@ -116,7 +107,6 @@ export default function CampaignCard({
       localStorage.setItem("storySrc", jsonSrc);
       localStorage.setItem("currentPageId", startPageId);
       localStorage.setItem("storyTitle", title);
-
       const c = getChoice();
       const all = JSON.parse(localStorage.getItem(RUNE_LS_KEY) || "{}");
       all[storyId] = c;
@@ -139,11 +129,9 @@ export default function CampaignCard({
 
   const choice = getChoice();
 
-  // ---------- WHITE-LABEL: domain -> javasolt WL domain + linkek (POST wrapperrel) ----------
+  // ---------- White-label: API hívás + linkek ----------
   const [wlOpen, setWlOpen] = useState(false);
   const [clientDomain, setClientDomain] = useState("");
-
-  // POST hívás állapotai
   const [wlRes, setWlRes] = useState<WLSuggestRes | null>(null);
   const [wlLoading, setWlLoading] = useState(false);
   const [wlError, setWlError] = useState<string | null>(null);
@@ -152,7 +140,6 @@ export default function CampaignCard({
     if (!clientDomain) return;
     const c = getChoice();
     const runes = c.icons?.length ? c.icons.join(",") : undefined;
-
     setWlLoading(true);
     setWlError(null);
     try {
@@ -162,7 +149,7 @@ export default function CampaignCard({
         mode: "managed",
         skin: selectedSkin || undefined,
         runes,
-        runemode: c.mode, // "single" | "triple"
+        runemode: c.mode,
       });
       setWlRes(data);
     } catch (err: any) {
@@ -190,43 +177,40 @@ export default function CampaignCard({
     );
   }
 
-const embedBase = wlRes?.wlDomain ? `https://${wlRes.wlDomain}/embed` : "/embed";
+  // ====== WHITE-LABEL LINK GENERÁLÁS (javított) ======
+  const wlBase = wlRes?.wlDomain ? `https://${wlRes.wlDomain}` : "";
+  const embedBase = wlBase ? `${wlBase}/embed` : "/embed";
+  const playBase = wlBase ? `${wlBase}/story` : "/story";
 
-const computedEmbedUrl =
-  wlRes?.embedUrl ||
-  buildEmbedUrl({
-    base: embedBase,
-    campaignId: storyId,
-    // WL host esetén NEM adunk külön host query-t
-    skin: selectedSkin,
-    start: startPageId,
-    src: jsonSrc,
-    title,
-    runes: choice.icons?.length ? choice.icons.join(",") : undefined,
-    runemode: choice.mode,
-  });
-
-
-  const runesPart =
+  const runesQS =
     choice.icons?.length
       ? `&runes=${encodeURIComponent(choice.icons.join(","))}&runemode=${choice.mode}`
       : "";
 
-const basePlay = wlRes?.wlDomain ? `https://${wlRes.wlDomain}/story` : "/story";
+  // Mindig önhordó embed URL
+  const computedEmbedUrl = buildEmbedUrl({
+    base: embedBase,
+    campaignId: storyId,
+    src: jsonSrc,
+    start: startPageId,
+    title,
+    skin: selectedSkin || undefined,
+    runes: choice.icons?.length ? choice.icons.join(",") : undefined,
+    runemode: choice.mode,
+  });
 
-const computedPlayUrl =
-  wlRes?.playUrl ||
-  `${basePlay}?c=${encodeURIComponent(storyId)}${
-    selectedSkin ? `&skin=${encodeURIComponent(selectedSkin)}` : ""
-  }${runesPart}`;
+  // Mindig önhordó play URL
+  const computedPlayUrl =
+    `${playBase}?src=${encodeURIComponent(jsonSrc)}` +
+    `&start=${encodeURIComponent(startPageId)}` +
+    `&title=${encodeURIComponent(title)}` +
+    (selectedSkin ? `&skin=${encodeURIComponent(selectedSkin)}` : "") +
+    runesQS;
 
-
+  // ====== RENDER ======
   return (
     <article className={styles.card}>
-      <div
-        className={styles.cover}
-        style={{ backgroundImage: `url(${cover})` }}
-      />
+      <div className={styles.cover} style={{ backgroundImage: `url(${cover})` }} />
       <div className={styles.body}>
         <h2>{title}</h2>
         {blurb && <p>{blurb}</p>}
@@ -281,7 +265,7 @@ const computedPlayUrl =
                 Triple
               </label>
 
-              {/* Dropdown gomb */}
+              {/* Dropdown */}
               <div className={styles.runeDropdown}>
                 <button
                   type="button"
@@ -327,7 +311,6 @@ const computedPlayUrl =
                           const isActive = activeIdx >= 0;
                           const disabled =
                             choice.mode === "triple" && !isActive && choice.icons.length >= 3;
-
                           return (
                             <li key={key} className={styles.runeMenuItem}>
                               <label className={disabled ? styles.disabled : ""}>
@@ -345,13 +328,10 @@ const computedPlayUrl =
                                     }
                                   }}
                                 />
-
                                 <span aria-hidden className={styles.iconPreview}>
                                   {IconComp ? <IconComp style={{ width: 18, height: 18 }} /> : "•"}
                                 </span>
-
                                 <span className={styles.labelText}>{key}</span>
-
                                 {choice.mode === "triple" && isActive && (
                                   <span className={styles.orderBadge}>{activeIdx + 1}</span>
                                 )}
@@ -360,7 +340,6 @@ const computedPlayUrl =
                           );
                         })}
                       </ul>
-
                       <div className={styles.runeMenuFooter}>
                         <button
                           type="button"
@@ -384,16 +363,14 @@ const computedPlayUrl =
           <button onClick={start} disabled={!jsonSrc} title={!jsonSrc ? "Hiányzó jsonSrc" : ""}>
             Start
           </button>
-
           <button aria-label={`Open report for ${storyId}`} onClick={() => onOpenReport(storyId)}>
             Report
           </button>
-
           <button aria-label={`Open schedule for ${storyId}`} onClick={() => onOpenSchedule(storyId)}>
             Schedule
           </button>
 
-          {/* ---------- White-label panel ---------- */}
+          {/* White-label panel */}
           <div className={styles.wlPanel} style={{ marginTop: 12 }}>
             {!wlOpen ? (
               <button type="button" onClick={() => setWlOpen(true)}>
@@ -410,7 +387,6 @@ const computedPlayUrl =
                     autoFocus
                   />
                 </label>
-
                 <div style={{ display: "flex", gap: 8 }}>
                   <button type="button" disabled={!clientDomain || wlLoading} onClick={onSuggestWL}>
                     {wlLoading ? "Generálás…" : "Generálás"}
@@ -427,12 +403,13 @@ const computedPlayUrl =
                     Bezár
                   </button>
                 </div>
-
                 {!!wlError && <p style={{ color: "tomato" }}>{String(wlError)}</p>}
 
                 {wlRes && (
                   <div className={styles.wlResult} style={{ display: "grid", gap: 6 }}>
-                    <div><strong>Brand ID:</strong> {wlRes.brandId}</div>
+                    <div>
+                      <strong>Brand ID:</strong> {wlRes.brandId}
+                    </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <strong>Dedikált domain:</strong>
                       <code>{wlRes.wlDomain || clientDomain}</code>
@@ -440,22 +417,23 @@ const computedPlayUrl =
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <strong>Play:</strong>
-                      <a href={computedPlayUrl} target="_blank" rel="noreferrer">{computedPlayUrl}</a>
+                      <a href={computedPlayUrl} target="_blank" rel="noreferrer">
+                        {computedPlayUrl}
+                      </a>
                       <CopyBtn text={computedPlayUrl} />
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <strong>Embed:</strong>
-                      <a href={computedEmbedUrl} target="_blank" rel="noreferrer">{computedEmbedUrl}</a>
+                      <a href={computedEmbedUrl} target="_blank" rel="noreferrer">
+                        {computedEmbedUrl}
+                      </a>
                       <CopyBtn text={computedEmbedUrl} />
                     </div>
-
                     {wlRes.verification && (
                       <details>
                         <summary>DNS verifikáció (CNAME mód esetén)</summary>
                         <pre style={{ whiteSpace: "pre-wrap" }}>
-{`${
-  JSON.stringify(wlRes.verification, null, 2)
-}`}
+                          {JSON.stringify(wlRes.verification, null, 2)}
                         </pre>
                       </details>
                     )}

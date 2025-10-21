@@ -17,16 +17,10 @@ from typing import Any, Dict, List, Optional, Callable
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
 from jsonschema import Draft7Validator, FormatChecker
-from cache import clear_caches as _clear_story_cache
+
 router = APIRouter()
 
-# ---------- Config ----------
-STORIES_DIR = os.getenv(
-    "STORIES_DIR",
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../stories"))
-)
-
-# Core schema útvonal (backend/schemas/CoreSchema.json)
+# ---------- Config (schema path + limits) ----------
 CORE_SCHEMA_PATH = os.getenv(
     "CORE_SCHEMA_PATH",
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../schemas", "CoreSchema.json"))
@@ -35,24 +29,24 @@ CORE_SCHEMA_PATH = os.getenv(
 # ENV default bugfix: int() cannot parse "5_000_000" on some environments
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", "5000000"))  # ~5MB default
 
-# Ellenőrzés – logoljunk, ha valami hiányzik
-if not os.path.exists(CORE_SCHEMA_PATH):
-    print(f"[router] ⚠️ Core schema not found: {CORE_SCHEMA_PATH}")
-if not os.path.exists(STORIES_DIR):
-    print(f"[router] ⚠️ Stories directory not found: {STORIES_DIR}")
+# ---------- Runtime getters (avoid import-time racing with env) ----------
+def _get_stories_dir() -> str:
+    return os.path.abspath(
+        os.getenv(
+            "STORIES_DIR",
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "../stories"))
+        )
+    )
 
-# Optional hooks that might exist elsewhere in your codebase.
-# If not available, they degrade gracefully.
-_clear_story_cache: Optional[Callable[[], None]] = None
-_collect_meta: Optional[Callable[[str], Dict[str, Any]]] = None
-
+# ---------- Optional hooks (degrade gracefully if missing) ----------
 try:
-    # If your project defines these somewhere, import them here:
-    # from .cache import clear_story_cache as _clear_story_cache
-    # from .utils import collect_meta as _collect_meta
-    pass
+    # If available, use your project's cache clearer
+    from cache import clear_caches as _clear_story_cache  # type: ignore
 except Exception:
-    pass
+    _clear_story_cache = None  # type: ignore[assignment]
+
+# You may wire a meta collector elsewhere in your project
+_collect_meta: Optional[Callable[[str], Dict[str, Any]]] = None
 
 # ---------- Schema load ----------
 try:
@@ -90,7 +84,7 @@ def _fname_for_id(story_id: str) -> str:
     return f"{story_id}.json"
 
 def _ensure_stories_dir() -> None:
-    os.makedirs(STORIES_DIR, exist_ok=True)
+    os.makedirs(_get_stories_dir(), exist_ok=True)
 
 # ---------- Canonicalizer ----------
 def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -100,7 +94,7 @@ def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
     # (A) If "chapters" missing but "pages" is an object, convert to 1-chapter array
     if "chapters" not in data and isinstance(data.get("pages"), dict):
         pages_obj = data["pages"]
-        pages_arr = []
+        pages_arr: List[Dict[str, Any]] = []
         for pid, page in pages_obj.items():
             if isinstance(page, dict) and "id" not in page:
                 page["id"] = pid
@@ -127,7 +121,7 @@ def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
             pages = ch.get("pages")
             # Some legacy content might still use dict under chapters.pages
             if isinstance(pages, dict):
-                arr = []
+                arr: List[Dict[str, Any]] = []
                 for pid, page in pages.items():
                     if isinstance(page, dict) and "id" not in page:
                         page["id"] = pid
@@ -160,13 +154,13 @@ def _validate_against_core_schema(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     problems: List[Dict[str, Any]] = []
 
-    # --- META szemantika ---
+    # --- META semantics ---
     meta = data.get("meta") or {}
     ctas = meta.get("ctaPresets") or {}
     end_default = meta.get("endDefaultCta")
     start_page = meta.get("startPageId")
 
-    # endDefaultCta: ha string, legyen a ctaPresets kulcsai között
+    # endDefaultCta: if string, must exist in ctaPresets
     if isinstance(end_default, str):
         if not isinstance(ctas, dict) or end_default not in ctas:
             problems.append({
@@ -175,7 +169,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "keyword": "exists"
             })
 
-    # CTA-k: ha kind=link, urlTemplate kezdődjön http/https-sel
+    # CTA kind=link must have http/https urlTemplate
     if isinstance(ctas, dict):
         for key, c in ctas.items():
             if isinstance(c, dict) and c.get("kind") == "link":
@@ -187,8 +181,8 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "keyword": "format"
                     })
 
-    # --- Page ID-k összegyűjtése ---
-    page_ids = set()
+    # --- Collect page IDs ---
+    page_ids: set[str] = set()
     chapters = data.get("chapters", [])
     if isinstance(chapters, list):
         for ch in chapters:
@@ -198,7 +192,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                     if isinstance(p, dict) and "id" in p:
                         page_ids.add(p["id"])
 
-    # startPageId: ha meg van adva, létezzen a pages között
+    # startPageId must exist
     if isinstance(start_page, str) and start_page not in page_ids:
         problems.append({
             "path": "meta.startPageId",
@@ -206,7 +200,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             "keyword": "exists"
         })
 
-    # --- next/choices target ellenőrzések ---
+    # --- next/choices target checks ---
     targets: List[tuple] = []
     if isinstance(chapters, list):
         for ch in chapters:
@@ -258,7 +252,8 @@ def _process_and_save_story(
     if not story_id:
         raise HTTPException(status_code=400, detail="Missing storyId/title")
     dst_name = _fname_for_id(story_id)
-    dst_path = os.path.join(STORIES_DIR, dst_name)
+    stories_dir = _get_stories_dir()
+    dst_path = os.path.join(stories_dir, dst_name)
 
     existed_before = os.path.exists(dst_path)  # overwritten flag fix
 
@@ -274,7 +269,7 @@ def _process_and_save_story(
     # 5) Cache clear (if hook provided)
     try:
         if callable(_clear_story_cache):
-            _clear_story_cache()
+            _clear_story_cache()  # type: ignore[misc]
     except Exception:
         pass
 
@@ -300,8 +295,8 @@ def _process_and_save_story(
 @router.post("/upload-story", status_code=201)
 async def upload_story(
     overwrite: bool = Query(default=False, description="Overwrite existing story with same id"),
-    mode: str = Query(default="strict", pattern="^(strict|warnOnly)$"),
-    file: UploadFile = File(default=None),
+    mode: str = Query(default="strict", regex="^(strict|warnOnly)$"),
+    file: Optional[UploadFile] = File(default=None),
     body: Optional[Dict[str, Any]] = Body(default=None),
 ):
     data = await _read_json_with_limit(file, body)
@@ -310,8 +305,8 @@ async def upload_story(
 @router.post("/stories/import", status_code=201)
 async def import_story(
     overwrite: bool = Query(default=False),
-    mode: str = Query(default="strict", pattern="^(strict|warnOnly)$"),
-    file: UploadFile = File(default=None),
+    mode: str = Query(default="strict", regex="^(strict|warnOnly)$"),
+    file: Optional[UploadFile] = File(default=None),
     body: Optional[Dict[str, Any]] = Body(default=None),
 ):
     data = await _read_json_with_limit(file, body)
@@ -323,21 +318,22 @@ def list_stories():
     Lists all story JSON files under STORIES_DIR.
     Returns meta info if available.
     """
-    if not os.path.isdir(STORIES_DIR):
-        raise HTTPException(status_code=500, detail=f"Stories directory not found: {STORIES_DIR}")
+    stories_dir = _get_stories_dir()
+    if not os.path.isdir(stories_dir):
+        raise HTTPException(status_code=500, detail=f"Stories directory not found: {stories_dir}")
 
-    out: list[dict[str, any]] = []
-    for fn in os.listdir(STORIES_DIR):
+    out: List[Dict[str, Any]] = []
+    for fn in os.listdir(stories_dir):
         if not fn.lower().endswith(".json"):
             continue
-        full = os.path.join(STORIES_DIR, fn)
+        full = os.path.join(stories_dir, fn)
         try:
             with open(full, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            meta = data.get("meta", {})
+            meta = data.get("meta", {}) or {}
             out.append({
-                "id": meta.get("id") or os.path.splitext(fn)[0],
-                "title": meta.get("title") or os.path.splitext(fn)[0],
+                "id": data.get("storyId") or meta.get("id") or os.path.splitext(fn)[0],
+                "title": meta.get("title") or data.get("title") or os.path.splitext(fn)[0],
                 "description": meta.get("description") or "",
                 "coverImage": meta.get("coverImage") or "",
                 "jsonSrc": f"/stories/{fn}",
@@ -353,7 +349,7 @@ def list_stories():
             })
 
     # rendezés név szerint
-    out.sort(key=lambda x: x["title"].lower())
+    out.sort(key=lambda x: (x.get("title") or "").lower())
     return out
 
 # ---------- Optional: setup() for app include ----------

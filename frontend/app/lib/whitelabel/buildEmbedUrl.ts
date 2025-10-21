@@ -13,8 +13,8 @@ export type BuildEmbedOpts = {
 
 /**
  * Build an Embed URL.
- * If base is a full URL (e.g. "https://brand.wl.domain/embed"), we DO NOT add `host` as a query param.
- * If base is relative ("/embed"), we fallback to current origin and we MAY add `host` as query (legacy).
+ * Ha a `base` teljes URL (pl. "https://brand.wl.domain/embed"), NEM tesszük hozzá a `host` query-t.
+ * Ha a `base` relatív ("/embed"), az aktuális originre esik vissza, és HOZZÁTEHETJÜK a `host`-ot (legacy).
  */
 export function buildEmbedUrl({
   base = "/embed",
@@ -28,22 +28,29 @@ export function buildEmbedUrl({
   runes,
   runemode,
 }: BuildEmbedOpts) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  const origin =
+    typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "http://localhost";
+
   const isAbsolute = /^https?:\/\//i.test(base);
   const u = new URL(isAbsolute ? base : origin + base);
+
   // ensure path '/embed/<campaignId>'
   u.pathname = `${u.pathname.replace(/\/+$/, "")}/${encodeURIComponent(campaignId)}`;
 
   const q = u.searchParams;
+
   // only attach host when we are NOT on WL base url
   if (!isAbsolute && host) q.set("host", host);
-  if (skin)  q.set("skin", skin);
+  if (skin) q.set("skin", skin);
   if (start) q.set("start", start);
-  if (src)   q.set("src", src);
+  if (src) q.set("src", src);
   if (title) q.set("title", title);
   if (analytics) q.set("analytics", "1");
   if (runes) q.set("runes", runes);
   if (runemode) q.set("runemode", runemode);
 
-  return `${u.pathname}?${q.toString()}`;
+  // TELJES URL-t adjunk vissza (ne csak pathname+query-t)
+  return u.toString();
 }
