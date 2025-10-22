@@ -31,6 +31,21 @@ from feedback_routes import router as feedback_router
 from storysvc.router import router as stories_router   
 from router.white_label import router as white_label_router  # <-- EZ KELL
 
+# --- ezek a többi import után jöhetnek ---
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # Alap biztonsági headerek (CSP-t a Next.js adja a webappra)
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Permissions-Policy", "geolocation=()")
+        # HSTS csak ha HTTPS mögött futsz (Cloudflare alatt később edge-en is bekapcsoljuk)
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=63072000; includeSubDomains; preload"
+        )
+        return response
 
 
 print("=== Backend indul ===")
@@ -265,6 +280,9 @@ class NoCacheStoriesMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(NoCacheStoriesMiddleware)
+app.add_middleware(NoCacheStoriesMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 @app.get("/api/story")
 def get_story(src: str = Query(default="story.json")):

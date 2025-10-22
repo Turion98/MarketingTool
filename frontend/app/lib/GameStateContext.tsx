@@ -585,7 +585,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       // ✅ Meta-prefetch
       try {
-        const baseUrl = src.startsWith("http") ? src : `http://127.0.0.1:8000${src}`;
+       const baseUrl = src.startsWith("http") ? src : `${(process.env.NEXT_PUBLIC_API_BASE || "")}${src}`;
         const cacheBust = baseUrl.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
         const metaUrl = `${baseUrl}${cacheBust}`;
 
@@ -850,10 +850,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       try {
         setIsLoading(true);
 
-        const API_BASE =
-  (process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/,"");
+        const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/,"");
+const base = API_BASE || ""; // üres = same-origin
 
-const url = `${API_BASE}/page/${encodeURIComponent(currentPageId)}?src=${encodeURIComponent(storySrc)}`;
+const url = `${base}/page/${encodeURIComponent(currentPageId)}?src=${encodeURIComponent(storySrc)}`;
 
         const response = await fetch(url, { signal: ac.signal });
         if (!response.ok) {
@@ -905,7 +905,7 @@ const url = `${API_BASE}/page/${encodeURIComponent(currentPageId)}?src=${encodeU
           const metaSrc = (globals?.storySrc || localStorage.getItem(LS_KEYS.storySrc) || "")
             .replace(/^\/?stories\//, "/stories/");
           if (metaSrc) {
-            const base = metaSrc.startsWith("http") ? metaSrc : `http://127.0.0.1:8000${metaSrc}`;
+            const base = metaSrc.startsWith("http") ? metaSrc : `${(process.env.NEXT_PUBLIC_API_BASE || "")}${metaSrc}`;
             const bust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
             const full = `${base}${bust}`;
 
