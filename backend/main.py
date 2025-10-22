@@ -294,10 +294,12 @@ def get_story(src: str = Query(default="story.json")):
 
 # --- CORS: engedjük a WL root alatt a wildcardot is ---
 WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost").replace(".", r"\.")  # pl. "wl.yoursaas.com" -> "wl\.yoursaas\.com"
+DEV_HOST = os.getenv("DEV_HOST", "azenc.local").replace(".", r"\.")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=rf"^https?://([a-z0-9\-]+\.)?({WL_ROOT}|localhost|127\.0\.0\.1)(:\d+)?$",
+   allow_origin_regex=rf"^https?://([a-z0-9\-]+\.)?({WL_ROOT}|{DEV_HOST}|localhost|127\.0\.0\.1)(:\d+)?$",
+
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -80,7 +80,9 @@ const DELAY_MS = 3000;
 const FADE_IN_MS = 600;
 const RUNE = { slot: 72, gap: 0, slots: 3, offsetX: 176, offsetY: 25 };
 const SKIN_LS_KEY = "skinByCampaignId";
-
+const API_BASE =
+  (process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
+  
 /** ---------- Fragment-kompozíció ---------- */
 type FragmentBank = Record<
   string,
@@ -982,8 +984,7 @@ useEffect(() => {
     registerAbort(ac);
 
     // ⬅️ fontos: src param + FE cache 18 percig
-    fetchPageJsonCached<any>(
-      `http://127.0.0.1:8000/page/${pid}?src=${encodeURIComponent(globals.storySrc!)}`,
+      fetchPageJsonCached<any>(`${API_BASE}/page/${pid}?src=${encodeURIComponent(globals.storySrc!)}`,
       { storyId: derivedStoryId, pageId: pid, ttlMs: 18 * 60_000, signal: ac.signal }
     )
       .then((data) => {
@@ -993,7 +994,7 @@ useEffect(() => {
           controllers.push(ac2);
           registerAbort(ac2);
 
-          fetch("http://127.0.0.1:8000/voice", {
+         fetch(`${API_BASE}/voice`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1010,9 +1011,7 @@ useEffect(() => {
             .then((res) => res.json())
             .then((json) => {
               if (json?.url) {
-                const fullUrl = json.url.startsWith("http")
-                  ? json.url
-                  : `http://127.0.0.1:8000${json.url}`;
+                 const fullUrl = json.url.startsWith("http") ? json.url : `${API_BASE}${json.url}`;
                 try { preloadAudio(fullUrl); } catch {}
               }
             })
@@ -1078,8 +1077,8 @@ useEffect(() => {
     registerAbort(ac);
 
     try {
-      const nextPageData = await fetchPageJsonCached<any>(
-        `http://127.0.0.1:8000/page/${nextId}?src=${encodeURIComponent(globals.storySrc!)}`,
+     const nextPageData = await fetchPageJsonCached<any>(
+    `${API_BASE}/page/${nextId}?src=${encodeURIComponent(globals.storySrc!)}`,
         { storyId: derivedStoryId, pageId: nextId, ttlMs: 18 * 60_000, signal: ac.signal }
       );
 
@@ -1843,10 +1842,14 @@ if (!pageData || !pageData.id) {
   console.log({ isLoading, isMuted, hasChoices, blocksLen: blocks.length });
   console.groupEnd();
 
-  /* ⬇️ GUARD IDE */
 const _mustBeFn = (n: string, v: any) => {
   const t = typeof v;
-  if (t !== "function") { console.error(`[BAD] ${n}:`, v); throw new Error(`${n} is ${t}`); }
+  if (t !== "function") {
+    // Dev warning, de NEM dobunk – így a fallbackek élnek
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[WARN] ${n} is not a function (got: ${t}). Rendering continues.`, v);
+    }
+  }
 };
 _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
 _mustBeFn("RuneDockDisplay", RuneDockDisplay);

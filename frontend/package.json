@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+  "dev": "next dev -p 3000 -H azenc.local --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.21.0",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^3.0.1",
     "clsx": "^2.1.1",
@@ -17,7 +18,8 @@
     "next": "15.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "sass": "^1.89.2"
+    "sass": "^1.89.2",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -25,8 +27,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^9.38.0",
     "eslint-config-next": "15.4.2",
+    "eslint-plugin-no-unsanitized": "^4.1.4",
+    "eslint-plugin-regexp": "^2.10.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-security-node": "^1.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

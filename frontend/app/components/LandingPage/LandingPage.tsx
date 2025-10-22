@@ -27,6 +27,11 @@ const LandingPage: React.FC = () => {
 
   const router = useRouter();
 
+  /** 🔧 API BASE a FastAPI-hoz */
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
+    "http://127.0.0.1:8000";
+
   /** 🔧 Ütközést okozó lokál kulcsok célzott törlése új kampány indítása előtt */
   const resetStoryState = (hard = false) => {
     try {
@@ -55,7 +60,7 @@ const LandingPage: React.FC = () => {
   };
 
   const goToFirstPage = async () => {
-    const defaultSrc = "/stories/global.json"; // ⬅️ a fő JSON-od
+    const defaultSrc = "/stories/global.json"; // ⬅️ a fő JSON-od (backend eléri)
     const firstPageId = "ch1_pg1";
     const title = "Main Campaign";
 
@@ -81,7 +86,7 @@ const LandingPage: React.FC = () => {
 
   const handleStart = async () => {
     if (!apiReady) {
-      setGlobalError("Érvénytelen vagy hiányzó API kulcs(ok).");
+      setGlobalError("Érvénytelen vagy hiányzó API kulcs(ok) vagy a backend nem elérhető.");
       return;
     }
     setLoading(true);
@@ -98,37 +103,26 @@ const LandingPage: React.FC = () => {
     await goToFirstPage();
   };
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
-    "http://127.0.0.1:8000";
-
-  // Kulcsok validálása
+  // ✅ Kulcsok + backend elérhetőség validálása (FastAPI /health)
   const validateKeys = async () => {
-    if (!voiceApiKey || !imageApiKey) {
+    // Követelmény: mindkét kulcs legyen kitöltve (üzemi mód)
+    if (!voiceApiKey?.trim() || !imageApiKey?.trim()) {
       setApiReady(false);
       return;
     }
     setValidating(true);
     try {
-      const resVoice = await fetch("/api/testVoice", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${voiceApiKey}` },
-      });
-      const resImage = await fetch("/api/testImage", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${imageApiKey}` },
-      });
-
-      if (resVoice.ok && resImage.ok) {
+      const r = await fetch(`${API_BASE}/health`, { cache: "no-store" });
+      if (r.ok) {
         setApiReady(true);
         setGlobalError(null);
       } else {
         setApiReady(false);
-        setGlobalError("Az egyik API kulcs hibás.");
+        setGlobalError(`Backend /health válasz: ${r.status}`);
       }
     } catch (err) {
       setApiReady(false);
-      setGlobalError("Nem sikerült kapcsolódni az API-hoz.");
+      setGlobalError("Nem sikerült kapcsolódni a backendhez (/health).");
     } finally {
       setValidating(false);
     }
@@ -136,7 +130,8 @@ const LandingPage: React.FC = () => {
 
   useEffect(() => {
     validateKeys();
-  }, [voiceApiKey, imageApiKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceApiKey, imageApiKey, API_BASE]);
 
   return (
     <>
@@ -181,7 +176,7 @@ const LandingPage: React.FC = () => {
         {/* VALIDATION MESSAGES */}
         {!apiReady && (voiceApiKey || imageApiKey) && !validating && (
           <p className={styles.errorMessage}>
-            A megadott API kulcsok érvénytelenek vagy hibásak.
+            A megadott API kulcsok érvénytelenek, vagy a backend nem elérhető.
           </p>
         )}
         {validating && (
@@ -192,13 +187,7 @@ const LandingPage: React.FC = () => {
         <button
           className={`${styles.startButton} globalStartButton`}
           onClick={handleStart}
-          disabled={
-            !apiReady ||
-            validating ||
-            loading ||
-            !voiceApiKey?.trim() ||
-            !imageApiKey?.trim()
-          }
+          disabled={!apiReady || validating || loading}
         >
           {loading ? "Indítás..." : "Enter the Tower"}
         </button>
