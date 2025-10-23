@@ -851,9 +851,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/,"");
-const base = API_BASE || ""; // üres = same-origin
+        const base = API_BASE || ""; // üres = same-origin
 
-const url = `${base}/page/${encodeURIComponent(currentPageId)}?src=${encodeURIComponent(storySrc)}`;
+        const url = `${base}/page/${encodeURIComponent(currentPageId)}?src=${encodeURIComponent(storySrc)}`;
 
         const response = await fetch(url, { signal: ac.signal });
         if (!response.ok) {

@@ -18,6 +18,19 @@ let mem: StorageShape | null = null;
 let saveTimer: number | null = null;
 let memUserId: string | null = null;
 
+type StoriesMap = StorageShape["stories"];
+type StoryBucket = StoriesMap[keyof StoriesMap];
+
+type DailyCounters = {
+  pageViews: number;
+  choices: number;
+  puzzles: { tries: number; solved: number };
+  runes: number;
+  mediaStarts: number;
+  mediaStops: number;
+  completions: number;
+};
+
 function now() {
   return Date.now();
 }
@@ -55,7 +68,7 @@ function load(): StorageShape {
       }
     }
   } catch {}
-  mem = { schema: ANALYTICS_SCHEMA_VERSION, stories: {} };
+  mem = { schema: ANALYTICS_SCHEMA_VERSION, stories: {} as StorageShape["stories"] };
   return mem!;
 }
 
@@ -69,10 +82,10 @@ function saveSoon() {
   }, BATCH_DEBOUNCE_MS) as unknown as number;
 }
 
-function storyBucket(storyId: string) {
+function storyBucket(storyId: string): StoryBucket {
   const s = load();
   if (!s.stories[storyId]) s.stories[storyId] = { sessions: {}, events: [], meta: {} };
-  return s.stories[storyId];
+  return s.stories[storyId]!;
 }
 
 // ---------- INIT / META ----------
@@ -81,7 +94,6 @@ export function initAnalyticsForStory(storyId: string) {
   saveSoon();
 }
 
-// meta: csak ismert mezők, hogy ne dobjon TS-t “ismeretlen property”-re
 export function setStoryMeta(
   storyId: string,
   meta: Partial<DeviceMeta & { title?: string; src?: string; campaign?: string; userId?: string }>
@@ -104,7 +116,7 @@ export function setStoryMeta(
 
 export function getOrCreateSessionId(storyId: string) {
   const key = `qz_session_${storyId}`;
-  let v = null as string | null;
+  let v: string | null = null;
   try {
     v = localStorage.getItem(key);
   } catch {}
@@ -120,6 +132,19 @@ export function getOrCreateSessionId(storyId: string) {
   return v;
 }
 
+// ---------- Helpers a props olvasásához (any nélkül) ----------
+function getProp<T extends string | number | boolean>(
+  obj: GenericProps | undefined,
+  key: string,
+  type: "string" | "number" | "boolean"
+): T | undefined {
+  const v = obj ? (obj as Record<string, unknown>)[key] : undefined;
+  if (type === "string" && typeof v === "string") return v as T;
+  if (type === "number" && typeof v === "number") return v as T;
+  if (type === "boolean" && typeof v === "boolean") return v as T;
+  return undefined;
+}
+
 // ---------- PUSH ----------
 function pushEvent(e: AnalyticsEvent) {
   const b = storyBucket(e.storyId);
@@ -127,12 +152,14 @@ function pushEvent(e: AnalyticsEvent) {
 
   // Merge / dedup rövid ablakban
   const last = arr[arr.length - 1];
+  const sameProps =
+    JSON.stringify((last?.props as unknown) ?? null) === JSON.stringify((e.props as unknown) ?? null);
   if (
     last &&
-    (e.ts - last.ts) <= MERGE_WINDOW_MS &&
+    e.ts - last.ts <= MERGE_WINDOW_MS &&
     last.t === e.t &&
     last.pageId === e.pageId &&
-    JSON.stringify(last.props || null) === JSON.stringify(e.props || null) &&
+    sameProps &&
     last.refPageId === e.refPageId
   ) {
     return; // dedup
@@ -192,7 +219,7 @@ export function trackGameComplete(
     baseEvent(storyId, sessionId, "game:complete", pageId, undefined, {
       reason: "terminal_page",
       ...(extra || {}),
-    }) as any
+    })
   );
 }
 
@@ -221,7 +248,7 @@ export function trackChoice(
   extra?: GenericProps
 ) {
   const props: GenericProps = { choiceId, ...(label ? { label } : {}) };
-  if (typeof latencyMs === "number" && latencyMs >= 0) props.latencyMs = latencyMs;
+  if (typeof latencyMs === "number" && latencyMs >= 0) (props as Record<string, unknown>).latencyMs = latencyMs;
   if (extra && Object.keys(extra).length) Object.assign(props, extra);
   pushEvent(baseEvent(storyId, sessionId, "choice_select", pageId, undefined, props));
 }
@@ -332,8 +359,7 @@ export function exportStoryCSV(storyId: string): Blob {
     ["storyId", "id", "ts", "type", "pageId", "refPageId", "sessionId", "userId", "props"],
   ];
   for (const e of b.events) {
-    const userId =
-      (e as any)?.props?.userId != null ? String((e as any).props.userId) : "";
+    const userId = getProp<string>(e.props, "userId", "string") ?? "";
     rows.push([
       storyId,
       e.id,
@@ -359,10 +385,9 @@ export function exportAllCSV(): Blob {
     ["storyId", "id", "ts", "type", "pageId", "refPageId", "sessionId", "userId", "props"],
   ];
   for (const storyId of Object.keys(s.stories)) {
-    const b = s.stories[storyId];
+    const b = s.stories[storyId]!;
     for (const e of b.events) {
-      const userId =
-        (e as any)?.props?.userId != null ? String((e as any).props.userId) : "";
+      const userId = getProp<string>(e.props, "userId", "string") ?? "";
       rows.push([
         storyId,
         e.id,
@@ -393,8 +418,8 @@ export function listStories(): Array<{ storyId: string; title?: string; src?: st
   const s = load();
   return Object.entries(s.stories).map(([storyId, bucket]) => ({
     storyId,
-    title: (bucket.meta as any)?.title,
-    src: (bucket.meta as any)?.src,
+    title: (bucket.meta as Record<string, unknown>)?.["title"] as string | undefined,
+    src: (bucket.meta as Record<string, unknown>)?.["src"] as string | undefined,
   }));
 }
 
@@ -402,15 +427,15 @@ export function getUsersForStory(storyId: string): string[] {
   const b = storyBucket(storyId);
   const set = new Set<string>();
   for (const e of b.events) {
-    const u = (e as any)?.props?.userId;
-    if (u) set.add(String(u));
+    const u = getProp<string>(e.props, "userId", "string");
+    if (u) set.add(u);
   }
   return Array.from(set);
 }
 
 export function getEventsByUser(storyId: string, userId: string): AnalyticsEvent[] {
   const b = storyBucket(storyId);
-  return b.events.filter((e) => (e as any)?.props?.userId === userId);
+  return b.events.filter((e) => getProp<string>(e.props, "userId", "string") === userId);
 }
 
 export function getEventsBySession(storyId: string, sessionId: string): AnalyticsEvent[] {
@@ -427,7 +452,7 @@ export function rollupDaily(storyId: string) {
       sessions: Set<string>;
       users: Set<string>;
       pages: Set<string>;
-      counters: any;
+      counters: DailyCounters;
       pageViews: Map<string, number>;
     }
   >();
@@ -458,8 +483,8 @@ export function rollupDaily(storyId: string) {
     d.sessions.add(e.sessionId);
     if (e.pageId) d.pages.add(e.pageId);
 
-    const userId = (e as any)?.props?.userId;
-    if (userId) d.users.add(String(userId));
+    const userId = getProp<string>(e.props, "userId", "string");
+    if (userId) d.users.add(userId);
 
     switch (e.t) {
       case "page_enter":
@@ -472,9 +497,11 @@ export function rollupDaily(storyId: string) {
       case "puzzle_try":
         d.counters.puzzles.tries++;
         break;
-      case "puzzle_result":
-        if ((e as any)?.props?.isCorrect) d.counters.puzzles.solved++;
+      case "puzzle_result": {
+        const isCorrect = getProp<boolean>(e.props, "isCorrect", "boolean") ?? false;
+        if (isCorrect) d.counters.puzzles.solved++;
         break;
+      }
       case "rune_unlock":
         d.counters.runes++;
         break;
@@ -484,9 +511,9 @@ export function rollupDaily(storyId: string) {
       case "media_stop":
         d.counters.mediaStops++;
         break;
-        case "game:complete":
-  d.counters.completions++;      // ⬅️ ÚJ
-  break
+      case "game:complete":
+        d.counters.completions++;
+        break;
     }
   }
 
@@ -503,53 +530,55 @@ export function rollupDaily(storyId: string) {
       .map(([pageId, views]) => ({ pageId, views })),
   }));
 }
-// --- AUTO UPLOAD HELPEREK ---
-// KÉRJÜK: hagyd meg a meglévő exportokat, ezt tedd a fájl VÉGÉRE!
 
+// --- AUTO UPLOAD HELPEREK ---
 export function prepareBatch(storyId: string) {
-  const b = (function () {
-    // belső access a story buckethez
-    // TS miatt nem exportáltuk külön; a file tetején van storyBucket
-    // @ts-ignore
-    return storyBucket(storyId);
-  })();
+  const s = load();
+  const b = storyBucket(storyId);
 
   // utolsó feltöltés időbélyege
-  const lastTs = Number(((b.meta as any) || {}).lastUploadTs || 0);
-  const events = b.events.filter((e: any) => Number(e.ts) > lastTs);
+  const lastTs = Number((b.meta as Record<string, unknown>)?.["lastUploadTs"] ?? 0);
+  const events = b.events.filter((e) => Number(e.ts) > lastTs);
 
   const userId =
-    (b.meta as any)?.userId ||
+    (b.meta as Record<string, unknown>)?.["userId"] as string | undefined ??
     (typeof window !== "undefined" ? getOrCreateUserId() : undefined);
 
   const device = {
-    ua: (b.meta as any)?.ua,
-    w: (b.meta as any)?.w,
-    h: (b.meta as any)?.h,
-    dpr: (b.meta as any)?.dpr,
-    lang: (b.meta as any)?.lang,
+    ua: (b.meta as Record<string, unknown>)?.["ua"] as string | undefined,
+    w: (b.meta as Record<string, unknown>)?.["w"] as number | undefined,
+    h: (b.meta as Record<string, unknown>)?.["h"] as number | undefined,
+    dpr: (b.meta as Record<string, unknown>)?.["dpr"] as number | undefined,
+    lang: (b.meta as Record<string, unknown>)?.["lang"] as string | undefined,
   };
 
   return { storyId, userId, device, events };
 }
+
 export async function uploadBatch(storyId: string, endpoint?: string) {
   const payload = prepareBatch(storyId);
   if (!payload.events.length) return { ok: true, written: 0 };
 
   // --- Endpoint feloldás (prioritási sorrendben) ---
   const envFromWindow =
-    (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_ANALYTICS_ENDPOINT) || undefined;
+    (typeof window !== "undefined" &&
+      (window as unknown as Record<string, unknown>)["NEXT_PUBLIC_ANALYTICS_ENDPOINT"]) as
+      | string
+      | undefined;
   const envFromProcess =
-    (typeof process !== "undefined" && (process as any).env?.NEXT_PUBLIC_ANALYTICS_ENDPOINT) ||
-    undefined;
+    (typeof process !== "undefined" &&
+      (process as unknown as { env?: Record<string, unknown> }).env?.[
+        "NEXT_PUBLIC_ANALYTICS_ENDPOINT"
+      ]) as string | undefined;
 
   const defaultNextApi = "/api/analytics/batch";
   const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
 
-  const endpoints = [endpoint, envFromWindow, envFromProcess, defaultNextApi, devFastApi]
-    .filter(Boolean) as string[];
+  const endpoints = [endpoint, envFromWindow, envFromProcess, defaultNextApi, devFastApi].filter(
+    Boolean
+  ) as string[];
 
-  let lastError: any = null;
+  let lastError: unknown = null;
 
   for (const url of endpoints) {
     try {
@@ -573,12 +602,11 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 
       // siker → lastUploadTs frissítése
-      const maxTs = Math.max(...payload.events.map((e: any) => Number(e.ts)));
+      const maxTs = Math.max(...payload.events.map((e) => Number(e.ts)));
 
-      // @ts-ignore – belső helper ugyanebben a fájlban
+      const s = load();
       const b = storyBucket(storyId);
-      (b.meta as any) = { ...(b.meta || {}), lastUploadTs: maxTs };
-      // @ts-ignore – belső saveSoon
+      (b.meta as Record<string, unknown>) = { ...(b.meta || {}), lastUploadTs: maxTs };
       saveSoon();
 
       if (process.env.NODE_ENV !== "production") {
@@ -592,7 +620,7 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
 
       // ha a szerver nem ad JSON-t, akkor is legyen ok válasz
       try {
-        const json = await res.json();
+        const json = (await res.json()) as unknown;
         return json;
       } catch {
         return { ok: true, written: payload.events.length };
@@ -602,51 +630,56 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
       if (process.env.NODE_ENV !== "production") {
         console.warn("[analytics] upload failed, trying next endpoint", { url, err });
       }
-      // próbálkozunk a következő endpointtal
       continue;
     }
   }
 
   // minden kísérlet megbukott → ne dobjunk hibát, adjunk vissza státuszt
   return {
-    ok: false,
+    ok: false as const,
     tried: endpoints,
     queued: payload.events.length,
     error: String(lastError || "upload failed"),
   };
 }
+
 // --- Dev helpers on window ---------------------------------------
 declare global {
   interface Window {
     __an?: {
-      dump: () => any;
-      events: (storyId: string) => any[];
-      prepare: (storyId: string) => any;
-      upload: (storyId: string, endpoint?: string) => Promise<any>;
+      dump: () => unknown;
+      events: (storyId: string) => unknown[];
+      prepare: (storyId: string) => ReturnType<typeof prepareBatch>;
+      upload: (storyId: string, endpoint?: string) => Promise<unknown>;
       clear: (storyId: string) => void;
     };
   }
 }
 
 if (typeof window !== "undefined") {
-  (window as any).__an = {
+  window.__an = {
     dump: () => {
-      try { return JSON.parse(localStorage.getItem("qz_analytics_v1") || "null"); }
-      catch { return null; }
+      try {
+        return JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      } catch {
+        return null;
+      }
     },
     events: (storyId: string) => {
       try {
-        const s = JSON.parse(localStorage.getItem("qz_analytics_v1") || '{"stories":{}}');
-        return (s.stories?.[storyId]?.events) || [];
-      } catch { return []; }
+        const s = JSON.parse(localStorage.getItem(LS_KEY) || '{"stories":{}}') as StorageShape;
+        return (s.stories?.[storyId]?.events as unknown[]) || [];
+      } catch {
+        return [];
+      }
     },
     prepare: (storyId: string) => prepareBatch(storyId),
     upload: (storyId: string, endpoint?: string) => uploadBatch(storyId, endpoint),
     clear: (storyId: string) => {
       try {
-        const s = JSON.parse(localStorage.getItem("qz_analytics_v1") || '{"stories":{}}');
+        const s = JSON.parse(localStorage.getItem(LS_KEY) || '{"stories":{}}') as StorageShape;
         if (s.stories && s.stories[storyId]) delete s.stories[storyId];
-        localStorage.setItem("qz_analytics_v1", JSON.stringify(s));
+        localStorage.setItem(LS_KEY, JSON.stringify(s));
       } catch {}
     },
   };

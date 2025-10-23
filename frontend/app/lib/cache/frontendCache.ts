@@ -1,8 +1,10 @@
 // Lightweight FE cache: memory + localStorage + TTL + verziózás (SSR-safe)
-type Bucket = "skin" | "campaign" | "page" | "wl" | string;
+export type Bucket = "skin" | "campaign" | "page" | "wl" | (string & {});
 
 const VERSION = "v1";
-const MEM = new Map<string, { exp: number; val: any }>();
+type CacheRecord<T> = { exp: number; val: T };
+
+const MEM = new Map<string, CacheRecord<unknown>>();
 const LS_PREFIX = "mt:"; // elkülönítés a saját LS kulcsaidtól
 
 const now = () => Date.now();
@@ -38,42 +40,42 @@ function safeParse<T>(raw: string | null): T | null {
   try { return JSON.parse(raw) as T; } catch { return null; }
 }
 
-export function getCache<T = any>(bucket: Bucket, id: string): T | null {
+export function getCache<T = unknown>(bucket: Bucket, id: string): T | null {
   const k = keyOf(bucket, id);
 
   // memory first
-  const mem = MEM.get(k);
-  if (mem && mem.exp > now()) return mem.val as T;
+  const mem = MEM.get(k) as CacheRecord<T> | undefined;
+  if (mem && mem.exp > now()) return mem.val;
   if (mem) MEM.delete(k);
 
   // localStorage fallback
-  const obj = safeParse<{ exp: number; val: T }>(lsGet(k));
+  const obj = safeParse<CacheRecord<T>>(lsGet(k));
   if (obj && obj.exp > now()) {
-    MEM.set(k, obj); // re-hydrate memory
+    MEM.set(k, obj as CacheRecord<unknown>); // re-hydrate memory
     return obj.val;
   }
   if (obj) lsRemove(k);
   return null;
 }
 
-export function setCache<T = any>(bucket: Bucket, id: string, val: T, ttlMs: number) {
-  const rec = { exp: now() + Math.max(1, ttlMs), val };
+export function setCache<T = unknown>(bucket: Bucket, id: string, val: T, ttlMs: number): void {
+  const rec: CacheRecord<T> = { exp: now() + Math.max(1, ttlMs), val };
   const k = keyOf(bucket, id);
-  MEM.set(k, rec);
+  MEM.set(k, rec as CacheRecord<unknown>);
   // best-effort persist (ne hasaljon SSR-en / quota-n)
   try { lsSet(k, JSON.stringify(rec)); } catch {}
 }
 
-export function hasFresh(bucket: Bucket, id: string) {
+export function hasFresh(bucket: Bucket, id: string): boolean {
   const k = keyOf(bucket, id);
   const mem = MEM.get(k);
-  if (mem && mem.exp > now()) return true;
+  if (mem && (mem as CacheRecord<unknown>).exp > now()) return true;
 
-  const obj = safeParse<{ exp: number }>(lsGet(k));
+  const obj = safeParse<Pick<CacheRecord<unknown>, "exp">>(lsGet(k));
   return !!(obj && obj.exp > now());
 }
 
-export function clearExpired() {
+export function clearExpired(): void {
   const t = now();
   // memory
   for (const [k, v] of MEM.entries()) if (!v || v.exp <= t) MEM.delete(k);
@@ -83,13 +85,13 @@ export function clearExpired() {
   for (let i = 0; i < lsLen(); i++) {
     const k = lsKey(i) || "";
     if (!k.startsWith(`${LS_PREFIX}${VERSION}:`)) continue;
-    const v = safeParse<{ exp: number }>(lsGet(k));
+    const v = safeParse<Pick<CacheRecord<unknown>, "exp">>(lsGet(k));
     if (!v || v.exp <= t) rm.push(k);
   }
   rm.forEach(lsRemove);
 }
 
-export function clearAll(namespace: Bucket | null = null) {
+export function clearAll(namespace: Bucket | null = null): void {
   // memory
   for (const k of Array.from(MEM.keys())) {
     if (!namespace || k.includes(`:${namespace}:`)) MEM.delete(k);
