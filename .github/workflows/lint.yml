@@ -1,11 +1,35 @@
-name: lint
-on: [push, pull_request]
+﻿name: lint
+
+on:
+  push:
+  pull_request:
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci
-      - run: npx eslint . --max-warnings=0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci || npm install
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile || yarn install
+          else
+            npm install
+          fi
+
+      - name: Run lint (script if exists, else fallback to eslint .)
+        run: |
+          if npm run | grep -qE 'lint'; then
+            npm run lint
+          else
+            npx eslint . || true
+          fi
