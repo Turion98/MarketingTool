@@ -75,6 +75,9 @@ import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 import { loadTokens } from "../../lib/tokenLoader";
 import { fetchPageJsonCached, prefetchPages } from "@/app/lib/story/fetchPageJson";
 
+/*import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
+*/
+
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
 const FADE_IN_MS = 600;
@@ -82,7 +85,7 @@ const RUNE = { slot: 72, gap: 0, slots: 3, offsetX: 176, offsetY: 25 };
 const SKIN_LS_KEY = "skinByCampaignId";
 const API_BASE =
   (process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
-  
+
 /** ---------- Fragment-kompozíció ---------- */
 type FragmentBank = Record<
   string,
@@ -409,6 +412,19 @@ const StoryPage: React.FC = () => {
   const pageRootRef = useRef<HTMLDivElement>(null);
   // ⬇️ Egyedi rúna PNG-k: flagId -> pngUrl
 const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
+
+/*
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      (window as any).runSecSmoke = () => {
+        const result = runSecuritySmokeTest();
+        console.log("[SMOKE][FINAL]", result);
+        return result;
+      };
+      console.log("[SMOKE] runSecSmoke() is now available in console");
+    }
+  }, []);
+*/
 
 useLayoutEffect(() => {
     const root = pageRootRef.current;
