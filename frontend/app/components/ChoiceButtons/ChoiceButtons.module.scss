@@ -1,8 +1,28 @@
 /* ====== ChoiceButtons.module.scss (buttons only, no container panel) ====== */
 
+/* Timing / motion tokens (Riddle-parity) */
+:root {
+  --ch-dur-in: var(--choice-dur-in, 480ms);
+  --ch-dur-exit: var(--choice-dur-exit, 220ms);
+  --ch-ease-in: var(--choice-ease-in, cubic-bezier(.22,.61,.36,1));
+  --ch-ease-out: var(--choice-ease-out, cubic-bezier(.16,.84,.44,1));
+}
+
 /* A WRAPPERNEK NINCS SAJÁT HÁTTERE/KERETE/ÁRNYÉKA */
 .choiceButtons {
   display: contents; /* a wrapper teljesen eltűnik a layoutból */
+
+  /* baseline: amikor mountoljuk, rejtett állapotból indulunk, mint Riddle */
+  opacity: 0;
+  transform: translateY(6px);
+  animation: chRootIn var(--ch-dur-in) var(--ch-ease-in) forwards;
+}
+
+/* amikor a komponens "eltűnik" (pl. következő oldalra lépés előtt)
+   → ugyanaz az exit mint Riddle: halványodás + pici scale */
+.choiceButtons.exiting {
+  pointer-events: none;
+  animation: chExit var(--ch-dur-exit) var(--ch-ease-out) both;
 }
 
 /* VALÓDI GOMB */
@@ -18,7 +38,7 @@
   border-radius: var(--choice-radius, 14px);
 
   /* Keret – SZÉTBONTVA, hogy a width token működjön */
-  border-width: var(--choice-border-width, 1px) ;
+  border-width: var(--choice-border-width, 1px);
   border-style: var(--choice-border-style, solid);
   border-color: var(--choice-border, rgba(255,255,255,.18));
 
@@ -96,12 +116,36 @@
   filter: none;
 }
 
-/* Belépő animáció (ha a parent .visible-t ad) */
-.choiceButtons.visible .choiceButton:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: .08s; }
-.choiceButtons.visible .choiceButton:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: .16s; }
-.choiceButtons.visible .choiceButton:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: .24s; }
-.choiceButtons.visible .choiceButton:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: .32s; }
-.choiceButtons.visible .choiceButton:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: .40s; }
+/* Belépő animáció gombonként
+   - marad a stagger (delay per nth-child),
+   - DE az opacity/translateY induló állapot már nem inline stílus hack,
+     hanem ugyanúgy, mint eddig.
+*/
+.choiceButtons.visible .choiceButton:nth-child(1) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: .08s;
+}
+.choiceButtons.visible .choiceButton:nth-child(2) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: .16s;
+}
+.choiceButtons.visible .choiceButton:nth-child(3) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: .24s;
+}
+.choiceButtons.visible .choiceButton:nth-child(4) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: .32s;
+}
+.choiceButtons.visible .choiceButton:nth-child(5) {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: .40s;
+}
 
 /* Mobil finomhangolás – a legacy mobil tokenjeit használjuk */
 @media (max-width: 520px) {
@@ -115,5 +159,28 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .choiceButton { transition: none; }
+  .choiceButtons {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .choiceButtons.exiting {
+    animation: none;
+  }
+  .choiceButton {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ========== KEYFRAMES (Riddle-parity) ========== */
+@keyframes chRootIn {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes chExit {
+  0%   { opacity: 1; transform: scale(1);    }
+  100% { opacity: 0; transform: scale(.995); }
 }

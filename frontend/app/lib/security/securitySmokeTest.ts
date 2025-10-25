@@ -77,7 +77,6 @@ function testConfigGuard(): { ok: boolean; detail: string } {
     // @ts-expect-error szándékos illegális írás
     guarded.data.skin = "hacked_skin";
   } catch {
-    // ha ide jutunk, az jó: tényleg readonly lett
     freezeWorked = true;
   }
 
@@ -94,6 +93,7 @@ function testConfigGuard(): { ok: boolean; detail: string } {
     hash: guarded.hash,
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const checkHacked = validateGuardedConfig(hackedClone as any);
 
   // hackelt példányt el kell utasítania, és vissza kell esnie safe fallback-re
@@ -110,7 +110,6 @@ function testConfigGuard(): { ok: boolean; detail: string } {
 // ---- CACHE TEST ------------------------------------------------------
 
 function testCache(): { ok: boolean; detail: string } {
-  // tiszta indulás
   clearCache();
 
   // 1) tegyünk be valamit
@@ -124,6 +123,7 @@ function testCache(): { ok: boolean; detail: string } {
   setCacheEntry(key1, { pageTitle: "Intro scene" });
 
   // 2) olvassuk vissza
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hit: any = getCacheEntry(key1);
   const gotInitial =
     !!hit && hit.data && hit.data.pageTitle === "Intro scene";
@@ -154,7 +154,6 @@ export function runSecuritySmokeTest(): SmokeResult {
   const sid = getSessionId();
 
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
     console.log(
       "[SMOKE] sessionId (masked):",
       typeof sid === "string" ? sid.slice(0, 6) + "..." : sid
@@ -177,13 +176,9 @@ export function runSecuritySmokeTest(): SmokeResult {
   };
 
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
     console.log("[SMOKE][RATE]", rate);
-    // eslint-disable-next-line no-console
     console.log("[SMOKE][CFG]", cfg);
-    // eslint-disable-next-line no-console
     console.log("[SMOKE][CACHE]", cache);
-    // eslint-disable-next-line no-console
     console.log("[SMOKE][FINAL]", result);
   }
 

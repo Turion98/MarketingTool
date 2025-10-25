@@ -11,20 +11,9 @@ export type Choice = {
   text: string;
   next: string;
   reward?: any;
-
-  /** Lehet string VAGY string[] – normalizáljuk tömbbé render előtt */
   lockedIf?: string[] | string;
-
   disabled?: boolean;
-
-  /** Átadjuk a StoryPage-nek (fallback: actions alapján töltjük ki) */
   fragmentId?: string;
-
-  /**
-   * Két támogatott séma:
-   * 1) { type: "unlockFragment", id: string }
-   * 2) { unlockFragment: string }
-   */
   actions?: Array<
     | { type: string; id?: string }
     | { unlockFragment?: string }
@@ -35,11 +24,10 @@ type Props = {
   choices: Choice[];
   unlockedFragments: string[];
   show: boolean;
-  // next, reward, teljes choiceObj
   onChoiceSelected: (next: string, reward?: any, choiceObj?: Choice) => void;
 };
 
-/** Egyszerű segédfüggvény a className-ek összefűzésére */
+// segédfüggvény osztályösszefűzésre
 function cx(...v: Array<string | undefined | false | null>) {
   return v.filter(Boolean).join(" ");
 }
@@ -50,13 +38,26 @@ const ChoiceButtons: React.FC<Props> = ({
   onChoiceSelected,
   show,
 }) => {
-  const [animate, setAnimate] = useState(false);
+  // 🔄 phase: riddle parity
+  // - "hidden"   → még nem jelent meg
+  // - "visible"  → látható, interaktív
+  // - "exiting"  → kifade-elés pillanatában
+  const [phase, setPhase] = useState<"hidden" | "visible" | "exiting">(
+    show ? "visible" : "hidden"
+  );
 
-  // Kontextus az analitikához
   const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
 
+  // amikor show változik, állítsuk a phase-t
   useEffect(() => {
-    setAnimate(!!show);
+    if (show) {
+      setPhase("visible");
+    } else {
+      // ha le akarjuk venni, előbb tegyük "exiting"-re
+      // (ha a parent azonnal unmountolja, ez úgysem fog látszani,
+      //  de ha bent hagyja egy pillanatra, akkor szép lesz)
+      setPhase((prev) => (prev === "visible" ? "exiting" : "hidden"));
+    }
   }, [show]);
 
   const safeUnlocked = useMemo(
@@ -89,14 +90,12 @@ const ChoiceButtons: React.FC<Props> = ({
   };
 
   const handleClick = (choice: Choice) => {
-    // Normalizált fragmentId: explicit → actions-ből származtatott
     const fragFromActions = pickFragmentIdFromActions(choice);
     const ensuredChoice: Choice = {
       ...choice,
       fragmentId: choice.fragmentId ?? fragFromActions,
     };
 
-    // Eredeti logika
     onChoiceSelected(ensuredChoice.next, ensuredChoice.reward, ensuredChoice);
 
     // Analitika – best-effort
@@ -121,7 +120,11 @@ const ChoiceButtons: React.FC<Props> = ({
 
   return (
     <nav
-      className={cx(style.choiceButtons, animate && style.visible)}
+      className={cx(
+        style.choiceButtons,
+        phase === "visible" && style.visible,
+        phase === "exiting" && style.exiting
+      )}
       aria-label="Choices"
       data-role="choices"
     >
@@ -133,8 +136,10 @@ const ChoiceButtons: React.FC<Props> = ({
           ? [choice.lockedIf]
           : [];
 
-        // Zár logika: ha bármelyik feltétel szerepel az unlockedFragments-ben, zárolt
-        const isLocked = lockedIfArr.some((lock) => safeUnlocked.includes(lock));
+        // Zár logika
+        const isLocked = lockedIfArr.some((lock) =>
+          safeUnlocked.includes(lock)
+        );
         const disabled = !!choice.disabled || isLocked;
 
         const key = (choice.id ?? `idx-${index}`).toString();
@@ -145,7 +150,6 @@ const ChoiceButtons: React.FC<Props> = ({
             type="button"
             className={cx(style.choiceButton, isLocked && style.locked)}
             onClick={() => !disabled && handleClick(choice)}
-            // opcionális: ha zároltra kattint, logoljuk ui_click-ként
             onMouseDown={() => {
               if (disabled && storyId && sessionId && currentPageId) {
                 try {

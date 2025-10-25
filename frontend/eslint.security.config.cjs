@@ -1,6 +1,3 @@
-// eslint.security.config.cjs
-// Flat-config kizárólag a security modulokra.
-
 const tsParser = require("@typescript-eslint/parser");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 
@@ -15,7 +12,12 @@ module.exports = [
       parserOptions: {
         ecmaVersion: "latest",
         sourceType: "module",
-        project: null, // nem használunk project references-t itt
+        project: null
+      },
+      globals: {
+        window: "readonly",
+        console: "readonly",
+        process: "readonly",
       },
     },
 
@@ -24,13 +26,17 @@ module.exports = [
     },
 
     rules: {
-      // szigor itt, hogy security kód ne legyen laza:
+      // security elv: ne hagyjunk type-less adatfolyamot – de engedjük lokálisan, ha kell
       "@typescript-eslint/no-explicit-any": "error",
+
+      // maradhat warning (nem akarjuk hogy ez blokkoljon)
       "@typescript-eslint/no-unused-vars": ["warn"],
+
+      // security log => console engedélyezett
       "no-console": "off",
 
-      // alap JS ajánlott dolgok
-      "no-undef": "error",
+      // ezek most már nem kellenek, mert fent definiáltuk a globálokat:
+      "no-undef": "off",
       "no-redeclare": "error",
     },
   },

@@ -27,6 +27,11 @@
 
 import { secLog } from "./secLog";
 
+// SECURITY NOTE:
+// LOCAL_SALT kizárólag fejlesztői környezetre van.
+// Ez NEM hálózati titok, és nem mehet ki semmilyen szerveres/verziózott "prod secret" helyett.
+// Production esetben a backend oldali aláírás / hitelesítés dönt, nem ez.
+// Ez csak lokális manipuláció-detektálásra szolgál fejlesztés közben.
 const LOCAL_SALT = "local_dev_salt_v1";
 
 // Ezek lesznek a kötelező mezők, amiket védeni akarunk.

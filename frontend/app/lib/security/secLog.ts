@@ -29,7 +29,6 @@ export function secLog(
   }
 
   const ts = Date.now();
-  // eslint-disable-next-line no-console
   console.warn(
     `[SEC] ${ts} ${level} ${code} ${msg} ${JSON.stringify(safeCtx)}`
   );

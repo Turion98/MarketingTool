@@ -15,7 +15,8 @@ type CacheEntry<T = unknown> = {
   timestamp: number;
 };
 
-type CacheBucket = Map<string, CacheEntry<any>>;
+// ⬅️ itt változtattunk: any -> unknown
+type CacheBucket = Map<string, CacheEntry<unknown>>;
 
 // ---- Beállítások ----
 const DEFAULT_TTL_MS = 5 * 60 * 1000; // 5 perc
@@ -52,7 +53,6 @@ export function setCacheEntry<T>(
   evictIfNeeded();
   // debug log (nem kötelező)
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
     console.log(`[CACHE] set ${key} (ttl=${ttlMs}ms)`);
   }
 }
@@ -91,7 +91,6 @@ export function hasCacheEntry(key: string, ttlMs: number = DEFAULT_TTL_MS): bool
 export function clearCache(): void {
   bucket.clear();
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
     console.log("[CACHE] cleared");
   }
 }

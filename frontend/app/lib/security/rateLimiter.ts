@@ -47,7 +47,6 @@ function secLog(
 
   // formátum: [SEC]<ts><lvl><code><msg><ctxJson>
   const ts = Date.now();
-  // eslint-disable-next-line no-console
   console.warn(
     `[SEC] ${ts} ${level} ${code} ${msg} ${JSON.stringify(safeCtx)}`
   );
@@ -85,14 +84,11 @@ export function checkAndConsumeRateLimit(
   const nowMs = Date.now();
   const bucketKey = makeBucketKey(actionKey, sid);
 
-  // vedd ki a meglévő bucketet
   const prevHits = buckets[bucketKey] ?? [];
-  // takarítsd ki az ablakon túli találatokat
   const freshHits = pruneOld(prevHits, nowMs, windowMs);
 
   if (freshHits.length >= maxEvents) {
-    // megtelt a limit
-    const oldestRelevant = freshHits[0]; // legrégebbi még bent lévő timestamp
+    const oldestRelevant = freshHits[0]; 
     const retryAfterMs = windowMs - (nowMs - oldestRelevant);
 
     secLog("WARN", "RATE_LIMIT_BLOCK", "local rate limit triggered", {
@@ -101,7 +97,6 @@ export function checkAndConsumeRateLimit(
       retryAfterMs,
     });
 
-    // ne írjunk vissza új hitet, mert blokkoltuk
     buckets[bucketKey] = freshHits;
     return {
       ok: false,
@@ -109,7 +104,6 @@ export function checkAndConsumeRateLimit(
     };
   }
 
-  // engedélyezett, felvesszük a mostani hitet
   freshHits.push(nowMs);
   buckets[bucketKey] = freshHits;
 

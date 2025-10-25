@@ -75,8 +75,8 @@ import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 import { loadTokens } from "../../lib/tokenLoader";
 import { fetchPageJsonCached, prefetchPages } from "@/app/lib/story/fetchPageJson";
 
-/*import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
-*/
+import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
+
 
 const DEBUG_RUNES = true; // ideiglenes debug kapcsoló
 const DELAY_MS = 3000;
@@ -412,19 +412,24 @@ const StoryPage: React.FC = () => {
   const pageRootRef = useRef<HTMLDivElement>(null);
   // ⬇️ Egyedi rúna PNG-k: flagId -> pngUrl
 const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
-
-/*
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      (window as any).runSecSmoke = () => {
-        const result = runSecuritySmokeTest();
+ 
+useEffect(() => {
+  if (process.env.NODE_ENV === "development") {
+    (window as any).runSecSmoke = () => {
+      try {
+        const result = runSecuritySmokeTest?.();
         console.log("[SMOKE][FINAL]", result);
         return result;
-      };
-      console.log("[SMOKE] runSecSmoke() is now available in console");
-    }
-  }, []);
-*/
+      } catch (err) {
+        console.warn("[SMOKE] runSecSmoke failed:", err);
+        return { ok: false, error: String(err || "unknown") };
+      }
+    };
+    console.log("[SMOKE] runSecSmoke() is now available in console");
+  }
+}, []);
+
+
 
 useLayoutEffect(() => {
     const root = pageRootRef.current;
@@ -944,6 +949,8 @@ useEffect(() => {
 }, [pageData?.id, globalFragments]);
 
 useEffect(() => {
+  if (process.env.NODE_ENV === "production") return;
+
   const raw = (pageData as any)?.fragmentRecall;
   const recalls = Array.isArray(raw) ? raw : (raw ? [raw] : []);
   const recallIds = recalls.map(r => r?.id).filter(Boolean);
@@ -964,7 +971,6 @@ useEffect(() => {
   console.log("missingInFragments:", missingInFragments);
 
   if (recallIds.length && missingInFragments.length) {
-    // magyarázat, miért hiányozhat:
     console.warn(
       "[RECALL ROOT-CAUSE] A keresett recall ID(k) nincsenek a fragments store-ban. " +
       "Ez akkor fordul elő, ha az adott ID unlock-olva lett, " +
@@ -1347,6 +1353,7 @@ useEffect(() => {
 
 // 🔎 Debug: PG4 állapot
 useEffect(() => {
+  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id === "ch1_pg4") {
     const textType = Array.isArray(pageData?.text) ? "array" : typeof pageData?.text;
     const globalKeys = pageData?.fragmentsGlobal ? Object.keys(pageData.fragmentsGlobal).slice(0, 20) : [];
@@ -1365,6 +1372,7 @@ useEffect(() => {
 
 // 🔎 Extra debug PG4 unlock állapot
 useEffect(() => {
+  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id !== "ch1_pg4") return;
   const hasOrigin = unlockedFragments.includes("tower_origin_fragment_ch1");
   const hasSelf   = unlockedFragments.includes("tower_self_fragment_ch1");
@@ -1374,6 +1382,7 @@ useEffect(() => {
 
 // 🔎 Mit rakott össze végül? (blocks tartalom soronként)
 useEffect(() => {
+  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id !== "ch1_pg4") return;
   console.log("[PG4 BLOCKS]", blocks.length, "lines");
   blocks.forEach((b, i) => console.log(`[#${i}]`, b));
