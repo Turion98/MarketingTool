@@ -32,15 +32,13 @@
   z-index: var(--dock-z, 10);
   pointer-events: auto;
 
-  /* entrance fade */
+  /* entrance baseline */
   opacity: 1;
   transform: none;
   transition:
     opacity var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
-
-
 
 /* ===== Choice button ===== */
 .choice {
@@ -90,12 +88,15 @@
 /* Hover: scale + shadow + gradient shift */
 .choice:enabled:hover {
   transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
+
   /* csak a színt írjuk át, hogy a width/style token maradjon */
   border-color: var(
     --choice-border-hover,
     color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255,255,255,.18)))
   );
+
   box-shadow: var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36));
+
   background: linear-gradient(
     180deg,
     var(--choice-bg-top-hover, color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--choice-bg-top, rgba(255,255,255,.12)))),
@@ -106,16 +107,20 @@
 /* Active/press (touch-friendly) */
 .choice:enabled:active {
   transform: scale(var(--choice-scale-active, .995)) translateY(0);
+
   border-color: var(
     --choice-border-active,
     color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border, rgba(255,255,255,.18)))
   );
+
   box-shadow: var(--choice-shadow-active, 0 6px 16px rgba(0,0,0,.44));
+
   background: linear-gradient(
     180deg,
     var(--choice-bg-top-active, color-mix(in oklch, var(--brand-accent, #ffc861) 20%, var(--choice-bg-top, rgba(255,255,255,.12)))),
     var(--choice-bg-bot-active, color-mix(in oklch, var(--brand-accent, #ffc861) 14%, var(--choice-bg-bot, rgba(255,255,255,.06))))
   );
+
   transition-duration: var(--dock-dur-press, 100ms);
 }
 
@@ -124,6 +129,7 @@
   cursor: not-allowed;
   opacity: .55;
   filter: grayscale(.2) saturate(.8);
+
   background: linear-gradient(
     180deg,
     var(--choice-bg-top-disabled, rgba(255,255,255,.05)),
@@ -154,12 +160,52 @@
 .alignCenter { justify-content: center; }
 .alignEnd { justify-content: flex-end; }
 
+/* ===== Dock visibility / mount lifecycle ===== */
+
+/*
+  baseline mount állapot:
+  - StoryPage úgy rendereli a dockot, hogy először CSAK .fadeWrapper van rajta
+  - ekkor opacity:0 + lejjebb van tolva => láthatatlan, nem villan
+*/
+.fadeWrapper {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease;
+  pointer-events: auto;
+}
+
+/*
+  amikor StoryPage azt mondja: dockJustAppeared === true
+  => hozzáadja az .appearing class-t
+  => szépen felúszik és kifényesedik
+*/
+.appearing {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/*
+  amikor oldalváltás előtt kifade-oljuk
+  => StoryPage isFadingOut === true
+*/
+.fadingOut {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
 /* ===== Mobile ===== */
 @media (max-width: 640px) {
   .grid {
     gap: var(--dock-gap-mobile, var(--dock-gap, 16px));
     padding: var(--dock-pad-mobile, var(--dock-pad, 12px));
   }
+
   .choice {
     font-size: var(--choice-font-mobile, var(--choice-font, 16px));
     padding: var(--choice-padding-y-mobile, var(--choice-padding-y, 14px))
@@ -169,5 +215,16 @@
 
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
-  .choice, .grid { transition: none; }
+  .choice,
+  .grid {
+    transition: none;
+  }
+
+  .fadeWrapper,
+  .appearing,
+  .fadingOut {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
 }

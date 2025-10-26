@@ -11,6 +11,22 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+@keyframes npExitFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(.995);
+  }
+}
+
+/* amikor a panel épp kifelé megy oldalváltás miatt */
+.textDockTop[data-exiting="1"] {
+  pointer-events: none;
+  animation: npExitFade var(--np-exit-dur, 220ms) var(--np-exit-ease, cubic-bezier(.16,.84,.44,1)) both;
+}
 
 @media (max-width: 640px) {
   .text {

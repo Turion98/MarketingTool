@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import NineSlicePanel from "../../NineSlicePanel/NineSlicePanel";
 import TypingText from "../../TypingText/TypingText";
 import s from "./NarrativePanel.module.scss";
@@ -23,7 +23,16 @@ export type NarrativePanelProps = {
   setLockedMeasure: (m: Measure) => void;
   firstLockTimerRef: React.MutableRefObject<number | null>;
   backdrop?: React.ReactNode;
-  title?: string;  
+  title?: string;
+
+  /** oldalváltás kifade flag StoryPage-ből */
+  exiting?: boolean;
+
+  /** StoryPage-nek jelezzünk vissza ha a kifade tényleg LEFUTOTT */
+  onExitDone?: () => void;
+
+  /** ms-ben: mennyi idő a kifade transition (syncben --np-exit-dur-rel) */
+  exitMs?: number;
 };
 
 /**
@@ -45,16 +54,68 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
     setLockedMeasure,
     firstLockTimerRef,
     backdrop,
+    title,
+    exiting = false,
+    onExitDone,
+    exitMs = 220,
   } = props;
 
+  // Ez az a node, amin a kilépő transition fut (.textboxContainer a scss-ben)
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
+  // amikor exiting -> várjuk meg míg lefut az opacity/transform transition,
+  // utána egyszer jelezzünk vissza onExitDone()
+  useEffect(() => {
+    if (!exiting) return;
+    const el = boxRef.current;
+
+    // ha nincs ref valamiért, ne akadjunk fenn
+    if (!el) {
+      onExitDone?.();
+      return;
+    }
+
+    let done = false;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      el.removeEventListener("transitionend", onTransEnd, true);
+      el.removeEventListener("animationend", onAnimEnd, true);
+      onExitDone?.();
+    };
+
+    const onTransEnd = () => finish();
+    const onAnimEnd = () => finish();
+
+    el.addEventListener("transitionend", onTransEnd, true);
+    el.addEventListener("animationend", onAnimEnd, true);
+
+    // fallback (pl. Safari edge case)
+    const fallback = window.setTimeout(finish, exitMs + 80);
+
+    return () => {
+      window.clearTimeout(fallback);
+      el.removeEventListener("transitionend", onTransEnd, true);
+      el.removeEventListener("animationend", onAnimEnd, true);
+    };
+  }, [exiting, exitMs, onExitDone]);
+
   return (
-    <div className={s.textDockTop} role="region" aria-label="Narration box">
-      <div className={s.textboxContainer}>
+    <div
+      className={s.textDockTop}
+      role="region"
+      aria-label="Narration box"
+      data-exiting={exiting ? "1" : "0"}
+    >
+      <div className={s.textboxContainer} ref={boxRef}>
         <NineSlicePanel
           padding={{ top: 16, right: 16, bottom: 16, left: 16 }}
           trackScroll
           onMeasure={(m: Measure) => {
             onMeasure(m);
+
+            // első stabil mérés lockolása ~350ms után
             if (!lockedMeasure && firstLockTimerRef.current == null) {
               firstLockTimerRef.current = window.setTimeout(() => {
                 setLockedMeasure(m);
@@ -62,31 +123,35 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
               }, 350) as unknown as number;
               return;
             }
-            if (lockedMeasure && typingDone) setLockedMeasure(m);
+
+            // ha már van lock és a typing is kész, akkor frissítjük
+            if (lockedMeasure && typingDone) {
+              setLockedMeasure(m);
+            }
           }}
           backdrop={backdrop}
         >
           {lines.length > 0 ? (
-          <div className={s.textClamp}>
-            {/* ⬇️ Láthatatlan cím overlay a TypingText felett */}
-      {props.title ? (
-        <span
-          className={s.titleOverlay}
-          data-page-title-overlay
-          aria-hidden="true"
-        >
-          {props.title}
-        </span>
-      ) : null}
-            <TypingText
-              key={`tt_${pageId}`}
-              lines={lines}
-              skipRequested={skipRequested}
-              replayTrigger={replayTrigger}
-              delayMs={delayMs}
-              onReady={onReady}
-              onComplete={onComplete}
-            />
+            <div className={s.textClamp}>
+              {title ? (
+                <span
+                  className={s.titleOverlay}
+                  data-page-title-overlay
+                  aria-hidden="true"
+                >
+                  {title}
+                </span>
+              ) : null}
+
+              <TypingText
+                key={`tt_${pageId}`}
+                lines={lines}
+                skipRequested={skipRequested}
+                replayTrigger={replayTrigger}
+                delayMs={delayMs}
+                onReady={onReady}
+                onComplete={onComplete}
+              />
             </div>
           ) : (
             <div />

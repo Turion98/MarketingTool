@@ -172,6 +172,16 @@ body {
   pointer-events: none;
 }
 
+.textbox-container {
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+
+.textbox-container.fadingOut {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .endCtaCard {
   pointer-events: auto;
 

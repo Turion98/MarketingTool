@@ -12,6 +12,24 @@
 
   /* háttér / vizuál itt általában átlátszó, a skin szabályozza, ha kell */
   background: transparent;
+
+  /* ⬇️ kilépő animációhoz: alap állapot a gyermek dobozra */
+  .textboxContainer {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity var(--np-exit-dur, 220ms) ease,
+      transform var(--np-exit-dur, 220ms) ease;
+  }
+}
+
+/* amikor StoryPage kiküldi a narrExiting=true-t
+   -> NarrativePanel root kapja: data-exiting="1"
+   -> innen triggereljük a kifade-et */
+.textDockTop[data-exiting="1"] .textboxContainer {
+  opacity: 0;
+  transform: translateY(8px) scale(.98);
+  pointer-events: none;
 }
 
 .textboxContainer {

@@ -399,6 +399,24 @@ type Measure = {
   content: { x: number; y: number; width: number; height: number };
 };
 
+function animateScrollToTop(el: HTMLElement, durationMs: number) {
+  const startTop = el.scrollTop;
+  const startTime = performance.now();
+
+  function step(now: number) {
+    const t = Math.min(1, (now - startTime) / durationMs); // 0 → 1
+    // easeOutQuad
+    const eased = 1 - (1 - t) * (1 - t);
+    el.scrollTop = startTop * (1 - eased);
+
+    if (t < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
 const StoryPage: React.FC = () => {
   // ---- state hookok (feltétel nélkül) ----
   const [skipAvailable, setSkipAvailable] = useState(false);
@@ -412,24 +430,22 @@ const StoryPage: React.FC = () => {
   const pageRootRef = useRef<HTMLDivElement>(null);
   // ⬇️ Egyedi rúna PNG-k: flagId -> pngUrl
 const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
- 
-useEffect(() => {
-  if (process.env.NODE_ENV === "development") {
-    (window as any).runSecSmoke = () => {
-      try {
-        const result = runSecuritySmokeTest?.();
+const scrollContainerRef = useRef<HTMLElement | null>(null);
+const [pendingScrollReset, setPendingScrollReset] = useState(false);
+const [isFadingOut, setIsFadingOut] = useState(false);
+const [dockJustAppeared, setDockJustAppeared] = useState(false);
+const prevWasChoiceRef = useRef(false);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      (window as any).runSecSmoke = () => {
+        const result = runSecuritySmokeTest();
         console.log("[SMOKE][FINAL]", result);
         return result;
-      } catch (err) {
-        console.warn("[SMOKE] runSecSmoke failed:", err);
-        return { ok: false, error: String(err || "unknown") };
-      }
-    };
-    console.log("[SMOKE] runSecSmoke() is now available in console");
-  }
-}, []);
-
-
+      };
+      console.log("[SMOKE] runSecSmoke() is now available in console");
+    }
+  }, []);
 
 useLayoutEffect(() => {
     const root = pageRootRef.current;
@@ -438,7 +454,9 @@ useLayoutEffect(() => {
     // Keressük meg a Canvas görgető konténerét (CSS Modules kompat: class*="canvasWrap")
     const scrollEl = root.querySelector<HTMLElement>('[class*="canvasWrap"]');
     if (!scrollEl) return;
-
+  // ⬅️ ÚJ: elmentjük, hogy később tudjunk rá görgetni
+  scrollContainerRef.current = scrollEl;
+  
     const setDocH = () => {
       // rAF: biztosan kész a layout
       requestAnimationFrame(() => {
@@ -719,6 +737,8 @@ useEffect(() => {
     setSkipRequested(false);
     setSkipAvailable(false);
     setReplayKey((prev) => prev + 1);
+    setIsFadingOut(false);
+    setDockJustAppeared(false);
   }, [pageData?.id]);
 
   // oldalváltáskor T0 reset + SFX takarítás
@@ -751,6 +771,9 @@ useEffect(() => {
  useEffect(() => {
   setTypingDone(false);
 }, [pageData?.id]);
+
+
+
 
 // ⬇️ Puzzle stopwatch – TOP LEVEL (külön effekt!)
 useEffect(() => {
@@ -949,8 +972,6 @@ useEffect(() => {
 }, [pageData?.id, globalFragments]);
 
 useEffect(() => {
-  if (process.env.NODE_ENV === "production") return;
-
   const raw = (pageData as any)?.fragmentRecall;
   const recalls = Array.isArray(raw) ? raw : (raw ? [raw] : []);
   const recallIds = recalls.map(r => r?.id).filter(Boolean);
@@ -971,6 +992,7 @@ useEffect(() => {
   console.log("missingInFragments:", missingInFragments);
 
   if (recallIds.length && missingInFragments.length) {
+    // magyarázat, miért hiányozhat:
     console.warn(
       "[RECALL ROOT-CAUSE] A keresett recall ID(k) nincsenek a fragments store-ban. " +
       "Ez akkor fordul elő, ha az adott ID unlock-olva lett, " +
@@ -1353,7 +1375,6 @@ useEffect(() => {
 
 // 🔎 Debug: PG4 állapot
 useEffect(() => {
-  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id === "ch1_pg4") {
     const textType = Array.isArray(pageData?.text) ? "array" : typeof pageData?.text;
     const globalKeys = pageData?.fragmentsGlobal ? Object.keys(pageData.fragmentsGlobal).slice(0, 20) : [];
@@ -1372,7 +1393,6 @@ useEffect(() => {
 
 // 🔎 Extra debug PG4 unlock állapot
 useEffect(() => {
-  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id !== "ch1_pg4") return;
   const hasOrigin = unlockedFragments.includes("tower_origin_fragment_ch1");
   const hasSelf   = unlockedFragments.includes("tower_self_fragment_ch1");
@@ -1382,24 +1402,43 @@ useEffect(() => {
 
 // 🔎 Mit rakott össze végül? (blocks tartalom soronként)
 useEffect(() => {
-  if (process.env.NODE_ENV === "production") return;
   if (pageData?.id !== "ch1_pg4") return;
   console.log("[PG4 BLOCKS]", blocks.length, "lines");
   blocks.forEach((b, i) => console.log(`[#${i}]`, b));
 }, [pageData?.id, blocks]);
 
-/** ⬇️ Ha végül nincs mit írni (nincs base/recall és nem tudtunk fragmentet beemelni), engedjük a továbbot */
 useEffect(() => {
   if (!pageData?.id) return;
+
   if (blocks.length === 0) {
+    // ⛔ EDGE CASE:
+    // ha az előző oldal is choice screen volt, akkor NE spawnolj
+    // instant új choice dockot ennek az oldalnak a mountján
+    if (prevWasChoiceRef.current) {
+      // reseteljük a flaget, hogy a KÖVETKEZŐ oldal már normál lehessen
+      prevWasChoiceRef.current = false;
+      return;
+    }
+
+    // normál "üres oldal = csak választás" eset:
     const id = window.setTimeout(() => {
       setSkipAvailable(true);
-      setShowChoices(true);
+
+      requestAnimationFrame(() => {
+        setDockJustAppeared(true);
+        setShowChoices(true);
+      });
     }, 200);
+
     registerTimeout(id);
     return () => clearTimeout(id);
+  } else {
+    // ha van narr text, azt akarjuk, hogy majd a NarrativePanel.onComplete
+    // intézze a choice megjelenítését, szóval itt visszaállítjuk:
+    prevWasChoiceRef.current = false;
   }
 }, [pageData?.id, blocks.length, hasChoices, registerTimeout]);
+
 
 // stabilizált props-ok a GeneratedImage-hez
 const stableParams = useMemo(
@@ -1716,12 +1755,62 @@ if (actionFlags.length > 0) {
     uniqueFlags.forEach((f) => setFlag(f));
   });
 }
+prevWasChoiceRef.current = true;
+// 7) Oldalváltás – fade + scroll koordinált lezárással
+if (next && next !== pageData?.id) {
+  pendingNextRef.current = next;
+  setIsFadingOut(true);
+  setSkipRequested(true);
 
-// 7) Oldalváltás – CSAK ha nincs animáció miatti pending
-if (!pendingNextRef.current && next && next !== pageData?.id) {
-  try { localStorage.setItem("currentPageId", next); } catch {}
-  goToNextPage(next);
+  const FADE_MS = 600;            // vizuális fade hossza
+  const SCROLL_MS = FADE_MS * 2;  // scroll anim hossza
+
+  let fadeDone = false;
+  let scrollDone = false;
+
+  const tryProceed = () => {
+    if (fadeDone && scrollDone) {
+      setShowChoices(false);
+      const nx = pendingNextRef.current;
+      pendingNextRef.current = null;
+      if (nx && nx !== pageData?.id) {
+        try { localStorage.setItem("currentPageId", nx); } catch {}
+        goToNextPage(nx);
+      }
+    }
+  };
+
+  // 1️⃣ fade-out vége (valódi lezárás)
+  window.setTimeout(() => {
+    fadeDone = true;
+    tryProceed();
+  }, FADE_MS);
+
+  // 2️⃣ scroll indul, és callback, ha tényleg végzett
+  const el = scrollContainerRef.current;
+  if (el) {
+    const startTop = el.scrollTop;
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const t = Math.min(1, (now - startTime) / SCROLL_MS);
+      const eased = 1 - (1 - t) * (1 - t);
+      el.scrollTop = startTop * (1 - eased);
+      if (t < 1) requestAnimationFrame(step);
+      else {
+        scrollDone = true;
+        tryProceed();
+      }
+    };
+    requestAnimationFrame(step);
+  } else {
+    scrollDone = true;
+    tryProceed();
+  }
 }
+
+
+
 },
 [
   unlockedFragments,
@@ -2054,12 +2143,12 @@ return (
   /* ===== NARRÁCIÓS panel ===== */
   narr={
     <div
-      className={`${style["textbox-container"]} ${
-        expanded ? style.expanded : ""
-      }`}
-      role="region"
-      aria-label="Narration box"
-    >
+       className={`${style["textbox-container"]} ${
+    expanded ? style.expanded : ""
+  } ${isFadingOut ? style.fadingOut : ""}`}
+  role="region"
+  aria-label="Narration box"
+>
       <NarrativePanel
         lines={blocks}
         skipRequested={skipRequested}
@@ -2067,9 +2156,14 @@ return (
         delayMs={DELAY_MS}
         onReady={() => setSkipAvailable(true)}
         onComplete={() => {
-          setTypingDone(true);
-          setShowChoices(true);
-        }}
+  setTypingDone(true);
+  prevWasChoiceRef.current = true;
+  // choice megjelenítés kontrolláltan
+  requestAnimationFrame(() => {
+    setDockJustAppeared(true);
+    setShowChoices(true);      // tényleg mutasd
+  });
+}}
         onMeasure={(m: Measure) => {
           setMeasure(m);
         }}
@@ -2099,111 +2193,116 @@ return (
   }
 
   /* ===== INTERAKCIÓS DOCK – puzzle/choices ===== */
-  dock={
-    showChoices &&  !isEndNode ? (
-      <>
-        {isRiddlePage &&
-  (() => {
-    const r = pageData as unknown as PuzzleRiddle;
-    return (
-      <div className={dockStyles.grid}>
-        <RiddleQuiz
-          page={pageData}   
-          question={r.question /* ha inkább a narrációban van a kérdés, hagyd undefined */}
-          options={r.options}
-          correctIndex={r.correctIndex}
+ /* ===== INTERAKCIÓS DOCK – puzzle/choices ===== */
+dock={
+  showChoices && !isEndNode ? (
+    <div
+        className={[
+    dockStyles.fadeWrapper,
+    dockJustAppeared ? dockStyles.appearing : "",
+    isFadingOut ? dockStyles.fadingOut : "",
+  ].join(" ")}
 
-          /* vizuális visszacsatolás – háttér nélküli felirat (egyelőre SCSS-ből) */
-          correctLabel={riddleCorrectLabel}
-          showCorrectLabel="above"
+    >
+      {isRiddlePage &&
+        (() => {
+          const r = pageData as unknown as PuzzleRiddle;
+          return (
+            <div className={dockStyles.grid}>
+              <RiddleQuiz
+                page={pageData}
+                question={r.question /* ha inkább a narrációban van a kérdés, hagyd undefined */}
+                options={r.options}
+                correctIndex={r.correctIndex}
+                /* vizuális visszacsatolás – háttér nélküli felirat (egyelőre SCSS-ből) */
+                correctLabel={riddleCorrectLabel}
+                showCorrectLabel="above"
+                /* (elő)hang jelzés – opcionális */
+                onPlaySfx={(id) => {
+                  try {
+                    // sfxBus.play(id) ha van
+                  } catch {}
+                }}
+                /* analitika + JSON onAnswer + navigáció */
+                onResult={({ choiceIdx }) => {
+                  handleRiddleAnswer(choiceIdx);
+                }}
+              />
+            </div>
+          );
+        })()}
 
-          /* (elő)hang jelzés – most még opcionális; ha nincs lejátszó, ez kimaradhat */
-          onPlaySfx={(id) => {
-            try {
-              // ha van saját SFX buszod, itt szólítsd meg (pl. sfxBus.play(id))
-            } catch {}
-          }}
+      {!isRiddlePage &&
+        isRunesPage &&
+        (() => {
+          const p = pageData as any;
+          return (
+            <PuzzleRunes
+              options={p.options}
+              answer={p.answer}
+              maxAttempts={p.maxAttempts ?? 3}
+              mode={p.mode ?? "ordered"} // ÚJ
+              feedback={p.feedback ?? "reset"}
+              className={dockStyles.grid}
+              buttonClassName={dockStyles.choice}
+              /* ⬇️ KÖTELEZŐ ANALYTICS AZONOSÍTÓK */
+              storyId={derivedStoryId || "default_story"}
+              sessionId={derivedSessionId || "sess_unknown"}
+              pageId={pageData.id}
+              puzzleId={p.id ?? `runes-${pageData.id}`}
+              onResult={(ok) => {
+                const branch = ok ? p.onSuccess : p.onFail;
+                if (!branch) return;
 
-          /* analitika + JSON onAnswer + navigáció: marad StoryPage-ben */
-          onResult={({ choiceIdx }) => {
-            handleRiddleAnswer(choiceIdx);
-          }}
-        />
-      </div>
-    );
-  })()}
+                const fl = branch.setFlags;
+                if (Array.isArray(fl)) {
+                  fl.forEach((f: string) => setFlag(f));
+                } else if (fl && typeof fl === "object") {
+                  Object.entries(fl).forEach(([k, v]) => v && setFlag(k));
+                }
 
-
-        {!isRiddlePage &&
-          isRunesPage &&
-          (() => {
-            const p = pageData as any;
-            return (
-              <PuzzleRunes
-  options={p.options}
-  answer={p.answer}
-  maxAttempts={p.maxAttempts ?? 3}
-  mode={p.mode ?? "ordered"}              // ÚJ
-  feedback={p.feedback ?? "reset"}
-  className={dockStyles.grid}
-  buttonClassName={dockStyles.choice}
-  /* ⬇️ KÖTELEZŐ ANALYTICS AZONOSÍTÓK */
-  storyId={derivedStoryId || "default_story"}
-  sessionId={derivedSessionId || "sess_unknown"}
-  pageId={pageData.id}
-  puzzleId={p.id ?? `runes-${pageData.id}`}
-  onResult={(ok) => {
-    const branch = ok ? p.onSuccess : p.onFail;
-    if (!branch) return;
-
-    const fl = branch.setFlags;
-    if (Array.isArray(fl)) {
-      fl.forEach((f: string) => setFlag(f));
-    } else if (fl && typeof fl === "object") {
-      Object.entries(fl).forEach(([k, v]) => v && setFlag(k));
-    }
-
-    const nx = branch.goto;
-    if (nx && nx !== pageData?.id) {
-      try { localStorage.setItem("currentPageId", nx); } catch {}
-      goToNextPage(nx);
-    }
-  }}
-/>
-
-
-            );
-          })()}
-
-        {!isRiddlePage &&
-          !isRunesPage &&
-          Array.isArray(pageData.choices) &&
-          pageData.choices.length > 0 && (
-            <InteractionDock
-              mode="default"
-              choices={pageData.choices.map((c: any, idx: number) => ({
-                id: String(c?.id ?? idx),
-                label: String(
-                  c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`
-                ),
-                disabled: !!c?.disabled,
-              }))}
-              onSelect={(choiceId: string) => {
-                const choice = (pageData.choices ?? []).find(
-                  (c: any, i: number) => String(c?.id ?? i) === String(choiceId)
-                );
-                if (!choice) return;
-                handleChoice(
-                  String(choice.next ?? ""),
-                  (choice as any).reward,
-                  choice as any
-                );
+                const nx = branch.goto;
+                if (nx && nx !== pageData?.id) {
+                  try {
+                    localStorage.setItem("currentPageId", nx);
+                  } catch {}
+                  goToNextPage(nx);
+                }
               }}
             />
-          )}
-      </>
-    ) : null
-  }
+          );
+        })()}
+
+      {!isRiddlePage &&
+        !isRunesPage &&
+        Array.isArray(pageData.choices) &&
+        pageData.choices.length > 0 && (
+          <InteractionDock
+            mode="default"
+            choices={pageData.choices.map((c: any, idx: number) => ({
+              id: String(c?.id ?? idx),
+              label: String(
+                c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`
+              ),
+              disabled: !!c?.disabled,
+            }))}
+            onSelect={(choiceId: string) => {
+              const choice = (pageData.choices ?? []).find(
+                (c: any, i: number) =>
+                  String(c?.id ?? i) === String(choiceId)
+              );
+              if (!choice) return;
+              handleChoice(
+                String(choice.next ?? ""),
+                (choice as any).reward,
+                choice as any
+              );
+            }}
+          />
+        )}
+    </div>
+  ) : null
+}
 
   /* ===== ACTION BAR – Skip/Replay/Mute/Next ===== */
   action={

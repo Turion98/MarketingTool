@@ -1,48 +1,92 @@
-/* ====== ChoiceButtons.module.scss (buttons only, no container panel) ====== */
+/* ====== ChoiceButtons.module.scss (unified with InteractionDock layout) ====== */
 
-/* Timing / motion tokens (Riddle-parity) */
+/* Timing / motion tokens */
 :root {
-  --ch-dur-in: var(--choice-dur-in, 480ms);
+  --ch-dur-in:  var(--choice-dur-in, 480ms);
   --ch-dur-exit: var(--choice-dur-exit, 220ms);
   --ch-ease-in: var(--choice-ease-in, cubic-bezier(.22,.61,.36,1));
   --ch-ease-out: var(--choice-ease-out, cubic-bezier(.16,.84,.44,1));
 }
 
-/* A WRAPPERNEK NINCS SAJÁT HÁTTERE/KERETE/ÁRNYÉKA */
+/* OUTER WRAPPER (most már valódi box, nem display: contents) */
 .choiceButtons {
-  display: contents; /* a wrapper teljesen eltűnik a layoutból */
+  /* InteractionDock.grid baseline layout */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 
-  /* baseline: amikor mountoljuk, rejtett állapotból indulunk, mint Riddle */
+  width: min(100%, var(--wrapper-maxw, 1100px));
+  margin-inline: auto;
+  min-width: 0;
+
+  gap: var(--dock-gap, 16px);
+  padding: var(--dock-pad, 12px);
+
+  box-sizing: border-box;
+  position: relative;
+  z-index: var(--dock-z, 10);
+  pointer-events: auto;
+
+  /* no panel chrome here */
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+
+  /* baseline entrance anim (mint eddig) */
   opacity: 0;
   transform: translateY(6px);
   animation: chRootIn var(--ch-dur-in) var(--ch-ease-in) forwards;
 }
 
-/* amikor a komponens "eltűnik" (pl. következő oldalra lépés előtt)
-   → ugyanaz az exit mint Riddle: halványodás + pici scale */
+/* kilépő állapot (StoryPage choiceExiting) */
 .choiceButtons.exiting {
   pointer-events: none;
   animation: chExit var(--ch-dur-exit) var(--ch-ease-out) both;
 }
 
-/* VALÓDI GOMB */
+/* LIST belül – csak szemantika miatt, a layoutot a wrapper már megadta */
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--dock-gap, 16px);
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* VALÓDI GOMB (InteractionDock.choice style alapján) */
 .choiceButton {
-  /* Tipó + méret */
-  font-size: var(--choice-font, 1.15rem);
-  line-height: 1.25;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  display: block;
+  width: 100%;
+  max-width: var(--choice-maxw, 480px);
+  margin-inline: auto; /* center each button in column */
+
+  /* tipó */
   color: var(--choice-color, #fff);
-  background-clip: padding-box;
+  text-align: center;
+  font: inherit;
+  font-size: var(--choice-font, 16px);
+  line-height: 1.25;
+  letter-spacing: .2px;
 
-  /* Geometria + spacing */
-  padding: var(--choice-padding-y, 0.75rem) var(--choice-padding-x, 1.2rem);
-  border-radius: var(--choice-radius, 14px);
+  /* spacing / radius to match InteractionDock */
+  padding: var(--choice-padding-y, 14px) var(--choice-padding-x, 16px);
+  border-radius: var(--choice-radius, 12px);
 
-  /* Keret – SZÉTBONTVA, hogy a width token működjön */
+  /* border split so width/style tokens work */
   border-width: var(--choice-border-width, 1px);
   border-style: var(--choice-border-style, solid);
   border-color: var(--choice-border, rgba(255,255,255,.18));
 
-  /* Felszín + árnyék tokenekről */
+  /* surface + shadow */
   background: linear-gradient(
     180deg,
     var(--choice-bg-top, rgba(255,255,255,.12)),
@@ -51,76 +95,86 @@
   box-shadow: var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30));
 
   cursor: pointer;
-  user-select: none;
-  transform: translateY(0);
-  opacity: 0;
 
-  /* Mozgás (legacy tokenekkel kompatibilis) */
+  /* entry stagger uses opacity/transform, start hidden */
+  opacity: 0;
+  transform: translateY(0);
+
   transition:
+    transform var(--dock-dur-hover, 160ms) var(--dock-ease-emph, cubic-bezier(.2,0,0,1)),
+    border-color var(--dock-dur-hover, 160ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
+    box-shadow var(--dock-dur-hover, 160ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
+    background var(--dock-dur-hover, 160ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     opacity .25s ease,
-    transform .25s ease,
-    box-shadow .12s ease,
-    background .12s ease,
-    border-color .12s ease,
-    filter .12s ease;
+    filter var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
   will-change: transform, opacity;
 }
 
-/* Hover – legacy tokenek */
-.choiceButton:hover {
-  /* Finom skála, ha a komponens támogatja; különben marad a fényesség */
-  transform: translateY(0) scale(var(--choice-scale-hover, 1));
+/* Hover */
+.choiceButton:hover:enabled {
+  transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
+  border-color: var(
+    --choice-border-hover,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255,255,255,.18)))
+  );
+  box-shadow: var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36));
   background: linear-gradient(
     180deg,
-    var(--choice-bg-top-hover, var(--choice-bg-top, rgba(255,255,255,.12))),
-    var(--choice-bg-bot-hover, var(--choice-bg-bot, rgba(255,255,255,.06)))
+    var(--choice-bg-top-hover,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--choice-bg-top, rgba(255,255,255,.12)))
+    ),
+    var(--choice-bg-bot-hover,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 8%, var(--choice-bg-bot, rgba(255,255,255,.06)))
+    )
   );
-  border-color: var(--choice-border-hover, var(--choice-border));
-  box-shadow: var(--choice-shadow-hover, var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30)));
 }
 
-/* Active/press – legacy tokenek */
-.choiceButton:active {
-  transform: translateY(1px) scale(var(--choice-scale-active, .995));
+/* Active/press */
+.choiceButton:active:enabled {
+  transform: scale(var(--choice-scale-active, .995)) translateY(0);
+  border-color: var(
+    --choice-border-active,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border, rgba(255,255,255,.18)))
+  );
+  box-shadow: var(--choice-shadow-active, 0 6px 16px rgba(0,0,0,.44));
   background: linear-gradient(
     180deg,
-    var(--choice-bg-top-active, var(--choice-bg-top, rgba(255,255,255,.12))),
-    var(--choice-bg-bot-active, var(--choice-bg-bot, rgba(255,255,255,.06)))
+    var(--choice-bg-top-active,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 20%, var(--choice-bg-top, rgba(255,255,255,.12)))
+    ),
+    var(--choice-bg-bot-active,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 14%, var(--choice-bg-bot, rgba(255,255,255,.06)))
+    )
   );
-  border-color: var(--choice-border-active, var(--choice-border));
-  box-shadow: var(--choice-shadow-active, var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30)));
+  transition-duration: var(--dock-dur-press, 100ms);
   filter: none;
 }
 
-/* Focus – A11y: kettős gyűrű a legacy tokenről, ha van */
+/* Focus ring (a11y) */
 .choiceButton:focus-visible {
   outline: none;
   box-shadow:
+    var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36)),
     var(--choice-focus-ring,
       0 0 0 2px color-mix(in oklch, white 50%, transparent),
       0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent)
-    ),
-    var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30));
+    );
 }
 
 /* Disabled */
 .choiceButton[aria-disabled="true"],
 .choiceButton:disabled {
   cursor: not-allowed;
-  border-color: var(--choice-border, rgba(255,255,255,.18));
+  opacity: .55;
+  filter: grayscale(.2) saturate(.8);
   background: linear-gradient(
     180deg,
     var(--choice-bg-top-disabled, rgba(255,255,255,.05)),
     var(--choice-bg-bot-disabled, rgba(255,255,255,.03))
   );
-  filter: none;
 }
 
-/* Belépő animáció gombonként
-   - marad a stagger (delay per nth-child),
-   - DE az opacity/translateY induló állapot már nem inline stílus hack,
-     hanem ugyanúgy, mint eddig.
-*/
+/* staggered reveal once .choiceButtons.visible is set */
 .choiceButtons.visible .choiceButton:nth-child(1) {
   opacity: 1;
   transform: translateY(0);
@@ -147,13 +201,17 @@
   transition-delay: .40s;
 }
 
-/* Mobil finomhangolás – a legacy mobil tokenjeit használjuk */
-@media (max-width: 520px) {
+/* Mobile tweaks */
+@media (max-width: 640px) {
+  .choiceButtons {
+    gap: var(--dock-gap-mobile, var(--dock-gap, 16px));
+    padding: var(--dock-pad-mobile, var(--dock-pad, 12px));
+  }
   .choiceButton {
-    font-size: var(--choice-font-mobile, var(--choice-font, 1.05rem));
+    font-size: var(--choice-font-mobile, var(--choice-font, 16px));
     padding:
-      var(--choice-padding-y-mobile, var(--choice-padding-y, 0.65rem))
-      var(--choice-padding-x-mobile, var(--choice-padding-x, 1rem));
+      var(--choice-padding-y-mobile, var(--choice-padding-y, 14px))
+      var(--choice-padding-x-mobile, var(--choice-padding-x, 16px));
   }
 }
 
@@ -174,7 +232,7 @@
   }
 }
 
-/* ========== KEYFRAMES (Riddle-parity) ========== */
+/* keyframes */
 @keyframes chRootIn {
   0%   { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0);   }

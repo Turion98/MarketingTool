@@ -1,7 +1,6 @@
-// /components/ChoiceButtons/ChoiceButtons.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import style from "./ChoiceButtons.module.scss";
 import { useGameState } from "../../lib/GameStateContext";
 import { trackChoice, trackUiClick } from "../../lib/analytics";
@@ -25,11 +24,43 @@ type Props = {
   unlockedFragments: string[];
   show: boolean;
   onChoiceSelected: (next: string, reward?: any, choiceObj?: Choice) => void;
+
+  /** ⬅️ ÚJ: StoryPage adja be, hogy mikor kezdődjön az EXIT anim */
+  requestExit?: boolean;
+
+  /** ⬅️ ÚJ: StoryPage kapjon visszajelzést, ha az EXIT anim LEFUTOTT */
+  onExitDone?: () => void;
+
+  /** mennyi idő az exit anim ms-ben (StoryPage-nek is kell tudni timingot kalkulálni) */
+  exitMs?: number;
 };
 
-// segédfüggvény osztályösszefűzésre
+/* helper */
 function cx(...v: Array<string | undefined | false | null>) {
   return v.filter(Boolean).join(" ");
+}
+
+/* utility: várjuk meg az anim/transition végét (mint RiddleQuiz.waitForExitAnimation) */
+function waitForExitAnimation(el: HTMLElement | null, timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    if (!el) {
+      setTimeout(resolve, timeoutMs + 50);
+      return;
+    }
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      el.removeEventListener("animationend", onAnimEnd, true);
+      el.removeEventListener("transitionend", onTransEnd, true);
+      resolve();
+    };
+    const onAnimEnd = () => finish();
+    const onTransEnd = () => finish();
+    el.addEventListener("animationend", onAnimEnd, true);
+    el.addEventListener("transitionend", onTransEnd, true);
+    window.setTimeout(finish, timeoutMs + 80);
+  });
 }
 
 const ChoiceButtons: React.FC<Props> = ({
@@ -37,28 +68,46 @@ const ChoiceButtons: React.FC<Props> = ({
   unlockedFragments,
   onChoiceSelected,
   show,
+  requestExit = false,
+  onExitDone,
+  exitMs = 220, // syncben a SCSS --ch-dur-exit-tel
 }) => {
-  // 🔄 phase: riddle parity
-  // - "hidden"   → még nem jelent meg
-  // - "visible"  → látható, interaktív
-  // - "exiting"  → kifade-elés pillanatában
+  // phase: riddle-parity
+  // hidden  -> láthatatlan (még nem mount animation)
+  // visible -> aktív, interaktív
+  // exiting -> kifade-el (pointer-events:none)
   const [phase, setPhase] = useState<"hidden" | "visible" | "exiting">(
     show ? "visible" : "hidden"
   );
 
+  const rootRef = useRef<HTMLElement | null>(null);
+
+  // Analytics context
   const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
 
-  // amikor show változik, állítsuk a phase-t
+  // figyeljük a show flag-et (belépés)
   useEffect(() => {
     if (show) {
       setPhase("visible");
     } else {
-      // ha le akarjuk venni, előbb tegyük "exiting"-re
-      // (ha a parent azonnal unmountolja, ez úgysem fog látszani,
-      //  de ha bent hagyja egy pillanatra, akkor szép lesz)
-      setPhase((prev) => (prev === "visible" ? "exiting" : "hidden"));
+      // ha valamiért false-ra váltaná a parent, de mi még nem kérünk exitet,
+      // akkor se ugorjunk rögtön hidden-be, megőrizzük amit eddig tudunk
     }
   }, [show]);
+
+  // figyeljük a requestExit-et (kilépés)
+  useEffect(() => {
+    if (!requestExit) return;
+    // ha még nem exiting, állítsuk át és várjuk meg az anim végét
+    if (phase !== "exiting") {
+      setPhase("exiting");
+
+      // várjuk meg az anim végét, majd jelezzünk vissza
+      waitForExitAnimation(rootRef.current, exitMs).then(() => {
+        onExitDone?.();
+      });
+    }
+  }, [requestExit, phase, exitMs, onExitDone]);
 
   const safeUnlocked = useMemo(
     () => (Array.isArray(unlockedFragments) ? unlockedFragments : []),
@@ -70,16 +119,14 @@ const ChoiceButtons: React.FC<Props> = ({
     [choices]
   );
 
-  const pickFragmentIdFromActions = (choice: Choice): string | undefined => {
+  const pickFragmentIdFromActions = useCallback((choice: Choice): string | undefined => {
     if (!Array.isArray(choice.actions)) return undefined;
 
-    // Séma #2 előnyben: { unlockFragment: "id" }
     const direct = choice.actions.find(
       (a: any) => typeof (a as any)?.unlockFragment === "string"
     ) as { unlockFragment?: string } | undefined;
     if (direct?.unlockFragment) return direct.unlockFragment;
 
-    // Séma #1: { type: "unlockFragment", id: "id" }
     const typed = choice.actions.find(
       (a: any) =>
         (a as any)?.type === "unlockFragment" &&
@@ -87,7 +134,7 @@ const ChoiceButtons: React.FC<Props> = ({
     ) as { type: string; id?: string } | undefined;
 
     return typed?.id;
-  };
+  }, []);
 
   const handleClick = (choice: Choice) => {
     const fragFromActions = pickFragmentIdFromActions(choice);
@@ -98,7 +145,7 @@ const ChoiceButtons: React.FC<Props> = ({
 
     onChoiceSelected(ensuredChoice.next, ensuredChoice.reward, ensuredChoice);
 
-    // Analitika – best-effort
+    // analytics best-effort
     try {
       if (storyId && sessionId && currentPageId) {
         const label =
@@ -120,6 +167,7 @@ const ChoiceButtons: React.FC<Props> = ({
 
   return (
     <nav
+      ref={rootRef}
       className={cx(
         style.choiceButtons,
         phase === "visible" && style.visible,
@@ -129,17 +177,13 @@ const ChoiceButtons: React.FC<Props> = ({
       data-role="choices"
     >
       {safeChoices.map((choice, index) => {
-        // lockedIf normalizálása tömbbé
         const lockedIfArr: string[] = Array.isArray(choice.lockedIf)
           ? choice.lockedIf.filter(Boolean)
           : typeof choice.lockedIf === "string"
           ? [choice.lockedIf]
           : [];
 
-        // Zár logika
-        const isLocked = lockedIfArr.some((lock) =>
-          safeUnlocked.includes(lock)
-        );
+        const isLocked = lockedIfArr.some((lock) => safeUnlocked.includes(lock));
         const disabled = !!choice.disabled || isLocked;
 
         const key = (choice.id ?? `idx-${index}`).toString();
