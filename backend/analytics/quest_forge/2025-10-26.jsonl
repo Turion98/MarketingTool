@@ -27,3 +27,15 @@
 {"_type": "batch_header", "ts": "2025-10-26T15:40:26.347585Z", "storyId": "quest_forge", "userId": "u_l6mhwsjrzomh7proez", "device": {}, "count": 2}
 {"id": "e_hvih1s2w5bumh7vkgyc", "t": "page_enter", "ts": 1761493196244, "storyId": "quest_forge", "sessionId": "sess_dz2fi96bwuemh7vkgj5", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_l6mhwsjrzomh7proez"}}
 {"id": "e_dncjzt9snmimh7vkh0c", "t": "page_exit", "ts": 1761493196316, "storyId": "quest_forge", "sessionId": "sess_dz2fi96bwuemh7vkgj5", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 72, "userId": "u_l6mhwsjrzomh7proez"}}
+{"_type": "batch_header", "ts": "2025-10-26T16:06:29.149239Z", "storyId": "quest_forge", "userId": "u_t9owhb3reqmh7wfnnu", "device": {}, "count": 2}
+{"id": "e_ju8w8j6oh4mh7wh1ye", "t": "page_enter", "ts": 1761494716454, "storyId": "quest_forge", "sessionId": "sess_zrl0pb0jzqlmh7wh1rq", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_t9owhb3reqmh7wfnnu"}}
+{"id": "e_9nriy0boyqsmh7wh1zg", "t": "page_exit", "ts": 1761494716492, "storyId": "quest_forge", "sessionId": "sess_zrl0pb0jzqlmh7wh1rq", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 38, "userId": "u_t9owhb3reqmh7wfnnu"}}
+{"_type": "batch_header", "ts": "2025-10-26T16:06:59.222979Z", "storyId": "quest_forge", "userId": "u_t9owhb3reqmh7wfnnu", "device": {}, "count": 2}
+{"id": "e_160sxscvflmmh7wim0q", "t": "page_enter", "ts": 1761494789114, "storyId": "quest_forge", "sessionId": "sess_y92oktn0nrmh7wiluy", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_t9owhb3reqmh7wfnnu"}}
+{"id": "e_gkfxnhq52mmh7wim20", "t": "page_exit", "ts": 1761494789160, "storyId": "quest_forge", "sessionId": "sess_y92oktn0nrmh7wiluy", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 46, "userId": "u_t9owhb3reqmh7wfnnu"}}
+{"_type": "batch_header", "ts": "2025-10-26T16:10:29.248244Z", "storyId": "quest_forge", "userId": "u_t9owhb3reqmh7wfnnu", "device": {}, "count": 2}
+{"id": "e_auui9dqvvk6mh7wn61q", "t": "page_enter", "ts": 1761495001694, "storyId": "quest_forge", "sessionId": "sess_nj9336jgg7mh7wn5w2", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_t9owhb3reqmh7wfnnu"}}
+{"id": "e_ssd50rw4ogomh7wn62o", "t": "page_exit", "ts": 1761495001728, "storyId": "quest_forge", "sessionId": "sess_nj9336jgg7mh7wn5w2", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 33, "userId": "u_t9owhb3reqmh7wfnnu"}}
+{"_type": "batch_header", "ts": "2025-10-26T16:15:29.297823Z", "storyId": "quest_forge", "userId": "u_t9owhb3reqmh7wfnnu", "device": {}, "count": 2}
+{"id": "e_pq9sp21mawmh7wtxio", "t": "page_enter", "ts": 1761495317232, "storyId": "quest_forge", "sessionId": "sess_3au1pz8dcvhmh7wtxc8", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_t9owhb3reqmh7wfnnu"}}
+{"id": "e_pbiea1dsxomh7wtxjn", "t": "page_exit", "ts": 1761495317267, "storyId": "quest_forge", "sessionId": "sess_3au1pz8dcvhmh7wtxc8", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 35, "userId": "u_t9owhb3reqmh7wfnnu"}}

@@ -431,12 +431,14 @@ const StoryPage: React.FC = () => {
   // ⬇️ Egyedi rúna PNG-k: flagId -> pngUrl
 const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
 const scrollContainerRef = useRef<HTMLElement | null>(null);
-const [pendingScrollReset, setPendingScrollReset] = useState(false);
 const [isFadingOut, setIsFadingOut] = useState(false);
 const [dockJustAppeared, setDockJustAppeared] = useState(false);
 const prevWasChoiceRef = useRef(false);
+const [choicePageId, setChoicePageId] = useState<string | null>(null);
+const [pageUnlockedForInteraction, setPageUnlockedForInteraction] = useState<string | null>(null);
 
-  useEffect(() => {
+
+useEffect(() => {
     if (process.env.NODE_ENV === "development") {
       (window as any).runSecSmoke = () => {
         const result = runSecuritySmokeTest();
@@ -585,6 +587,7 @@ const pendingNextRef = useRef<string | null>(null);
     addFragment: (id: string, data: FragmentData) => void;
      globalFragments: FragmentBank; // ⬅️ típus kieg
   };
+  const [localPageId, setLocalPageId] = useState(pageData?.id);
   // --- Query params (kell a story azonosítóhoz) ---
 const params = useSearchParams();
 const showAnalytics = params.get("analytics") === "1";
@@ -730,16 +733,22 @@ useEffect(() => {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
-
-  useEffect(() => {
+useLayoutEffect(() => {
+  if (pageData?.id !== localPageId) {
+    // hard reset UI state az új oldalhoz, még paint előtt
     setShowChoices(false);
+    setChoicePageId(null);
     setAnimateNext(false);
     setSkipRequested(false);
     setSkipAvailable(false);
-    setReplayKey((prev) => prev + 1);
+    setReplayKey(prev => prev + 1);
     setIsFadingOut(false);
     setDockJustAppeared(false);
-  }, [pageData?.id]);
+    setPageUnlockedForInteraction(null);
+    setLocalPageId(pageData?.id);
+  }
+}, [pageData?.id, localPageId]);
+
 
   // oldalváltáskor T0 reset + SFX takarítás
   useEffect(() => {
@@ -1423,10 +1432,11 @@ useEffect(() => {
     // normál "üres oldal = csak választás" eset:
     const id = window.setTimeout(() => {
       setSkipAvailable(true);
-
+      setPageUnlockedForInteraction(pageData.id);
       requestAnimationFrame(() => {
         setDockJustAppeared(true);
         setShowChoices(true);
+        setChoicePageId(pageData.id);
       });
     }, 200);
 
@@ -1775,6 +1785,16 @@ if (next && next !== pageData?.id) {
       pendingNextRef.current = null;
       if (nx && nx !== pageData?.id) {
         try { localStorage.setItem("currentPageId", nx); } catch {}
+        // ⬇️ KRITIKUS: mielőtt ténylegesen átlépünk az új oldalra,
+  // nullázd ki azokat a state-eket, amiket az új oldal első renderje örökölne:
+  flushSync(() => {
+    setSkipRequested(false);             // volt true → ne menjen át
+    setIsFadingOut(false);               // vizuál ne égjen át
+    setDockJustAppeared(false);          // ne villanjon át stílus
+    setShowChoices(false);               // biztos ami biztos
+    setChoicePageId(null);               // dock ne gondolja azt hogy már jóvá lett hagyva
+    setPageUnlockedForInteraction(null); // ne legyen unlockolt az új oldal azonnal
+  });
         goToNextPage(nx);
       }
     }
@@ -2157,11 +2177,13 @@ return (
         onReady={() => setSkipAvailable(true)}
         onComplete={() => {
   setTypingDone(true);
-  prevWasChoiceRef.current = true;
+  setPageUnlockedForInteraction(pageData.id);
+  
   // choice megjelenítés kontrolláltan
   requestAnimationFrame(() => {
     setDockJustAppeared(true);
-    setShowChoices(true);      // tényleg mutasd
+    setShowChoices(true); 
+    setChoicePageId(pageData.id);     // tényleg mutasd
   });
 }}
         onMeasure={(m: Measure) => {
@@ -2174,20 +2196,22 @@ return (
         pageId={pageData.id}
         title={(pageData as any)?.title}
         backdrop={
-          <>
-            <BrickBottomOverlay
-              usePortal
-              anchor={anchorPortal as any}
-              position="bottom"
-            />
-            <BrickBottomOverlay
-              usePortal
-              anchor={anchorPortal as any}
-              src="/ui/brick.png"
-              position="top"
-            />
-          </>
-        }
+  anchorPortal ? (
+    <>
+      <BrickBottomOverlay
+        usePortal
+        anchor={anchorPortal as any}
+        position="bottom"
+      />
+      <BrickBottomOverlay
+        usePortal
+        anchor={anchorPortal as any}
+        src="/ui/brick.png"
+        position="top"
+      />
+    </>
+  ) : null
+}
       />
     </div>
   }
@@ -2195,7 +2219,11 @@ return (
   /* ===== INTERAKCIÓS DOCK – puzzle/choices ===== */
  /* ===== INTERAKCIÓS DOCK – puzzle/choices ===== */
 dock={
-  showChoices && !isEndNode ? (
+  showChoices &&
+  choicePageId === pageData.id &&   // ⬅️ csak akkor rajzoljuk, ha erre az oldalra lett engedélyezve
+  pageUnlockedForInteraction === pageData.id &&
+  !isEndNode ? (
+
     <div
         className={[
     dockStyles.fadeWrapper,
@@ -2307,11 +2335,17 @@ dock={
   /* ===== ACTION BAR – Skip/Replay/Mute/Next ===== */
   action={
     <ActionBar
-  canNext={!Array.isArray(pageData.choices) && !!resolvedNext && showChoices && !isEndNode}
+ canNext={
+  !Array.isArray(pageData.choices) &&
+  !!resolvedNext &&
+  pageUnlockedForInteraction === pageData.id &&  // csak ha EZ az oldal már kész
+  !isEndNode
+}
   onNext={handleNext}
   canSkip={skipAvailable && !isEndNode}
   onSkip={() => {
     setSkipRequested(true);
+    setPageUnlockedForInteraction(pageData.id);
     setTimeout(() => setSkipRequested(false), 0);
   }}
   canReplay={!isEndNode}

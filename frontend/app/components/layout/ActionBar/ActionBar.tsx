@@ -4,8 +4,6 @@ import s from "./ActionBar.module.scss";
 import RestartButton from "../../RestartButton/RestartButton";
 
 type ActionBarProps = {
-  canNext: boolean;
-  onNext: () => void;
   canSkip: boolean;
   onSkip: () => void;
   canReplay: boolean;
@@ -16,8 +14,6 @@ type ActionBarProps = {
 };
 
 const ActionBar: React.FC<ActionBarProps> = ({
-  canNext,
-  onNext,
   canSkip,
   onSkip,
   canReplay,
@@ -40,7 +36,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
   return (
     <>
-      {/* Mobil toggle – a viewport jobb alsó sarkában */}
+      {/* mobil toggle gomb a jobb alsó sarokban */}
       <div className={s.mobileRow}>
         <button
           type="button"
@@ -48,7 +44,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
           aria-label="Open actions"
           aria-controls="actionbar"
           aria-expanded={open}
-          onClick={() => setOpen(v => !v)}
+          onClick={() => setOpen((v) => !v)}
         >
           Actions
         </button>
@@ -61,7 +57,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
         aria-label="Actions sidebar"
         data-testid="action-bar"
       >
-        {/* TARTALMI GOMBOK */}
+        {/* felső gombsor */}
         <div className={s.group}>
           <button
             type="button"
@@ -97,20 +93,13 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </button>
         </div>
 
-        {/* FOOTER – mindig a panel alján, nem absolute, így nem csúszik össze semmivel */}
+        {/* footer: csak Restart marad itt */}
         <div className={s.footer}>
-          <button
-            type="button"
-            className={`${s.btn} ${s.primary}`}
-            disabled={!canNext}
-            onClick={onNext}
-            onKeyDown={onKeyActivate(onNext, !canNext)}
-            aria-label="Next"
-          >
-            <span className={s.label}>Next</span>
-          </button>
-
-          <RestartButton className={s.btn} startPageId="landing" aria-label="Restart" />
+          <RestartButton
+            className={s.btn}
+            startPageId="landing"
+            aria-label="Restart"
+          />
         </div>
       </aside>
     </>
