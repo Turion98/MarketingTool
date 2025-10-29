@@ -1,68 +1,64 @@
 /* ===== Canvas.module.scss (MEDIA ROW GROWS; NO CROP) ===== */
 
-/* A legacy skin felülírhatja ezeket; itt adunk biztos fallbacket */
+/* Skin fallbackok */
 :root,
 html[data-skin="legacy-default"],
 body[data-skin="legacy-default"] {
-  /* Desktop szélesség-korlátok (szabadon állítható skinből is) */
   --canvas-minw-desktop: 820px;
   --canvas-maxw-desktop: 1280px;
 
-  /* Padding/gap fallbackek (ha nincs legacyban definiálva) */
   --canvas-pad: clamp(12px, 2cqi, 20px);
   --canvas-gap: clamp(8px, 1.6cqi, 16px);
   --canvas-xs-pad: clamp(8px, 3cqi, 16px);
   --canvas-xs-gap: clamp(6px, 2cqi, 12px);
 
-  /* Progress sticky fallback */
   --progress-sticky-top: 0px;
 }
 
-/* ❌ EDDIG: :root { --ab-height: clamp(44px, 6cqi, 64px); }
-   ✅ HELYETTE: olvasd a legacyból, fallbackkel ahol kell. */
-
 .canvasWrap {
-  /* alap */
   --_page-bg: var(--app-page-bg, var(--skin-bg, #0d0f13));
   background: var(--_page-bg);
 
   position: fixed;
   inset: 0;
+
   display: flex;
   justify-content: center;
   align-items: flex-start;
+
   width: 100vw;
   height: 100dvh;
   min-height: 100vh;
+
   overflow-y: auto;
   overflow-x: hidden;
-
-  /* Stabilizálás: a belső növekedés ne dobja meg a külső layoutot */
-
 }
 
-/* ✅ DESKTOPON: a .canvasInner NEM szab szélességet, csak középre igazít */
+/* FIGYELEM:
+   kivesszük a .canvasInner réteget nálad ténylegesen nincs is használva a JSX-ben
+   (Canvas.tsx nem renderel canvasInner-t), ezért törölhető lenne.
+   Most nem törlöm, csak nem fogjuk használni szélességkorlátozásra.
+*/
 .canvasInner {
-  inline-size: auto;           /* kulcs: ne diktáljon szélességet desktopon */
+  inline-size: auto;
   max-inline-size: 100%;
   margin-inline: auto;
   padding: var(--canvas-pad);
 
-  display: grid;               /* a .playfield középre igazításához */
+  display: grid;
   justify-items: center;
-  min-width: 0;                /* ne feszítse túl a szélességet a belső grid */
+  min-width: 0;
 }
 
-/* ===== GRID (alap: mobil – minden egymás alatt) ===== */
+/* ===== GRID (alap: MOBIL FIRST) ===== */
 .playfield {
   display: grid;
 
-  /* 🔒 DESKTOP kezdőszélesség: azonnal a minimumra áll,
-     nem nő “gépeléssel”/betöltéssel. A plafont a max szabja. */
-  inline-size: var(--canvas-minw-desktop);
-  max-inline-size: var(--canvas-maxw-desktop);
+  /* Mobil baseline: töltse ki a viewport szélességét. */
+  inline-size: 100%;
+  min-inline-size: 100%;
+  max-inline-size: 100%;
 
-  /* rács */
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto auto auto auto;
   grid-template-areas:
@@ -73,11 +69,10 @@ body[data-skin="legacy-default"] {
     "dock"
     "action";
 
-  gap: var(--canvas-gap);
+  gap: var(--canvas-xs-gap);
   align-items: start;
   justify-items: stretch;
 
-  /* ne engedje, hogy gyerekek túlterjesszék */
   min-width: 0;
 }
 
@@ -94,11 +89,8 @@ body[data-skin="legacy-default"] {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-
-  /* opcionális: overflow: hidden; */
 }
 
-/* Progress */
 .areaProgress {
   grid-area: progress;
   height: var(--progress-height, 4px);
@@ -108,13 +100,35 @@ body[data-skin="legacy-default"] {
   z-index: 10;
 }
 
-/* Média */
-.areaMedia  { grid-area: media; align-self: start; overflow: visible; min-width: 0; }
-.areaNarr   { grid-area: narr;  align-self: start; min-width: 0; }
-.areaDock   { grid-area: dock;  display: grid; place-items: center; min-width: 0; }
-.areaAction { grid-area: action; min-width: 0; }
+.areaMedia  {
+  grid-area: media;
+  align-self: start;
+  overflow: visible;
+  min-width: 0;
+}
 
-/* A média ne tudja kifeszíteni a vásznat betöltés után sem */
+.areaNarr   {
+  grid-area: narr;
+  align-self: start;
+  min-width: 0;
+}
+
+/* Fontos: mobilon NE középre igazítsuk a dockot grid-del.
+   Engedjük hogy a child (InteractionDock.wrapper) saját 100%-át kifeszítse.
+*/
+.areaDock {
+  grid-area: dock;
+  display: block;        /* volt: display: grid; place-items: center; */
+  min-width: 0;
+  width: 100%;
+}
+
+.areaAction {
+  grid-area: action;
+  min-width: 0;
+}
+
+/* Media frame containment */
 .areaMedia .mediaFrame {
   aspect-ratio: var(--media-aspect, auto);
   overflow: visible;
@@ -131,10 +145,13 @@ body[data-skin="legacy-default"] {
   contain: layout paint;
 }
 
-/* Sticky util */
-.stickyBar { position: sticky; top: var(--progress-sticky-top); z-index: 10; }
+.stickyBar {
+  position: sticky;
+  top: var(--progress-sticky-top);
+  z-index: 10;
+}
 
-/* ===== RuneDock mobil overlay (jobb felső sarok) ===== */
+/* RuneDock mobil overlay */
 .runeDockTopRight {
   position: absolute;
   top: 0;
@@ -156,29 +173,35 @@ body[data-skin="legacy-default"] {
   transition: opacity 160ms ease;
 }
 
-/* Desktop only / Mobile only segédosztályok */
+/* Show/hide helpers */
 .showOnlyDesktop { display: none; }
-@media (min-width: 768px) { .showOnlyDesktop { display: initial; } }
+@media (min-width: 768px) {
+  .showOnlyDesktop { display: initial; }
+}
 
 .showOnlyMobile { display: block; }
-@media (min-width: 768px) { .showOnlyMobile { display: none !important; } }
-
-/* 📱 MOBIL: mindig 100% széles vászon + kisebb paddings/gap */
-@media (max-width: 640px) {
-  .canvasInner {
-    inline-size: 100%;       /* mobilon a konténer 100% */
-    padding: var(--canvas-xs-pad);
-  }
-
-  .playfield {
-    inline-size: 100%;       /* mobilon a vászon is 100% */
-    min-inline-size: 100%;
-    max-inline-size: 100%;
-    gap: var(--canvas-xs-gap);
-  }
+@media (min-width: 768px) {
+  .showOnlyMobile { display: none !important; }
 }
 
 /* ===== TABLET / DESKTOP ===== */
+@media (min-width: 641px) {
+  .playfield {
+    /* desktop szabály itt lép életbe */
+    inline-size: var(--canvas-minw-desktop);
+    max-inline-size: var(--canvas-maxw-desktop);
+
+    gap: var(--canvas-gap);
+  }
+
+  /* desktopon visszaadhatjuk a középre igazítást a dockra */
+  .areaDock {
+    display: grid;
+    place-items: center;
+  }
+}
+
+/* extra desktop finomhang (>=768px ugyanaz a grid mint most) */
 @media (min-width: 768px) {
   .playfield {
     grid-template-columns: 1fr;
@@ -194,10 +217,9 @@ body[data-skin="legacy-default"] {
 
   .areaNarr,
   .areaDock,
-  .areaAction { grid-column: 1 / -1; }
+  .areaAction {
+    grid-column: 1 / -1;
+  }
 
-  .areaDock { place-items: center; }
-
-  /* Ha lenne bal felső overlay változat, desktopon rejtheted: */
   .runeDockTopLeft { display: none; }
 }

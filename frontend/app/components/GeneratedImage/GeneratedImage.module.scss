@@ -1,20 +1,28 @@
-/* ===== GeneratedImage.module.scss (FILL + CENTERED IMAGE, INHERIT RADIUS) =====
- * A kép “beleül” a MediaFrame .content klippelt terébe.
- * Semmilyen extra border/keret itt — mindent a MediaFrame kezel.
- */
-
+/* Külső konténer: oszlopban rendezzük a frame-et és alatta a feliratot */
 .imageRoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  inline-size: 100%;
+  block-size: auto;
+  margin: auto;
+  overflow: visible;
+}
+
+/* Ez lesz maga a képtér, amit eddig az .imageRoot viselt.
+   Ide jön az a tartalom, ami a MediaFrame borderén belül marad. */
+.imageFrameInner {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   inline-size: 100%;
   block-size: auto;
-  overflow: visible;
-  margin: auto;
+  overflow: hidden;          /* fontos: a keret vágjon itt, ne kint */
+  border-radius: inherit;    /* örökli a MediaFrame clipjét */
 }
 
-/* A bitmap egyszerűen örökölje a szülő (content) border-radiusát és klippjét */
+/* A bitmap maga */
 .generatedImage {
   display: block;
   max-width: 100%;
@@ -26,22 +34,23 @@
   -webkit-user-drag: none;
   pointer-events: none;
 
-  /* kulcs: örökölt lekerekítés + smooth fade-in */
   border-radius: inherit;
   transition: opacity 0.3s ease-out;
   opacity: 0;
 }
 
-/* Fade-in animáció osztály */
-.fadeIn { opacity: 1; }
+/* Fade-in */
+.fadeIn {
+  opacity: 1;
+}
 
-/* Opcionális anticipációs szöveg (változatlan) */
+/* Felirat: teljesen a frame alatt, nincs hatása a keretre */
 .anticipationText {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
+  margin-top: 0.5rem;
   text-align: center;
   font-size: 0.9rem;
+  line-height: 1.2;
   opacity: 0.8;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   pointer-events: none;
 }

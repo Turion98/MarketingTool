@@ -5,7 +5,7 @@
 
 /* ===== Wrapper & grid ===== */
 .wrapper {
-  display: contents; /* no extra box */
+  display: contents;
 }
 
 .grid {
@@ -14,10 +14,12 @@
   align-items: stretch;
   justify-content: flex-start;
 
-  width: min(100%, var(--wrapper-maxw, 1100px));
-  margin-inline: auto;
+  /* konténer szélesség */
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 
+  margin-inline: 0;
   gap: var(--dock-gap, 16px);
   padding: var(--dock-pad, 12px);
 
@@ -40,6 +42,16 @@
     transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
 
+/* ===== Children sizing ===== */
+/* mobil baseline (alapértelmezett) */
+.grid > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: 0;
+  box-sizing: border-box;
+}
+
 /* ===== Choice button ===== */
 .choice {
   appearance: none;
@@ -48,9 +60,9 @@
 
   display: block;
   width: 100%;
-  max-width: var(--choice-maxw, 480px);
+  max-width: 100%;
+  margin-inline: 0;
 
-  margin-inline: auto; /* center in column */
   padding: var(--choice-padding-y, 14px) var(--choice-padding-x, 16px);
 
   color: var(--choice-color, #fff);
@@ -60,7 +72,6 @@
     var(--choice-bg-bot, rgba(255,255,255,.06))
   );
 
-  /* ---- Border: szétszedve, hogy a legacy width/style tokenek működjenek ---- */
   border-color: var(--choice-border, rgba(255,255,255,.18));
   border-style: var(--choice-border-style, solid);
   border-width: var(--choice-border-width, 1px);
@@ -85,11 +96,10 @@
     filter var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
 
-/* Hover: scale + shadow + gradient shift */
+/* Hover */
 .choice:enabled:hover {
   transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
 
-  /* csak a színt írjuk át, hogy a width/style token maradjon */
   border-color: var(
     --choice-border-hover,
     color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255,255,255,.18)))
@@ -104,7 +114,7 @@
   );
 }
 
-/* Active/press (touch-friendly) */
+/* Active / press */
 .choice:enabled:active {
   transform: scale(var(--choice-scale-active, .995)) translateY(0);
 
@@ -124,7 +134,7 @@
   transition-duration: var(--dock-dur-press, 100ms);
 }
 
-/* Disabled state */
+/* Disabled */
 .choice:disabled {
   cursor: not-allowed;
   opacity: .55;
@@ -137,7 +147,7 @@
   );
 }
 
-/* Focus visible ring */
+/* Focus ring */
 .choice:focus-visible {
   outline: none;
   box-shadow:
@@ -148,7 +158,7 @@
     );
 }
 
-/* Compact rows (optional list mode) */
+/* Compact rows (list mode) */
 .list {
   display: grid;
   grid-template-columns: 1fr;
@@ -162,11 +172,6 @@
 
 /* ===== Dock visibility / mount lifecycle ===== */
 
-/*
-  baseline mount állapot:
-  - StoryPage úgy rendereli a dockot, hogy először CSAK .fadeWrapper van rajta
-  - ekkor opacity:0 + lejjebb van tolva => láthatatlan, nem villan
-*/
 .fadeWrapper {
   opacity: 0;
   transform: translateY(8px);
@@ -176,20 +181,11 @@
   pointer-events: auto;
 }
 
-/*
-  amikor StoryPage azt mondja: dockJustAppeared === true
-  => hozzáadja az .appearing class-t
-  => szépen felúszik és kifényesedik
-*/
 .appearing {
   opacity: 1;
   transform: translateY(0);
 }
 
-/*
-  amikor oldalváltás előtt kifade-oljuk
-  => StoryPage isFadingOut === true
-*/
 .fadingOut {
   opacity: 0;
   transform: translateY(8px);
@@ -199,17 +195,24 @@
     transform 200ms ease;
 }
 
-/* ===== Mobile ===== */
-@media (max-width: 640px) {
+/* ===== Desktop layout overrides ===== */
+/* csak 641px és fölötte erőltetjük a "centered card" viselkedést */
+@media (min-width: 641px) {
   .grid {
-    gap: var(--dock-gap-mobile, var(--dock-gap, 16px));
-    padding: var(--dock-pad-mobile, var(--dock-pad, 12px));
+    width: min(100%, var(--wrapper-maxw, 1100px));
+    max-width: var(--wrapper-maxw, 1100px);
+    margin-inline: auto;
+  }
+
+  .grid > * {
+    min-width: 420px;
+    max-width: 100%;
+    margin-inline: auto;
   }
 
   .choice {
-    font-size: var(--choice-font-mobile, var(--choice-font, 16px));
-    padding: var(--choice-padding-y-mobile, var(--choice-padding-y, 14px))
-             var(--choice-padding-x-mobile, var(--choice-padding-x, 16px));
+    max-width: var(--choice-maxw, 480px);
+    margin-inline: auto;
   }
 }
 

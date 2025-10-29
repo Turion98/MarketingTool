@@ -130,8 +130,9 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     [imgFit]
   );
 
-  return (
-    <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
+return (
+  <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
+    <div className={styles.imageFrameInner}>
       {displayedSrc && (
         <img
           key={displayedSrc}
@@ -147,11 +148,12 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
           }}
         />
       )}
-      {(showAnticipation || loading) && !terminalError && (
-        <div className={styles.anticipationText}>A vision is forming…</div>
-      )}
     </div>
-  );
+
+    
+  </div>
+);
 };
+
 
 export default GeneratedImage_with_fadein;
