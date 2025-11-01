@@ -1,8 +1,29 @@
-import os, json, time, hashlib
+# backend/generate_image.py
+
+import os
+import json
+import time
+import hashlib
 from typing import Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
 
-# --- Konfig betöltés ---
+import requests
+
+# =========================
+# REPLICATE KULCS + MODELL
+# =========================
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+
+REPLICATE_DEFAULT_VERSION = os.getenv(
+    "REPLICATE_IMAGE_VERSION",
+    "cfc062cde6f7c54dc085f1cf89a9853b14e571db6d501fcdd602a31e6cd6f3c0",
+)
+
+# =========================
+# KONFIG
+# =========================
+
 def get_config():
     if os.path.exists("userConfig.json"):
         with open("userConfig.json", "r", encoding="utf-8") as f:
@@ -11,37 +32,47 @@ def get_config():
 
 _config = get_config()
 
-ENABLE_IMAGE_CACHE   = bool(_config.get("ENABLE_IMAGE_CACHE", True))
+ENABLE_IMAGE_CACHE = bool(_config.get("ENABLE_IMAGE_CACHE", True))
 ENABLE_IMAGE_PRELOAD = bool(_config.get("ENABLE_IMAGE_PRELOAD", True))
+_IMAGE_PARAMS = _config.get("IMAGE_PARAMS", {})
+_DEFAULT_FMT = (_config.get("IMAGE_DEFAULT_FMT", "png") or "png").lower()
 
-# Opcionális globális felülírások
-_IMAGE_PARAMS = _config.get("IMAGE_PARAMS", {})   # pl.: {"draft": {...}, "refine": {...}}
-_DEFAULT_FMT  = (_config.get("IMAGE_DEFAULT_FMT", "png") or "png").lower()
-
-# --- LOG könyvtár ---
+# log könyvtár
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "image_gen.jsonl")
 
 
-# --- Helper: slug ---
+# =========================
+# HELPER-ek
+# =========================
+def _log(event: Dict[str, Any]) -> None:
+    event["ts"] = datetime.utcnow().isoformat() + "Z"
+    line = json.dumps(event, ensure_ascii=False)
+    # konzolra
+    print("[image_gen]", line, flush=True)
+    # fájlba
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as lf:
+            lf.write(line + "\n")
+    except Exception:
+        pass
+
+
 def _slugify(value: Optional[str]) -> str:
     s = (value or "").strip().lower()
     if not s:
         return "default"
-    # fájlnév/útvonal részek lepucolása
     s = s.replace("\\", "/")
-    s = os.path.basename(s)                # "Erodv2_analytics.json"
+    s = os.path.basename(s)
     if s.endswith(".json"):
         s = s[:-5]
-    # csak [a-z0-9_-]
     out = []
     for ch in s:
         if ("a" <= ch <= "z") or ("0" <= ch <= "9") or ch in ("-", "_"):
             out.append(ch)
         else:
             out.append("-")
-    # duplák összehúzása
     slug = "".join(out)
     while "--" in slug:
         slug = slug.replace("--", "-")
@@ -49,7 +80,25 @@ def _slugify(value: Optional[str]) -> str:
     return slug
 
 
-# --- Helper: egyedi fájlnév generálás (story-szeparált) ---
+def _compute_prompt_key(
+    prompt: Optional[str],
+    params: Dict[str, Any],
+    style_profile: Dict[str, Any],
+    existing_key: Optional[str] = None,
+) -> str:
+    if existing_key:
+        return existing_key
+    data_str = json.dumps(
+        {
+            "prompt": prompt,
+            "params": params,
+            "style": style_profile,
+        },
+        sort_keys=True,
+    )
+    return hashlib.sha1(data_str.encode("utf-8")).hexdigest()
+
+
 def _build_filename(
     page_id: str,
     prompt_key: str,
@@ -57,83 +106,67 @@ def _build_filename(
     fmt: str,
     story_slug: Optional[str] = None,
 ) -> str:
-    """
-    Egyedi fájlnév generálása cache-hez, biztonságos formában.
-    A képek 'generated/images/<story_slug>/' alá kerülnek.
-    """
     safe_story = _slugify(story_slug)
     base_dir = os.path.join("generated", "images", safe_story)
     os.makedirs(base_dir, exist_ok=True)
 
     pk_hash = hashlib.sha1(prompt_key.encode("utf-8")).hexdigest()[:12]
     seed_str = f"_{seed}" if seed is not None else ""
-    # a page_id is marad a névben, hogy emberibb legyen
     filename = f"{page_id}_{pk_hash}{seed_str}.{fmt}"
     return os.path.join(base_dir, filename)
 
 
-# --- Helper: promptKey generálás ---
-def _compute_prompt_key(
-    prompt: Optional[str],
-    params: Dict[str, Any],
-    style_profile: Dict[str, Any],
-    existing_key: Optional[str] = None
-) -> str:
-    """
-    Egyedi prompt_key generálás a prompt + paraméterek + style_profile alapján.
-    Ha van existing_key, azt használjuk.
-    """
-    if existing_key:
-        return existing_key
-    data_str = json.dumps({
-        "prompt": prompt,
-        "params": params,
-        "style": style_profile
-    }, sort_keys=True)
-    return hashlib.sha1(data_str.encode("utf-8")).hexdigest()
-
-
-# --- Helper: metaadat írás mellékfájlba ---
 def _write_sidecar_meta(image_path: str, meta: Dict[str, Any]) -> None:
-    meta_path = image_path + ".json"
     try:
-        with open(meta_path, "w", encoding="utf-8") as mf:
+        with open(image_path + ".json", "w", encoding="utf-8") as mf:
             json.dump(meta, mf, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"[WARN] Metaadat írás sikertelen: {e}")
+    except Exception:
+        pass
 
 
-# --- Helper: log írás JSONL-be ---
-def _log(event: Dict[str, Any]) -> None:
-    event["ts"] = datetime.utcnow().isoformat() + "Z"
-    try:
-        with open(LOG_FILE, "a", encoding="utf-8") as lf:
-            lf.write(json.dumps(event, ensure_ascii=False) + "\n")
-    except Exception as e:
-        print(f"[WARN] Log írás sikertelen: {e}")
+def _normalize_prompt(prompt: Any) -> str:
+    """
+    A story motor küldhet összetett prompt-objektumot:
+    {
+        "global": "...",
+        "chapter": "...",
+        "page": "...",
+        "combinedPrompt": "...",
+        "negativePrompt": "..."
+    }
+    A Replicate viszont sima stringet vár. Itt egyetlen stringgé lapítjuk.
+    """
+    if prompt is None:
+        return ""
+    # ha már string → kész
+    if isinstance(prompt, str):
+        return prompt.strip()
+    # ha dict → össze kell fűzni
+    if isinstance(prompt, dict):
+        # ha van combinedPrompt → ezt használjuk elsőnek
+        cp = prompt.get("combinedPrompt")
+        if cp:
+            base = str(cp).strip()
+        else:
+            parts = []
+            for key in ("global", "chapter", "page"):
+                v = prompt.get(key)
+                if v:
+                    parts.append(str(v).strip())
+            base = ", ".join(p for p in parts if p)
+        neg = prompt.get("negativePrompt")
+        if neg:
+            # külön jelöljük, hogy negatív
+            base = f"{base}, Negative: {str(neg).strip()}"
+        return base.strip()
+    # bármi más → str()
+    return str(prompt).strip()
 
 
-# --- Helper: mock kép létrehozása minimális PNG-vel ---
-def _ensure_min_png(path: str) -> None:
-    try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "wb") as f:
-            # 1x1 px átlátszó PNG
-            f.write(
-                b"\x89PNG\r\n\x1a\n"
-                b"\x00\x00\x00\rIHDR"
-                b"\x00\x00\x00\x01\x00\x00\x00\x01"
-                b"\x08\x06\x00\x00\x00"
-                b"\x1f\x15\xc4\x89"
-                b"\x00\x00\x00\x0cIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01"
-                b"\x0d\n-\xb4"
-                b"\x00\x00\x00\x00IEND\xaeB`\x82"
-            )
-    except Exception as e:
-        print(f"[WARN] Mock PNG létrehozás sikertelen: {e}")
+# =========================
+# FŐ FÜGGVÉNY
+# =========================
 
-
-# --- Fő kép generáló függvény ---
 def generate_image_asset(
     *,
     prompt: Optional[str],
@@ -146,25 +179,24 @@ def generate_image_asset(
     fmt: str = "png",
     reuse_existing: bool = True,
     api_key: Optional[str] = None,
-    mode: str = "draft",  # "draft" | "refine"
-    story_slug: Optional[str] = None,      # ⬅️ ÚJ: közvetlen slug
-    story_src: Optional[str] = None,       # ⬅️ ÚJ: ha slug nincs, ebből képezünk
+    mode: str = "draft",
+    story_slug: Optional[str] = None,
+    story_src: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Fő belépési pont a main.py (vagy más) számára, draft/refine támogatással.
-    A képek 'generated/images/<story_slug>/' alá kerülnek. Ha nincs megadva
-    story_slug, a story_src alapján képezünk, különben 'default'.
-    """
     started = time.perf_counter()
     params = params or {}
     style_profile = style_profile or {}
 
-    # fmt default a konfigból is jöhet
+    # 🔽 fontos: a bejövő prompt lehet OBJECT → laposítsuk az elején
+    raw_prompt = prompt
+    norm_prompt = _normalize_prompt(prompt)
+
+    # fmt normalizálás
     fmt = (fmt or _DEFAULT_FMT or "png").lower()
     if fmt not in ("png", "jpg", "jpeg", "webp"):
         fmt = "png"
 
-    # Mode alapján default paraméterek + konfig felülírás
+    # alap paramok mód szerint
     default_params = {
         "draft": {"width": 512, "height": 768, "steps": 12, "cfg": 3.5},
         "refine": {"width": 768, "height": 1152, "steps": 28, "cfg": 6.5},
@@ -177,18 +209,153 @@ def generate_image_asset(
     for k, v in default_params.get(mode, {}).items():
         params.setdefault(k, v)
 
-    # PromptKey előállítás
-    pk = _compute_prompt_key(prompt, {**params, "mode": mode}, style_profile, prompt_key)
+    # prompt key – már a LAPOSÍTOTT promptból számolunk
+    pk = _compute_prompt_key(norm_prompt, {**params, "mode": mode}, style_profile, prompt_key)
 
-    # Story slug kinyerés
+    # story slug
     effective_slug = story_slug or _slugify(story_src)
 
-    # Fájlnév (story-szeparált)
+    # kimeneti fájl
     out_file = _build_filename(page_id, pk, seed, fmt, story_slug=effective_slug)
     out_rel = os.path.relpath(out_file).replace("\\", "/")
     out_url = f"/{out_rel}" if not out_rel.startswith("/") else out_rel
 
-    # Cache ellenőrzés
+    # 1) TÉNYLEGES REPLICATE HÍVÁS (ELŐBB!)
+    api_key = api_key or REPLICATE_API_TOKEN
+    got_real_image = False
+    real_url = None
+
+    if not api_key:
+        _log({
+            "event": "image.no_api_key",
+            "pageId": page_id,
+            "prompt": norm_prompt,
+            "rawPrompt": raw_prompt,
+            "mode": mode,
+            "storySlug": effective_slug,
+        })
+    else:
+        try:
+            REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
+
+            # 🔽 itt MÁR a laposított promptot küldjük
+            replicate_input = {
+                "prompt": norm_prompt or "",
+            }
+            if "width" in params:
+                replicate_input["width"] = params["width"]
+            if "height" in params:
+                replicate_input["height"] = params["height"]
+            if "steps" in params:
+                # a legtöbb replicate-es SD/Flux ezt így szereti
+                replicate_input["num_inference_steps"] = params["steps"]
+            if "cfg" in params:
+                replicate_input["guidance_scale"] = params["cfg"]
+
+            create_resp = requests.post(
+                "https://api.replicate.com/v1/predictions",
+                headers={
+                    "Authorization": f"Token {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "version": REPLICATE_VERSION,
+                    "input": replicate_input,
+                },
+                timeout=30,
+            )
+            create_resp.raise_for_status()
+            pred = create_resp.json()
+            pred_id = pred.get("id")
+
+            if pred_id:
+                for _ in range(40):
+                    time.sleep(2)
+                    poll_resp = requests.get(
+                        f"https://api.replicate.com/v1/predictions/{pred_id}",
+                        headers={"Authorization": f"Token {api_key}"},
+                        timeout=30,
+                    )
+                    poll_resp.raise_for_status()
+                    poll = poll_resp.json()
+                    st = poll.get("status")
+                    if st == "succeeded":
+                        out = poll.get("output") or []
+                        if out:
+                            real_url = out[0] if isinstance(out, list) else out
+                            got_real_image = True
+                        else:
+                            _log({
+                                "event": "image.replicate_no_output",
+                                "pageId": page_id,
+                                "prompt": norm_prompt,
+                                "rawPrompt": raw_prompt,
+                                "mode": mode,
+                                "storySlug": effective_slug,
+                                "poll": poll,
+                            })
+                        break
+                    if st in ("failed", "canceled"):
+                        _log({
+                            "event": "image.replicate_failed_status",
+                            "status": st,
+                            "pageId": page_id,
+                            "prompt": norm_prompt,
+                            "rawPrompt": raw_prompt,
+                            "mode": mode,
+                            "storySlug": effective_slug,
+                            "poll": poll,
+                        })
+                        break
+
+        except Exception as e:
+            # megpróbáljuk kiszedni a Replicate tényleges hiba-válaszát is
+            replicate_body = None
+            try:
+                # requests.HTTPError esetén itt lesz a response
+                if hasattr(e, "response") and e.response is not None:
+                    replicate_body = e.response.text
+            except Exception:
+                replicate_body = None
+
+            _log({
+                "event": "image.replicate_error",
+                "error": str(e),
+                "replicateResponse": replicate_body,  # 🔴 EZT AKARTUK HOZZÁADNI
+                "pageId": page_id,
+                "prompt": norm_prompt,
+                "rawPrompt": raw_prompt,
+                "mode": mode,
+                "storySlug": effective_slug,
+            })
+
+
+    # 2) HA SIKERÜLT, AKKOR (ÉS CSAK AKKOR) LOG + VISSZA
+    if got_real_image and real_url:
+        duration_ms = int((time.perf_counter() - started) * 1000)
+        _log({
+            "event": "image.replicate_success",
+            "pageId": page_id,
+            "prompt": norm_prompt,
+            "rawPrompt": raw_prompt,
+            "mode": mode,
+            "storySlug": effective_slug,
+            "replicateUrl": real_url,
+            "durationMs": duration_ms,
+        })
+        # itt lehetne letölteni és lokálisan menteni, ha nagyon akarjuk
+        return {
+            "path": real_url,
+            "url": real_url,
+            "seed": seed,
+            "cacheHit": False,
+            "promptKey": pk,
+            "mode": mode,
+            "storySlug": effective_slug,
+            "source": "replicate",
+        }
+
+    # 3) HA NEM SIKERÜLT → PRÓBÁLJUK A CACHE-T (MÁSODLAGOS!)
     if ENABLE_IMAGE_CACHE and cache and os.path.exists(out_file):
         duration_ms = int((time.perf_counter() - started) * 1000)
         meta = {
@@ -205,52 +372,37 @@ def generate_image_asset(
             "source": "cache",
             "storySlug": effective_slug,
         }
-        _write_sidecar_meta(out_file, {
-            **meta,
-            "prompt": prompt,
-            "params": params,
-            "styleProfile": style_profile,
-        })
-        _log({"event": "image.cache_hit", **meta, "path": out_url})
+        _write_sidecar_meta(
+            out_file,
+            {
+                **meta,
+                "prompt": norm_prompt,
+                "rawPrompt": raw_prompt,
+                "params": params,
+                "styleProfile": style_profile,
+            },
+        )
+        _log({"event": "image.cache_fallback", **meta, "path": out_url})
         return {
             "path": out_url,
+            "url": out_url,
             "seed": seed,
             "cacheHit": True,
             "promptKey": pk,
             "mode": mode,
             "storySlug": effective_slug,
+            "source": "cache",
         }
 
-    # Ha nincs cache találat → generálás (mock)
-    _ensure_min_png(out_file)
-
+    # 4) SE REPLICATE, SE CACHE → HIBA (frontend fallback veszi át)
     duration_ms = int((time.perf_counter() - started) * 1000)
-    meta_write = {
+    _log({
+        "event": "image.no_source_available",
         "pageId": page_id,
-        "promptKey": pk,
-        "seed": seed,
+        "prompt": norm_prompt,
+        "rawPrompt": raw_prompt,
         "mode": mode,
-        "cacheHit": False,
+        "storySlug": effective_slug,
         "durationMs": duration_ms,
-        "flags": {
-            "ENABLE_IMAGE_CACHE": ENABLE_IMAGE_CACHE,
-            "ENABLE_IMAGE_PRELOAD": ENABLE_IMAGE_PRELOAD,
-        },
-        "source": "generated",
-        "path": out_url,
-        "prompt": prompt,
-        "params": params,
-        "styleProfile": style_profile,
-        "storySlug": effective_slug,
-    }
-    _write_sidecar_meta(out_file, meta_write)
-    _log({"event": "image.generated", **meta_write})
-
-    return {
-        "path": out_url,
-        "seed": seed,
-        "cacheHit": False,
-        "promptKey": pk,
-        "mode": mode,
-        "storySlug": effective_slug,
-    }
+    })
+    raise RuntimeError("Image generation failed: no replicate output and no cached image.")

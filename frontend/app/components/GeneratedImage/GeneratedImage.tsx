@@ -8,13 +8,35 @@ import { useImageCache } from "../../lib/useImageCache";
 
 type GeneratedImageProps = {
   pageId: string;
-  prompt?: string | null;
+  prompt?: string | null; // jöhet object is a page JSON-ből
   params?: Record<string, any>;
   imageTiming?: { generate?: boolean; delayMs?: number };
   mode?: "draft" | "refine";
 };
 
 const FALLBACK_SRC = "/assets/FallBack_image.png";
+
+function normalizePrompt(p: any): string {
+  if (!p) return "";
+  if (typeof p === "string") return p.trim();
+  if (typeof p === "object") {
+    // ha van combinedPrompt → ez az első
+    if (p.combinedPrompt) {
+      const base = String(p.combinedPrompt).trim();
+      return p.negativePrompt ? `${base}, Negative: ${String(p.negativePrompt).trim()}` : base;
+    }
+    const parts: string[] = [];
+    if (p.global) parts.push(String(p.global).trim());
+    if (p.chapter) parts.push(String(p.chapter).trim());
+    if (p.page) parts.push(String(p.page).trim());
+    let base = parts.join(", ");
+    if (p.negativePrompt) {
+      base = `${base}, Negative: ${String(p.negativePrompt).trim()}`;
+    }
+    return base.trim();
+  }
+  return String(p).trim();
+}
 
 function adaptCacheResult(cache: any) {
   if (Array.isArray(cache)) {
@@ -27,8 +49,7 @@ function adaptCacheResult(cache: any) {
         state?.data?.url ??
         state?.data?.src ??
         undefined,
-      loading:
-        !!state?.loading || !!state?.isLoading || state?.status === "loading",
+      loading: !!state?.loading || !!state?.isLoading || state?.status === "loading",
       error: state?.error ?? state?.err ?? state?.data?.error ?? null,
       retry:
         actions?.retry ??
@@ -74,7 +95,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   imageTiming,
   mode = "draft",
 }) => {
-  const { setGlobalError } = useGameState();
+  const { setGlobalError, imageApiKey } = useGameState();
 
   const [fadeIn, setFadeIn] = useState(false);
   const [showAnticipation, setShowAnticipation] = useState(false);
@@ -84,18 +105,22 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   const imgFit = typeof params?.objectFit === "string" ? params.objectFit : "contain";
 
   const shouldGenerate = imageTiming?.generate !== false && !terminalError;
-  const effectivePrompt = shouldGenerate ? (prompt ?? "") : "";
+
+  // 🔽 ITT normalizáljuk, hogy a hook már ne kapjon objectet
+  const normalizedPrompt = shouldGenerate ? normalizePrompt(prompt) : "";
 
   const cache = useImageCache({
     enabled: shouldGenerate,
     pageId,
-    prompt: effectivePrompt,
+    prompt: normalizedPrompt,
     params,
     mode,
+    apiKey: imageApiKey,
   });
 
   const { imageUrl, loading, error } = adaptCacheResult(cache);
 
+  // loader / anticipation
   useEffect(() => {
     if (!loading) return;
     const t = setTimeout(() => setShowAnticipation(true), 600);
@@ -104,11 +129,34 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 
   useEffect(() => {
     if (imageUrl && imageUrl.trim().length > 0) {
-      setDisplayedSrc(imageUrl);
+      const FRONT_ORIGIN =
+        (typeof window !== "undefined" && window.location.origin) ||
+        "http://localhost:3000";
+
+      let finalUrl = imageUrl.trim();
+
+      // 1) csak a tényleges backend-kép URL-eket proxizzuk
+      if (finalUrl.startsWith("http://127.0.0.1:8000/generated/images/")) {
+        finalUrl = `${FRONT_ORIGIN}/api/image/${finalUrl.replace(
+          "http://127.0.0.1:8000/generated/images/",
+          ""
+        )}`;
+      }
+      // 2) csak a /generated/images/... kezdetűeket proxizzuk
+      else if (finalUrl.startsWith("/generated/images/")) {
+        finalUrl = `${FRONT_ORIGIN}/api/image/${finalUrl.replace(
+          "/generated/images/",
+          ""
+        )}`;
+      }
+      // 3) MINDEN MÁST HAGYJUNK BÉKÉN
+
+      setDisplayedSrc(finalUrl);
       setTerminalError(null);
     }
   }, [imageUrl]);
 
+  // error → global + fallback
   useEffect(() => {
     if (!error) return;
     setGlobalError?.(String(error));
@@ -118,6 +166,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     }
   }, [error, displayedSrc, setGlobalError]);
 
+  // fade-in
   useEffect(() => {
     if (!displayedSrc) return;
     setFadeIn(false);
@@ -130,30 +179,27 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     [imgFit]
   );
 
-return (
-  <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
-    <div className={styles.imageFrameInner}>
-      {displayedSrc && (
-        <img
-          key={displayedSrc}
-          src={displayedSrc}
-          alt=""
-          className={`${styles.generatedImage} ${fadeIn ? styles.fadeIn : ""}`}
-          draggable={false}
-          onError={(e) => {
-            if (displayedSrc !== FALLBACK_SRC) {
-              e.currentTarget.src = FALLBACK_SRC;
-              setDisplayedSrc(FALLBACK_SRC);
-            }
-          }}
-        />
-      )}
+  return (
+    <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
+      <div className={styles.imageFrameInner}>
+        {displayedSrc && (
+          <img
+            key={displayedSrc}
+            src={displayedSrc}
+            alt=""
+            className={`${styles.generatedImage} ${fadeIn ? styles.fadeIn : ""}`}
+            draggable={false}
+            onError={(e) => {
+              if (displayedSrc !== FALLBACK_SRC) {
+                e.currentTarget.src = FALLBACK_SRC;
+                setDisplayedSrc(FALLBACK_SRC);
+              }
+            }}
+          />
+        )}
+      </div>
     </div>
-
-    
-  </div>
-);
+  );
 };
-
 
 export default GeneratedImage_with_fadein;

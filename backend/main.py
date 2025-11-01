@@ -22,6 +22,7 @@ from email_utils import send_mail_with_pdf
 from report_scheduler import load_settings, save_settings, start_scheduler, set_generate_cb
 from models.report_settings import ReportSettings
 from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Body
 
 # ✅ Unified cache imports
 from cache import load_story_cached, get_page_cached, was_last_page_hit, clear_caches as clear_all_caches
@@ -30,6 +31,12 @@ from cache import load_story_cached, get_page_cached, was_last_page_hit, clear_c
 from feedback_routes import router as feedback_router
 from storysvc.router import router as stories_router   
 from router.white_label import router as white_label_router  # <-- EZ KELL
+
+from fastapi import File
+from fastapi.responses import FileResponse
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- ezek a többi import után jöhetnek ---
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -194,6 +201,41 @@ def log_jsonl(event: Dict[str, Any]) -> None:
     except Exception as e:
         print("Logolási hiba:", e)
 
+def _normalize_prompt_incoming(p: Any) -> str:
+    """
+    A frontend küldhet objektumot is:
+    {
+      "global": "...",
+      "chapter": "...",
+      "page": "...",
+      "combinedPrompt": "...",
+      "negativePrompt": "..."
+    }
+    Itt egyetlen stringgé lapítjuk, hogy a generate_image_asset mindig stringet kapjon.
+    """
+    if p is None:
+        return ""
+    if isinstance(p, str):
+        return p.strip()
+    if isinstance(p, dict):
+        # 1. ha van combinedPrompt → ezt használjuk
+        cp = p.get("combinedPrompt")
+        if cp:
+            base = str(cp).strip()
+        else:
+            parts = []
+            for key in ("global", "chapter", "page"):
+                v = p.get(key)
+                if v:
+                    parts.append(str(v).strip())
+            base = ", ".join(parts)
+        neg = p.get("negativePrompt")
+        if neg:
+            base = f"{base}, Negative: {str(neg).strip()}"
+        return base.strip()
+    # bármi más
+    return str(p).strip()
+
 # =========================
 #   FRAGMENTS KEZELÉS
 # =========================
@@ -346,6 +388,62 @@ def health():
         "generatedAudioDirExists": os.path.isdir("generated/audio"),
         "sfxCount": len(os.listdir(sfx_dir)) if os.path.isdir(sfx_dir) else 0
     }
+
+from fastapi import Request
+
+@app.post("/api/generate-image")
+async def api_generate_image(req: Request):
+    if not HAS_IMAGE_BACKEND:
+        raise HTTPException(status_code=500, detail="Image backend not loaded")
+
+    body = await req.json()
+    page_id = body.get("pageId") or body.get("page_id") or "page"
+
+    # 🔽 ITT LAPOSÍTJUK MÁR A BELÉPÉSKOR
+    raw_prompt = body.get("prompt") or None
+    prompt = _normalize_prompt_incoming(raw_prompt)
+
+    params = body.get("params") or {}
+    style = body.get("styleProfile") or {}
+    mode = body.get("mode") or "draft"
+    api_key = body.get("apiKey") or None
+    story_slug = body.get("storySlug") or body.get("storyId") or None
+    reuse = body.get("reuseExisting", True)
+    fmt = body.get("format", "png")
+
+    try:
+        res = generate_image_asset(
+            prompt=prompt,               # ← már a laposított megy be
+            page_id=page_id,
+            params=params,
+            style_profile=style,
+            cache=True,
+            fmt=fmt,
+            reuse_existing=reuse,
+            api_key=api_key,
+            mode=mode,
+            story_slug=story_slug,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"ok": True, "url": res.get("url"), "path": res.get("path")}
+
+from pathlib import Path
+
+@app.get("/api/image/{story_slug}/{image_name}")
+def get_generated_image(story_slug: str, image_name: str):
+    """
+    Frontend proxy kompatibilitás: /api/image/<story>/<file.png>
+    → kiszolgáljuk a /generated/images/<story>/<file.png>-t
+    """
+    base = Path("generated") / "images" / story_slug / image_name
+    if not base.exists():
+      # lehet, hogy a JSON sidecar kellene
+      raise HTTPException(status_code=404, detail="Image not found")
+
+    # content type-et adhatunk fixen is
+    return FileResponse(str(base), media_type="image/png")
 
 # --- Landing endpoint (API) ---
 @app.get("/api/landing")
@@ -810,6 +908,7 @@ def rollup_range(
             "exitAfterPage": "Az adott időszakban sessionönként az utolsó page_enter oldalt számoljuk exitként.",
         }
     }
+
 
 # =========================
 #   TOKEN + EXPORT (HTML/JSON/PDF)

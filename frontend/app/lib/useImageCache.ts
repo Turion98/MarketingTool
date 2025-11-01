@@ -7,10 +7,33 @@ const toHash = (s: string) => {
   return `${h >>> 0}`;
 };
 
+function normalizePrompt(p: any): string {
+  if (!p) return "";
+  if (typeof p === "string") return p.trim();
+  if (typeof p === "object") {
+    // 1. ha van combinedPrompt → ez az első
+    if (p.combinedPrompt) {
+      const base = String(p.combinedPrompt).trim();
+      return p.negativePrompt ? `${base}, Negative: ${String(p.negativePrompt).trim()}` : base;
+    }
+    // 2. külön mezőkből
+    const parts: string[] = [];
+    if (p.global) parts.push(String(p.global).trim());
+    if (p.chapter) parts.push(String(p.chapter).trim());
+    if (p.page) parts.push(String(p.page).trim());
+    let base = parts.join(", ");
+    if (p.negativePrompt) {
+      base = `${base}, Negative: ${String(p.negativePrompt).trim()}`;
+    }
+    return base.trim();
+  }
+  return String(p).trim();
+}
+
 type UseImageCacheArgs = {
   enabled?: boolean;
   pageId: string;
-  prompt: string;
+  prompt: any; // lehet string vagy object is
   params?: Record<string, any>;
   styleProfile?: Record<string, any>;
   mode?: "draft" | "refine";
@@ -18,6 +41,9 @@ type UseImageCacheArgs = {
   retryDelayMs?: number;
   timeoutMs?: number;
   retryTrigger?: number;
+  apiKey?: string;
+  // ha később áthozod a GameState-ből, ide is jöhet:
+  storySlug?: string;
 };
 
 type UseImageCacheResult = {
@@ -43,6 +69,8 @@ export function useImageCache({
   retryDelayMs = 2000,
   timeoutMs = 15000,
   retryTrigger = 0,
+  apiKey,
+  storySlug = "default", // ⬅️ fontos: backend is ezt várta a tesztben
 }: UseImageCacheArgs): UseImageCacheResult {
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
@@ -66,8 +94,11 @@ export function useImageCache({
       return;
     }
 
-    // 🔴 Ha korábban fail volt és nincs új retryTrigger, akkor ne induljunk újra
+    // 🔴 ha korábban fail volt és nincs új retryTrigger, akkor ne induljunk újra
     if (hasFailedRef.current && retryTrigger === 0) return;
+
+    // 🔽 itt laposítjuk a promptot, hogy a fetch-nek már mindig string menjen
+    const normalizedPrompt = normalizePrompt(prompt);
 
     let isMounted = true;
     const controller = new AbortController();
@@ -82,13 +113,21 @@ export function useImageCache({
 
         const seed = getSeedForPage(pageId);
         const promptKey = toHash(
-          JSON.stringify({ pageId, prompt, params, styleProfile, seed, mode })
+          JSON.stringify({
+            pageId,
+            prompt: normalizedPrompt,
+            params,
+            styleProfile,
+            seed,
+            mode,
+            storySlug,
+          })
         );
 
         // ⬇️ Local cache check + HIT mérés
         const cacheKey = `image_${pageId}_${mode}`;
         const t0 = performance.now();
-        const cached = localStorage.getItem(cacheKey);
+        const cached = typeof window !== "undefined" ? localStorage.getItem(cacheKey) : null;
         if (cached) {
           const ms = Math.round(performance.now() - t0);
           lastImagePerfLog = { key: cacheKey, url: cached, hit: true, ms };
@@ -114,9 +153,13 @@ export function useImageCache({
           return;
         }
 
+        // ⬇️ backend alap (pont ugyanaz, mint amit PowerShellből hívtál)
+        const API_BASE =
+          process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") || "http://127.0.0.1:8000";
+
         const body = {
           pageId,
-          prompt,
+          prompt: normalizedPrompt, // 🔴 innen már sosem megy object
           params,
           styleProfile,
           seed,
@@ -125,6 +168,8 @@ export function useImageCache({
           format: "png",
           reuseExisting: true,
           mode,
+          apiKey,
+          storySlug, // ⬅️ ez kellett a tesztedben is
         };
 
         // ⬇️ Fetch + retry + MISS mérés
@@ -137,15 +182,12 @@ export function useImageCache({
               setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
             );
 
-            const fetchPromise = fetch(
-              `${process.env.NEXT_PUBLIC_API_URL ?? ""}/generate_image`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-                signal: controller.signal,
-              }
-            );
+            const fetchPromise = fetch(`${API_BASE}/api/generate-image`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+              signal: controller.signal,
+            });
 
             const res: any = (await Promise.race([fetchPromise, timeoutPromise])) as Response;
 
@@ -154,11 +196,24 @@ export function useImageCache({
             const data = await res.json();
             if (!isMounted) return;
 
-            if (data?.path) {
-              const finalUrl = data.path.startsWith("/") ? data.path : `/${data.path}`;
+            // === VÁLASZ FELDOLGOZÁSA ===
+            const rawUrl: string | undefined = data?.url || data?.path;
+
+            if (rawUrl) {
+              let finalUrl = rawUrl as string;
+
+              // ha a backend lokális fájlt ad vissza → rakjuk elé az API_BASE-et
+              if (finalUrl.startsWith("/generated/")) {
+                finalUrl = `${API_BASE}${finalUrl}`;
+              } else if (!finalUrl.startsWith("http")) {
+                // biztos ami biztos
+                finalUrl = `${API_BASE}/${finalUrl.replace(/^\/+/, "")}`;
+              }
 
               try {
-                localStorage.setItem(cacheKey, finalUrl);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem(cacheKey, finalUrl);
+                }
               } catch {
                 // localStorage megtelt, ignoráljuk
               }
@@ -210,7 +265,8 @@ export function useImageCache({
     maxRetries,
     retryDelayMs,
     timeoutMs,
-    retryTrigger, // ⬅️ csak Retry indít újra
+    retryTrigger,
+    storySlug, // ha változik, új kép
   ]);
 
   return { imageUrl, loading, error };
