@@ -17,6 +17,9 @@ type GeneratedImageProps = {
 
 const FALLBACK_SRC = "/assets/FallBack_image.png";
 
+/**
+ * prompt normalizálás – elfogadja az objektumos promptot is
+ */
 function normalizePrompt(p: any): string {
   if (!p) return "";
   if (typeof p === "string") return p.trim();
@@ -40,6 +43,9 @@ function normalizePrompt(p: any): string {
   return String(p).trim();
 }
 
+/**
+ * a useImageCache többféle formában adhat vissza adatot
+ */
 function adaptCacheResult(cache: any) {
   if (Array.isArray(cache)) {
     const [state, actions] = cache ?? [];
@@ -98,19 +104,22 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 }) => {
   const { setGlobalError, imageApiKey } = useGameState();
 
+  // vizuális state-ek
   const [fadeIn, setFadeIn] = useState(false);
   const [displayedSrc, setDisplayedSrc] = useState<string | null>(null);
   const [terminalError, setTerminalError] = useState<string | null>(null);
   const [showAnticipation, setShowAnticipation] = useState(false);
-  // ⬇️ ÚJ: külön state a keret nyitottságára
   const [isFrameOpen, setIsFrameOpen] = useState(false);
+  const [didMount, setDidMount] = useState(false);
 
   const imgFit =
     typeof params?.objectFit === "string" ? params.objectFit : "contain";
 
+  // csak akkor próbáljon képet beszerezni, ha engedélyezett és nincs végleges hibánk
   const shouldGenerate = imageTiming?.generate !== false && !terminalError;
   const normalizedPrompt = shouldGenerate ? normalizePrompt(prompt) : "";
 
+  // kép betöltés / cache
   const cache = useImageCache({
     enabled: shouldGenerate,
     pageId,
@@ -122,51 +131,48 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 
   const { imageUrl, loading, error } = adaptCacheResult(cache);
 
-useEffect(() => {
-  // 1) régi kép le
-  setDisplayedSrc(null);
-  setFadeIn(false);
-  setShowAnticipation(true);
+  // első render
+  useEffect(() => {
+    setDidMount(true);
+  }, []);
 
-  // 2) először ZÁRD BE,
-  // de úgy, hogy a browser tényleg kirajzolja zárva
-  let raf1: number;
-  let raf2: number;
+  /**
+   * OLDALVÁLTÁS
+   * - keretet csukjuk be
+   * - de a KÉPET NEM szedjük le azonnal → ha nem jön új kép, legalább a régi látszik
+   */
+  useEffect(() => {
+    setIsFrameOpen(false);
+    // jelezzük, hogy “dolgozik”
+    setShowAnticipation(true);
+  }, [pageId]);
 
-  setIsFrameOpen(false);
+  /**
+   * LOADING állapot:
+   * - ha tölt, egy kis késés után mutassuk az anticipation-t
+   * - ha nem tölt már: ha volt régi kép, akkor nyissuk ki a keretet, hogy ne legyen üres
+   */
+  useEffect(() => {
+    if (loading) {
+      const t = setTimeout(() => setShowAnticipation(true), 300);
+      return () => clearTimeout(t);
+    }
 
-  raf1 = requestAnimationFrame(() => {
-    // itt már van egy paint zárt állapottal
-    raf2 = requestAnimationFrame(() => {
-      // itt nyitjuk ki → EZT már látja transitionként
+    // ha nem loading
+    setShowAnticipation(false);
+
+    // ha nincs új imageUrl, de volt korábban kép, ne hagyjuk zárva
+    if (!loading && !imageUrl && displayedSrc) {
       setIsFrameOpen(true);
-    });
-  });
+    }
+  }, [loading, imageUrl, displayedSrc]);
 
-  return () => {
-    if (raf1) cancelAnimationFrame(raf1);
-    if (raf2) cancelAnimationFrame(raf2);
-  };
-}, [pageId]);
-
-
-// loader / anticipation
-useEffect(() => {
-  if (loading) {
-    // kicsi késleltetés, hogy ne villogjon, ha 150ms alatt jön a kép
-    const t = setTimeout(() => setShowAnticipation(true), 350);
-    return () => clearTimeout(t);
-  }
-
-  // ha már NEM loading
-  setShowAnticipation(false);
-
-  // ⚠️ NEM csukjuk össze itt a frame-et!
-  // majd csak akkor csukjuk, ha új oldalra lépünk (a pageId-s effectben),
-  // vagy ha te explicit úgy döntesz.
-}, [loading]);
-
-  // új kép érkezett
+  /**
+   * ÚJ KÉP ÉRKEZETT
+   * - URL normalizálás (backend → frontend proxy)
+   * - displayedSrc beállítás
+   * - keret kinyitás
+   */
   useEffect(() => {
     if (imageUrl && imageUrl.trim().length > 0) {
       const FRONT_ORIGIN =
@@ -175,6 +181,7 @@ useEffect(() => {
 
       let finalUrl = imageUrl.trim();
 
+      // backend által adott abszolút URL → frontend image proxy-ra irányítjuk
       if (finalUrl.startsWith("http://127.0.0.1:8000/generated/images/")) {
         finalUrl = `${FRONT_ORIGIN}/api/image/${finalUrl.replace(
           "http://127.0.0.1:8000/generated/images/",
@@ -187,26 +194,40 @@ useEffect(() => {
         )}`;
       }
 
-      setDisplayedSrc(finalUrl);
+      // ha ugyanaz a kép jött vissza, ne villogjunk
+      setDisplayedSrc((prev) => {
+        if (prev === finalUrl) return prev;
+        return finalUrl;
+      });
+
+      // külön tickben nyissuk a keretet, hogy a transition tényleg fusson
+      requestAnimationFrame(() => {
+        setIsFrameOpen(true);
+      });
+
       setTerminalError(null);
-      // ⬇️ biztosan legyen nyitva ha már kép is van
-      setIsFrameOpen(true);
     }
   }, [imageUrl]);
 
-  // error → global + fallback
+  /**
+   * HIBA → fallback + keret nyitva
+   */
   useEffect(() => {
     if (!error) return;
     setGlobalError?.(String(error));
+
     if (isTerminalError(error)) {
       setTerminalError(String(error));
-      if (!displayedSrc) setDisplayedSrc(FALLBACK_SRC);
-      // ha fallback-et tettünk be, akkor is legyen nyitva
+      if (!displayedSrc) {
+        setDisplayedSrc(FALLBACK_SRC);
+      }
       setIsFrameOpen(true);
     }
   }, [error, displayedSrc, setGlobalError]);
 
-  // fade-in az új képre
+  /**
+   * KÉP SAJÁT FADE-INJE
+   */
   useEffect(() => {
     if (!displayedSrc) return;
     setFadeIn(false);
@@ -230,38 +251,40 @@ useEffect(() => {
     [imgFit]
   );
 
-  const shouldBeOpen =
-  isFrameOpen || loading || showAnticipation || !!displayedSrc;
+  const shouldBeOpen = didMount && isFrameOpen;
 
-return (
-  <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
-    <div
-      className={
-        shouldBeOpen
-          ? `${styles.imageFrameInner} ${styles.imageFrameInnerOpen}`
-          : styles.imageFrameInner
-      }
-    >
-        {displayedSrc ? (
-          <img
-            key={displayedSrc}
-            src={displayedSrc}
-            alt=""
-            className={imgClass}
-            draggable={false}
-            onError={(e) => {
-              if (displayedSrc !== FALLBACK_SRC) {
-                e.currentTarget.src = FALLBACK_SRC;
-                setDisplayedSrc(FALLBACK_SRC);
-                setIsFrameOpen(true);
-              }
-            }}
-          />
-        ) : null}
+  return (
+    <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
+      <div
+        className={
+          shouldBeOpen
+            ? `${styles.imageFrameInner} ${styles.imageFrameInnerOpen}`
+            : styles.imageFrameInner
+        }
+      >
+        <div className={styles.imageRatio}>
+          {displayedSrc ? (
+            <img
+              key={displayedSrc}
+              src={displayedSrc}
+              alt=""
+              className={imgClass}
+              draggable={false}
+              onError={(e) => {
+                // ha a proxy 405-öt dob és emiatt nem tudja betölteni:
+                if (displayedSrc !== FALLBACK_SRC) {
+                  e.currentTarget.src = FALLBACK_SRC;
+                  setDisplayedSrc(FALLBACK_SRC);
+                  setIsFrameOpen(true);
+                }
+              }}
+            />
+          ) : null}
 
-        {!displayedSrc && showAnticipation ? (
-          <div className={styles.anticipationText}>Kép előkészítése…</div>
-        ) : null}
+          {!displayedSrc && showAnticipation ? (
+            <div className={styles.anticipationText}>Kép előkészítése…</div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

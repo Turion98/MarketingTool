@@ -15,37 +15,36 @@
   align-items: center;
   justify-content: center;
   inline-size: 100%;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: inherit;
   background: transparent;
 
   /* alap: csukva */
-  max-height: 0;
+  transform-origin: top;
+  transform: scaleY(0);
   opacity: 0;
 
   transition:
-    max-height 0.6s ease-in-out,
-    opacity 0.4s ease-in-out;
-  will-change: max-height, opacity;
+    transform 0.45s ease-in-out,
+    opacity 0.35s ease-in-out;
 }
 
-/* ⬇️ ha tényleg mutatunk valamit → nyíljon ki */
 .imageFrameInnerOpen {
-  max-height: 60vh;  /* elég nagy, hogy a tényleges kép kiférjen */
+  transform: scaleY(1);
   opacity: 1;
 }
 
-/* opcionális: CSAK TÖLTÉSKOR legyen kis “hely” */
-.imageFrameInnerLoading {
-  min-height: min(26vh, 15rem);
+.imageRatio {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  position: relative;
 }
 
 /* --- Kép --- */
 .generatedImage {
   display: block;
   max-width: 100%;
-  height: auto;
+  max-height: 100%;
   object-fit: var(--gi-fit, contain);
   object-position: center;
   user-select: none;
@@ -67,14 +66,20 @@
   animation: fadeOutToCenter 0.85s ease-in forwards;
 }
 
+/* “Kép előkészítése…” – középen */
 .anticipationText {
-  margin-top: 0.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 0.9rem;
   line-height: 1.2;
   opacity: 0.8;
   padding: 0 0.75rem;
   pointer-events: none;
+  backdrop-filter: blur(2px);
 }
 
 @keyframes fadeInCenterOut {

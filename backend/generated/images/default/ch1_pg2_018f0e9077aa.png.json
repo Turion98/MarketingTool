@@ -1,0 +1,28 @@
+{
+  "pageId": "ch1_pg2",
+  "promptKey": "2c31bbca22b6f03849333116a145256d799e7085",
+  "seed": null,
+  "mode": "draft",
+  "cacheHit": true,
+  "durationMs": 1185,
+  "flags": {
+    "ENABLE_IMAGE_CACHE": true,
+    "ENABLE_IMAGE_PRELOAD": true
+  },
+  "source": "cache",
+  "storySlug": "default",
+  "prompt": {
+    "chapter": "fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust",
+    "page": "the Wanderer walking alone across a cracked plain under a motionless grey sky, broken stone markers fade into the dust, distant impression of a tower forming in the mist",
+    "global": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting",
+    "combinedPrompt": "Muted cold color palette, cinematic wide-angle composition, Unreal Engine 5 + Octane style rendering, ultra detailed textures, erosion, moss, atmospheric fog, realistic lighting, fog-drenched cliffs and scattered ruins, quiet echoes, pressure building in still air, memories shaping in dust, the Wanderer walking alone across a cracked plain under a motionless grey sky, broken stone markers fade into the dust, distant impression of a tower forming in the mist",
+    "negativePrompt": "no cartoon, no anime, no sci-fi, no modern objects, no bright colors, no low detail, no flat lighting, no blurry or distorted forms, no cheerful or comedic tone, no saturated color"
+  },
+  "params": {
+    "width": 512,
+    "height": 768,
+    "steps": 12,
+    "cfg": 3.5
+  },
+  "styleProfile": {}
+}
