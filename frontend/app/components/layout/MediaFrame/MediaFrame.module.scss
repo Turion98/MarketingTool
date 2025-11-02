@@ -22,6 +22,22 @@
   padding: var(--mf-pad, 8px);
 }
 
+/* opcionális belépő animáció, a TSX használja */
+.fadeIn {
+  animation: mf-fadein 0.35s ease-out;
+}
+
+@keyframes mf-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Content follows bitmap size (frame pontosan a bitmapet öleli) */
 .content {
   position: relative;
@@ -69,40 +85,27 @@
   position: absolute;
   inset: 0;
 
-/* fontos: a kép sarkával egyező sugár */
+  /* fontos: a kép sarkával egyező sugár */
   border-radius: var(--mf-radius, 14px);
 
   /* 🔹 BONTOTT BORDER (új) */
-  /* fallback: ha nincs külön color/style, visszaesik a régi shorthandre */
   border-width: var(--mf-border-w, 8px);
   border-style: var(--mf-border-style, solid);
-  /* ha van külön szín, használd azt; különben a régi --mf-border (shorthand) színe*/
   border-color: var(--mf-border-color, transparent);
 
-  /* 🔹 Kombinált/gradientes keret támogatás kétlayeres background trükkel:
-     - 1. réteg: border-hez renderelt gradient (border-box-ra klippelve)
-     - 2. réteg: belső háttérkitöltés (padding-box-ra klippelve) */
   background:
     var(--mf-border-gradient, transparent) border-box,
     var(--mf-bg, transparent) padding-box;
 
-  /* Ha NEM gradient a keret, hanem sima szín:
-     - állítsd be a border-color-t (--mf-border-color),
-     - és tartsd a fenti background első rétegét 'transparent'-en. */
-
-  /* Opcionális border-image gradient fallback:
-     - Ha be van állítva, a böngésző támogatja, felül fogja írni a border-color-t */
   border-image: var(--mf-border-image, none);
   border-image-slice: 1;
 
   box-shadow: var(--mf-shadow, 0 10px 20px rgba(0,0,0,0.35));
   opacity: var(--mf-opacity, 1);
 
-  /* ne takarja a kattintható tartalmat */
   pointer-events: none;
   z-index: 1;
 
-  /* a belső background szépen vágva maradjon a border belső élén */
   background-clip: border-box, padding-box;
 }
 
@@ -111,19 +114,58 @@
   content: "";
   position: absolute;
   inset: 0;
-
-  /* belső él egyenletesebb: a szegély beljebb tolva */
   border-radius: calc(var(--mf-radius, 14px) - var(--mf-border-w, 8px));
-
-  /* “matt”/passepartout hatás a tényleges bitmap zsugorítása nélkül */
   box-shadow: inset 0 0 0 var(--mf-inner-gap, 0px) var(--mf-inner-fill, transparent);
-
   background: var(--mf-overlay, transparent);
   mix-blend-mode: var(--mf-overlay-blend, normal);
   opacity: var(--mf-overlay-opacity, 0);
-
   pointer-events: none;
   z-index: 2;
+}
+
+/* ========================= */
+/* 🔸 ARANY OVERLAY RÉTEG  */
+/* ========================= */
+
+/* ez a TSX-ben a .content-en BELÜL van! */
+.decorLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 3; /* a ::before / ::after fölött */
+}
+
+/* maga az SVG – a .content méretét követi */
+.goldOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: var(--mf-gold, #d4af37);
+}
+
+/* kis sarok-konténer a logónak */
+.logoSlot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(18%, 280px);
+  aspect-ratio: 14 / 9;
+  display: grid;
+  place-items: center;
+  z-index: 4;
+
+  background: rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(3px);
+
+  border-left: 1px solid rgba(212, 175, 55, 0.5);
+  border-top: 1px solid rgba(212, 175, 55, 0.5);
+
+  border-bottom-right-radius: calc(var(--mf-radius, 14px) - 2px);
 }
 
 /* Ha a keretet a kép alá szeretnéd tenni, oldd fel az izolációt: */
