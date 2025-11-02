@@ -1,9 +1,6 @@
 /* ===== MediaFrame.module.scss (NO CROP, AUTO-HEIGHT + FIT-CONTENT FRAME) =====
- * Goals:
- *  - Never cut the bitmap: use object-fit: contain.
- *  - Let the image define height/width naturally.
- *  - Center everything and let frame hug the bitmap precisely.
- *  - Fully token-driven via CSS variables (legacy skin írja felül).
+ * Minden token a skinből jön (pl. html[data-skin="legacy-default"])
+ * Itt már NINCS :root és NINCS skin-override.
  */
 
 /* === Core layout === */
@@ -41,7 +38,7 @@
 /* Content follows bitmap size (frame pontosan a bitmapet öleli) */
 .content {
   position: relative;
-  display: inline-grid;      /* zsugorodik a kép méretére */
+  display: inline-grid;
   justify-content: center;
   align-items: center;
   width: fit-content;
@@ -84,28 +81,19 @@
   content: "";
   position: absolute;
   inset: 0;
-
-  /* fontos: a kép sarkával egyező sugár */
   border-radius: var(--mf-radius, 14px);
-
-  /* 🔹 BONTOTT BORDER (új) */
   border-width: var(--mf-border-w, 8px);
   border-style: var(--mf-border-style, solid);
   border-color: var(--mf-border-color, transparent);
-
   background:
     var(--mf-border-gradient, transparent) border-box,
     var(--mf-bg, transparent) padding-box;
-
   border-image: var(--mf-border-image, none);
   border-image-slice: 1;
-
-  box-shadow: var(--mf-shadow, 0 10px 20px rgba(0,0,0,0.35));
+  box-shadow: var(--mf-shadow, 0 10px 20px rgba(0, 0, 0, 0.35));
   opacity: var(--mf-opacity, 1);
-
   pointer-events: none;
   z-index: 1;
-
   background-clip: border-box, padding-box;
 }
 
@@ -124,7 +112,7 @@
 }
 
 /* ========================= */
-/* 🔸 ARANY OVERLAY RÉTEG  */
+/* 🔸 ARANY / SVG OVERLAY   */
 /* ========================= */
 
 /* ez a TSX-ben a .content-en BELÜL van! */
@@ -135,7 +123,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  z-index: 3; /* a ::before / ::after fölött */
+  z-index: 3;
 }
 
 /* maga az SVG – a .content méretét követi */
@@ -148,13 +136,16 @@
   color: var(--mf-gold, #d4af37);
 }
 
-/* kis sarok-konténer a logónak */
+/* ========================= */
+/* 🔸 LOGO SLOT TOKENEKKEL  */
+/* ========================= */
+
 .logoSlot {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: min(18%, 280px);
-  aspect-ratio: 14 / 9;
+  right: calc(var(--mf-logo-margin-right, 0) * 1px);
+  bottom: calc(var(--mf-logo-margin-bottom, 0) * 1px);
+  width: calc(var(--mf-logo-box-w, 280) * 1px);
+  height: calc(var(--mf-logo-box-h, 180) * 1px);
   display: grid;
   place-items: center;
   z-index: 4;
@@ -162,14 +153,21 @@
   background: rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(3px);
 
-  border-left: 1px solid rgba(212, 175, 55, 0.5);
-  border-top: 1px solid rgba(212, 175, 55, 0.5);
+  border-left: 1px solid color-mix(in oklch, var(--mf-gold, #d4af37) 55%, transparent);
+  border-top: 1px solid color-mix(in oklch, var(--mf-gold, #d4af37) 55%, transparent);
 
   border-bottom-right-radius: calc(var(--mf-radius, 14px) - 2px);
+  border-top-left-radius: calc(var(--mf-logo-panel-radius, 22) * 1px);
+
+  /* kicsi extra kiemelés, ha kell */
+  transform: translateY(calc(var(--mf-logo-panel-raise, 0) * -1px));
+  padding: calc(var(--mf-logo-pad-y, 1) * 1%) calc(var(--mf-logo-pad-x, 1) * 1%);
 }
 
-/* Ha a keretet a kép alá szeretnéd tenni, oldd fel az izolációt: */
-/*
-.mediaFrame { isolation: isolate; }
-.content::before, .content::after { z-index: -1; }
-*/
+/* ha van benne tényleges img */
+.logoSlot img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}

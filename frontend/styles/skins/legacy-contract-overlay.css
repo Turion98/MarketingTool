@@ -14,7 +14,6 @@ body[data-skin="legacy-default"] {
   --contract-focus-ring-inner: 0 0 0 2px color-mix(in oklch, white 50%, transparent);
   --contract-focus-ring-outer: 0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent);
 
-  /* Egységes interaktív motor (CSAK interaktív zónákhoz: choice/riddle/puzzle/actionbar/cta) */
   --contract-interactive-hover-bg-tint: 12%;
   --contract-interactive-hover-shadow: 0 10px 24px rgba(0,0,0,.36);
   --contract-interactive-hover-glow: 0 0 0 2px color-mix(in oklch, var(--brand-accent, #ffc861) 10%, transparent);
@@ -25,10 +24,8 @@ body[data-skin="legacy-default"] {
   --contract-interactive-active-scale: .995;
   --contract-interactive-disabled-opacity: .5;
 
-  /* ===== ZÓNÁK: közös surface API ===== */
-
-  /* HEADER (nem interaktív) */
-  /* Alapértelmezésben egyezzen az ActionBar hátterével (kérés szerint) */
+  /* ===== ZÓNÁK ===== */
+  /* HEADER */
   --contract-header-bg-color-top: var(--contract-actionbar-bg-color-top, rgba(0,0,0,.45));
   --contract-header-bg-color-bot: var(--contract-actionbar-bg-color-bot, rgba(0,0,0,.60));
   --contract-header-bg-angle: var(--contract-actionbar-bg-angle, 180deg);
@@ -42,28 +39,23 @@ body[data-skin="legacy-default"] {
   --contract-header-shadow-rest: var(--contract-actionbar-shadow-rest, 0 16px 40px rgba(0,0,0,.45));
   --contract-header-shadow-hover: 0 10px 36px rgba(0,0,0,.45);
 
-  /* Header méret/spacing */
-  --contract-header-minh: 64px;         /* bridge-eli --header-minh */
-  --contract-header-minh-dense: 52px;   /* bridge-eli --header-minh-dense */
+  --contract-header-minh: 64px;
+  --contract-header-minh-dense: 52px;
   --contract-header-pad-x: 12px;
   --contract-header-pad-y: 8px;
 
-  /* Header logo + title */
   --contract-header-logo-scale: 1.5;
   --contract-header-logo-max-w: 100%;
   --contract-header-logo-fit: contain;
   --contract-header-logo-pad-inline-start: 12px;
   --contract-header-logo-vertical-shift: 0px;
 
-  /* Kérés: header title tipó/szín = ActionBar tipó/szín */
   --contract-header-title-font-size: var(--contract-actionbar-font-size, 16px);
   --contract-header-title-weight: 600;
   --contract-header-title-tracking: .2px;
   --contract-header-title-color: #fff;
   --contract-header-title-margin: 0 30px 0 0;
   --contract-header-title-shift: -25px;
-
-  /* ÁLTALÁNOS HEADER SZÖVEG (ÚJ) */
   --contract-header-text-color: #fff;
 
   /* CHOICE */
@@ -83,11 +75,9 @@ body[data-skin="legacy-default"] {
   --contract-choice-font-size-mobile: 15px;
   --contract-choice-pad-x: 16px;
   --contract-choice-pad-y: 14px;
-
-  /* CHOICE SZÖVEG (ÚJ) */
   --contract-choice-text-color: #ffffff;
 
-  /* RIDDLE = CHOICE surface */
+  /* RIDDLE */
   --contract-riddle-bg-color-top: var(--contract-choice-bg-color-top);
   --contract-riddle-bg-color-bot: var(--contract-choice-bg-color-bot);
   --contract-riddle-bg-angle: var(--contract-choice-bg-angle);
@@ -99,16 +89,13 @@ body[data-skin="legacy-default"] {
   --contract-riddle-border-style: var(--contract-choice-border-style);
   --contract-riddle-radius: var(--contract-choice-radius);
   --contract-riddle-shadow-rest: var(--contract-choice-shadow-rest);
-
   --contract-riddle-font-size: var(--contract-choice-font-size);
   --contract-riddle-font-size-mobile: var(--contract-choice-font-size-mobile);
   --contract-riddle-pad-x: var(--contract-choice-pad-x);
   --contract-riddle-pad-y: var(--contract-choice-pad-y);
-
-  /* RIDDLE SZÖVEG (ÚJ) */
   --contract-riddle-text-color: var(--contract-choice-text-color, #fff);
 
-  /* PUZZLE = RIDDLE surface */
+  /* PUZZLE */
   --contract-puzzle-bg-color-top: var(--contract-riddle-bg-color-top);
   --contract-puzzle-bg-color-bot: var(--contract-riddle-bg-color-bot);
   --contract-puzzle-bg-angle: var(--contract-riddle-bg-angle);
@@ -120,16 +107,13 @@ body[data-skin="legacy-default"] {
   --contract-puzzle-border-style: var(--contract-riddle-border-style);
   --contract-puzzle-radius: var(--contract-riddle-radius);
   --contract-puzzle-shadow-rest: var(--contract-riddle-shadow-rest);
-
   --contract-puzzle-font-size: var(--contract-riddle-font-size);
   --contract-puzzle-font-size-mobile: var(--contract-riddle-font-size-mobile);
   --contract-puzzle-pad-x: var(--contract-riddle-pad-x);
   --contract-puzzle-pad-y: var(--contract-riddle-pad-y);
-
-  /* PUZZLE SZÖVEG (ÚJ) */
   --contract-puzzle-text-color: var(--contract-choice-text-color, #fff);
 
-  /* ACTIONBAR (interaktív) */
+  /* ACTIONBAR */
   --contract-actionbar-bg-color-top: rgba(0,0,0,.45);
   --contract-actionbar-bg-color-bot: rgba(0,0,0,.60);
   --contract-actionbar-bg-angle: 180deg;
@@ -141,16 +125,13 @@ body[data-skin="legacy-default"] {
   --contract-actionbar-border-style: solid;
   --contract-actionbar-radius: 16px;
   --contract-actionbar-shadow-rest: 0 16px 40px rgba(0,0,0,.45);
-
   --contract-actionbar-font-size: 16px;
   --contract-actionbar-font-size-mobile: 16px;
   --contract-actionbar-pad-x: 12px;
   --contract-actionbar-pad-y: 12px;
-
-  /* ACTIONBAR SZÖVEG (ÚJ) */
   --contract-actionbar-text-color: #fff;
 
-  /* CTA (interaktív) */
+  /* CTA */
   --contract-cta-bg-color-top: #3a7bd5;
   --contract-cta-bg-color-bot: #00d2ff;
   --contract-cta-bg-angle: 180deg;
@@ -162,18 +143,15 @@ body[data-skin="legacy-default"] {
   --contract-cta-border-style: solid;
   --contract-cta-radius: 14px;
   --contract-cta-shadow-rest: 0 10px 24px rgba(0,0,0,.35);
-
   --contract-cta-font-size: 16px;
   --contract-cta-font-size-mobile: 15px;
   --contract-cta-pad-x: 18px;
   --contract-cta-pad-y: 0px;
   --contract-cta-icon-size: 18px;
   --contract-cta-letter-spacing: .2px;
-
-  /* CTA SZÖVEG (ÚJ) */
   --contract-cta-text-color: #fff;
 
-  /* ===== CTA OVERLAY (contract-szintű formázás) ===== */
+  /* CTA OVERLAY */
   --contract-cta-overlay-bg-color: rgba(0, 0, 0, .55);
   --contract-cta-overlay-blur: 6px;
   --contract-cta-overlay-border-color: rgba(255, 255, 255, .12);
@@ -188,20 +166,17 @@ body[data-skin="legacy-default"] {
   --contract-cta-overlay-title-align: center;
   --contract-cta-overlay-gap: 10px;
 
-  /* QUIZ szemantika (choice/riddle/puzzle) */
+  /* QUIZ */
   --contract-quiz-ok-color: #38d678;
   --contract-quiz-err-color: #ff4d4f;
   --contract-quiz-accent-color: var(--brand-accent, #ffc861);
   --contract-quiz-unpicked-opacity: .45;
-
   --contract-quiz-success-border: color-mix(in oklch, var(--contract-quiz-ok-color) 88%, #26a85a);
   --contract-quiz-success-glow:   0 0 0 8px color-mix(in oklch, var(--contract-quiz-ok-color) 35%, transparent);
   --contract-quiz-success-shadow: 0 10px 28px rgba(46,204,113,.22);
-
   --contract-quiz-error-border:   color-mix(in oklch, var(--contract-quiz-err-color) 88%, #d43a3d);
   --contract-quiz-error-glow:     0 0 0 8px color-mix(in oklch, var(--contract-quiz-err-color) 35%, transparent);
   --contract-quiz-error-shadow:   0 8px 24px rgba(255,77,79,.22);
-
   --contract-quiz-dur-in: 480ms;
   --contract-quiz-dur-hover: 160ms;
   --contract-quiz-dur-active: 100ms;
@@ -216,99 +191,29 @@ body[data-skin="legacy-default"] {
   --contract-quiz-scale-commit: 1.01;
   --contract-quiz-scale-correct: 1.03;
 
-  --contract-cta-prominence: default;
-
-  /* ===== DECORATIVE BACKGROUND – CONTRACT NÉVTÉR ===== */
+  /* DECORATIVE BG */
   --contract-bg-color: white;
-  --contract-bg-image: none;         /* pl. url('/path/to/image.jpg') */
+  --contract-bg-image: none;
   --contract-bg-position: center center;
   --contract-bg-size: cover;
   --contract-bg-repeat: no-repeat;
-
-  --contract-bg-overlay: none;       /* pl. linear-gradient(...) */
+  --contract-bg-overlay: none;
   --contract-bg-overlay-opacity: 1;
   --contract-bg-blur: 0px;
 
-  /* ==================== BRIDGE: contract → legacy token aliasok ====================
-     A komponensek most a legacy neveket olvassák (legacy-default.css), ezért itt
-     a legacy neveket a contract értékeire fordítjuk át.  (No markup change.)
-     =============================================================================== */
-
-  /* HEADER (legacy komponens olvassa ezeket) – alap (nem gradient) */
+  /* ===== HEADER legacy alias ===== */
   --header-bg: var(--contract-header-bg-color-top, rgba(0,0,0,.25));
   --header-bg-solid: var(--contract-header-bg-color-bot, rgba(0,0,0,.45));
   --header-bg-trans: var(--contract-header-bg-color-top, rgba(0,0,0,.25));
-
-  /* ===== RUNE DOCK (contract → legacy alias – alap) ===== */
-  --rune-dock-gap: var(--contract-rune-dock-gap, 6px);
-  --rune-dock-pad: var(--contract-rune-dock-pad, 4px 6px);
-  --rune-dock-radius: var(--contract-rune-dock-radius, 10px);
-  --rune-dock-bg-top: var(--contract-rune-dock-bg-top, rgba(255,255,255,.06));
-  --rune-dock-bg-bot: var(--contract-rune-dock-bg-bot, rgba(255,255,255,.06));
-  --rune-dock-border: var(--contract-rune-dock-border, rgba(255,255,255,.12));
-  --rune-dock-blur: var(--contract-rune-dock-blur, 6px);
-  --rune-dock-shadow: var(--contract-rune-dock-shadow, none);
-
-  --rune-rail-gap: var(--contract-rune-rail-gap, 6px);
-
-  --rune-slot-size: var(--contract-rune-slot-size, 22px);
-  --rune-slot-radius: var(--contract-rune-slot-radius, 4px);
-  --rune-slot-outline: var(--contract-rune-slot-outline, 1px dashed rgba(255,255,255,.25));
-  --rune-slot-fg: var(--contract-rune-slot-fg, rgba(255,255,255,.8));
-  --rune-slot-opacity-rest: var(--contract-rune-slot-opacity-rest, .35);
-  --rune-slot-opacity-locked: var(--contract-rune-slot-opacity-locked, .05);
-  --rune-slot-locked-filter: var(--contract-rune-slot-locked-filter, grayscale(.7));
-  --rune-slot-opacity-unlocked: var(--contract-rune-slot-opacity-unlocked, 1);
-  --rune-slot-hover-translate-y: var(--contract-rune-slot-hover-translate-y, -1px);
-  --rune-slot-hover-scale: var(--contract-rune-slot-hover-scale, 1.05);
-
-  /* slot-szintű színek – skin tudja override-olni, ha nem jön palette-ből */
-  --rune-slot-1-color-active: var(--contract-rune-slot-1-color-active, #ffc861);
-  --rune-slot-1-color-locked: var(--contract-rune-slot-1-color-locked, rgba(255,255,255,.25));
-  --rune-slot-2-color-active: var(--contract-rune-slot-2-color-active, #00ffd5);
-  --rune-slot-2-color-locked: var(--contract-rune-slot-2-color-locked, rgba(255,255,255,.25));
-  --rune-slot-3-color-active: var(--contract-rune-slot-3-color-active, #ff5a5a);
-  --rune-slot-3-color-locked: var(--contract-rune-slot-3-color-locked, rgba(255,255,255,.25));
-}
-
-/* Két-szintű háttér támogatása – csak ha a böngésző tud gradientet a calc mix-szel */
-@supports (background: linear-gradient(0deg, #000, #111)) {
-  html[data-skin="legacy-default"],
-  body[data-skin="legacy-default"] {
-    --header-bg: linear-gradient(
-      var(--contract-header-bg-angle, 180deg),
-      var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 0%,
-      var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 100%
-    );
-    --header-bg-solid: linear-gradient(
-      var(--contract-header-bg-angle, 180deg),
-      var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 0%,
-      var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 100%
-    );
-    --header-bg-trans: linear-gradient(
-      var(--contract-header-bg-angle, 180deg),
-      color-mix(in srgb, var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 90%, transparent) 0%,
-      color-mix(in srgb, var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 90%, transparent) 100%
-    );
-  }
-}
-
-/* ===== Aliasok folytatása (selectorban kell lennie) ===== */
-html[data-skin="legacy-default"],
-body[data-skin="legacy-default"] {
   --header-border: var(--contract-header-border-color, rgba(255,255,255,.12));
   --header-radius: var(--contract-header-radius, 14px);
   --header-blur: var(--contract-header-backdrop-blur, 6px);
   --header-shadow: var(--contract-header-shadow-rest, 0 8px 28px rgba(0,0,0,.35));
   --header-shadow-strong: var(--contract-header-shadow-hover, 0 10px 36px rgba(0,0,0,.45));
-
-  /* Méret/spacing aliasok */
-  --header-minh: var(--contract-header-minh, var(--header-minh));
-  --header-minh-dense: var(--contract-header-minh-dense, var(--header-minh-dense));
+  --header-minh: var(--contract-header-minh, 64px);
+  --header-minh-dense: var(--contract-header-minh-dense, 52px);
   --header-pad-h: var(--contract-header-pad-x, 12px);
   --header-pad-v: var(--contract-header-pad-y, 8px);
-
-  /* Title aliasok — plusz a font-families is egységesítve */
   --header-title-font: var(--contract-font-family, var(--font-sans));
   --header-title-size: var(--contract-header-title-font-size, 22px);
   --header-title-weight: var(--contract-header-title-weight, 600);
@@ -316,29 +221,24 @@ body[data-skin="legacy-default"] {
   --header-title-color: var(--contract-header-title-color, var(--skin-fg, #fff));
   --header-title-margin: var(--contract-header-title-margin, 0 30px 0 0);
   --header-title-shift: var(--contract-header-title-shift, -25px);
-
-  /* Általános header szöveg színe (ÚJ) */
   --header-fg: var(--contract-header-text-color, var(--skin-fg, #fff));
-
-  /* Logo aliasok */
   --logo-scale: var(--contract-header-logo-scale, 1.5);
   --logo-max-w: var(--contract-header-logo-max-w, 100%);
   --logo-fit: var(--contract-header-logo-fit, contain);
   --logo-pad-inline-start: var(--contract-header-logo-pad-inline-start, 12px);
   --logo-vertical-shift: var(--contract-header-logo-vertical-shift, 0px);
 
-  /* ===== Text / TypingText (globális szöveg) ===== */
+  /* ===== TEXT BRIDGE ===== */
   --contract-text-font-family: var(--contract-font-family);
   --contract-text-font-size: var(--contract-choice-font-size, 18px);
   --contract-text-line-height: 1.4;
   --contract-text-color: var(--choice-text-color, var(--choice-color, #fff));
-
   --tt-font-family: var(--contract-text-font-family, var(--tt-font-family));
   --tt-font-size: var(--contract-text-font-size, var(--tt-font-size));
   --tt-line-height: var(--contract-text-line-height, var(--tt-line-height));
   --tt-color: var(--contract-text-color, var(--tt-color));
 
-  /* ===== CHOICE (ebből él a Riddle/Puzzle is) ===== */
+  /* ===== CHOICE legacy ===== */
   --choice-bg-top: var(--contract-choice-bg-color-top);
   --choice-bg-bot: var(--contract-choice-bg-color-bot);
   --choice-border: var(--contract-choice-border-color);
@@ -351,23 +251,19 @@ body[data-skin="legacy-default"] {
   --choice-padding-x: var(--contract-choice-pad-x);
   --choice-padding-y: var(--contract-choice-pad-y);
   --choice-backdrop-blur: var(--contract-choice-backdrop-blur);
-
-  /* Egységes hover/active a motorból */
   --choice-bg-top-hover: color-mix(in oklch, var(--contract-quiz-accent-color) var(--contract-interactive-hover-bg-tint), var(--contract-choice-bg-color-top));
   --choice-bg-bot-hover: color-mix(in oklch, var(--contract-quiz-accent-color) calc(var(--contract-interactive-hover-bg-tint) - 4%), var(--contract-choice-bg-color-bot));
   --choice-shadow-hover: var(--contract-interactive-hover-shadow);
-
   --choice-bg-top-active: color-mix(in oklch, var(--contract-quiz-accent-color) var(--contract-interactive-active-bg-tint), var(--contract-choice-bg-color-top));
   --choice-bg-bot-active: color-mix(in oklch, var(--contract-quiz-accent-color) calc(var(--contract-interactive-active-bg-tint) - 6%), var(--contract-choice-bg-color-bot));
   --choice-shadow-active: var(--contract-interactive-active-shadow);
-
   --choice-scale-hover: var(--contract-quiz-scale-hover);
   --choice-scale-active: var(--contract-quiz-scale-active);
   --choice-focus-ring:
     var(--contract-focus-ring-inner),
     var(--contract-focus-ring-outer);
 
-  /* ===== ACTION BAR ===== */
+  /* ===== ACTION BAR legacy ===== */
   --ab-bg-top: var(--contract-actionbar-bg-color-top);
   --ab-bg-bot: var(--contract-actionbar-bg-color-bot);
   --ab-border: var(--contract-actionbar-border-color);
@@ -376,17 +272,15 @@ body[data-skin="legacy-default"] {
   --ab-radius: var(--contract-actionbar-radius);
   --ab-backdrop-blur: var(--contract-actionbar-backdrop-blur);
   --ab-shadow: var(--contract-actionbar-shadow-rest);
-
-  /* ActionBar gombok (legacy btn-*) a globális motorból */
   --btn-bg: var(--ab-bg-top);
   --btn-bg-hover: color-mix(in oklch, var(--contract-quiz-accent-color) var(--contract-interactive-hover-bg-tint), var(--ab-bg-top));
-  --btn-fg: var(--contract-actionbar-text-color, #fff); /* ÚJ: szövegszín */
+  --btn-fg: var(--contract-actionbar-text-color, #fff);
   --btn-border: var(--ab-border);
   --btn-transition-dur: var(--contract-transition-dur);
   --btn-transition-ease: var(--contract-transition-ease);
   --btn-active-scale: var(--contract-interactive-active-scale);
 
-  /* ===== CTA ===== */
+  /* ===== CTA legacy ===== */
   --cta-bg-top: var(--contract-cta-bg-color-top);
   --cta-bg-bot: var(--contract-cta-bg-color-bot);
   --cta-bg-angle: var(--contract-cta-bg-angle);
@@ -404,9 +298,8 @@ body[data-skin="legacy-default"] {
   --cta-overlay-color: var(--contract-cta-overlay-color);
   --cta-overlay-alpha: var(--contract-cta-overlay-alpha);
   --cta-backdrop-blur: var(--contract-cta-backdrop-blur);
-  --cta-color: var(--contract-cta-text-color, #fff); /* ÚJ: szövegszín */
+  --cta-color: var(--contract-cta-text-color, #fff);
 
-  /* CTA hover/active egységes motorból */
   --cta-bg-top-hover: color-mix(in oklch, var(--contract-quiz-accent-color) var(--contract-interactive-hover-bg-tint), var(--contract-cta-bg-color-top));
   --cta-bg-bot-hover: color-mix(in oklch, var(--contract-quiz-accent-color) calc(var(--contract-interactive-hover-bg-tint) - 4%), var(--contract-cta-bg-color-bot));
   --cta-shadow-hover: var(--contract-interactive-hover-shadow);
@@ -429,47 +322,75 @@ body[data-skin="legacy-default"] {
   --cta-ol-title-align: var(--contract-cta-overlay-title-align);
   --cta-ol-gap: var(--contract-cta-overlay-gap);
 
-  /* ===== MEDIA FRAME (contract → legacy alias) ===== */
-  --mf-max-w: var(--contract-media-max-w, var(--mf-max-w));
-  --mf-radius: var(--contract-media-radius, var(--mf-radius));
-  --mf-border-w: var(--contract-media-border-w, var(--mf-border-w));
-  --mf-border: var(--contract-media-border, var(--mf-border));
-  --mf-bg: var(--contract-media-bg, var(--mf-bg));
-  --mf-shadow: var(--contract-media-shadow, var(--mf-shadow));
-  --mf-inner-gap: var(--contract-media-inner-gap, var(--mf-inner-gap));
-  --mf-inner-fill: var(--contract-media-inner-fill, var(--mf-inner-fill));
-  --mf-overlay: var(--contract-media-overlay, var(--mf-overlay));
-  --mf-overlay-opacity: var(--contract-media-overlay-opacity, var(--mf-overlay-opacity));
-  --mf-overlay-blend: var(--contract-media-overlay-blend, var(--mf-overlay-blend));
-    /* ===== MEDIA FRAME (contract → legacy alias BŐVÍTVE) ===== */
-  --mf-max-w: var(--contract-media-max-w, var(--mf-max-w));
-  --mf-radius: var(--contract-media-radius, var(--mf-radius));
+  /* ===== MEDIA FRAME (javított híd) ===== */
+  /* ezek most NEM önmagukra esnek vissza, hanem a legacy-default fix értékeire */
+  --mf-max-w: var(--contract-media-max-w, 900px);
+  --mf-radius: var(--contract-media-radius, 32px);
+  --mf-pad: var(--contract-media-pad, 0px);
+  --mf-opacity: var(--contract-media-opacity, 1);
 
-  /* már létező */
-  --mf-border-w: var(--contract-media-border-w, var(--mf-border-w));
-  --mf-border: var(--contract-media-border, var(--mf-border));
+  --mf-border-w: var(--contract-media-border-w, 10px);
+  --mf-border: var(--contract-media-border, transparent);
+  --mf-border-style: var(--contract-media-border-style, solid);
+  --mf-border-color: var(--contract-media-border-color, transparent);
+  --mf-border-gradient: var(--contract-media-border-gradient, transparent);
+  --mf-border-image: var(--contract-media-border-image, none);
 
-  /* 🔹 ÚJ bontott + extra */
-  --mf-border-style: var(--contract-media-border-style, var(--mf-border-style));
-  --mf-border-color: var(--contract-media-border-color, var(--mf-border-color));
-  --mf-border-gradient: var(--contract-media-border-gradient, var(--mf-border-gradient));
-  --mf-border-image: var(--contract-media-border-image, var(--mf-border-image));
+  --mf-bg: var(--contract-media-bg,
+    linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)
+  );
+  --mf-shadow: var(--contract-media-shadow,
+    0 14px 40px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset
+  );
+  --mf-inner-gap: var(--contract-media-inner-gap, 8px);
+  --mf-inner-fill: var(--contract-media-inner-fill, rgba(255,255,255,0.04));
 
-  --mf-bg: var(--contract-media-bg, var(--mf-bg));
-  --mf-shadow: var(--contract-media-shadow, var(--mf-shadow));
-  --mf-inner-gap: var(--contract-media-inner-gap, var(--mf-inner-gap));
-  --mf-inner-fill: var(--contract-media-inner-fill, var(--mf-inner-fill));
-  --mf-overlay: var(--contract-media-overlay, var(--mf-overlay));
-  --mf-overlay-opacity: var(--contract-media-overlay-opacity, var(--mf-overlay-opacity));
-  --mf-overlay-blend: var(--contract-media-overlay-blend, var(--mf-overlay-blend));
+  --mf-overlay: var(--contract-media-overlay,
+    radial-gradient(
+      120% 100% at 50% 0%,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.07) 42%,
+      transparent 65%
+    )
+  );
+  --mf-overlay-opacity: var(--contract-media-overlay-opacity, 0.35);
+  --mf-overlay-blend: var(--contract-media-overlay-blend, screen);
 
+  /* SVG fémkeret tokenek – konkrét fallback */
+  --mf-svg-base-1: var(--contract-media-svg-base-1, #f6f3ee);
+  --mf-svg-base-2: var(--contract-media-svg-base-2, #ddd2bf);
+  --mf-svg-base-3: var(--contract-media-svg-base-3, #c0ad8d);
 
-  /* ===== PROGRESS (ha a komponens olvassa a --ph-* tokeneket) ===== */
+  --mf-svg-inner-1: var(--contract-media-svg-inner-1, #f2efe9);
+  --mf-svg-inner-2: var(--contract-media-svg-inner-2, #8ea98e);
+  --mf-svg-inner-3: var(--contract-media-svg-inner-3, #d9cba9);
+
+  --mf-svg-overlay-top: var(--contract-media-svg-overlay-top, rgba(255, 255, 255, 0.95));
+  --mf-svg-overlay-mid: var(--contract-media-svg-overlay-mid, rgba(255, 255, 255, 0.08));
+  --mf-svg-overlay-bottom: var(--contract-media-svg-overlay-bottom, rgba(0, 0, 0, 0.28));
+
+  --mf-svg-outer-stroke: var(--contract-media-svg-outer-stroke, 26);
+  --mf-svg-inner-stroke: var(--contract-media-svg-inner-stroke, 16);
+  --mf-svg-overlay-stroke: var(--contract-media-svg-overlay-stroke, 26);
+
+  /* Logópanel */
+  --mf-logo-box-w: var(--contract-media-logo-box-w, 330);
+  --mf-logo-box-h: var(--contract-media-logo-box-h, 218);
+  --mf-logo-margin-right: var(--contract-media-logo-margin-right, 0);
+  --mf-logo-margin-bottom: var(--contract-media-logo-margin-bottom, 0);
+  --mf-logo-panel-radius: var(--contract-media-logo-panel-radius, 22);
+  --mf-logo-panel-extra: var(--contract-media-logo-panel-extra, 3);
+  --mf-logo-panel-raise: var(--contract-media-logo-panel-raise, 12);
+  --mf-logo-pad-x: var(--contract-media-logo-pad-x, 1);
+  --mf-logo-pad-y: var(--contract-media-logo-pad-y, 1);
+
+  /* PROGRESS */
   --ph-track: var(--contract-progress-track, var(--ph-track));
   --ph-fill: var(--contract-progress-fill, var(--ph-fill));
   --ph-shadow: var(--contract-progress-shadow, var(--ph-shadow));
 
-  /* ===== DECORATIVE BACKGROUND – BRIDGE (contract → legacy) ===== */
+  /* DECOR BG – legacy */
   --bg-color: var(--contract-bg-color);
   --bg-image: var(--contract-bg-image);
   --bg-position: var(--contract-bg-position);
@@ -479,36 +400,36 @@ body[data-skin="legacy-default"] {
   --bg-overlay-opacity: var(--contract-bg-overlay-opacity);
   --bg-blur: var(--contract-bg-blur);
 
-  /* =========================================================================
-     UNIFIED TEXT & QUIZ LINKING
-     TypingText ↔ Riddle/Puzzle/Note: mind ugyanaz a tipó és szín
-     ========================================================================= */
-  /* Legacy quiz tokenek felülírása egységesítéshez */
-  --quiz-title-font-family: var(--contract-text-font-family);
-  --quiz-title-size: var(--contract-text-font-size);
-  --quiz-title-weight:  var(--choice-text-weight, 600);
-  --quiz-title-lineh:   var(--contract-text-line-height);
-  --quiz-title-letter-spacing: var(--choice-text-letter-spacing, .1px);
-  --quiz-title-transform: none;
-  --quiz-title-color: var(--contract-text-color);
-
-  --quiz-extra-font-family: var(--contract-text-font-family);
-  --quiz-extra-size: calc(var(--contract-text-font-size) * .85);
-  --quiz-extra-weight: 400;
-  --quiz-extra-lineh: var(--contract-text-line-height);
-  --quiz-extra-letter-spacing: .1px;
-  --quiz-extra-style: normal;
-  --quiz-extra-color: color-mix(in oklch, var(--contract-text-color) 85%, transparent);
-  --quiz-extra-align: center;
-
-  /* ===== BRIDGE – SZÖVEGSZÍNEK (ÚJ) ===== */
+  /* SZÖVEGSZÍNEK BRIDGE */
   --choice-color: var(--contract-choice-text-color, #fff);
   --choice-text-color: var(--contract-choice-text-color, #fff);
   --riddle-color: var(--contract-riddle-text-color, var(--contract-choice-text-color, #fff));
   --puzzle-btn-color: var(--contract-puzzle-text-color, var(--contract-choice-text-color, #fff));
 }
 
-/* ===== MOBILE finomhangolás (csak a szükséges méret-/spacing tokenek) ===== */
+/* gradientes header csak ha tudja */
+@supports (background: linear-gradient(0deg, #000, #111)) {
+  html[data-skin="legacy-default"],
+  body[data-skin="legacy-default"] {
+    --header-bg: linear-gradient(
+      var(--contract-header-bg-angle, 180deg),
+      var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 0%,
+      var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 100%
+    );
+    --header-bg-solid: linear-gradient(
+      var(--contract-header-bg-angle, 180deg),
+      var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 0%,
+      var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 100%
+    );
+    --header-bg-trans: linear-gradient(
+      var(--contract-header-bg-angle, 180deg),
+      color-mix(in srgb, var(--contract-header-bg-color-top, rgba(0,0,0,.25)) 90%, transparent) 0%,
+      color-mix(in srgb, var(--contract-header-bg-color-bot, rgba(0,0,0,.45)) 90%, transparent) 100%
+    );
+  }
+}
+
+/* MOBILE */
 @media (max-width: 640px) {
   html[data-skin="legacy-default"],
   body[data-skin="legacy-default"] {

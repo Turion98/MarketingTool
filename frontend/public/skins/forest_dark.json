@@ -157,6 +157,47 @@
     "--contract-media-border-style": "solid",
     "--contract-media-border-color": "rgba(157,223,127,.4)",
     "--contract-media-border-gradient": "linear-gradient(180deg, rgba(157,223,127,.3), rgba(157,223,127,.1))",
-    "--contract-media-border-image": "none"
+    "--contract-media-border-image": "none",
+
+    "--contract-media-max-w": "980px",
+    "--contract-media-radius": "28px",
+    "--contract-media-pad": "0px",
+    "--contract-media-opacity": "1",
+
+    "--contract-media-bg": "linear-gradient(180deg, rgba(9,18,11,0.65) 0%, rgba(6,11,7,0.35) 100%)",
+    "--contract-media-shadow": "0 16px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(157,223,127,.18) inset",
+
+    "--contract-media-inner-gap": "8px",
+    "--contract-media-inner-fill": "rgba(14,25,16,.35)",
+
+    "--contract-media-overlay": "radial-gradient(110% 90% at 50% 0%, rgba(164,231,131,0.35) 0%, rgba(13,15,19,0) 70%)",
+    "--contract-media-overlay-opacity": "1",
+    "--contract-media-overlay-blend": "screen",
+
+    "--contract-media-svg-base-1": "#192a1c",
+    "--contract-media-svg-base-2": "#2d4631",
+    "--contract-media-svg-base-3": "#3a5f3e",
+
+    "--contract-media-svg-inner-1": "#9ddf7f",
+    "--contract-media-svg-inner-2": "#6cc76e",
+    "--contract-media-svg-inner-3": "#2f5f3b",
+
+    "--contract-media-svg-overlay-top": "rgba(218,255,205,0.95)",
+    "--contract-media-svg-overlay-mid": "rgba(160,229,141,0.08)",
+    "--contract-media-svg-overlay-bottom": "rgba(0,0,0,0.3)",
+
+    "--contract-media-svg-outer-stroke": "26",
+    "--contract-media-svg-inner-stroke": "16",
+    "--contract-media-svg-overlay-stroke": "26",
+
+    "--contract-media-logo-box-w": "310",
+    "--contract-media-logo-box-h": "210",
+    "--contract-media-logo-margin-right": "0",
+    "--contract-media-logo-margin-bottom": "0",
+    "--contract-media-logo-panel-radius": "20",
+    "--contract-media-logo-panel-extra": "3",
+    "--contract-media-logo-panel-raise": "10",
+    "--contract-media-logo-pad-x": "4",
+    "--contract-media-logo-pad-y": "4"
   }
 }

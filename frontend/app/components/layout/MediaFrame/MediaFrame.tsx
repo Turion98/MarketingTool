@@ -1,13 +1,7 @@
 // app/components/layout/MediaFrame/MediaFrame.tsx
 "use client";
 
-import React, {
-  useLayoutEffect,
-  useRef,
-  useState,
-  useCallback,
-  CSSProperties,
-} from "react";
+import React, { CSSProperties } from "react";
 import s from "./MediaFrame.module.scss";
 
 type MediaFrameProps = {
@@ -16,70 +10,24 @@ type MediaFrameProps = {
   children?: React.ReactNode;
   style?: CSSProperties;
   showGoldFrame?: boolean;
+  logoSrc?: string;
 };
-
-// stroke beállítások EGY helyen
-const OUTER_STROKE = 26; // vastag alap
-const INNER_STROKE = 16; // belső
-const OVERLAY_STROKE = OUTER_STROKE;
 
 const VIEWBOX_W = 1600;
 const VIEWBOX_H = 900;
 
-// hogy ne vágja le a stroke fele
-const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2; // 26/2=13 → +2 = 15
-
-function buildPathFromRects(
-  frame: DOMRect,
-  logo: DOMRect | null,
-  inset: number = BASE_INSET
-): string {
-  if (!frame) {
-    return `M ${inset} ${inset} H ${VIEWBOX_W - inset} V ${
-      VIEWBOX_H - inset
-    } H ${inset} Z`;
-  }
-
-  const left = inset;
-  const top = inset;
-  const right = VIEWBOX_W - inset;
-  const bottom = VIEWBOX_H - inset;
-
-  const scaleX = VIEWBOX_W / frame.width;
-  const scaleY = VIEWBOX_H / frame.height;
-
-  if (!logo) {
-    return `M ${left} ${top} H ${right} V ${bottom} H ${left} Z`;
-  }
-
-  const logoLeftDom = logo.left - frame.left;
-  const logoTopDom = logo.top - frame.top;
-  const logoRightDom = logoLeftDom + logo.width;
-  const logoBottomDom = logoTopDom + logo.height;
-
-  const logoLeft = logoLeftDom * scaleX;
-  const logoTop = logoTopDom * scaleY;
-  const logoRight = logoRightDom * scaleX;
-  const logoBottom = logoBottomDom * scaleY;
-
-  const gap = inset;
-  const logoTopAdj = Math.min(logoTop - gap, bottom);
-  const logoLeftAdj = Math.max(logoLeft - gap, left);
-  const logoRightAdj = Math.min(logoRight + gap, right);
-  const logoBottomAdj = Math.min(logoBottom + gap, bottom);
-
-  return [
-    `M ${left} ${top}`,
-    `H ${right}`,
-    `V ${logoTopAdj}`,
-    `H ${logoRightAdj}`,
-    `V ${logoBottomAdj}`,
-    `H ${logoLeftAdj}`,
-    `V ${bottom}`,
-    `H ${left}`,
-    `V ${top}`,
-    "Z",
-  ].join(" ");
+/**
+ * Helper: CSS változót olvasunk ki (számként).
+ * px vagy unit nélküli szám esetén is működik.
+ */
+function readCssNumber(varName: string, fallback: number): number {
+  if (typeof window === "undefined") return fallback;
+  const cs = getComputedStyle(document.documentElement);
+  const raw = cs.getPropertyValue(varName).trim();
+  if (!raw) return fallback;
+  // lehet "330", "330px", "26", stb.
+  const num = parseFloat(raw);
+  return Number.isFinite(num) ? num : fallback;
 }
 
 const MediaFrame: React.FC<MediaFrameProps> = ({
@@ -88,26 +36,63 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   children,
   style,
   showGoldFrame = true,
+  logoSrc = "assets/my_logo.png",
 }) => {
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const logoRef = useRef<HTMLDivElement | null>(null);
-  const [path, setPath] = useState<string>("");
+  // SVG stroke-ok (skin felülírhatja)
+  const OUTER_STROKE = readCssNumber("--mf-svg-outer-stroke", 26);
+  const INNER_STROKE = readCssNumber("--mf-svg-inner-stroke", 16);
+  const OVERLAY_STROKE = readCssNumber("--mf-svg-overlay-stroke", OUTER_STROKE);
 
-  const recalc = useCallback(() => {
-    const contentEl = contentRef.current;
-    if (!contentEl) return;
-    const frameRect = contentEl.getBoundingClientRect();
-    const logoEl = logoRef.current;
-    const logoRect = logoEl ? logoEl.getBoundingClientRect() : null;
-    setPath(buildPathFromRects(frameRect, logoRect));
-  }, []);
+  // stroke felezés + kis ráhagyás
+  const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
 
-  useLayoutEffect(() => {
-    recalc();
-    const onResize = () => recalc();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [recalc]);
+  // logó méret és hely – teljesen skinből
+  const LOGO_BOX_W = readCssNumber("--mf-logo-box-w", 330);
+  const LOGO_BOX_H = readCssNumber("--mf-logo-box-h", 218);
+  const LOGO_MARGIN_RIGHT = readCssNumber("--mf-logo-margin-right", 0);
+  const LOGO_MARGIN_BOTTOM = readCssNumber("--mf-logo-margin-bottom", 0);
+
+  // panel kerekítés / kitolás
+  const PANEL_EXPAND = readCssNumber("--mf-logo-panel-extra", 3);
+  const RADIUS = readCssNumber("--mf-logo-panel-radius", 22);
+  const PANEL_RAISE = readCssNumber("--mf-logo-panel-raise", 12);
+
+  // logó belső paddingje % -ban volt megadva → itt átszámoljuk px-re
+  const LOGO_PAD_X_PCT = readCssNumber("--mf-logo-pad-x", 1); // %
+  const LOGO_PAD_Y_PCT = readCssNumber("--mf-logo-pad-y", 1); // %
+
+  const LOGO_PAD_X = (LOGO_BOX_W * LOGO_PAD_X_PCT) / 100;
+  const LOGO_PAD_Y = (LOGO_BOX_H * LOGO_PAD_Y_PCT) / 100;
+
+  // teljes, folyamatos keret
+  function buildRectPath(inset: number = BASE_INSET): string {
+    const left = inset;
+    const top = inset;
+    const right = VIEWBOX_W - inset;
+    const bottom = VIEWBOX_H - inset;
+    return `M ${left} ${top} H ${right} V ${bottom} H ${left} Z`;
+  }
+
+  const path = buildRectPath();
+
+  // jobb alsó sarok slot pozíciója – ez is skinből jövő méretek alapján
+  const slotX = VIEWBOX_W - BASE_INSET - LOGO_MARGIN_RIGHT - LOGO_BOX_W;
+  const slotY = VIEWBOX_H - BASE_INSET - LOGO_MARGIN_BOTTOM - LOGO_BOX_H;
+
+  // a panel, amit a keret “kitölt” a logó mögött
+  const fillLeft = slotX - PANEL_EXPAND;
+  const fillTop = VIEWBOX_H - BASE_INSET - LOGO_MARGIN_BOTTOM - LOGO_BOX_H - PANEL_RAISE - PANEL_EXPAND;
+  const fillRight = VIEWBOX_W - BASE_INSET + PANEL_EXPAND;
+  const fillBottom = VIEWBOX_H - BASE_INSET + PANEL_EXPAND;
+
+  const logoFillPath = [
+    `M ${fillLeft} ${fillTop + RADIUS}`,
+    `Q ${fillLeft} ${fillTop} ${fillLeft + RADIUS} ${fillTop}`,
+    `H ${fillRight}`,
+    `V ${fillBottom}`,
+    `H ${fillLeft}`,
+    `Z`,
+  ].join(" ");
 
   return (
     <div
@@ -116,7 +101,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
       data-mode={mode}
       style={style}
     >
-      <div ref={contentRef} className={s.content}>
+      <div className={s.content}>
         {children}
 
         {showGoldFrame && (
@@ -128,89 +113,109 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
             >
               <defs>
                 {/* 1) ALAP: fehér arany */}
-                <linearGradient id="platinumBase" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#0603ee" />
-                  <stop offset="45%" stopColor="#ddd2bf" />
-                  <stop offset="100%" stopColor="#c0ad8d" />
+                <linearGradient
+                  id="platinumBase"
+                  x1="0"
+                  y1="0"
+                  x2={VIEWBOX_W}
+                  y2={VIEWBOX_H}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="var(--mf-svg-base-1)" />
+                  <stop offset="45%" stopColor="var(--mf-svg-base-2)" />
+                  <stop offset="100%" stopColor="var(--mf-svg-base-3)" />
                 </linearGradient>
 
                 {/* 2) BELSŐ: fehér arany + zöld */}
-                <linearGradient id="platinumGreen" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#f2efe9" />
-                  <stop offset="50%" stopColor="#8ea98e" />
-                  <stop offset="100%" stopColor="#d9cba9" />
+                <linearGradient
+                  id="platinumGreen"
+                  x1="0"
+                  y1="0"
+                  x2={VIEWBOX_W}
+                  y2="0"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="var(--mf-svg-inner-1)" />
+                  <stop offset="50%" stopColor="var(--mf-svg-inner-2)" />
+                  <stop offset="100%" stopColor="var(--mf-svg-inner-3)" />
                 </linearGradient>
 
                 {/* 3) OVERLAY: fémes fény */}
-                <linearGradient id="metalOverlay" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-                  <stop offset="35%" stopColor="rgba(255,255,255,0.08)" />
-                  <stop offset="100%" stopColor="rgba(0,0,0,0.28)" />
+                <linearGradient
+                  id="metalOverlay"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2={VIEWBOX_H}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stopColor="var(--mf-svg-overlay-top)" />
+                  <stop offset="35%" stopColor="var(--mf-svg-overlay-mid)" />
+                  <stop offset="100%" stopColor="var(--mf-svg-overlay-bottom)" />
                 </linearGradient>
+
+                {/* BELSŐ ÁRNYÉK FILTER – marad fix, de akár ezt is kivihetjük tokenre */}
+                <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feFlood floodColor="rgba(0,0,0,0.45)" />
+                  <feComposite operator="out" in2="SourceGraphic" in="SourceGraphic" />
+                  <feGaussianBlur stdDeviation="5" />
+                  <feOffset dx="0" dy="0" />
+                  <feComposite operator="atop" in2="SourceGraphic" />
+                </filter>
+
+                <clipPath id="logoClip">
+                  <rect x={slotX} y={slotY} width={LOGO_BOX_W} height={LOGO_BOX_H} />
+                </clipPath>
               </defs>
 
-              {path && (
-                <>
-                  {/* 1. RÉTEG – VASTAG ALAP */}
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke="url(#platinumBase)"
-                    strokeWidth={OUTER_STROKE}
-                    strokeLinejoin="round"
-                    shapeRendering="geometricPrecision"
-                  />
+              {/* 0) KITÖLTÉS – panel a logó alatt (skinből jövő méret) */}
+              <path d={logoFillPath} fill="url(#platinumBase)" />
+              <path d={logoFillPath} fill="url(#metalOverlay)" opacity={0.6} />
 
-                  {/* 2. RÉTEG – KÖZÉPEN ülő BELSŐ */}
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke="url(#platinumGreen)"
-                    strokeWidth={INNER_STROKE}
-                    strokeLinejoin="round"
-                    opacity={0.95}
-                  />
+              {/* 1) KÜLSŐ KERET */}
+              <g filter="url(#innerShadow)">
+                <path
+                  d={path}
+                  fill="none"
+                  stroke="url(#platinumBase)"
+                  strokeWidth={OUTER_STROKE}
+                  strokeLinejoin="round"
+                  shapeRendering="geometricPrecision"
+                />
+              </g>
 
-                  {/* 3. RÉTEG – OVERLAY ugyanazon a vastagságon */}
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke="url(#metalOverlay)"
-                    strokeWidth={OVERLAY_STROKE}
-                    strokeLinejoin="round"
-                    opacity={0.6}
-                  />
-                </>
-              )}
-            </svg>
-
-            {/* LOGO SLOT */}
-            <div
-              ref={logoRef}
-              className={s.logoSlot}
-              style={{
-                right: "4px",
-                bottom: "4px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.12)",
-                border: "2px solid rgba(230,224,210,0.6)",
-                borderRadius: "6px",
-              }}
-            >
-              <img
-                src="assets/my_logo.png"
-                alt="Logo"
-                data-logo
-                style={{
-                  maxWidth: "70%",
-                  height: "auto",
-                  objectFit: "contain",
-                  filter: "drop-shadow(0 0 3px rgba(0,0,0,0.4))",
-                }}
+              {/* 2) BELSŐ CSÍK */}
+              <path
+                d={path}
+                fill="none"
+                stroke="url(#platinumGreen)"
+                strokeWidth={INNER_STROKE}
+                strokeLinejoin="round"
+                opacity={0.97}
               />
-            </div>
+
+              {/* 3) FÉNY OVERLAY */}
+              <path
+                d={path}
+                fill="none"
+                stroke="url(#metalOverlay)"
+                strokeWidth={OVERLAY_STROKE}
+                strokeLinejoin="round"
+                opacity={0.6}
+              />
+
+              {/* 4) LOGÓ – klippelve */}
+              <g clipPath="url(#logoClip)">
+                <image
+                  href={logoSrc}
+                  x={slotX + LOGO_PAD_X}
+                  y={slotY + LOGO_PAD_Y}
+                  width={LOGO_BOX_W - LOGO_PAD_X * 2}
+                  height={LOGO_BOX_H - LOGO_PAD_Y * 2}
+                  preserveAspectRatio="xMidYMid meet"
+                />
+              </g>
+            </svg>
           </div>
         )}
       </div>
