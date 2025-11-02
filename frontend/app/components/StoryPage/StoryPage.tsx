@@ -2560,6 +2560,7 @@ const StoryPage: React.FC = () => {
                     .imageTiming
                     ?.mode || "draft"
                 }
+                 pageIsFadingOut={isFadingOut}
               />
             </MediaFrame>
           ) : null

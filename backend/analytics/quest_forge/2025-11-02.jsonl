@@ -1,0 +1,6 @@
+{"_type": "batch_header", "ts": "2025-11-02T06:44:49.121269Z", "storyId": "quest_forge", "userId": "u_xadv9018c5hmhhcidet", "device": {}, "count": 2}
+{"id": "e_indggqzzwwbmhhcikw9", "t": "page_enter", "ts": 1762065857097, "storyId": "quest_forge", "sessionId": "sess_39yu24lx7gtmhhcikre", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_xadv9018c5hmhhcidet"}}
+{"id": "e_vb6fpxq9ms9mhhcikwp", "t": "page_exit", "ts": 1762065857113, "storyId": "quest_forge", "sessionId": "sess_39yu24lx7gtmhhcikre", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 16, "userId": "u_xadv9018c5hmhhcidet"}}
+{"_type": "batch_header", "ts": "2025-11-02T07:18:21.858917Z", "storyId": "quest_forge", "userId": "u_xadv9018c5hmhhcidet", "device": {}, "count": 2}
+{"id": "e_o3ml6g7oaydmhhdq0xn", "t": "page_enter", "ts": 1762067884091, "storyId": "quest_forge", "sessionId": "sess_1w9fp6yu27nmhhdq0te", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_xadv9018c5hmhhcidet"}}
+{"id": "e_o5wxi6s392lmhhdq0y6", "t": "page_exit", "ts": 1762067884110, "storyId": "quest_forge", "sessionId": "sess_1w9fp6yu27nmhhdq0te", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 19, "userId": "u_xadv9018c5hmhhcidet"}}

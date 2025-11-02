@@ -1,50 +1,72 @@
-/* Külső konténer: oszlopban rendezzük a frame-et és alatta a feliratot */
+/* --- Külső konténer --- */
 .imageRoot {
   display: flex;
   flex-direction: column;
   align-items: center;
   inline-size: 100%;
-  block-size: auto;
   margin: auto;
   overflow: visible;
 }
 
-/* Ez lesz maga a képtér, amit eddig az .imageRoot viselt.
-   Ide jön az a tartalom, ami a MediaFrame borderén belül marad. */
+/* --- Képtér --- */
 .imageFrameInner {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   inline-size: 100%;
-  block-size: auto;
-  overflow: hidden;          /* fontos: a keret vágjon itt, ne kint */
-  border-radius: inherit;    /* örökli a MediaFrame clipjét */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: inherit;
+  background: transparent;
+
+  /* alap: csukva */
+  max-height: 0;
+  opacity: 0;
+
+  transition:
+    max-height 0.6s ease-in-out,
+    opacity 0.4s ease-in-out;
+  will-change: max-height, opacity;
 }
 
-/* A bitmap maga */
+/* ⬇️ ha tényleg mutatunk valamit → nyíljon ki */
+.imageFrameInnerOpen {
+  max-height: 60vh;  /* elég nagy, hogy a tényleges kép kiférjen */
+  opacity: 1;
+}
+
+/* opcionális: CSAK TÖLTÉSKOR legyen kis “hely” */
+.imageFrameInnerLoading {
+  min-height: min(26vh, 15rem);
+}
+
+/* --- Kép --- */
 .generatedImage {
   display: block;
   max-width: 100%;
   height: auto;
   object-fit: var(--gi-fit, contain);
   object-position: center;
-
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
-
   border-radius: inherit;
-  transition: opacity 0.3s ease-out;
+
   opacity: 0;
+  transition: opacity 0.45s ease, transform 0.45s ease;
 }
 
-/* Fade-in */
 .fadeIn {
   opacity: 1;
+  transform: scale(1);
+  animation: fadeInCenterOut 0.95s ease-out forwards;
 }
 
-/* Felirat: teljesen a frame alatt, nincs hatása a keretre */
+.fadeOut {
+  animation: fadeOutToCenter 0.85s ease-in forwards;
+}
+
 .anticipationText {
   margin-top: 0.5rem;
   text-align: center;
@@ -53,4 +75,26 @@
   opacity: 0.8;
   padding: 0 0.75rem;
   pointer-events: none;
+}
+
+@keyframes fadeInCenterOut {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOutToCenter {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
 }

@@ -196,18 +196,49 @@ def generate_image_asset(
     if fmt not in ("png", "jpg", "jpeg", "webp"):
         fmt = "png"
 
-    # alap paramok mód szerint
+    # 🔽 alap paramok mód szerint – MOSTANTÓL 16:9
     default_params = {
-        "draft": {"width": 512, "height": 768, "steps": 12, "cfg": 3.5},
-        "refine": {"width": 768, "height": 1152, "steps": 28, "cfg": 6.5},
+        "draft": {
+            "width": 960,
+            "height": 540,
+            "steps": 12,
+            "cfg": 3.5,
+            "aspect_ratio": "16:9",   # kényszerített arány
+        },
+        "refine": {
+            "width": 1280,
+            "height": 720,
+            "steps": 28,
+            "cfg": 6.5,
+            "aspect_ratio": "16:9",   # kényszerített arány
+        },
     }
+
+    # ha van userConfig → engedjük kiegészíteni
     if "draft" in _IMAGE_PARAMS and isinstance(_IMAGE_PARAMS["draft"], dict):
         default_params["draft"].update(_IMAGE_PARAMS["draft"])
     if "refine" in _IMAGE_PARAMS and isinstance(_IMAGE_PARAMS["refine"], dict):
         default_params["refine"].update(_IMAGE_PARAMS["refine"])
 
+    # töltsük fel a bejövő params-ot a mode alapjaival
     for k, v in default_params.get(mode, {}).items():
         params.setdefault(k, v)
+
+    # ha NINCS aspect_ratio a végén, tegyük be 16:9-re
+    if "aspect_ratio" not in params:
+        # ha width/height már van, próbáljunk felismerni
+        w = params.get("width")
+        h = params.get("height")
+        if w and h:
+            ratio = w / h
+            if abs(ratio - (16 / 9)) < 0.05:
+                params["aspect_ratio"] = "16:9"
+            elif abs(ratio - (9 / 16)) < 0.05:
+                params["aspect_ratio"] = "9:16"
+            else:
+                params["aspect_ratio"] = "16:9"
+        else:
+            params["aspect_ratio"] = "16:9"
 
     # prompt key – már a LAPOSÍTOTT promptból számolunk
     pk = _compute_prompt_key(norm_prompt, {**params, "mode": mode}, style_profile, prompt_key)
@@ -239,18 +270,33 @@ def generate_image_asset(
             REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
 
             # 🔽 itt MÁR a laposított promptot küldjük
-            replicate_input = {
+            replicate_input: Dict[str, Any] = {
                 "prompt": norm_prompt or "",
             }
+
+            # ⚠️ KÜLDJÜK MIND A HÁRMAT, HOGY NE TUDJA IGNORÁLNI
             if "width" in params:
                 replicate_input["width"] = params["width"]
             if "height" in params:
                 replicate_input["height"] = params["height"]
+            if "aspect_ratio" in params:
+                replicate_input["aspect_ratio"] = params["aspect_ratio"]
+
             if "steps" in params:
                 # a legtöbb replicate-es SD/Flux ezt így szereti
                 replicate_input["num_inference_steps"] = params["steps"]
             if "cfg" in params:
                 replicate_input["guidance_scale"] = params["cfg"]
+
+            # LOG: mit küldtünk ténylegesen
+            _log({
+                "event": "image.replicate_request",
+                "pageId": page_id,
+                "prompt": norm_prompt,
+                "input": replicate_input,
+                "mode": mode,
+                "storySlug": effective_slug,
+            })
 
             create_resp = requests.post(
                 "https://api.replicate.com/v1/predictions",
@@ -312,7 +358,6 @@ def generate_image_asset(
             # megpróbáljuk kiszedni a Replicate tényleges hiba-válaszát is
             replicate_body = None
             try:
-                # requests.HTTPError esetén itt lesz a response
                 if hasattr(e, "response") and e.response is not None:
                     replicate_body = e.response.text
             except Exception:
@@ -321,14 +366,13 @@ def generate_image_asset(
             _log({
                 "event": "image.replicate_error",
                 "error": str(e),
-                "replicateResponse": replicate_body,  # 🔴 EZT AKARTUK HOZZÁADNI
+                "replicateResponse": replicate_body,
                 "pageId": page_id,
                 "prompt": norm_prompt,
                 "rawPrompt": raw_prompt,
                 "mode": mode,
                 "storySlug": effective_slug,
             })
-
 
     # 2) HA SIKERÜLT, AKKOR (ÉS CSAK AKKOR) LOG + VISSZA
     if got_real_image and real_url:
@@ -343,7 +387,6 @@ def generate_image_asset(
             "replicateUrl": real_url,
             "durationMs": duration_ms,
         })
-        # itt lehetne letölteni és lokálisan menteni, ha nagyon akarjuk
         return {
             "path": real_url,
             "url": real_url,
