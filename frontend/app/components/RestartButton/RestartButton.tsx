@@ -28,6 +28,15 @@ const RestartButton: React.FC<RestartButtonProps> = ({
   const { resetGame, setCurrentPageId, storyId, sessionId, currentPageId } =
     (useGameState() as any) ?? {};
 
+  // --- kliens oldali admin-detektálás (ugyanazt a logikát használjuk, amit a UI-ban is fogsz)
+  const isAdminClient = (): boolean => {
+    if (typeof window === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("admin") === "1") return true;
+    const ls = window.localStorage.getItem("questell_admin");
+    return ls === "1";
+  };
+
   const hardResetAudio = () => {
     try {
       document.dispatchEvent(new Event("qzera:audio-reset"));
@@ -73,32 +82,80 @@ const RestartButton: React.FC<RestartButtonProps> = ({
     }
   };
 
-  const handleRestart = () => {
+  // --- backend admin restart hívás
+  const callAdminRestart = async () => {
+    if (typeof window === "undefined") return;
+    const admin = isAdminClient();
+    if (!admin) return;
+
+    // ugyanaz a secret, mint amit a clearAllCache-ben is használsz
+    const ADMIN_KEY =
+      process.env.NEXT_PUBLIC_DEV_CLEAR_SECRET || "KAB1T05Z3r!25";
+
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE ||
+      window.localStorage.getItem("apiBase") ||
+      "http://127.0.0.1:8000";
+
+    try {
+      const res = await fetch(`${apiBase.replace(/\/+$/, "")}/admin/restart`, {
+        method: "POST",
+        headers: {
+          "x-admin-key": ADMIN_KEY,
+          "Content-Type": "application/json",
+        },
+      });
+      const json = await res.json().catch(() => null);
+      console.log("[RestartButton] admin /admin/restart →", json);
+    } catch (err) {
+      console.warn("[RestartButton] admin restart failed:", err);
+    }
+  };
+
+  const handleRestart = async () => {
     if (typeof window === "undefined") return;
 
+    const admin = isAdminClient();
+
+    // analitika
     try {
       if (storyId && sessionId) {
         const page = String(currentPageId ?? "unknown");
         trackUiClick(String(storyId), String(sessionId), page, "restart_click", {
           seedCount,
           startPageId,
+          admin: admin ? "1" : "0",
         });
       }
     } catch {}
 
+    // ha admin → először backend
+    if (admin) {
+      await callAdminRestart();
+    }
+
+    // helyi reset
     try {
       hardResetAudio();
       resetGame?.();
       clearAllCache();
       createSessionSeeds(seedCount);
 
+      // frontend állapotok
       localStorage.setItem("currentPageId", startPageId);
       setCurrentPageId?.(startPageId);
     } catch (err) {
       console.error("Restart error:", err);
     }
 
-    router.push(`/?page=${encodeURIComponent(startPageId)}`);
+    // redirect – ha admin volt, vigyük tovább az admin=1-et
+    const baseTarget = `/play/${encodeURIComponent(startPageId)}`;
+    if (admin) {
+      router.push(`${baseTarget}?admin=1`);
+    } else {
+      // ha a landingot tényleg zárod, ezt később ki lehet venni
+      router.push(baseTarget);
+    }
   };
 
   return (

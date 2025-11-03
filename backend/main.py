@@ -32,6 +32,9 @@ from feedback_routes import router as feedback_router
 from storysvc.router import router as stories_router   
 from router.white_label import router as white_label_router  # <-- EZ KELL
 
+from auth_admin import get_admin
+from routers.admin import router as admin_router
+
 from fastapi import File
 from fastapi.responses import FileResponse
 
@@ -359,7 +362,7 @@ def any_options(rest_of_path: str):
 app.include_router(feedback_router, prefix="/api")
 app.include_router(stories_router, prefix="/api")
 app.include_router(white_label_router) 
-
+app.include_router(admin_router) 
 # --- Statikus mappák ---
 if os.path.isdir("assets"):
     app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -430,6 +433,7 @@ async def api_generate_image(req: Request):
     return {"ok": True, "url": res.get("url"), "path": res.get("path")}
 
 from pathlib import Path
+
 
 @app.get("/api/image/{story_slug}/{image_name}")
 def get_generated_image(story_slug: str, image_name: str):

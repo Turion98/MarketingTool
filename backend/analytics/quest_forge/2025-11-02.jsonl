@@ -87,3 +87,20 @@
 {"id": "e_hxyo8xyib37mhhw9y4i", "t": "page_enter", "ts": 1762099046658, "storyId": "quest_forge", "sessionId": "sess_q5gc7arc0qmhhvaic1", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_lusr7pirgamhhkgrpe"}}
 {"_type": "batch_header", "ts": "2025-11-02T15:57:47.673080Z", "storyId": "quest_forge", "userId": "u_lusr7pirgamhhkgrpe", "device": {}, "count": 1}
 {"id": "e_y7ftun9g0b9mhhw9ydb", "t": "page_exit", "ts": 1762099046975, "storyId": "quest_forge", "sessionId": "sess_q5gc7arc0qmhhvaic1", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 317, "userId": "u_lusr7pirgamhhkgrpe"}}
+{"_type": "batch_header", "ts": "2025-11-02T16:48:22.074996Z", "storyId": "quest_forge", "userId": "u_61moh5rcaqmhhxufw1", "device": {}, "count": 2}
+{"id": "e_mynw1vqv20hmhhxmhvd", "t": "page_enter", "ts": 1762101311737, "storyId": "quest_forge", "sessionId": "sess_54hoabjpvvpmhhxk1o7", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_ipuetbtgvefmhhxmhds"}}
+{"id": "e_5otd15e70acmhhxmhvz", "t": "page_exit", "ts": 1762101311759, "storyId": "quest_forge", "sessionId": "sess_54hoabjpvvpmhhxk1o7", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 22, "userId": "u_ipuetbtgvefmhhxmhds"}}
+{"_type": "batch_header", "ts": "2025-11-02T16:50:58.910067Z", "storyId": "quest_forge", "userId": "u_hl7yk64hxbumhhy6sgs", "device": {}, "count": 2}
+{"id": "e_qlmoidusqtamhhy3fo8", "t": "page_enter", "ts": 1762102102040, "storyId": "quest_forge", "sessionId": "sess_useh0nk3ytlmhhxuain", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_61moh5rcaqmhhxufw1"}}
+{"id": "e_7932o14fhanmhhy3fqp", "t": "page_exit", "ts": 1762102102129, "storyId": "quest_forge", "sessionId": "sess_useh0nk3ytlmhhxuain", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 89, "userId": "u_61moh5rcaqmhhxufw1"}}
+{"_type": "batch_header", "ts": "2025-11-02T17:11:57.177468Z", "storyId": "quest_forge", "userId": "u_hl7yk64hxbumhhy6sgs", "device": {}, "count": 2}
+{"id": "e_x17rck7cfj8mhhy6sp7", "t": "page_enter", "ts": 1762102258891, "storyId": "quest_forge", "sessionId": "sess_isjlc0vfd0emhhy6sgr", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"id": "e_tnap9sj5blpmhhy6spw", "t": "page_exit", "ts": 1762102258916, "storyId": "quest_forge", "sessionId": "sess_isjlc0vfd0emhhy6sgr", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 25, "userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"_type": "batch_header", "ts": "2025-11-02T17:11:57.485902Z", "storyId": "quest_forge", "userId": "u_hl7yk64hxbumhhy6sgs", "device": {}, "count": 4}
+{"id": "e_x17rck7cfj8mhhy6sp7", "t": "page_enter", "ts": 1762102258891, "storyId": "quest_forge", "sessionId": "sess_isjlc0vfd0emhhy6sgr", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"id": "e_tnap9sj5blpmhhy6spw", "t": "page_exit", "ts": 1762102258916, "storyId": "quest_forge", "sessionId": "sess_isjlc0vfd0emhhy6sgr", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 25, "userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"id": "e_m1bl0n8a7mmhhyxrtb", "t": "page_enter", "ts": 1762103517455, "storyId": "quest_forge", "sessionId": "sess_h02f2r5nk49mhhyxrhn", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"id": "e_1zzt2onykfamhhyxrtf", "t": "page_exit", "ts": 1762103517459, "storyId": "quest_forge", "sessionId": "sess_h02f2r5nk49mhhyxrhn", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 4, "userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"_type": "batch_header", "ts": "2025-11-02T17:12:27.615412Z", "storyId": "quest_forge", "userId": "u_hl7yk64hxbumhhy6sgs", "device": {}, "count": 2}
+{"id": "e_hbargmp7ui7mhhyxrtk", "t": "page_enter", "ts": 1762103517464, "storyId": "quest_forge", "sessionId": "sess_h02f2r5nk49mhhyxrhn", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_hl7yk64hxbumhhy6sgs"}}
+{"id": "e_najzwimqutpmhhyxrub", "t": "page_exit", "ts": 1762103517491, "storyId": "quest_forge", "sessionId": "sess_h02f2r5nk49mhhyxrhn", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 26, "userId": "u_hl7yk64hxbumhhy6sgs"}}
