@@ -1,7 +1,7 @@
 // /components/RestartButton/RestartButton.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import style from "./RestartButton.module.scss";
 import { createSessionSeeds } from "../../lib/sessionSeeds";
@@ -28,14 +28,19 @@ const RestartButton: React.FC<RestartButtonProps> = ({
   const { resetGame, setCurrentPageId, storyId, sessionId, currentPageId } =
     (useGameState() as any) ?? {};
 
-  // --- kliens oldali admin-detektálás (ugyanazt a logikát használjuk, amit a UI-ban is fogsz)
-  const isAdminClient = (): boolean => {
-    if (typeof window === "undefined") return false;
-    const sp = new URLSearchParams(window.location.search);
-    if (sp.get("admin") === "1") return true;
-    const ls = window.localStorage.getItem("questell_admin");
-    return ls === "1";
-  };
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 🔹 Admin detektálás (a Landing admin-login által használt kulcsok alapján)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const isFlag = localStorage.getItem("adminMode") === "true";
+      const hasKey = !!sessionStorage.getItem("adminKey");
+      setIsAdmin(isFlag && hasKey);
+    } catch {
+      setIsAdmin(false);
+    }
+  }, []);
 
   const hardResetAudio = () => {
     try {
@@ -43,35 +48,24 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       const anyWin = window as any;
 
       if (anyWin.__bgm__) {
-        try {
-          anyWin.__bgm__.pause?.();
-          if (typeof anyWin.__bgm__.currentTime === "number") {
-            anyWin.__bgm__.currentTime = 0;
-          }
-          anyWin.__bgm__.src && anyWin.__bgm__.load?.();
-        } finally {
-          anyWin.__bgm__ = null;
-        }
+        anyWin.__bgm__.pause?.();
+        if (typeof anyWin.__bgm__.currentTime === "number")
+          anyWin.__bgm__.currentTime = 0;
+        anyWin.__bgm__.src && anyWin.__bgm__.load?.();
+        anyWin.__bgm__ = null;
       }
 
       if (anyWin.__narration__) {
-        try {
-          anyWin.__narration__.pause?.();
-          if (typeof anyWin.__narration__.currentTime === "number") {
-            anyWin.__narration__.currentTime = 0;
-          }
-          anyWin.__narration__.src && anyWin.__narration__.load?.();
-        } finally {
-          anyWin.__narration__ = null;
-        }
+        anyWin.__narration__.pause?.();
+        if (typeof anyWin.__narration__.currentTime === "number")
+          anyWin.__narration__.currentTime = 0;
+        anyWin.__narration__.src && anyWin.__narration__.load?.();
+        anyWin.__narration__ = null;
       }
 
       if (anyWin.__audioCtx__?.state) {
-        try {
-          anyWin.__audioCtx__.close?.();
-        } finally {
-          anyWin.__audioCtx__ = null;
-        }
+        anyWin.__audioCtx__.close?.();
+        anyWin.__audioCtx__ = null;
       }
 
       localStorage.removeItem("bgmPosition");
@@ -84,11 +78,8 @@ const RestartButton: React.FC<RestartButtonProps> = ({
 
   // --- backend admin restart hívás
   const callAdminRestart = async () => {
-    if (typeof window === "undefined") return;
-    const admin = isAdminClient();
-    if (!admin) return;
+    if (!isAdmin) return;
 
-    // ugyanaz a secret, mint amit a clearAllCache-ben is használsz
     const ADMIN_KEY =
       process.env.NEXT_PUBLIC_DEV_CLEAR_SECRET || "KAB1T05Z3r!25";
 
@@ -115,8 +106,6 @@ const RestartButton: React.FC<RestartButtonProps> = ({
   const handleRestart = async () => {
     if (typeof window === "undefined") return;
 
-    const admin = isAdminClient();
-
     // analitika
     try {
       if (storyId && sessionId) {
@@ -124,39 +113,34 @@ const RestartButton: React.FC<RestartButtonProps> = ({
         trackUiClick(String(storyId), String(sessionId), page, "restart_click", {
           seedCount,
           startPageId,
-          admin: admin ? "1" : "0",
+          admin: isAdmin ? "1" : "0",
         });
       }
     } catch {}
 
     // ha admin → először backend
-    if (admin) {
+    if (isAdmin) {
       await callAdminRestart();
     }
 
-    // helyi reset
     try {
       hardResetAudio();
       resetGame?.();
       clearAllCache();
       createSessionSeeds(seedCount);
-
-      // frontend állapotok
       localStorage.setItem("currentPageId", startPageId);
       setCurrentPageId?.(startPageId);
     } catch (err) {
       console.error("Restart error:", err);
     }
 
-    // redirect – ha admin volt, vigyük tovább az admin=1-et
     const baseTarget = `/play/${encodeURIComponent(startPageId)}`;
-    if (admin) {
-      router.push(`${baseTarget}?admin=1`);
-    } else {
-      // ha a landingot tényleg zárod, ezt később ki lehet venni
-      router.push(baseTarget);
-    }
+    if (isAdmin) router.push(`${baseTarget}?admin=1`);
+    else router.push(baseTarget);
   };
+
+  // 🔸 Ha nem admin → semmit nem renderel
+  if (!isAdmin) return null;
 
   return (
     <button

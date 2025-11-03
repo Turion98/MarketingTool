@@ -70,6 +70,8 @@ import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 
+import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
+
 const DEBUG_RUNES = true;
 const DELAY_MS = 3000;
 const FADE_IN_MS = 600;
@@ -2339,6 +2341,7 @@ const StoryPage: React.FC = () => {
     const t = pageData.transition;
     return (
       <div className={style.storyPage}>
+         <AdminQuickPanel />
         {analyticsSync}
 
         <DecorBackground />
@@ -2405,6 +2408,7 @@ const StoryPage: React.FC = () => {
       "ch4_pg1";
     return (
       <div className={style.storyPage}>
+        <AdminQuickPanel />
         {analyticsSync}
         <div
           className={style.storyBackground}
@@ -2412,6 +2416,7 @@ const StoryPage: React.FC = () => {
           <DecorBackground preset="subtle" />
         </div>
 
+      
         {showAnalytics && (
           <AnalyticsReport
             storyId={derivedStoryId}
@@ -2454,6 +2459,7 @@ const StoryPage: React.FC = () => {
       ref={pageRootRef}
       className={style.storyPage}
     >
+      <AdminQuickPanel />
       {analyticsSync}
       {showAnalytics && (
         <AnalyticsReport
