@@ -11,6 +11,15 @@ type MediaFrameProps = {
   style?: CSSProperties;
   showGoldFrame?: boolean;
   logoSrc?: string;
+
+  /** Oldal azonosító – hogy oldalváltáskor tudjunk újranyitni */
+  pageId?: string;
+
+  /** StoryPage-ből jön: amikor igaz, zárjuk a keretet (fade out fázis) */
+  pageIsFadingOut?: boolean;
+
+  /** Mennyi késleltetés után nyíljon ki a keret oldalváltáskor (ms) */
+  openDelayMs?: number;
 };
 
 const VIEWBOX_W = 1600;
@@ -37,11 +46,17 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   style,
   showGoldFrame = true,
   logoSrc = "assets/my_logo.png",
+  pageId,
+  pageIsFadingOut = false,
+  openDelayMs = 3900, // 🔹 alap késleltetés oldalváltáskor
 }) => {
   // SVG stroke-ok (skin felülírhatja)
   const OUTER_STROKE = readCssNumber("--mf-svg-outer-stroke", 26);
   const INNER_STROKE = readCssNumber("--mf-svg-inner-stroke", 16);
-  const OVERLAY_STROKE = readCssNumber("--mf-svg-overlay-stroke", OUTER_STROKE);
+  const OVERLAY_STROKE = readCssNumber(
+    "--mf-svg-overlay-stroke",
+    OUTER_STROKE
+  );
 
   // stroke felezés + kis ráhagyás
   const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
@@ -64,6 +79,58 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   const LOGO_PAD_X = (LOGO_BOX_W * LOGO_PAD_X_PCT) / 100;
   const LOGO_PAD_Y = (LOGO_BOX_H * LOGO_PAD_Y_PCT) / 100;
 
+  // 🔸 keret nyit/zár state
+  const [frameOpen, setFrameOpen] = React.useState(true);
+  const lastPageIdRef = React.useRef<string | undefined>(pageId);
+
+  // 🔸 nyitási timer ref (hogy le tudjuk állítani)
+  const openTimerRef = React.useRef<number | null>(null);
+
+  // cleanup: komponens unmountkor töröljük a timert
+  React.useEffect(() => {
+    return () => {
+      if (openTimerRef.current !== null && typeof window !== "undefined") {
+        window.clearTimeout(openTimerRef.current);
+      }
+    };
+  }, []);
+
+  // oldalváltás: csuk → kis késleltetéssel nyit
+  React.useEffect(() => {
+    if (pageId === undefined) return;
+    if (pageId === lastPageIdRef.current) return;
+
+    lastPageIdRef.current = pageId;
+
+    // először mindig csukjuk be
+    setFrameOpen(false);
+
+    if (typeof window !== "undefined") {
+      // korábbi timer, ha volt, töröljük
+      if (openTimerRef.current !== null) {
+        window.clearTimeout(openTimerRef.current);
+      }
+
+      openTimerRef.current = window.setTimeout(() => {
+        setFrameOpen(true);
+        openTimerRef.current = null;
+      }, openDelayMs);
+    } else {
+      setFrameOpen(true);
+    }
+  }, [pageId, openDelayMs]);
+
+  // fade out fázis: csukjuk a keretet és ne nyíljon ki újra
+  React.useEffect(() => {
+    if (pageIsFadingOut) {
+      if (openTimerRef.current !== null && typeof window !== "undefined") {
+        window.clearTimeout(openTimerRef.current);
+        openTimerRef.current = null;
+      }
+      setFrameOpen(false);
+    }
+  }, [pageIsFadingOut]);
+
   // teljes, folyamatos keret
   function buildRectPath(inset: number = BASE_INSET): string {
     const left = inset;
@@ -81,7 +148,13 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
   // a panel, amit a keret “kitölt” a logó mögött
   const fillLeft = slotX - PANEL_EXPAND;
-  const fillTop = VIEWBOX_H - BASE_INSET - LOGO_MARGIN_BOTTOM - LOGO_BOX_H - PANEL_RAISE - PANEL_EXPAND;
+  const fillTop =
+    VIEWBOX_H -
+    BASE_INSET -
+    LOGO_MARGIN_BOTTOM -
+    LOGO_BOX_H -
+    PANEL_RAISE -
+    PANEL_EXPAND;
   const fillRight = VIEWBOX_W - BASE_INSET + PANEL_EXPAND;
   const fillBottom = VIEWBOX_H - BASE_INSET + PANEL_EXPAND;
 
@@ -94,12 +167,17 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     `Z`,
   ].join(" ");
 
+  const frameStyle: CSSProperties = {
+    ...style,
+    ["--mf-open" as any]: frameOpen ? 1 : 0,
+  };
+
   return (
     <div
       className={`${s.mediaFrame} ${fadeIn ? s.fadeIn : ""}`}
       aria-label="Media frame"
       data-mode={mode}
-      style={style}
+      style={frameStyle}
     >
       <div className={s.content}>
         {children}
@@ -154,7 +232,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   <stop offset="100%" stopColor="var(--mf-svg-overlay-bottom)" />
                 </linearGradient>
 
-                {/* BELSŐ ÁRNYÉK FILTER – marad fix, de akár ezt is kivihetjük tokenre */}
+                {/* BELSŐ ÁRNYÉK FILTER */}
                 <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
                   <feFlood floodColor="rgba(0,0,0,0.45)" />
                   <feComposite operator="out" in2="SourceGraphic" in="SourceGraphic" />
@@ -168,7 +246,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                 </clipPath>
               </defs>
 
-              {/* 0) KITÖLTÉS – panel a logó alatt (skinből jövő méret) */}
+              {/* 0) KITÖLTÉS – panel a logó alatt */}
               <path d={logoFillPath} fill="url(#platinumBase)" />
               <path d={logoFillPath} fill="url(#metalOverlay)" opacity={0.6} />
 

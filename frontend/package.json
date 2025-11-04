@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev -p 3000 -H azenc.local --turbopack",
+    "dev": "next dev -p 3000 -H azenc.local --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:security": "eslint --config eslint.security.config.cjs --no-ignore \"app/lib/security/**/*.ts\" --max-warnings=0 --no-cache",
     "check:security": "tsc --project tsconfig.security.json --noEmit --pretty --skipLibCheck"
-
   },
   "dependencies": {
     "@sentry/nextjs": "^10.21.0",
@@ -17,6 +16,7 @@
     "ajv-formats": "^3.0.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.14",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "next": "15.4.2",
     "react": "19.1.0",

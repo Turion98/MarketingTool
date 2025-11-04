@@ -1,0 +1,3 @@
+{"_type": "batch_header", "ts": "2025-11-04T07:52:36.893808Z", "storyId": "quest_forge", "userId": "u_y4wsg1hh9xmhiut5zu", "device": {}, "count": 2}
+{"id": "e_g1p6qb8t00qmhiusss7", "t": "page_enter", "ts": 1762157033143, "storyId": "quest_forge", "sessionId": "sess_zojhgf63iwjmhiussbb", "pageId": "ch1_pg1", "refPageId": null, "props": {"userId": "u_aahkgsyyze9mhiu20aj"}}
+{"id": "e_bans4ne4pn4mhiusssx", "t": "page_exit", "ts": 1762157033169, "storyId": "quest_forge", "sessionId": "sess_zojhgf63iwjmhiussbb", "pageId": "ch1_pg1", "refPageId": null, "props": {"dwellMs": 26, "userId": "u_aahkgsyyze9mhiu20aj"}}

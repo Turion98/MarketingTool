@@ -2545,9 +2545,12 @@ const StoryPage: React.FC = () => {
         }
         media={
           showFrame ? (
-            <MediaFrame mode="image">
+            <MediaFrame mode="image"
+            pageId={pageData.id}
+      pageIsFadingOut={isFadingOut}>
               <GeneratedImage_with_fadein
                 pageId={pageData.id}
+                
                 prompt={
                   shouldGenerate
                     ? pageData.imagePrompt

@@ -158,6 +158,12 @@ type GameStateContextType = {
   visitedPages: Set<string>;
   progressValue: number;
   progressDisplay: ProgressDisplay;
+
+    /** 🔹 Reward image (DOM export) */
+  rewardImageReady: boolean;
+  setRewardImageReady: (ready: boolean) => void;
+  registerRewardFrame: (el: HTMLDivElement | null) => void;
+  downloadRewardImage: () => void;
 };
 
 const GameStateContext = createContext<GameStateContextType>({} as GameStateContextType);
@@ -378,6 +384,38 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       // swallow
     }
   }, [hydrated]);
+
+    const [rewardImageReady, setRewardImageReady] = useState(false);
+  const rewardFrameRef = useRef<HTMLDivElement | null>(null);
+
+  const registerRewardFrame = useCallback((el: HTMLDivElement | null) => {
+    rewardFrameRef.current = el;
+  }, []);
+
+  const downloadRewardImage = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    if (!rewardFrameRef.current) {
+      console.warn("[RewardExport] nincs frame elem regisztrálva");
+      return;
+    }
+
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(rewardFrameRef.current, {
+        quality: 0.95,
+        pixelRatio: window.devicePixelRatio || 2,
+      });
+
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "questell_reward.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("[RewardExport] export hiba", err);
+    }
+  }, []);
 
   /** 🔹 Analytics: storyId + sessionId előkészítés */
   useEffect(() => {
@@ -951,6 +989,11 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     clearAllTimeouts,
   ]);
 
+    useEffect(() => {
+    // új oldal → jutalom reset
+    setRewardImageReady(false);
+  }, [currentPageId]);
+
   /** Merge a globál bankba + persist (additív) */
   useEffect(() => {
     if (!hydrated) return;
@@ -1103,6 +1146,11 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
         storyId,
         sessionId,
+
+        rewardImageReady,
+        setRewardImageReady,
+        registerRewardFrame,
+        downloadRewardImage,
       }}
     >
       {children}

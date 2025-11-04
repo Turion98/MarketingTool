@@ -18,22 +18,11 @@
   overflow: hidden;
   border-radius: inherit;
   background: transparent;
-
-  /* alap: csukva */
-  transform-origin: top;
-  transform: scaleY(0);
-  opacity: 0;
-
-  transition:
-    transform 0.45s ease-in-out,
-    opacity 0.35s ease-in-out;
 }
 
-.imageFrameInnerOpen {
-  transform: scaleY(1);
-  opacity: 1;
-}
+/* NINCS többé külön .imageFrameInnerOpen – a keretnyitást a MediaFrame intézi */
 
+/* A kép 16:9 területe */
 .imageRatio {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -53,7 +42,7 @@
   border-radius: inherit;
 
   opacity: 0;
-  transition: opacity 0.45s ease, transform 0.45s ease;
+  transition: opacity 0.85s ease, transform 0.85s ease;
 }
 
 .fadeIn {

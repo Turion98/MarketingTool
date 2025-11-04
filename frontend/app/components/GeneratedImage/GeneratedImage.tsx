@@ -109,13 +109,10 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   const [displayedSrc, setDisplayedSrc] = useState<string | null>(null);
   const [terminalError, setTerminalError] = useState<string | null>(null);
   const [showAnticipation, setShowAnticipation] = useState(false);
-  const [isFrameOpen, setIsFrameOpen] = useState(false);
-  const [didMount, setDidMount] = useState(false);
 
   const imgFit =
     typeof params?.objectFit === "string" ? params.objectFit : "contain";
 
-  // csak akkor próbáljon képet beszerezni, ha engedélyezett és nincs végleges hibánk
   const shouldGenerate = imageTiming?.generate !== false && !terminalError;
   const normalizedPrompt = shouldGenerate ? normalizePrompt(prompt) : "";
 
@@ -131,47 +128,29 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 
   const { imageUrl, loading, error } = adaptCacheResult(cache);
 
-  // első render
+  /** OLDALVÁLTÁS – csak a “Kép előkészítése…” jelzést reseteljük */
   useEffect(() => {
-    setDidMount(true);
-  }, []);
-
-  /**
-   * OLDALVÁLTÁS
-   * - keretet csukjuk be
-   * - de a KÉPET NEM szedjük le azonnal → ha nem jön új kép, legalább a régi látszik
-   */
-  useEffect(() => {
-    setIsFrameOpen(false);
-    // jelezzük, hogy “dolgozik”
     setShowAnticipation(true);
+    setFadeIn(false);
   }, [pageId]);
 
   /**
    * LOADING állapot:
    * - ha tölt, egy kis késés után mutassuk az anticipation-t
-   * - ha nem tölt már: ha volt régi kép, akkor nyissuk ki a keretet, hogy ne legyen üres
+   * - ha nem tölt már: elrejtjük
    */
   useEffect(() => {
     if (loading) {
       const t = setTimeout(() => setShowAnticipation(true), 300);
       return () => clearTimeout(t);
     }
-
-    // ha nem loading
     setShowAnticipation(false);
-
-    // ha nincs új imageUrl, de volt korábban kép, ne hagyjuk zárva
-    if (!loading && !imageUrl && displayedSrc) {
-      setIsFrameOpen(true);
-    }
-  }, [loading, imageUrl, displayedSrc]);
+  }, [loading]);
 
   /**
    * ÚJ KÉP ÉRKEZETT
    * - URL normalizálás (backend → frontend proxy)
    * - displayedSrc beállítás
-   * - keret kinyitás
    */
   useEffect(() => {
     if (imageUrl && imageUrl.trim().length > 0) {
@@ -194,15 +173,9 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
         )}`;
       }
 
-      // ha ugyanaz a kép jött vissza, ne villogjunk
       setDisplayedSrc((prev) => {
         if (prev === finalUrl) return prev;
         return finalUrl;
-      });
-
-      // külön tickben nyissuk a keretet, hogy a transition tényleg fusson
-      requestAnimationFrame(() => {
-        setIsFrameOpen(true);
       });
 
       setTerminalError(null);
@@ -210,7 +183,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   }, [imageUrl]);
 
   /**
-   * HIBA → fallback + keret nyitva
+   * HIBA → fallback
    */
   useEffect(() => {
     if (!error) return;
@@ -221,7 +194,6 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
       if (!displayedSrc) {
         setDisplayedSrc(FALLBACK_SRC);
       }
-      setIsFrameOpen(true);
     }
   }, [error, displayedSrc, setGlobalError]);
 
@@ -251,17 +223,9 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     [imgFit]
   );
 
-  const shouldBeOpen = didMount && isFrameOpen;
-
   return (
     <div className={styles.imageRoot} style={rootVars} data-page={pageId}>
-      <div
-        className={
-          shouldBeOpen
-            ? `${styles.imageFrameInner} ${styles.imageFrameInnerOpen}`
-            : styles.imageFrameInner
-        }
-      >
+      <div className={styles.imageFrameInner}>
         <div className={styles.imageRatio}>
           {displayedSrc ? (
             <img
@@ -275,7 +239,6 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
                 if (displayedSrc !== FALLBACK_SRC) {
                   e.currentTarget.src = FALLBACK_SRC;
                   setDisplayedSrc(FALLBACK_SRC);
-                  setIsFrameOpen(true);
                 }
               }}
             />
