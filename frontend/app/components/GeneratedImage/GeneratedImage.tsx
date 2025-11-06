@@ -229,6 +229,8 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
               alt=""
               className={imgClass}
               draggable={false}
+              crossOrigin="anonymous"
+
               // 🔹 Reward jelzés: ha sikeresen betölt, jelez a GameState-nek
               onLoad={() => setRewardImageReady(true)}
               onError={(e) => {

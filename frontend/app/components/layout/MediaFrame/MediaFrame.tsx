@@ -40,6 +40,18 @@ function readCssNumber(varName: string, fallback: number): number {
   return Number.isFinite(num) ? num : fallback;
 }
 
+/**
+ * Helper: CSS színváltozót olvasunk ki stringként.
+ * Ha nincs vagy SSR-en fut, fallbacket ad.
+ */
+function getCssVar(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value || fallback;
+}
+
 const MediaFrame: React.FC<MediaFrameProps> = ({
   mode = "image",
   fadeIn = false,
@@ -175,6 +187,27 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     ["--mf-open" as any]: frameOpen ? 1 : 0,
   };
 
+  // 🔹 skin színek feloldása (konkrét stringgé, nem var(...) az SVG-ben)
+  const svgColors = React.useMemo(
+    () => ({
+      base1: getCssVar("--mf-svg-base-1", "#f6f3ee"),
+      base2: getCssVar("--mf-svg-base-2", "#ddd2bf"),
+      base3: getCssVar("--mf-svg-base-3", "#c0ad8d"),
+
+      inner1: getCssVar("--mf-svg-inner-1", "#f2efe9"),
+      inner2: getCssVar("--mf-svg-inner-2", "#8ea98e"),
+      inner3: getCssVar("--mf-svg-inner-3", "#d9cba9"),
+
+      overlayTop: getCssVar("--mf-svg-overlay-top", "rgba(255,255,255,0.0)"),
+      overlayMid: getCssVar("--mf-svg-overlay-mid", "rgba(255,255,255,0.22)"),
+      overlayBottom: getCssVar(
+        "--mf-svg-overlay-bottom",
+        "rgba(255,255,255,0.0)"
+      ),
+    }),
+    []
+  );
+
   return (
     <div
       ref={registerRewardFrame}
@@ -203,9 +236,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   y2={VIEWBOX_H}
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop offset="0%" stopColor="var(--mf-svg-base-1)" />
-                  <stop offset="45%" stopColor="var(--mf-svg-base-2)" />
-                  <stop offset="100%" stopColor="var(--mf-svg-base-3)" />
+                  <stop offset="0%" stopColor={svgColors.base1} />
+                  <stop offset="45%" stopColor={svgColors.base2} />
+                  <stop offset="100%" stopColor={svgColors.base3} />
                 </linearGradient>
 
                 {/* 2) BELSŐ: fehér arany + zöld */}
@@ -217,9 +250,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   y2="0"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop offset="0%" stopColor="var(--mf-svg-inner-1)" />
-                  <stop offset="50%" stopColor="var(--mf-svg-inner-2)" />
-                  <stop offset="100%" stopColor="var(--mf-svg-inner-3)" />
+                  <stop offset="0%" stopColor={svgColors.inner1} />
+                  <stop offset="50%" stopColor={svgColors.inner2} />
+                  <stop offset="100%" stopColor={svgColors.inner3} />
                 </linearGradient>
 
                 {/* 3) OVERLAY: fémes fény */}
@@ -231,28 +264,47 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   y2={VIEWBOX_H}
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop offset="0%" stopColor="var(--mf-svg-overlay-top)" />
-                  <stop offset="35%" stopColor="var(--mf-svg-overlay-mid)" />
-                  <stop offset="100%" stopColor="var(--mf-svg-overlay-bottom)" />
+                  <stop offset="0%" stopColor={svgColors.overlayTop} />
+                  <stop offset="35%" stopColor={svgColors.overlayMid} />
+                  <stop offset="100%" stopColor={svgColors.overlayBottom} />
                 </linearGradient>
 
                 {/* BELSŐ ÁRNYÉK FILTER */}
-                <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <filter
+                  id="innerShadow"
+                  x="-20%"
+                  y="-20%"
+                  width="140%"
+                  height="140%"
+                >
                   <feFlood floodColor="rgba(0,0,0,0.45)" />
-                  <feComposite operator="out" in2="SourceGraphic" in="SourceGraphic" />
+                  <feComposite
+                    operator="out"
+                    in2="SourceGraphic"
+                    in="SourceGraphic"
+                  />
                   <feGaussianBlur stdDeviation="5" />
                   <feOffset dx="0" dy="0" />
                   <feComposite operator="atop" in2="SourceGraphic" />
                 </filter>
 
                 <clipPath id="logoClip">
-                  <rect x={slotX} y={slotY} width={LOGO_BOX_W} height={LOGO_BOX_H} />
+                  <rect
+                    x={slotX}
+                    y={slotY}
+                    width={LOGO_BOX_W}
+                    height={LOGO_BOX_H}
+                  />
                 </clipPath>
               </defs>
 
               {/* 0) KITÖLTÉS – panel a logó alatt */}
               <path d={logoFillPath} fill="url(#platinumBase)" />
-              <path d={logoFillPath} fill="url(#metalOverlay)" opacity={0.6} />
+              <path
+                d={logoFillPath}
+                fill="url(#metalOverlay)"
+                opacity={0.6}
+              />
 
               {/* 1) KÜLSŐ KERET */}
               <g filter="url(#innerShadow)">

@@ -374,9 +374,63 @@ def generate_image_asset(
                 "storySlug": effective_slug,
             })
 
-    # 2) HA SIKERÜLT, AKKOR (ÉS CSAK AKKOR) LOG + VISSZA
+    # 2) HA SIKERÜLT, AKKOR (ÉS CSAK AKKOR) MENTSÜK LE LOKÁLISAN IS
     if got_real_image and real_url:
         duration_ms = int((time.perf_counter() - started) * 1000)
+
+        final_url = real_url
+        saved_local = False
+
+        # Ha HTTP(S) URL-t kaptunk a Replicate-től, próbáljuk letölteni
+        if isinstance(real_url, str) and real_url.startswith(("http://", "https://")):
+            try:
+                resp = requests.get(real_url, timeout=60)
+                resp.raise_for_status()
+
+                # biztosítsuk a mappát
+                os.makedirs(os.path.dirname(out_file), exist_ok=True)
+
+                with open(out_file, "wb") as f:
+                    f.write(resp.content)
+
+                # innentől a saját /generated/images/... URL-t használjuk
+                final_url = out_url
+                saved_local = True
+
+                _write_sidecar_meta(
+                    out_file,
+                    {
+                        "pageId": page_id,
+                        "promptKey": pk,
+                        "seed": seed,
+                        "mode": mode,
+                        "cacheHit": False,
+                        "durationMs": duration_ms,
+                        "flags": {
+                            "ENABLE_IMAGE_CACHE": ENABLE_IMAGE_CACHE,
+                            "ENABLE_IMAGE_PRELOAD": ENABLE_IMAGE_PRELOAD,
+                        },
+                        "source": "replicate_saved",
+                        "storySlug": effective_slug,
+                        "prompt": norm_prompt,
+                        "rawPrompt": raw_prompt,
+                        "params": params,
+                        "styleProfile": style_profile,
+                        "replicateUrl": real_url,
+                    },
+                )
+            except Exception as e:
+                _log({
+                    "event": "image.save_error",
+                    "error": str(e),
+                    "pageId": page_id,
+                    "prompt": norm_prompt,
+                    "rawPrompt": raw_prompt,
+                    "mode": mode,
+                    "storySlug": effective_slug,
+                    "replicateUrl": real_url,
+                })
+
         _log({
             "event": "image.replicate_success",
             "pageId": page_id,
@@ -385,18 +439,22 @@ def generate_image_asset(
             "mode": mode,
             "storySlug": effective_slug,
             "replicateUrl": real_url,
+            "savedLocal": saved_local,
+            "path": final_url,
             "durationMs": duration_ms,
         })
+
         return {
-            "path": real_url,
-            "url": real_url,
+            "path": final_url,
+            "url": final_url,
             "seed": seed,
             "cacheHit": False,
             "promptKey": pk,
             "mode": mode,
             "storySlug": effective_slug,
-            "source": "replicate",
+            "source": "replicate_saved" if saved_local else "replicate_remote",
         }
+
 
     # 3) HA NEM SIKERÜLT → PRÓBÁLJUK A CACHE-T (MÁSODLAGOS!)
     if ENABLE_IMAGE_CACHE and cache and os.path.exists(out_file):

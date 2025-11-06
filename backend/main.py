@@ -446,6 +446,13 @@ def get_generated_image(story_slug: str, image_name: str):
       # lehet, hogy a JSON sidecar kellene
       raise HTTPException(status_code=404, detail="Image not found")
 
+      # 🔽 IDE jön a CORS header hozzáadása
+    resp = FileResponse(str(base), media_type="image/png")
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return resp
+
     # content type-et adhatunk fixen is
     return FileResponse(str(base), media_type="image/png")
 

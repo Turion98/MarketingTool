@@ -2,6 +2,7 @@
 import React, { KeyboardEvent, useState } from "react";
 import s from "./ActionBar.module.scss";
 import RestartButton from "../../RestartButton/RestartButton";
+import RestartGameButton from "../../RestartGameButton/RestartGameButton";
 import { useGameState } from "../../../lib/GameStateContext";
 
 type ActionBarProps = {
@@ -24,7 +25,9 @@ const ActionBar: React.FC<ActionBarProps> = ({
   className,
 }) => {
   const [open, setOpen] = useState(false);
-  const { rewardImageReady, downloadRewardImage } = useGameState();
+  const { rewardImageReady, downloadRewardImage, globals } = useGameState();
+
+  const isAdmin = !!(globals as any)?.isAdmin;
 
   const onKeyActivate =
     (cb: () => void, disabled?: boolean) =>
@@ -108,14 +111,22 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </button>
         </div>
 
-        {/* footer: csak Restart marad itt */}
+        {/* footer: játékos restart – mindig látszik */}
         <div className={s.footer}>
-          <RestartButton
-            className={s.btn}
-            startPageId="landing"
-            aria-label="Restart"
-          />
+          <RestartGameButton className={s.btn} />
         </div>
+
+        {/* footer: admin BACK – csak admin módban */}
+        {isAdmin && (
+          <div className={s.footer}>
+            <RestartButton
+              className={s.btn}
+              startPageId="landing"
+              label="Back"
+              aria-label="Back to landing (admin)"
+            />
+          </div>
+        )}
       </aside>
     </>
   );

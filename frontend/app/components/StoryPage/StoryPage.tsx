@@ -1581,8 +1581,12 @@ const StoryPage: React.FC = () => {
   useEffect(() => {
     if (!pageData?.id) return;
 
+    // 🔹 Puzzle oldalak (riddle + runes): ne blokkoljuk őket a prevWasChoice guarddal
+    const isPuzzlePage = isRiddlePage || isRunesPage;
+
     if (blocks.length === 0) {
-      if (prevWasChoiceRef.current) {
+      if (prevWasChoiceRef.current && !isPuzzlePage) {
+        // normál, szöveg nélküli next-eknél marad a régi viselkedés
         prevWasChoiceRef.current = false;
         return;
       }
@@ -1602,7 +1606,14 @@ const StoryPage: React.FC = () => {
     } else {
       prevWasChoiceRef.current = false;
     }
-  }, [pageData?.id, blocks.length, hasChoices, registerTimeout]);
+  }, [
+    pageData?.id,
+    blocks.length,
+    hasChoices,
+    registerTimeout,
+    isRiddlePage,
+    isRunesPage,
+  ]);
 
   // image gen params
   const stableParams = useMemo(
