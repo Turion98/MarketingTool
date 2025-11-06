@@ -3,6 +3,7 @@
 
 import React, { CSSProperties } from "react";
 import s from "./MediaFrame.module.scss";
+import { useGameState } from "../../../lib/GameStateContext";
 
 type MediaFrameProps = {
   mode?: "image" | "video";
@@ -50,6 +51,8 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   pageIsFadingOut = false,
   openDelayMs = 3900, // 🔹 alap késleltetés oldalváltáskor
 }) => {
+  const { registerRewardFrame } = useGameState();
+
   // SVG stroke-ok (skin felülírhatja)
   const OUTER_STROKE = readCssNumber("--mf-svg-outer-stroke", 26);
   const INNER_STROKE = readCssNumber("--mf-svg-inner-stroke", 16);
@@ -174,6 +177,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
   return (
     <div
+      ref={registerRewardFrame}
       className={`${s.mediaFrame} ${fadeIn ? s.fadeIn : ""}`}
       aria-label="Media frame"
       data-mode={mode}

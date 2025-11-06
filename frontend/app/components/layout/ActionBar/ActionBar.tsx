@@ -2,6 +2,7 @@
 import React, { KeyboardEvent, useState } from "react";
 import s from "./ActionBar.module.scss";
 import RestartButton from "../../RestartButton/RestartButton";
+import { useGameState } from "../../../lib/GameStateContext";
 
 type ActionBarProps = {
   canSkip: boolean;
@@ -23,6 +24,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
   className,
 }) => {
   const [open, setOpen] = useState(false);
+  const { rewardImageReady, downloadRewardImage } = useGameState();
 
   const onKeyActivate =
     (cb: () => void, disabled?: boolean) =>
@@ -79,6 +81,19 @@ const ActionBar: React.FC<ActionBarProps> = ({
             aria-label="Replay"
           >
             <span className={s.label}>Replay</span>
+          </button>
+
+          {/* 🔹 Reward letöltés gomb – csak akkor aktív, ha van kész kép */}
+          <button
+            type="button"
+            className={s.btn}
+            disabled={!rewardImageReady}
+            onClick={downloadRewardImage}
+            onKeyDown={onKeyActivate(downloadRewardImage, !rewardImageReady)}
+            aria-label="Download reward image"
+            data-reward-ready={rewardImageReady ? "true" : "false"}
+          >
+            <span className={s.label}>Download</span>
           </button>
 
           <button

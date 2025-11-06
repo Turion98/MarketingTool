@@ -13,7 +13,8 @@
   right: calc(-1 * (var(--ab-w) + var(--ab-offset))); /* off-canvas ALAPHELYZET */
   height: auto;
   max-height: calc(100vh - (var(--ab-offset) * 2));
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden; /* 🔹 megakadályozza a vízszintes scrollt */
 
   width: var(--ab-w);
   z-index: var(--ab-z);
@@ -24,7 +25,7 @@
 
   /* helyet hagyunk a láblécnek */
   padding: var(--ab-pad);
-  padding-bottom: var(--ab-pad); /* 🔹 eltávolítva a felesleges extra hely */
+  padding-bottom: var(--ab-pad);
 
   border: 1px solid var(--ab-border);
   border-radius: var(--ab-radius);
@@ -36,12 +37,10 @@
 
   transition: right var(--btn-transition-dur) var(--btn-transition-ease);
 }
-.open { right: var(--ab-offset); }
+.open { right: 0; } /* 🔹 teljesen tapadjon a kép szélére */
 
 /* ===== Fejléc + mobil close ===== */
-.header {
-  display: none; /* 🔹 nincs rá szükség */
-}
+.header { display: none; }
 
 /* ===== Csoportok ===== */
 .group {
@@ -53,13 +52,14 @@
 /* ===== Lábléc (Next + Restart) ===== */
 .footer,
 .stickyFooter {
-  position: static;          /* ne absolute */
-  padding: 0;                /* ne nyelje el a rést belső padding */
-  margin-top: 0; /* ugyanakkora felső térköz, mint a .group elemek között */
-  display: grid;             /* gap működjön a gombok között is */
+  position: static;
+  padding: 0;
+  margin-top: 0;
+  display: grid;
   grid-auto-flow: row;
-  gap: var(--ab-gap);        /* 🔑 ez adja a Next és Restart közti rést */
+  gap: var(--ab-gap);
 }
+
 /* ===== Gombok ===== */
 .btn {
   display: inline-flex;
@@ -67,7 +67,6 @@
   justify-content: center;
 
   height: var(--btn-h);
-  padding: 0 12px;
   border-radius: var(--btn-radius);
 
   border: 1px solid var(--btn-border);
@@ -98,7 +97,7 @@
 
 /* primary variáns */
 .primary {
-  background: var(--btn-primary-bg, var(--btn-bg)); /* 🔹 fallback, hogy egységes legyen */
+  background: var(--btn-primary-bg, var(--btn-bg));
   &:hover { background: var(--btn-primary-bg-hover, var(--btn-bg-hover)); }
 }
 
@@ -109,9 +108,34 @@
   width: 100%;
 }
 
-/* ikonok rejtése (eredeti viselkedés) */
+/* ikonok rejtése */
 .btn img, .btn svg { display: none !important; }
 .label { line-height: 1; }
+
+
+
+@keyframes reward-metallic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.btn[data-reward-ready="true"] {
+  transform-origin: center;
+  border-radius: 12px;
+  will-change: box-shadow;
+  overflow: hidden; 
+  background: linear-gradient(
+    120deg,
+    color-mix(in oklch, var(--brand-accent) 40%, transparent) 0%,
+    color-mix(in oklch, white 40%, var(--brand-accent)) 50%,
+    color-mix(in oklch, var(--brand-accent) 40%, transparent) 100%
+  );
+  background-size: 200% 200%;
+  animation: reward-metallic 5.8s ease-in-out infinite;
+  color: var(--btn-fg);
+}
+
 
 /* ===== Mobile toggle – VIEWPORTHOZ TAPAD ===== */
 .mobileRow {
@@ -169,17 +193,30 @@
     right: calc(-1 * (var(--ab-w-mobile) + var(--ab-offset)));
     top: var(--ab-offset);
     height: auto;
-    max-height: var(--ab-mobile-maxh);
-    overflow: auto;
+    max-height: 90vh; /* 🔹 gombok ne vágódjanak le */
+    overflow-y: auto;
+    overflow-x: hidden;
+    
 
     width: var(--ab-w-mobile);
     border-radius: var(--ab-radius-mobile);
     border-left: 1px solid var(--ab-border);
     border-right: 0;
 
-    padding: 14px;
-    padding-bottom: 14px; /* 🔹 nincs extra hely */
+    padding: 10px;
+    padding-bottom: 10px;
     transition: right var(--btn-transition-dur) var(--btn-transition-ease);
   }
-  .open { right: var(--ab-offset); }
+
+  .open { right: 0; } /* 🔹 tapadjon a képre mobilon is */
+
+  .group {
+    gap: 6px;
+  }
+
+  .btn {
+    height: 34px; /* 🔹 kisebb gomb */
+    padding: 0 8px;
+    font-size: 0.65rem;
+  }
 }

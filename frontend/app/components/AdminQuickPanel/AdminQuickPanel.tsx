@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useGameState } from "../../lib/GameStateContext"; // ⬅️ ÚJ: context sync
+import { useGameState } from "../../lib/GameStateContext";
 
 type Props = {
   apiBase?: string;   // ha nem adod meg, NEXT_PUBLIC_API_BASE vagy http://127.0.0.1:8000
@@ -24,28 +24,46 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
   const [pass, setPass] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
-  const { setGlobal } = (useGameState() as any) ?? {}; // ⬅️ ÚJ
+  const { setGlobal } = (useGameState() as any) ?? {};
 
   // --- helpers
-  const markOn = useCallback((key: string) => {
-    try {
-      localStorage.setItem("adminMode", "true");
-      sessionStorage.setItem("adminKey", key);
-    } catch {}
-    try { setGlobal?.("isAdmin", true); } catch {}       // ⬅️ ÚJ
-    setAdminOk(true);
-    setMsg("Belépve: admin mód aktív.");
-  }, [setGlobal]);                                       // ⬅️ frissített deps
+  const markOn = useCallback(
+    (key: string) => {
+      try {
+        localStorage.setItem("adminMode", "true");
+        sessionStorage.setItem("adminKey", key);
+        // ⬇️ jelezd minden komponensnek, hogy admin ON
+        window.dispatchEvent(
+          new CustomEvent("qzera:admin-change", { detail: { isAdmin: true } })
+        );
+      } catch {}
+      try {
+        setGlobal?.("isAdmin", true);
+      } catch {}
+      setAdminOk(true);
+      setMsg("Belépve: admin mód aktív.");
+    },
+    [setGlobal]
+  );
 
-  const markOff = useCallback(() => {
-    try {
-      localStorage.removeItem("adminMode");
-      sessionStorage.removeItem("adminKey");
-    } catch {}
-    try { setGlobal?.("isAdmin", false); } catch {}      // ⬅️ ÚJ
-    setAdminOk(false);
-    setMsg("Kiléptél az admin módból.");
-  }, [setGlobal]);                                       // ⬅️ frissített deps
+  const markOff = useCallback(
+    () => {
+      try {
+        localStorage.removeItem("adminMode");
+        sessionStorage.removeItem("adminKey");
+        // ⬇️ jelezd minden komponensnek, hogy admin OFF
+        window.dispatchEvent(
+          new CustomEvent("qzera:admin-change", { detail: { isAdmin: false } })
+        );
+      } catch {}
+      try {
+        setGlobal?.("isAdmin", false);
+      } catch {}
+      setAdminOk(false);
+      setMsg("Kiléptél az admin módból.");
+    },
+    [setGlobal]
+  );
 
   const checkExisting = useCallback(() => {
     try {
@@ -53,15 +71,48 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
       const k = sessionStorage.getItem("adminKey") || "";
       if (!was || !k) {
         setAdminOk(false);
-        try { setGlobal?.("isAdmin", false); } catch {}  // ⬅️ ÚJ: context sync off
+        try {
+          setGlobal?.("isAdmin", false);
+        } catch {}
         return;
       }
+
       fetch(`${API_BASE}/admin/ping`, { headers: { "x-admin-key": k } })
-        .then((r) => (r.ok ? markOn(k) : markOff()))
-        .catch(() => markOff());
+        .then((r) => {
+          if (r.ok) {
+            // kulcs jó → erősítsük meg az állapotot
+            markOn(k);
+          } else if (r.status === 401 || r.status === 403) {
+            // tényleges hitelesítési hiba → dobjuk el az admin módot
+            markOff();
+          } else {
+            // egyéb hiba (500, 404 stb.) → ne rúgjuk ki a usert, csak log
+            console.warn("[AdminQuickPanel] /admin/ping error status:", r.status);
+            setAdminOk(true);
+            try {
+              setGlobal?.("isAdmin", true);
+            } catch {}
+            window.dispatchEvent(
+              new CustomEvent("qzera:admin-change", { detail: { isAdmin: true } })
+            );
+          }
+        })
+        .catch((err) => {
+          // hálózati hiba → dev módban ne dobjuk le az admint, csak figyelmeztetés
+          console.warn("[AdminQuickPanel] /admin/ping network error:", err);
+          setAdminOk(true);
+          try {
+            setGlobal?.("isAdmin", true);
+          } catch {}
+          window.dispatchEvent(
+            new CustomEvent("qzera:admin-change", { detail: { isAdmin: true } })
+          );
+        });
     } catch {
       setAdminOk(false);
-      try { setGlobal?.("isAdmin", false); } catch {}    // ⬅️ ÚJ
+      try {
+        setGlobal?.("isAdmin", false);
+      } catch {}
     }
   }, [API_BASE, markOn, markOff, setGlobal]);
 
@@ -72,12 +123,15 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
         setVisible((v) => !v);
       }
       if (e.ctrlKey && e.altKey && (e.key === "r" || e.key === "R")) {
-        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {}
         window.location.href = "/?admin=1";
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey as any);
+    return () => window.removeEventListener("keydown", onKey as any);
   }, []);
 
   // --- initial check + ha ?admin=1 a url-ben, nyissuk meg egyszer a panelt
@@ -101,11 +155,18 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
       return;
     }
     try {
-      const r = await fetch(`${API_BASE}/admin/ping`, { headers: { "x-admin-key": key } });
+      const r = await fetch(`${API_BASE}/admin/ping`, {
+        headers: { "x-admin-key": key },
+      });
       if (!r.ok) {
         setMsg("Sikertelen hitelesítés.");
         setAdminOk(false);
-        try { setGlobal?.("isAdmin", false); } catch {}
+        try {
+          setGlobal?.("isAdmin", false);
+        } catch {}
+        window.dispatchEvent(
+          new CustomEvent("qzera:admin-change", { detail: { isAdmin: false } })
+        );
         return;
       }
       markOn(key);
@@ -145,7 +206,9 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
         <div
           role="dialog"
           aria-modal="true"
-          onClick={(e) => { if (e.target === e.currentTarget) setVisible(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVisible(false);
+          }}
           style={{
             position: "fixed",
             inset: 0,
@@ -168,15 +231,25 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
               boxShadow: "0 0 24px rgba(242,184,91,.2)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
               <strong style={{ fontSize: "1.3rem" }}>Admin login</strong>
               <span
                 style={{
                   fontSize: ".85rem",
                   padding: "2px 10px",
                   borderRadius: 6,
-                  border: adminOk ? "1px solid rgba(91,242,155,.4)" : "1px solid rgba(242,184,91,.4)",
-                  background: adminOk ? "rgba(91,242,155,.2)" : "rgba(242,184,91,.2)",
+                  border: adminOk
+                    ? "1px solid rgba(91,242,155,.4)"
+                    : "1px solid rgba(242,184,91,.4)",
+                  background: adminOk
+                    ? "rgba(91,242,155,.2)"
+                    : "rgba(242,184,91,.2)",
                   color: adminOk ? "#6ef59c" : "#f2b85b",
                 }}
               >
@@ -184,16 +257,24 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
               </span>
             </div>
 
-            <label style={{ display: "block", marginBottom: 6 }}>Felhasználónév</label>
+            <label style={{ display: "block", marginBottom: 6 }}>
+              Felhasználónév
+            </label>
             <input
               value={user}
               onChange={(e) => setUser(e.target.value)}
               placeholder="admin"
-              autoCapitalize="off" autoCorrect="off" spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
               style={{
-                width: "100%", padding: "8px 10px", borderRadius: 6,
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 6,
                 border: "1px solid rgba(255,255,255,.25)",
-                background: "rgba(255,255,255,.08)", color: "#fff", marginBottom: 10,
+                background: "rgba(255,255,255,.08)",
+                color: "#fff",
+                marginBottom: 10,
               }}
             />
 
@@ -204,20 +285,37 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
               onChange={(e) => setPass(e.target.value)}
               placeholder="••••••••"
               style={{
-                width: "100%", padding: "8px 10px", borderRadius: 6,
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 6,
                 border: "1px solid rgba(255,255,255,.25)",
-                background: "rgba(255,255,255,.08)", color: "#fff", marginBottom: 10,
+                background: "rgba(255,255,255,.08)",
+                color: "#fff",
+                marginBottom: 10,
               }}
             />
 
-            {msg && <p style={{ minHeight: 22, margin: "4px 0 10px" }}>{msg}</p>}
+            {msg && (
+              <p style={{ minHeight: 22, margin: "4px 0 10px" }}>{msg}</p>
+            )}
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                justifyContent: "space-between",
+              }}
+            >
               <button
                 onClick={handleLogin}
                 style={{
-                  flex: 1, padding: "8px 10px", borderRadius: 6, cursor: "pointer",
-                  border: "1px solid rgba(242,184,91,.5)", background: "rgba(31,58,62,.6)", color: "#f2b85b",
+                  flex: 1,
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  border: "1px solid rgba(242,184,91,.5)",
+                  background: "rgba(31,58,62,.6)",
+                  color: "#f2b85b",
                 }}
               >
                 Belépés
@@ -225,8 +323,13 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
               <button
                 onClick={markOff}
                 style={{
-                  flex: 1, padding: "8px 10px", borderRadius: 6, cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.05)", color: "#ccc",
+                  flex: 1,
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  border: "1px solid rgba(255,255,255,.25)",
+                  background: "rgba(255,255,255,.05)",
+                  color: "#ccc",
                 }}
               >
                 Kilépés
@@ -234,16 +337,27 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
               <button
                 onClick={() => setVisible(false)}
                 style={{
-                  padding: "8px 10px", borderRadius: 6, cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.05)", color: "#ccc",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  border: "1px solid rgba(255,255,255,.25)",
+                  background: "rgba(255,255,255,.05)",
+                  color: "#ccc",
                 }}
               >
                 Bezár
               </button>
             </div>
 
-            <p style={{ marginTop: 10, fontSize: ".9rem", color: "rgba(255,255,255,.75)" }}>
-              Tipp: <kbd>Alt</kbd>+<kbd>A</kbd> panel nyit/zár. <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> vész-reset.
+            <p
+              style={{
+                marginTop: 10,
+                fontSize: ".9rem",
+                color: "rgba(255,255,255,.75)",
+              }}
+            >
+              Tipp: <kbd>Alt</kbd>+<kbd>A</kbd> panel nyit/zár.{" "}
+              <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> vész-reset.
             </p>
           </div>
         </div>

@@ -102,7 +102,8 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   mode = "draft",
   pageIsFadingOut = false,
 }) => {
-  const { setGlobalError, imageApiKey } = useGameState();
+  // 🔹 reward flag beépítése
+  const { setGlobalError, imageApiKey, setRewardImageReady } = useGameState();
 
   // vizuális state-ek
   const [fadeIn, setFadeIn] = useState(false);
@@ -149,8 +150,6 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 
   /**
    * ÚJ KÉP ÉRKEZETT
-   * - URL normalizálás (backend → frontend proxy)
-   * - displayedSrc beállítás
    */
   useEffect(() => {
     if (imageUrl && imageUrl.trim().length > 0) {
@@ -160,7 +159,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
 
       let finalUrl = imageUrl.trim();
 
-      // backend által adott abszolút URL → frontend image proxy-ra irányítjuk
+      // backend által adott abszolút URL → frontend image proxy
       if (finalUrl.startsWith("http://127.0.0.1:8000/generated/images/")) {
         finalUrl = `${FRONT_ORIGIN}/api/image/${finalUrl.replace(
           "http://127.0.0.1:8000/generated/images/",
@@ -182,9 +181,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     }
   }, [imageUrl]);
 
-  /**
-   * HIBA → fallback
-   */
+  /** HIBA → fallback */
   useEffect(() => {
     if (!error) return;
     setGlobalError?.(String(error));
@@ -197,9 +194,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     }
   }, [error, displayedSrc, setGlobalError]);
 
-  /**
-   * KÉP SAJÁT FADE-INJE
-   */
+  /** KÉP SAJÁT FADE-INJE */
   useEffect(() => {
     if (!displayedSrc) return;
     setFadeIn(false);
@@ -234,8 +229,9 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
               alt=""
               className={imgClass}
               draggable={false}
+              // 🔹 Reward jelzés: ha sikeresen betölt, jelez a GameState-nek
+              onLoad={() => setRewardImageReady(true)}
               onError={(e) => {
-                // ha a proxy 405-öt dob és emiatt nem tudja betölteni:
                 if (displayedSrc !== FALLBACK_SRC) {
                   e.currentTarget.src = FALLBACK_SRC;
                   setDisplayedSrc(FALLBACK_SRC);
