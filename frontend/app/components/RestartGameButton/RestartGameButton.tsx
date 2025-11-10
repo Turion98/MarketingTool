@@ -35,14 +35,41 @@ function resolveStartPageId(pageData: any, globals: any): string {
 
 const RestartGameButton: React.FC<Props> = ({ className }) => {
   const router = useRouter();
-  const { currentPageData, globals, setCurrentPageId } = useGameState() as any;
+  const {
+    currentPageData,
+    globals,
+    setCurrentPageId,
+    resetGame,
+    setStorySrc,       // 🔹 kell, hogy reset után vissza tudjuk állítani a storySrc-t
+  } = useGameState() as any;
 
-  const handleRestart = async () => {
+  const handleRestart = () => {
     if (typeof window === "undefined") return;
 
     const startPageId = resolveStartPageId(currentPageData, globals);
 
-    // 🔹 Cache ürítés – de ne blokkolja a navigációt
+    // 🔹 Jelenlegi query (src, skin, runemode, runes, stb.) megtartása
+    const search = window.location.search || "";
+    const params = new URLSearchParams(search);
+    const srcParam = params.get("src");
+
+    // 🔹 Játékállapot reset (progress, fragmentek, flag-ek, stb.)
+    resetGame?.();
+
+    // 🔹 storySrc visszaírása, hogy a StoryPage ne essen szét
+    if (srcParam && typeof setStorySrc === "function") {
+      setStorySrc(srcParam);
+    }
+
+    // 🔹 Új kezdőoldal beállítása state-ben + LS-ben
+    setCurrentPageId?.(startPageId);
+    try {
+      window.localStorage.setItem("currentPageId", startPageId);
+    } catch {
+      // leszarjuk, ha nincs storage
+    }
+
+    // 🔹 Cache ürítés – async, ne blokkolja a navigációt
     clearAllCache().catch((err) => {
       console.warn("[RestartGameButton] clearAllCache error", err);
     });
@@ -54,17 +81,8 @@ const RestartGameButton: React.FC<Props> = ({ className }) => {
       console.warn("[RestartGameButton] createSessionSeeds error", err);
     }
 
-    // 🔹 currentPageId persist + context frissítés
-    try {
-      window.localStorage.setItem("currentPageId", startPageId);
-    } catch {
-      // ha nincs storage, lenyeljük
-    }
-
-    setCurrentPageId?.(startPageId);
-
-    // 🔹 route: mindig /play/{startPageId} – storySrc már globals-ben van
-    router.push(`/play/${encodeURIComponent(startPageId)}`);
+    // 🔹 Maradjunk a /story runtime-on, eredeti query-vel (skin is megmarad)
+    router.push(`/story${search}`);
   };
 
   return (

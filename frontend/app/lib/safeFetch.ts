@@ -36,22 +36,44 @@ export async function safeFetch<T = unknown>(
     timeoutMs = 15_000,
     retries = 0,
     retryDelayMs = 300,
+    body: rawBody,
     ...init
   } = opts;
 
-  // Body & headers előkészítés
   const headers = new Headers(init.headers ?? {});
-  const explicitBody = init.body as BodyInit | null | undefined;
+  let body: BodyInit | null | undefined = undefined;
 
-  const body: BodyInit | null | undefined =
-    (json !== undefined &&
-     !(json instanceof FormData) &&
-     typeof json !== "string" &&
-     !(json instanceof Blob) &&
-     !(json instanceof URLSearchParams))
-      ? (headers.set("Content-Type", headers.get("Content-Type") ?? "application/json"),
-         JSON.stringify(json))
-      : (json ?? explicitBody) as BodyInit | null | undefined;
+  // ---- Body & Content-Type kezelése KORREKTEN ----
+
+  if (json !== undefined) {
+    // Ha json opció van, abból mindig application/json body lesz
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    body = JSON.stringify(json);
+  } else if (rawBody instanceof FormData) {
+    // FormData: NEM állítunk Content-Type-ot, a böngésző rakja rá a boundary-t
+    body = rawBody;
+  } else if (
+    rawBody === null ||
+    rawBody === undefined
+  ) {
+    body = undefined;
+  } else if (
+    typeof rawBody === "string" ||
+    rawBody instanceof Blob ||
+    rawBody instanceof URLSearchParams ||
+    rawBody instanceof ArrayBuffer
+  ) {
+    // Natív body: nem piszkáljuk
+    body = rawBody as BodyInit;
+  } else {
+    // Minden más (plain object, stb.) → JSON
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    body = JSON.stringify(rawBody);
+  }
 
   // Idempotens retry loop (egyszerű, lineáris backoff)
   let attempt = 0;
@@ -159,11 +181,18 @@ function safeJson(x: unknown): string {
 // ---- Cukor-függvények (opcionális) ----
 
 /** JSON küldése és JSON várása erős típussal. */
-export async function postJson<T = unknown>(url: string, body: Json, opts: Omit<FetchOptions, "json" | "method"> = {}) {
+export async function postJson<T = unknown>(
+  url: string,
+  body: Json,
+  opts: Omit<FetchOptions, "json" | "method"> = {}
+) {
   return safeFetch<T>(url, { ...opts, method: "POST", json: body });
 }
 
 /** GET + erős típus. */
-export async function getJson<T = unknown>(url: string, opts: Omit<FetchOptions, "json" | "method"> = {}) {
+export async function getJson<T = unknown>(
+  url: string,
+  opts: Omit<FetchOptions, "json" | "method"> = {}
+) {
   return safeFetch<T>(url, { ...opts, method: "GET" });
 }

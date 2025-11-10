@@ -1257,25 +1257,63 @@ const StoryPage: React.FC = () => {
     pageUnlockedForInteraction === pageData.id &&
     !isEndNode;
 
-  const dockChoicesForThisPage = useMemo(() => {
-    if (!canInteractHere || !pageData) return [];
+const dockChoicesForThisPage = useMemo(() => {
+  if (!canInteractHere || !pageData) return [];
 
-    if (Array.isArray(pageData.choices) && pageData.choices.length > 0) {
-      return pageData.choices.map((c: any, idx: number) => ({
-        id: String(c?.id ?? idx),
+  const allChoices: any[] = Array.isArray(pageData.choices)
+    ? pageData.choices
+    : [];
+
+  if (allChoices.length > 0) {
+    const unlockedSet = new Set(unlockedFragments || []);
+
+    const normalized = allChoices.map((c: any, idx: number) => {
+      const choiceId = String(c?.id ?? idx);
+
+      const showList: string[] = Array.isArray(c.showIfHasFragment)
+        ? c.showIfHasFragment.map((x: any) => String(x))
+        : [];
+      const hideList: string[] = Array.isArray(c.hideIfHasFragment)
+        ? c.hideIfHasFragment.map((x: any) => String(x))
+        : [];
+
+      let visible = true;
+
+      // ha van showIfHasFragment, csak akkor látszik, ha legalább 1 fragment megvan
+      if (showList.length > 0) {
+        visible = showList.some((frag) => unlockedSet.has(frag));
+      }
+
+      // ha van hideIfHasFragment, és bármelyik megvan, akkor elrejtjük
+      if (visible && hideList.length > 0) {
+        const hasHide = hideList.some((frag) => unlockedSet.has(frag));
+        if (hasHide) visible = false;
+      }
+
+      return {
+        raw: c,
+        id: choiceId,
+        visible,
+      };
+    });
+
+    const visibleChoices = normalized.filter((it) => it.visible);
+
+    if (visibleChoices.length > 0) {
+      return visibleChoices.map((it) => ({
+        id: it.id,
         label: String(
-          c?.text ?? c?.label ?? c?.id ?? `choice_${idx}`
+          it.raw?.text ??
+            it.raw?.label ??
+            it.raw?.id ??
+            `choice_${it.id}`
         ),
-        disabled: !!c?.disabled,
+        disabled: !!it.raw?.disabled,
       }));
     }
 
-    if (
-      (!Array.isArray(pageData.choices) ||
-        pageData.choices.length === 0) &&
-      resolvedNext &&
-      resolvedNext !== pageData.id
-    ) {
+    // ha minden choice eltűnt a szűrés miatt, de van resolvedNext → mutassunk egy sima "Next"-et
+    if (resolvedNext && resolvedNext !== pageData.id) {
       return [
         {
           id: "__NEXT__",
@@ -1286,12 +1324,31 @@ const StoryPage: React.FC = () => {
     }
 
     return [];
-  }, [
-    canInteractHere,
-    pageData ? pageData.choices : undefined,
-    resolvedNext,
-    pageData ? pageData.id : undefined,
-  ]);
+  }
+
+  if (
+    (!Array.isArray(pageData.choices) ||
+      pageData.choices.length === 0) &&
+    resolvedNext &&
+    resolvedNext !== pageData.id
+  ) {
+    return [
+      {
+        id: "__NEXT__",
+        label: "Next",
+        disabled: false,
+      },
+    ];
+  }
+
+  return [];
+}, [
+  canInteractHere,
+  pageData ? pageData.choices : undefined,
+  resolvedNext,
+  pageData ? pageData.id : undefined,
+  unlockedFragments, // 🔹 ÚJ dependency
+]);
 
   // CTA
   const endCtaContext: CtaContext = useMemo(

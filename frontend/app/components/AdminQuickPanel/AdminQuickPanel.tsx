@@ -17,6 +17,7 @@ type Props = {
 const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
   const API_BASE =
     (apiBase || process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
+  const ADMIN_BASE = `${API_BASE}/api/admin`;
 
   const [visible, setVisible] = useState(false);
   const [adminOk, setAdminOk] = useState(false);
@@ -77,7 +78,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
         return;
       }
 
-      fetch(`${API_BASE}/admin/ping`, { headers: { "x-admin-key": k } })
+      fetch(`${ADMIN_BASE}/ping`, { headers: { "x-admin-key": k } })
         .then((r) => {
           if (r.ok) {
             // kulcs jó → erősítsük meg az állapotot
@@ -87,7 +88,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
             markOff();
           } else {
             // egyéb hiba (500, 404 stb.) → ne rúgjuk ki a usert, csak log
-            console.warn("[AdminQuickPanel] /admin/ping error status:", r.status);
+            console.warn("[AdminQuickPanel] /api/admin/ping error status:", r.status);
             setAdminOk(true);
             try {
               setGlobal?.("isAdmin", true);
@@ -99,7 +100,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
         })
         .catch((err) => {
           // hálózati hiba → dev módban ne dobjuk le az admint, csak figyelmeztetés
-          console.warn("[AdminQuickPanel] /admin/ping network error:", err);
+          console.warn("[AdminQuickPanel] /api/admin/ping network error:", err);
           setAdminOk(true);
           try {
             setGlobal?.("isAdmin", true);
@@ -114,7 +115,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
         setGlobal?.("isAdmin", false);
       } catch {}
     }
-  }, [API_BASE, markOn, markOff, setGlobal]);
+  }, [ADMIN_BASE, markOn, markOff, setGlobal]);
 
   // --- hotkey Alt+A: panel toggle, Ctrl+Alt+R: vész reset
   useEffect(() => {
@@ -155,7 +156,8 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
       return;
     }
     try {
-      const r = await fetch(`${API_BASE}/admin/ping`, {
+      const r = await fetch(`${ADMIN_BASE}/ping`, {
+        method: "GET",
         headers: { "x-admin-key": key },
       });
       if (!r.ok) {
@@ -171,7 +173,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
       }
       markOn(key);
     } catch {
-      setMsg("Nem érem el a backend /admin/ping végpontot.");
+      setMsg("Nem érem el a backend /api/admin/ping végpontot.");
     }
   };
 

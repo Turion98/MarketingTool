@@ -71,7 +71,7 @@ const LandingPage: React.FC = () => {
         const k = sessionStorage.getItem("adminKey") || "";
         if (k) {
           // próbáljuk validálni csöndben
-          fetch(`${API_BASE}/admin/ping`, { headers: { "x-admin-key": k } })
+          fetch(`${API_BASE}/api/admin/ping`, { headers: { "x-admin-key": k } })
             .then((r) => {
               if (r.ok) {
                 persistAdminOn(k);
@@ -111,7 +111,7 @@ const LandingPage: React.FC = () => {
       return;
     }
     try {
-      const resp = await fetch(`${API_BASE}/admin/ping`, {
+      const resp = await fetch(`${API_BASE}/api/admin/ping`, {
         headers: { "x-admin-key": key },
       });
       if (!resp.ok) {

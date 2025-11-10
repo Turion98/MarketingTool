@@ -96,7 +96,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
             aria-label="Download reward image"
             data-reward-ready={rewardImageReady ? "true" : "false"}
           >
-            <span className={s.label}>Download</span>
+            <span className={s.label}>Get</span>
           </button>
 
           <button

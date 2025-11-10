@@ -191,6 +191,76 @@ def _apply_sfx_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
         page_out["sfx"] = _normalize_sfx_list(ov) if ov else []
     return page_out
 
+def _ensure_str_list(val: Any) -> list[str]:
+    """
+    Bemenet: None | str | list[any]
+    Kimenet: list[str] (mindig)
+    """
+    if val is None:
+        return []
+    if isinstance(val, str):
+        return [val] if val.strip() else []
+    if isinstance(val, list):
+        out: list[str] = []
+        for v in val:
+            if isinstance(v, str) and v.strip():
+                out.append(v.strip())
+        return out
+    return []
+
+
+def _normalize_page_logic_fields(page: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Egységesíti a page logikai mezőit:
+      - needsFragment / needsFragmentAny
+      - showIfHasFragment / hideIfHasFragment (top szinten, ha használnád)
+      - logic.ifHasFragment szerkezet
+      - choices[] alatt levő show/hide mezők (jövőbiztosan)
+    """
+    out = deepcopy(page)
+
+    # --- Top-level fragment feltételek ---
+    out["needsFragment"] = _ensure_str_list(out.get("needsFragment"))
+    out["needsFragmentAny"] = _ensure_str_list(out.get("needsFragmentAny"))
+
+    # (Opcionális) ha használsz ilyeneket top szinten:
+    out["showIfHasFragment"] = _ensure_str_list(out.get("showIfHasFragment"))
+    out["hideIfHasFragment"] = _ensure_str_list(out.get("hideIfHasFragment"))
+
+    # --- logic.ifHasFragment normalizálása ---
+    logic = out.get("logic")
+    if isinstance(logic, dict):
+        conds = logic.get("ifHasFragment")
+        if isinstance(conds, dict):
+            # ha valahol véletlen objectként lenne → lista
+            conds = [conds]
+        if isinstance(conds, list):
+            norm_list = []
+            for c in conds:
+                if not isinstance(c, dict):
+                    continue
+                frag = c.get("fragment")
+                go_to = c.get("goTo")
+                if isinstance(frag, str) and isinstance(go_to, str):
+                    norm_list.append({"fragment": frag.strip(), "goTo": go_to.strip()})
+            logic["ifHasFragment"] = norm_list
+
+    # --- Choice-szintű mezők jövőre (most még nem használod, de ne fájjon) ---
+    choices = out.get("choices")
+    if isinstance(choices, list):
+        for ch in choices:
+            if not isinstance(ch, dict):
+                continue
+            ch["showIfHasFragment"] = _ensure_str_list(ch.get("showIfHasFragment"))
+            ch["hideIfHasFragment"] = _ensure_str_list(ch.get("hideIfHasFragment"))
+            # choice-szintű needsFragment-et most *nem* támogatod tudatosan,
+            # szóval vagy kidobod, vagy később alakítod át showIfHasFragment-re.
+            # Itt egyelőre békén hagyjuk:
+            # ch.pop("needsFragment", None)
+
+    return out
+
+
 # --- Egyszerű logoló JSONL-be ---
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -362,7 +432,7 @@ def any_options(rest_of_path: str):
 app.include_router(feedback_router, prefix="/api")
 app.include_router(stories_router, prefix="/api")
 app.include_router(white_label_router) 
-app.include_router(admin_router) 
+app.include_router(admin_router, prefix="/api") 
 # --- Statikus mappák ---
 if os.path.isdir("assets"):
     app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -535,15 +605,19 @@ def get_page(page_id: str, src: str | None = Query(default=None)):
     story_path = _normalize_src_to_path(src)
     story = _load_story(story_path)
 
-    def _build_page_response_for(page_obj: Dict[str, Any]) -> Dict[str, Any]:
-        # 1) SFX normalize / override, 2) fragmentsGlobal injektálás
-        p = _apply_sfx_overrides(page_obj)
+    def _build_page_response_for(page_obj: Dict[str, Any], story: Dict[str, Any]) -> Dict[str, Any]:
+        # 0) logikai mezők egységesítése
+        norm = _normalize_page_logic_fields(page_obj)
+        # 1) SFX normalize / override
+        p = _apply_sfx_overrides(norm)
+        # 2) fragmentsGlobal injektálás
         return _inject_fragments_global_for(story, p)
+
 
     # 1) Globális "pages" dict kezelés (ha van ilyen)
     if "pages" in story and isinstance(story["pages"], dict) and page_id in story["pages"]:
         def _builder():
-            return _build_page_response_for(story["pages"][page_id])
+            return _build_page_response_for(story["pages"][page_id], story)
         data = get_page_cached(story_path, page_id, _builder)
         hit = was_last_page_hit()
         resp = JSONResponse(content=data)
@@ -556,7 +630,7 @@ def get_page(page_id: str, src: str | None = Query(default=None)):
     page = _find_page_recursive(story, page_id)
     if page:
         def _builder():
-            return _build_page_response_for(page)
+            return _build_page_response_for(page, story)
         data = get_page_cached(story_path, page_id, _builder)
         hit = was_last_page_hit()
         resp = JSONResponse(content=data)

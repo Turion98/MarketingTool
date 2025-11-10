@@ -68,6 +68,13 @@ type PageData = {
       default?: string;     // és a default-ot is
     };
   };
+  /** 🔹 ÚJ: logikai mezők, amiket a backend már küld */
+  logic?: {
+    ifHasFragment?: { fragment: string; goTo: string }[];
+    elseGoTo?: string;
+  };
+  needsFragment?: string[];
+  needsFragmentAny?: string[];
 };
 
 /** —————————————————————————————————————
@@ -902,41 +909,100 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
         const raw = await response.json();
 
-        // Forrás kiválasztás és laposítás
-        const srcBank: any =
-          (raw && typeof raw === "object" && raw.fragmentsGlobal) ??
-          (raw && typeof raw === "object" && raw.fragments) ??
-          undefined;
+        
+ // 🔹 LOGIC + FRAGMENT feltételek kezelése (redirect még normalizálás előtt)
 
-        const flatFragments: Record<string, any> =
-          srcBank && typeof srcBank === "object"
-            ? srcBank.recall || srcBank.saved || srcBank.fragments
-              ? {
-                  ...(srcBank.recall ?? {}),
-                  ...(srcBank.saved ?? {}),
-                  ...(srcBank.fragments ?? {}),
-                  ...(srcBank ?? {}),
-                }
-              : srcBank
-            : {};
+// 1) belépéskori logic.ifHasFragment / elseGoTo
+const conds = Array.isArray(raw?.logic?.ifHasFragment)
+  ? (raw.logic.ifHasFragment as { fragment: string; goTo: string }[])
+  : [];
 
-        const normalized: PageData = {
-          ...raw,
-          audio: {
-            ...raw?.audio,
-            text: typeof raw?.text === "string" ? raw.text : "",
-            background: raw?.audio?.background ?? raw?.audio?.bg ?? null,
-            mainNarration: raw?.audio?.mainNarration ?? raw?.audio?.main ?? null,
-            sidePreloadPages: raw?.audio?.sidePreloadPages ?? [],
-          },
-          voicePrompt: raw?.voicePrompt ?? raw?.tts ?? null,
-          fragmentsGlobal:
-            flatFragments && Object.keys(flatFragments).length
-              ? flatFragments
-              : undefined,
-        };
+if (conds.length || raw?.logic?.elseGoTo) {
+  for (const cond of conds) {
+    if (
+      cond?.fragment &&
+      cond?.goTo &&
+      Array.isArray(unlockedFragments) &&
+      unlockedFragments.includes(cond.fragment)
+    ) {
+      console.log(`[Logic] ${raw.id} → ${cond.goTo} (ifHasFragment hit)`);
+      setCurrentPageId(cond.goTo);
+      return;
+    }
+  }
 
-        setCurrentPageData(normalized);
+  if (raw?.logic?.elseGoTo) {
+    console.log(`[Logic] ${raw.id} → ${raw.logic.elseGoTo} (elseGoTo)`);
+    setCurrentPageId(raw.logic.elseGoTo);
+    return;
+  }
+}
+
+// 2) oldal-elérhetőség: needsFragment / needsFragmentAny
+const needsAll: string[] = Array.isArray(raw?.needsFragment)
+  ? (raw.needsFragment as string[]).filter(Boolean)
+  : [];
+const needsAny: string[] = Array.isArray(raw?.needsFragmentAny)
+  ? (raw.needsFragmentAny as string[]).filter(Boolean)
+  : [];
+
+let blocked = false;
+
+if (needsAll.length) {
+  const missing = needsAll.filter((f) => !unlockedFragments.includes(f));
+  if (missing.length) {
+    console.warn(`[Logic] Page ${raw.id} blocked, missing all-of:`, missing);
+    blocked = true;
+  }
+}
+
+if (!blocked && needsAny.length) {
+  const hasAny = needsAny.some((f) => unlockedFragments.includes(f));
+  if (!hasAny) {
+    console.warn(`[Logic] Page ${raw.id} blocked, needs any-of:`, needsAny);
+    blocked = true;
+  }
+}
+
+if (blocked) {
+  // ide később tehetsz okosabb fallbacket
+  setCurrentPageId("landing");
+  return;
+}
+
+// Forrás kiválasztás és laposítás
+const srcBank: any =
+  (raw && typeof raw === "object" && raw.fragmentsGlobal) ??
+  (raw && typeof raw === "object" && raw.fragments) ??
+  undefined;
+
+const flatFragments: Record<string, any> =
+  srcBank && typeof srcBank === "object"
+    ? srcBank.recall || srcBank.saved || srcBank.fragments
+      ? {
+          ...(srcBank.recall ?? {}),
+          ...(srcBank.saved ?? {}),
+          ...(srcBank.fragments ?? {}),
+          ...(srcBank ?? {}),
+        }
+      : srcBank
+    : {};
+
+const normalized: PageData = {
+  ...raw,
+  audio: {
+    ...raw?.audio,
+    text: typeof raw?.text === "string" ? raw.text : "",
+    background: raw?.audio?.background ?? raw?.audio?.bg ?? null,
+    mainNarration: raw?.audio?.mainNarration ?? raw?.audio?.main ?? null,
+    sidePreloadPages: raw?.audio?.sidePreloadPages ?? [],
+  },
+  voicePrompt: raw?.voicePrompt ?? raw?.tts ?? null,
+  fragmentsGlobal:
+    flatFragments && Object.keys(flatFragments).length ? flatFragments : undefined,
+};
+
+setCurrentPageData(normalized);
 
         // Meta refresh (mindig)
         try {

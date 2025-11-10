@@ -4,11 +4,23 @@
   border-radius: 10px;
   max-width: 600px;
   margin: 0 auto;
-  font-family: 'Merriweather', serif;
-  color: #fff;
   z-index: 5;
+
+  /* ✅ Tokenizált tipográfia */
+  font-family: var(--tt-font-family, "Merriweather", serif);
+  font-size: var(--tt-font-size, 1rem);
+  line-height: var(--tt-line-height, 1.5rem);
+  color: var(--tt-color, #fff);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 
   p {
     margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    font-size: var(--tt-font-size-mobile, var(--tt-font-size));
+    line-height: var(--tt-line-height-mobile, var(--tt-line-height));
   }
 }

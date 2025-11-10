@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import os
 import json
+import logging
 from typing import Any, Dict, List, Optional, Callable
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
 from jsonschema import Draft7Validator, FormatChecker
 
 router = APIRouter()
+
+logger = logging.getLogger("uvicorn.error")
 
 # ---------- Config (schema path + limits) ----------
 CORE_SCHEMA_PATH = os.getenv(
@@ -53,25 +56,66 @@ try:
     with open(CORE_SCHEMA_PATH, "r", encoding="utf-8") as f:
         CORE_SCHEMA = json.load(f)
     SCHEMA_VALIDATOR = Draft7Validator(CORE_SCHEMA, format_checker=FormatChecker())
+    print(f"[storysvc] CoreSchema loaded from {CORE_SCHEMA_PATH}")
 except Exception as e:
     CORE_SCHEMA = None
     SCHEMA_VALIDATOR = None
-    print(f"[router] ⚠️ CoreSchema init error: {e}")
+    print(f"[storysvc] ⚠️ CoreSchema init error: {e}")
 
 # ---------- Utilities ----------
-async def _read_json_with_limit(file: Optional[UploadFile], body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+async def _read_json_with_limit(
+    file: Optional[UploadFile],
+    body: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Reads JSON either from multipart file or JSON body, with size limit,
+    és közben **print**-el debugol.
+    """
     if file is not None:
         content = await file.read()
         if len(content) > MAX_UPLOAD_BYTES:
+            print(
+                "[storysvc] Upload rejected: payload too large "
+                f"({len(content)} bytes, limit={MAX_UPLOAD_BYTES})"
+            )
             raise HTTPException(status_code=413, detail=f"Payload too large (> {MAX_UPLOAD_BYTES} bytes)")
         try:
-            return json.loads(content.decode("utf-8"))
+            data = json.loads(content.decode("utf-8"))
         except Exception as e:
+            print(f"[storysvc] Invalid JSON in uploaded file {getattr(file, 'filename', None)!r}: {e}")
             raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+        if isinstance(data, dict):
+            meta = data.get("meta") or {}
+            print(
+                "[storysvc] Upload via file:",
+                "filename=", repr(getattr(file, "filename", None)),
+                "schemaVersion=", repr(data.get("schemaVersion")),
+                "storyId=", repr(data.get("storyId")),
+                "meta.title=", repr(meta.get("title")),
+            )
+        else:
+            print(
+                "[storysvc] Upload via file but JSON root is not an object:",
+                type(data).__name__,
+            )
+        return data
+
     if body is not None:
         if not isinstance(body, dict):
+            print("[storysvc] Body upload is not a JSON object:", type(body).__name__)
             raise HTTPException(status_code=400, detail="Body must be a JSON object")
+
+        meta = body.get("meta") or {}
+        print(
+            "[storysvc] Upload via body:",
+            "schemaVersion=", repr(body.get("schemaVersion")),
+            "storyId=", repr(body.get("storyId")),
+            "meta.title=", repr(meta.get("title")),
+        )
         return body
+
+    print("[storysvc] No file or body provided to upload-story/import-story")
     raise HTTPException(status_code=400, detail="No file or body provided")
 
 def _slug(txt: Optional[str]) -> str:
@@ -233,6 +277,19 @@ def _process_and_save_story(
     overwrite: bool,
     mode: str = "strict"
 ) -> Dict[str, Any]:
+    # 0) derive story_id as korai info / loggoláshoz
+    story_id = data.get("storyId") or _slug(data.get("title"))
+    if not story_id:
+        print("[storysvc] Missing storyId/title in uploaded story, cannot derive id")
+        raise HTTPException(status_code=400, detail="Missing storyId/title")
+
+    print(
+        "[storysvc] Processing story:",
+        "storyId=", repr(story_id),
+        "schemaVersion=", repr(data.get("schemaVersion")),
+        "mode=", mode,
+    )
+
     # 1) Canonicalize legacy formats
     data = _canonicalize_story(data)
 
@@ -243,14 +300,34 @@ def _process_and_save_story(
     sem_errors = _semantic_checks(data)
 
     errors = schema_errors + sem_errors
-    if mode == "strict" and errors:
+
+    print(
+        "[storysvc] Validation result:",
+        "storyId=", repr(story_id),
+        "schema_errors=", len(schema_errors),
+        "sem_errors=", len(sem_errors),
+        "mode=", mode,
+    )
+
+    if errors and mode == "strict":
+        print(
+            "[storysvc] Rejecting story in strict mode due to",
+            len(errors),
+            "validation errors"
+        )
+        for err in errors[:10]:
+            print(
+                "[storysvc]  - path=",
+                err.get("path"),
+                "keyword=",
+                err.get("keyword"),
+                "message=",
+                err.get("message"),
+            )
         raise HTTPException(status_code=400, detail={"errors": errors})
 
     # 4) Save
     _ensure_stories_dir()
-    story_id = data.get("storyId") or _slug(data.get("title"))
-    if not story_id:
-        raise HTTPException(status_code=400, detail="Missing storyId/title")
     dst_name = _fname_for_id(story_id)
     stories_dir = _get_stories_dir()
     dst_path = os.path.join(stories_dir, dst_name)
@@ -258,28 +335,43 @@ def _process_and_save_story(
     existed_before = os.path.exists(dst_path)  # overwritten flag fix
 
     if (not overwrite) and existed_before:
+        print(
+            "[storysvc] Story already exists and overwrite=False:",
+            "storyId=", repr(story_id),
+            "path=", dst_path,
+        )
         raise HTTPException(status_code=409, detail=f"Story already exists: {story_id}")
 
     try:
         with open(dst_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
+        print("[storysvc] Failed to save story", repr(story_id), "to", dst_path, "error:", e)
         raise HTTPException(status_code=500, detail=f"Failed to save story: {e}")
+
+    print(
+        "[storysvc] Saved story:",
+        "storyId=", repr(story_id),
+        "path=", dst_path,
+        "overwritten=", bool(overwrite and existed_before),
+    )
 
     # 5) Cache clear (if hook provided)
     try:
         if callable(_clear_story_cache):
             _clear_story_cache()  # type: ignore[misc]
-    except Exception:
-        pass
+            print("[storysvc] Story caches cleared after save")
+    except Exception as e:
+        print("[storysvc] Error while clearing story caches for", repr(story_id), ":", e)
 
     # 6) Meta collect (if hook provided)
     meta_info: Dict[str, Any] = {}
     try:
         if callable(_collect_meta):
             meta_info = _collect_meta(dst_path) or {}
-    except Exception:
-        pass
+            print("[storysvc] Collected meta for", repr(story_id), ":", meta_info)
+    except Exception as e:
+        print("[storysvc] Error while collecting meta for", repr(story_id), ":", e)
 
     return {
         "ok": True,

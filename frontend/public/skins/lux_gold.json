@@ -1,13 +1,14 @@
 {
   "id": "lux_gold",
   "title": "Lux Gold",
-  "version": 2,
+  "version": 3,
   "tokens": {
     "--brand-accent": "#ffd56a",
-    "--contract-text-font-family": "var(--font-sans, ui-sans-serif)",
-    "--contract-text-font-size": "1rem",
-    "--contract-text-line-height": "1.5rem",
-    "--contract-text-color": "#fef9f0",
+
+    "--contract-text-font-family": "var(--contract-typography-b-font-family)",
+    "--contract-text-font-size": "var(--contract-typography-b-font-size)",
+    "--contract-text-line-height": "var(--contract-typography-b-line-height)",
+    "--contract-text-color": "var(--contract-typography-b-color)",
 
     "--mf-max-w": "900px",
     "--mf-pad": "0px",
@@ -111,17 +112,27 @@
 
     "--contract-actionbar-bg-color-top": "#1a140a",
     "--contract-actionbar-bg-color-bot": "#2e210f",
+    "--contract-actionbar-bg-angle": "180deg",
+    "--contract-actionbar-overlay-color": "transparent",
+    "--contract-actionbar-overlay-alpha": "0",
     "--contract-actionbar-backdrop-blur": "6px",
     "--contract-actionbar-border-color": "rgba(255,213,106,.35)",
     "--contract-actionbar-border-width": "1px",
     "--contract-actionbar-border-style": "solid",
     "--contract-actionbar-radius": "16px",
     "--contract-actionbar-shadow-rest": "0 16px 40px rgba(0,0,0,.5)",
+    "--contract-actionbar-font-size": "16px",
+    "--contract-actionbar-font-size-mobile": "16px",
+    "--contract-actionbar-pad-x": "12px",
+    "--contract-actionbar-pad-y": "12px",
     "--contract-actionbar-text-color": "#fff3d1",
 
     "--contract-cta-bg-color-top": "#e8b33b",
     "--contract-cta-bg-color-bot": "#b6861f",
     "--contract-cta-bg-angle": "180deg",
+    "--contract-cta-overlay-color": "transparent",
+    "--contract-cta-overlay-alpha": "0",
+    "--contract-cta-backdrop-blur": "0px",
     "--contract-cta-border-color": "rgba(255,213,106,.55)",
     "--contract-cta-border-width": "1px",
     "--contract-cta-border-style": "solid",
@@ -206,6 +217,24 @@
     "--contract-quiz-success-border": "color-mix(in oklch, #22c55e 70%, white 30%)",
     "--contract-quiz-error-border": "color-mix(in oklch, #ef4444 70%, white 30%)",
     "--contract-quiz-shadow-success": "0 0 0 3px color-mix(in oklch, #22c55e 35%, transparent)",
-    "--contract-quiz-shadow-error": "0 0 0 3px color-mix(in oklch, #ef4444 35%, transparent)"
+    "--contract-quiz-shadow-error": "0 0 0 3px color-mix(in oklch, #ef4444 35%, transparent)",
+
+    "--contract-font-family": "var(--font-sans, ui-sans-serif)",
+    "--contract-line-height": "1.25",
+    "--contract-letter-spacing": "0.2px",
+
+    "--contract-typography-a-font-family": "var(--contract-font-family)",
+    "--contract-typography-a-font-size": "16px",
+    "--contract-typography-a-line-height": "1.25",
+    "--contract-typography-a-letter-spacing": "0.2px",
+    "--contract-typography-a-weight": "600",
+    "--contract-typography-a-color": "#ffeeb8",
+
+    "--contract-typography-b-font-family": "var(--contract-font-family)",
+    "--contract-typography-b-font-size": "18px",
+    "--contract-typography-b-line-height": "1.4",
+    "--contract-typography-b-letter-spacing": "0.1px",
+    "--contract-typography-b-weight": "400",
+    "--contract-typography-b-color": "#fef9f0"
   }
 }

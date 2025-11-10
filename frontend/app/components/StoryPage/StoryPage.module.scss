@@ -184,6 +184,8 @@ body {
 
 .endCtaCard {
   pointer-events: auto;
+  position:absolute;
+  top: 55%;
 
   /* 🔸 kizárólag a kártyára hasson a blur */
   backdrop-filter: blur(var(--cta-ol-blur, var(--cta-backdrop-blur, 6px)));

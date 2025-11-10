@@ -1,0 +1,2 @@
+{"_type": "batch_header", "ts": "2025-11-09T13:52:38.499691Z", "storyId": "frest_demo", "userId": "u_mitqxr75m7mhrq44pg", "device": {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36", "w": 892, "h": 670, "dpr": 1.375, "lang": "hu-HU"}, "count": 1}
+{"id": "e_9my6hrstjsmhrrw9un", "t": "page_enter", "ts": 1762696351967, "storyId": "frest_demo", "sessionId": "sess_x2r1ovij50lmhrrw9u4", "pageId": "r1", "refPageId": null, "props": {"userId": "u_mitqxr75m7mhrq44pg"}}

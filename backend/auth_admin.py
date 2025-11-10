@@ -1,7 +1,10 @@
 # backend/auth_admin.py
 import os
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
+
+load_dotenv()
 
 ADMIN_HEADER = APIKeyHeader(name="x-admin-key", auto_error=False)
 ADMIN_KEY = os.getenv("ADMIN_KEY", "local-admin-key")

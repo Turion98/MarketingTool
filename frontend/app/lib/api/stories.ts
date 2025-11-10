@@ -1,6 +1,7 @@
 // app/lib/api/stories.ts
 
-import { safeFetch, HttpError } from "../safeFetch";
+// NEM használjuk itt a safeFetch-et, hogy biztosan átmenjen a body.
+// import { safeFetch, HttpError } from "../safeFetch";
 
 // ---- Alap típusok ----
 type ImportMode = "strict" | "warnOnly";
@@ -79,6 +80,23 @@ function humanizeImportError(payload: ImportErrPayload, status?: number): string
   );
 }
 
+// Kényelmi parser a válaszhoz: JSON ha lehet, különben text
+async function parseResponse(res: Response): Promise<any> {
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
 // ---- API függvények ----
 
 /**
@@ -91,28 +109,31 @@ export async function uploadStory(
   mode: ImportMode = "strict"
 ): Promise<ImportOk> {
   const fd = new FormData();
-  fd.append("file", file);
+  fd.append("file", file); // 🔹 kulcs: "file" – ezt várja a backend
 
   const url = buildUrl("/api/stories/import", { overwrite, mode });
 
-  try {
-    // FormData esetén NEM állítunk Content-Type-ot (boundary-t a böngésző teszi rá)
-    const res = await safeFetch<ImportOk>(url, {
-      method: "POST",
-      body: fd,
-      cache: "no-store",
-    });
-    return res;
-  } catch (err) {
-    if (err instanceof HttpError) {
-      const payload = (err.payload ?? {}) as ImportErrPayload;
-      const msg = humanizeImportError(payload, err.status);
-      const e = new Error(msg);
-      (e as any).response = payload; // ha logolni szeretnéd
-      throw e;
-    }
-    throw err;
+  const res = await fetch(url, {
+    method: "POST",
+    body: fd,
+    cache: "no-store",
+  });
+
+  const payload = (await parseResponse(res)) as any;
+
+  if (!res.ok) {
+    const errPayload: ImportErrPayload =
+      typeof payload === "object" && payload !== null
+        ? payload
+        : { detail: typeof payload === "string" ? payload : undefined };
+
+    const msg = humanizeImportError(errPayload, res.status);
+    const e = new Error(msg);
+    (e as any).response = errPayload;
+    throw e;
   }
+
+  return (payload || { ok: true }) as ImportOk;
 }
 
 /**
@@ -125,29 +146,41 @@ export async function validateStoryServer(
 ): Promise<ImportOk> {
   const url = buildUrl("/api/stories/import", { mode });
 
-  try {
-    const res = await safeFetch<ImportOk>(url, {
-      method: "POST",
-      json, // safeFetch gondoskodik a JSON serializationről + header-ről
-      cache: "no-store",
-    });
-    return res;
-  } catch (err) {
-    if (err instanceof HttpError) {
-      const payload = (err.payload ?? {}) as ImportErrPayload;
-      const msg = humanizeImportError(payload, err.status);
-      const e = new Error(msg);
-      (e as any).errors =
-        (payload.detail && typeof payload.detail !== "string" && payload.detail.errors) ||
-        payload.errors ||
-        [];
-      (e as any).warnings =
-        (payload.detail && typeof payload.detail !== "string" && payload.detail.warnings) ||
-        payload.warnings ||
-        [];
-      (e as any).response = payload;
-      throw e;
-    }
-    throw err;
+  const res = await fetch(url, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(json),
+  });
+
+  const payload = (await parseResponse(res)) as any;
+
+  if (!res.ok) {
+    const errPayload: ImportErrPayload =
+      typeof payload === "object" && payload !== null
+        ? payload
+        : { detail: typeof payload === "string" ? payload : undefined };
+
+    const msg = humanizeImportError(errPayload, res.status);
+
+    const e = new Error(msg);
+    (e as any).errors =
+      (errPayload.detail &&
+        typeof errPayload.detail !== "string" &&
+        errPayload.detail.errors) ||
+      errPayload.errors ||
+      [];
+    (e as any).warnings =
+      (errPayload.detail &&
+        typeof errPayload.detail !== "string" &&
+        errPayload.detail.warnings) ||
+      errPayload.warnings ||
+      [];
+    (e as any).response = errPayload;
+    throw e;
   }
+
+  return (payload || { ok: true }) as ImportOk;
 }
