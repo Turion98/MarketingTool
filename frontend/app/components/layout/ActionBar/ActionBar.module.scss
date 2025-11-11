@@ -73,6 +73,24 @@
   background: var(--btn-bg);
   color: var(--btn-fg);
 
+  font-family: var(
+    --contract-actionbar-font-family,
+    var(--contract-header-font-family, var(--contract-typography-a-font-family, var(--contract-font-family, var(--font-sans))))
+  );
+  font-size: var(
+    --contract-actionbar-font-size,
+    var(--contract-header-title-font-size, 16px)
+  );
+  font-weight: var(
+    --contract-header-title-weight,
+    var(--contract-typography-a-weight, 600)
+  );
+  letter-spacing: var(
+    --contract-header-title-tracking,
+    var(--contract-typography-a-letter-spacing, .2px)
+  );
+  line-height: var(--contract-typography-a-line-height, 1.25);
+
   cursor: pointer;
   user-select: none;
 

@@ -68,13 +68,16 @@ body[data-skin="legacy-default"] {
   --contract-header-logo-pad-inline-start: 12px;
   --contract-header-logo-vertical-shift: 0px;
 
-  --contract-header-title-font-size: var(--contract-typography-a-font-size, 16px);
-  --contract-header-title-weight: var(--contract-typography-a-weight, 600);
-  --contract-header-title-tracking: var(--contract-typography-a-letter-spacing, .2px);
-  --contract-header-title-color: var(--contract-typography-a-color, #fff);
+  /* csak a font-family jön A-ból */
+  --contract-header-font-family: var(--contract-typography-a-font-family, var(--contract-font-family));
+
+  --contract-header-title-font-size: 16px;
+  --contract-header-title-weight: 600;
+  --contract-header-title-tracking: 0.2px;
+  --contract-header-title-color: #ffffff;
   --contract-header-title-margin: 0 30px 0 0;
   --contract-header-title-shift: -25px;
-  --contract-header-text-color: var(--contract-typography-a-color, #fff);
+  --contract-header-text-color: #ffffff;
 
   /* CHOICE */
   --contract-choice-bg-color-top: rgba(255,255,255,.12);
@@ -89,6 +92,7 @@ body[data-skin="legacy-default"] {
   --contract-choice-radius: 12px;
   --contract-choice-shadow-rest: 0 6px 18px rgba(0,0,0,.30);
 
+  --contract-choice-font-family: var(--contract-typography-b-font-family, var(--contract-font-family));
   --contract-choice-font-size: 18px;
   --contract-choice-font-size-mobile: 15px;
   --contract-choice-pad-x: 16px;
@@ -143,11 +147,13 @@ body[data-skin="legacy-default"] {
   --contract-actionbar-border-style: solid;
   --contract-actionbar-radius: 16px;
   --contract-actionbar-shadow-rest: 0 16px 40px rgba(0,0,0,.45);
-  --contract-actionbar-font-size: var(--contract-typography-a-font-size, 16px);
-  --contract-actionbar-font-size-mobile: var(--contract-typography-a-font-size, 16px);
+
+  --contract-actionbar-font-family: var(--contract-typography-a-font-family, var(--contract-font-family));
+  --contract-actionbar-font-size: 16px;
+  --contract-actionbar-font-size-mobile: 16px;
   --contract-actionbar-pad-x: 12px;
   --contract-actionbar-pad-y: 12px;
-  --contract-actionbar-text-color: var(--contract-typography-a-color, #fff);
+  --contract-actionbar-text-color: #ffffff;
 
   /* CTA */
   --contract-cta-bg-color-top: #3a7bd5;
@@ -161,13 +167,15 @@ body[data-skin="legacy-default"] {
   --contract-cta-border-style: solid;
   --contract-cta-radius: 14px;
   --contract-cta-shadow-rest: 0 10px 24px rgba(0,0,0,.35);
-  --contract-cta-font-size: var(--contract-typography-a-font-size, 16px);
-  --contract-cta-font-size-mobile: var(--contract-typography-a-font-size, 15px);
+
+  --contract-cta-font-family: var(--contract-typography-a-font-family, var(--contract-font-family));
+  --contract-cta-font-size: 16px;
+  --contract-cta-font-size-mobile: 15px;
   --contract-cta-pad-x: 18px;
   --contract-cta-pad-y: 0px;
   --contract-cta-icon-size: 18px;
-  --contract-cta-letter-spacing: var(--contract-typography-a-letter-spacing, .2px);
-  --contract-cta-text-color: var(--contract-typography-a-color, #fff);
+  --contract-cta-letter-spacing: 0.2px;
+  --contract-cta-text-color: #ffffff;
 
   /* CTA OVERLAY */
   --contract-cta-overlay-bg-color: rgba(0, 0, 0, .55);
@@ -232,7 +240,7 @@ body[data-skin="legacy-default"] {
   --header-minh-dense: var(--contract-header-minh-dense, 52px);
   --header-pad-h: var(--contract-header-pad-x, 12px);
   --header-pad-v: var(--contract-header-pad-y, 8px);
-  --header-title-font: var(--contract-font-family, var(--font-sans));
+  --header-title-font: var(--contract-header-font-family, var(--contract-font-family, var(--font-sans)));
   --header-title-size: var(--contract-header-title-font-size, 22px);
   --header-title-weight: var(--contract-header-title-weight, 600);
   --header-title-spacing: var(--contract-header-title-tracking, .2px);
@@ -248,9 +256,9 @@ body[data-skin="legacy-default"] {
 
   /* ===== TEXT BRIDGE ===== */
   --contract-text-font-family: var(--contract-typography-b-font-family, var(--contract-font-family));
-  --contract-text-font-size: var(--contract-typography-b-font-size, 18px);
-  --contract-text-line-height: var(--contract-typography-b-line-height, 1.4);
-  --contract-text-color: var(--contract-typography-b-color, var(--choice-text-color, var(--choice-color, #fff)));
+  --contract-text-font-size: 18px;
+  --contract-text-line-height: 1.4;
+  --contract-text-color: var(--choice-text-color, var(--choice-color, #ffffff));
 
   --tt-font-family: var(--contract-text-font-family, var(--tt-font-family));
   --tt-font-size: var(--contract-text-font-size, var(--tt-font-size));
@@ -265,6 +273,7 @@ body[data-skin="legacy-default"] {
   --choice-border-style: var(--contract-choice-border-style);
   --choice-radius: var(--contract-choice-radius);
   --choice-shadow: var(--contract-choice-shadow-rest);
+  --choice-font-family: var(--contract-choice-font-family, var(--contract-typography-b-font-family, var(--contract-font-family)));
   --choice-font: var(--contract-choice-font-size);
   --choice-font-mobile: var(--contract-choice-font-size-mobile);
   --choice-padding-x: var(--contract-choice-pad-x);
@@ -298,6 +307,7 @@ body[data-skin="legacy-default"] {
   --btn-transition-dur: var(--contract-transition-dur);
   --btn-transition-ease: var(--contract-transition-ease);
   --btn-active-scale: var(--contract-interactive-active-scale);
+  --btn-font-family: var(--contract-actionbar-font-family, var(--contract-typography-a-font-family, var(--contract-font-family)));
 
   /* ===== CTA legacy ===== */
   --cta-bg-top: var(--contract-cta-bg-color-top);
@@ -308,6 +318,7 @@ body[data-skin="legacy-default"] {
   --cta-border-style: var(--contract-cta-border-style);
   --cta-radius: var(--contract-cta-radius);
   --cta-shadow: var(--contract-cta-shadow-rest);
+  --cta-font-family: var(--contract-cta-font-family, var(--contract-typography-a-font-family, var(--contract-font-family)));
   --cta-font: var(--contract-cta-font-size);
   --cta-font-mobile: var(--contract-cta-font-size-mobile);
   --cta-padding-x: var(--contract-cta-pad-x);

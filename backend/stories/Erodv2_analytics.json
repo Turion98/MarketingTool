@@ -4,7 +4,8 @@
     "title": "Erod V2",
     "description": "Analytical journey through the ruins.",
     "coverImage": "/assets/covers/erodv2.jpg",
-    "startPageId": "ch1_pg1"
+    "startPageId": "ch1_pg1",
+    "logo": "assets/my_logo.png"
   },
   "id": "chapter_1",
   "title": "Erőd",

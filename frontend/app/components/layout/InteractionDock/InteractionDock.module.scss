@@ -79,10 +79,16 @@
   border-radius: var(--choice-radius, 12px);
 
   text-align: center;
-  font: inherit;
+
+  /* tipó – token driven, nem font: inherit */
+  font-family: var(
+    --choice-font-family,
+    var(--contract-text-font-family, var(--contract-typography-b-font-family, var(--contract-font-family, sans-serif)))
+  );
   font-size: var(--choice-font, 16px);
-  line-height: 1.25;
-  letter-spacing: .2px;
+  line-height: var(--choice-line-height, 1.25);
+  font-weight: var(--choice-text-weight, 600);
+  letter-spacing: var(--choice-text-letter-spacing, .2px);
 
   box-shadow: var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30));
   cursor: pointer;
@@ -94,6 +100,51 @@
     background var(--dock-dur-hover, 160ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     opacity var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     filter var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
+}
+
+/* ===== Belépő animáció a choice gombokra (mountkor) ===== */
+
+@keyframes dock-choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Alap animáció minden choice-ra, amikor DOM-ba kerül */
+.grid .choice {
+  animation-name: dock-choice-in;
+  animation-duration: var(--dock-dur-in, 420ms);
+  animation-timing-function: var(
+    --dock-ease-out,
+    cubic-bezier(.2,.8,.2,1)
+  );
+  animation-fill-mode: both; /* maradjon a végállapotban */
+}
+
+/* Enyhe lépcsőzés, hogy ne egyszerre ugorjanak be */
+.grid .choice:nth-child(1) {
+  animation-delay: 60ms;
+}
+.grid .choice:nth-child(2) {
+  animation-delay: 120ms;
+}
+.grid .choice:nth-child(3) {
+  animation-delay: 180ms;
+}
+.grid .choice:nth-child(4) {
+  animation-delay: 240ms;
 }
 
 /* Hover */
@@ -216,11 +267,30 @@
   }
 }
 
+/* ===== CTA sor a dockban (end node CTA) ===== */
+
+.ctaRow {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--dock-gap, 16px);
+}
+
+/* A gyerek (CampaignCta button) szélessége igazodjon a choice-okhoz */
+.ctaRow > * {
+  width: 100%;
+  max-width: var(--choice-maxw, 480px);
+  margin-inline: auto;
+}
+
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
   .choice,
   .grid {
     transition: none;
+  }
+
+  .grid .choice {
+    animation: none !important;
   }
 
   .fadeWrapper,

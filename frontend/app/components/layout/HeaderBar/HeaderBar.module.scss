@@ -10,6 +10,7 @@
 
   min-height: var(--header-minh, 80px);
   padding: var(--header-pad-v, 8px) var(--header-pad-h, 12px);
+  margin-bottom: 10px;
 
   background: var(--header-bg, rgba(0,0,0,.25));
   border-style: var(--header-border-style, solid);
@@ -100,6 +101,7 @@
   .headerBar {
     /* 4 oszlop: [left] [title-1] [title-2] [right] */
     grid-template-columns: auto minmax(0,1fr) minmax(0,1fr) auto;
+    margin-bottom: 0px;
   }
   .left   { grid-column: 1; }
   .center {

@@ -5,10 +5,14 @@
   "tokens": {
     "--brand-accent": "#ffd56a",
 
+    "--contract-font-family": "var(--font-sans, ui-sans-serif)",
+    "--contract-line-height": "1.25",
+    "--contract-letter-spacing": "0.2px",
+
+    "--contract-typography-a-font-family": "\"Cinzel\", serif",
+    "--contract-typography-b-font-family": "var(--contract-font-family)",
+
     "--contract-text-font-family": "var(--contract-typography-b-font-family)",
-    "--contract-text-font-size": "var(--contract-typography-b-font-size)",
-    "--contract-text-line-height": "var(--contract-typography-b-line-height)",
-    "--contract-text-color": "var(--contract-typography-b-color)",
 
     "--mf-max-w": "900px",
     "--mf-pad": "0px",
@@ -76,7 +80,6 @@
     "--contract-header-backdrop-blur": "8px",
     "--contract-header-shadow-rest": "0 8px 28px rgba(0,0,0,.5)",
     "--contract-header-shadow-hover": "0 10px 36px rgba(0,0,0,.6)",
-    "--contract-header-text-color": "#ffeeb8",
 
     "--contract-header-logo-scale": "1.5",
     "--contract-header-logo-max-w": "100%",
@@ -84,12 +87,15 @@
     "--contract-header-logo-pad-inline-start": "12px",
     "--contract-header-logo-vertical-shift": "0px",
 
-    "--contract-header-title-font-size": "22px",
-    "--contract-header-title-weight": "700",
-    "--contract-header-title-tracking": "0.3px",
+    "--contract-header-title-font-size": "24px",
+    "--contract-header-title-weight": "600",
+    "--contract-header-title-tracking": "0.2px",
     "--contract-header-title-color": "#ffd56a",
     "--contract-header-title-margin": "0 30px 0 0",
     "--contract-header-title-shift": "-20px",
+    "--contract-header-text-color": "#ffeeb8",
+
+    "--contract-text-color": "#fef9f0",
 
     "--contract-choice-bg-color-top": "#3b2b10",
     "--contract-choice-bg-color-bot": "#241a09",
@@ -125,7 +131,7 @@
     "--contract-actionbar-font-size-mobile": "16px",
     "--contract-actionbar-pad-x": "12px",
     "--contract-actionbar-pad-y": "12px",
-    "--contract-actionbar-text-color": "#fff3d1",
+    "--contract-actionbar-text-color": "#ffeeb8",
 
     "--contract-cta-bg-color-top": "#e8b33b",
     "--contract-cta-bg-color-bot": "#b6861f",
@@ -143,7 +149,7 @@
     "--contract-cta-pad-x": "18px",
     "--contract-cta-pad-y": "0px",
     "--contract-cta-icon-size": "18px",
-    "--contract-cta-letter-spacing": ".25px",
+    "--contract-cta-letter-spacing": "0.2px",
     "--contract-cta-text-color": "#1a1208",
 
     "--contract-cta-overlay-bg-color": "rgba(26,18,8,.75)",
@@ -217,24 +223,6 @@
     "--contract-quiz-success-border": "color-mix(in oklch, #22c55e 70%, white 30%)",
     "--contract-quiz-error-border": "color-mix(in oklch, #ef4444 70%, white 30%)",
     "--contract-quiz-shadow-success": "0 0 0 3px color-mix(in oklch, #22c55e 35%, transparent)",
-    "--contract-quiz-shadow-error": "0 0 0 3px color-mix(in oklch, #ef4444 35%, transparent)",
-
-    "--contract-font-family": "var(--font-sans, ui-sans-serif)",
-    "--contract-line-height": "1.25",
-    "--contract-letter-spacing": "0.2px",
-
-    "--contract-typography-a-font-family": "var(--contract-font-family)",
-    "--contract-typography-a-font-size": "16px",
-    "--contract-typography-a-line-height": "1.25",
-    "--contract-typography-a-letter-spacing": "0.2px",
-    "--contract-typography-a-weight": "600",
-    "--contract-typography-a-color": "#ffeeb8",
-
-    "--contract-typography-b-font-family": "var(--contract-font-family)",
-    "--contract-typography-b-font-size": "18px",
-    "--contract-typography-b-line-height": "1.4",
-    "--contract-typography-b-letter-spacing": "0.1px",
-    "--contract-typography-b-weight": "400",
-    "--contract-typography-b-color": "#fef9f0"
+    "--contract-quiz-shadow-error": "0 0 0 3px color-mix(in oklch, #ef4444 35%, transparent)"
   }
 }

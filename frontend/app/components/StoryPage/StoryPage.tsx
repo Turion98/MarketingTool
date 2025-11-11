@@ -2549,8 +2549,8 @@ const dockChoicesForThisPage = useMemo(() => {
               elevated
               left={
                 <img
-                  src="assets/my_logo.png"
-                  alt="Logo"
+                  src={logoUrl}
+                  alt={meta?.title || titleText || "Logo"}
                   data-logo
                 />
               }
@@ -2615,7 +2615,8 @@ const dockChoicesForThisPage = useMemo(() => {
           showFrame ? (
             <MediaFrame mode="image"
             pageId={pageData.id}
-      pageIsFadingOut={isFadingOut}>
+            pageIsFadingOut={isFadingOut}
+            logoSrc={logoUrl}>
               <GeneratedImage_with_fadein
                 pageId={pageData.id}
                 
@@ -2750,8 +2751,7 @@ const dockChoicesForThisPage = useMemo(() => {
           choicePageId ===
             pageData.id &&
           pageUnlockedForInteraction ===
-            pageData.id &&
-          !isEndNode ? (
+            pageData.id ? (
             <div
               ref={dockFreezeRef}
               className={[
@@ -2764,227 +2764,270 @@ const dockChoicesForThisPage = useMemo(() => {
                   : "",
               ].join(" ")}
             >
-              {isRiddlePage && (() => {
-                const r =
-                  pageData as unknown as PuzzleRiddle;
-                return (
+              {isEndNode ? (
+                resolvedEndCta ? (
                   <div
                     className={
                       dockStyles.grid
                     }
                   >
-                    <RiddleQuiz
-                      page={pageData}
-                      question={
-                        r.question
-                      }
-                      options={
-                        r.options
-                      }
-                      correctIndex={
-                        r.correctIndex
-                      }
-                      correctLabel={
-                        riddleCorrectLabel
-                      }
-                      showCorrectLabel="above"
-                      onPlaySfx={() => {
-                        // opcionális SFX trigger
-                      }}
-                      onResult={({
-                        choiceIdx,
-                      }) => {
-                        handleRiddleAnswer(
-                          choiceIdx
-                        );
-                      }}
-                    />
-                  </div>
-                );
-              })()}
-
-              {!isRiddlePage &&
-                isRunesPage &&
-                (() => {
-                  const p =
-                    pageData as any;
-                  return (
-                    <PuzzleRunes
-                      options={
-                        p.options
-                      }
-                      answer={
-                        p.answer
-                      }
-                      maxAttempts={
-                        p.maxAttempts ??
-                        3
-                      }
-                      mode={
-                        p.mode ??
-                        "ordered"
-                      }
-                      feedback={
-                        p.feedback ??
-                        "reset"
-                      }
+                    <div
                       className={
-                        dockStyles.grid
+                        style.endCtaCard
                       }
-                      buttonClassName={
-                        dockStyles.choice
-                      }
-                      storyId={
-                        derivedStoryId ||
-                        "default_story"
-                      }
-                      sessionId={
-                        derivedSessionId ||
-                        "sess_unknown"
-                      }
-                      pageId={
-                        pageData.id
-                      }
-                      puzzleId={
-                        p.id ??
-                        `runes-${pageData.id}`
-                      }
-                      onResult={(
-                        ok
-                      ) => {
-                        const branch = ok
-                          ? p.onSuccess
-                          : p.onFail;
-                        if (!branch)
-                          return;
-
-                        const fl =
-                          branch.setFlags;
-                        if (
-                          Array.isArray(
-                            fl
-                          )
-                        ) {
-                          fl.forEach(
-                            (f: string) =>
-                              setFlag(
-                                f
-                              )
-                          );
-                        } else if (
-                          fl &&
-                          typeof fl ===
-                            "object"
-                        ) {
-                          Object.entries(
-                            fl
-                          ).forEach(
-                            ([
-                              k,
-                              v,
-                            ]) =>
-                              v &&
-                              setFlag(
-                                k
-                              )
-                          );
+                    >
+                      <div
+                        className={
+                          style.endCtaTitle
                         }
-
-                        const nx =
-                          branch.goto;
-                        if (
-                          nx &&
-                          nx !==
-                            pageData?.id
-                        ) {
-                          try {
-                            localStorage.setItem(
-                              "currentPageId",
-                              nx
+                      >
+                        Köszönjük,
+                        végigjátszottad
+                        a kampányt!
+                      </div>
+                      <div
+                        className={
+                          style.endCtaActions
+                        }
+                      >
+                        <CampaignCta
+                          cta={
+                            resolvedEndCta
+                          }
+                          context={
+                            endCtaContext
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null
+              ) : (
+                <>
+                  {isRiddlePage && (() => {
+                    const r =
+                      pageData as unknown as PuzzleRiddle;
+                    return (
+                      <div
+                        className={
+                          dockStyles.grid
+                        }
+                      >
+                        <RiddleQuiz
+                          page={pageData}
+                          question={
+                            r.question
+                          }
+                          options={
+                            r.options
+                          }
+                          correctIndex={
+                            r.correctIndex
+                          }
+                          correctLabel={
+                            riddleCorrectLabel
+                          }
+                          showCorrectLabel="above"
+                          onPlaySfx={() => {
+                            // opcionális SFX trigger
+                          }}
+                          onResult={({
+                            choiceIdx,
+                          }) => {
+                            handleRiddleAnswer(
+                              choiceIdx
                             );
-                          } catch {}
-                          goToNextPage(
-                            nx
-                          );
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
+
+                  {!isRiddlePage &&
+                    isRunesPage &&
+                    (() => {
+                      const p =
+                        pageData as any;
+                      return (
+                        <PuzzleRunes
+                          options={
+                            p.options
+                          }
+                          answer={
+                            p.answer
+                          }
+                          maxAttempts={
+                            p.maxAttempts ??
+                            3
+                          }
+                          mode={
+                            p.mode ??
+                            "ordered"
+                          }
+                          feedback={
+                            p.feedback ??
+                            "reset"
+                          }
+                          className={
+                            dockStyles.grid
+                          }
+                          buttonClassName={
+                            dockStyles.choice
+                          }
+                          storyId={
+                            derivedStoryId ||
+                            "default_story"
+                          }
+                          sessionId={
+                            derivedSessionId ||
+                            "sess_unknown"
+                          }
+                          pageId={
+                            pageData.id
+                          }
+                          puzzleId={
+                            p.id ??
+                            `runes-${pageData.id}`
+                          }
+                          onResult={(
+                            ok
+                          ) => {
+                            const branch = ok
+                              ? p.onSuccess
+                              : p.onFail;
+                            if (!branch)
+                              return;
+
+                            const fl =
+                              branch.setFlags;
+                            if (
+                              Array.isArray(
+                                fl
+                              )
+                            ) {
+                              fl.forEach(
+                                (f: string) =>
+                                  setFlag(
+                                    f
+                                  )
+                              );
+                            } else if (
+                              fl &&
+                              typeof fl ===
+                                "object"
+                            ) {
+                              Object.entries(
+                                fl
+                              ).forEach(
+                                ([
+                                  k,
+                                  v,
+                                ]) =>
+                                  v &&
+                                  setFlag(
+                                    k
+                                  )
+                              );
+                            }
+
+                            const nx =
+                              branch.goto;
+                            if (
+                              nx &&
+                              nx !==
+                                pageData?.id
+                            ) {
+                              try {
+                                localStorage.setItem(
+                                  "currentPageId",
+                                  nx
+                                );
+                              } catch {}
+                              goToNextPage(
+                                nx
+                              );
+                            }
+                          }}
+                        />
+                      );
+                    })()}
+
+                  {!isRiddlePage &&
+                    !isRunesPage &&
+                    dockChoicesForThisPage.length >
+                      0 && (
+                      <InteractionDock
+                        mode="default"
+                        choices={
+                          dockChoicesForThisPage
                         }
-                      }}
-                    />
-                  );
-                })()}
-
-              {!isRiddlePage &&
-                !isRunesPage &&
-                dockChoicesForThisPage.length >
-                  0 && (
-                  <InteractionDock
-                    mode="default"
-                    choices={
-                      dockChoicesForThisPage
-                    }
-                    onSelect={(
-                      choiceId: string
-                    ) => {
-                      const realChoice =
-                        Array.isArray(
-                          pageData.choices
-                        )
-                          ? (
-                              pageData.choices as any[]
-                            ).find(
-                              (
-                                c: any,
-                                i: number
-                              ) =>
-                                String(
-                                  c?.id ??
-                                    i
-                                ) ===
-                                String(
-                                  choiceId
-                                )
+                        onSelect={(
+                          choiceId: string
+                        ) => {
+                          const realChoice =
+                            Array.isArray(
+                              pageData.choices
                             )
-                          : null;
+                              ? (
+                                  pageData.choices as any[]
+                                ).find(
+                                  (
+                                    c: any,
+                                    i: number
+                                  ) =>
+                                    String(
+                                      c?.id ??
+                                        i
+                                    ) ===
+                                    String(
+                                      choiceId
+                                    )
+                                )
+                              : null;
 
-                      if (realChoice) {
-                        handleChoice(
-                          String(
-                            realChoice.next ??
-                              ""
-                          ),
-                          (realChoice as any)
-                            .reward,
-                          realChoice as any
-                        );
-                        return;
-                      }
+                          if (realChoice) {
+                            handleChoice(
+                              String(
+                                realChoice.next ??
+                                  ""
+                              ),
+                              (realChoice as any)
+                                .reward,
+                              realChoice as any
+                            );
+                            return;
+                          }
 
-                      if (
-                        choiceId ===
-                          "__NEXT__" &&
-                        resolvedNext &&
-                        resolvedNext !==
-                          pageData.id
-                      ) {
-                        handleChoice(
-                          String(
-                            resolvedNext
-                          ),
-                          undefined,
-                          {
-                            id: "__NEXT__",
-                            text: "Next",
-                            next: String(
-                              resolvedNext
-                            ),
-                          } as any
-                        );
-                      }
-                    }}
-                  />
-                )}
+                          if (
+                            choiceId ===
+                              "__NEXT__" &&
+                            resolvedNext &&
+                            resolvedNext !==
+                              pageData.id
+                          ) {
+                            handleChoice(
+                              String(
+                                resolvedNext
+                              ),
+                              undefined,
+                              {
+                                id: "__NEXT__",
+                                text: "Next",
+                                next: String(
+                                  resolvedNext
+                                ),
+                              } as any
+                            );
+                          }
+                        }}
+                      />
+                    )}
+                </>
+              )}
             </div>
           ) : null
         }
+
         action={
           <ActionBar
             canSkip={
@@ -3103,43 +3146,7 @@ const dockChoicesForThisPage = useMemo(() => {
           />
         )}
 
-      {isEndNode && (
-        <div
-          className={
-            style.endCtaOverlay
-          }
-        >
-          <div
-            className={
-              style.endCtaCard
-            }
-          >
-            <div
-              className={
-                style.endCtaTitle
-              }
-            >
-              Köszönjük,
-              végigjátszottad
-              a kampányt!
-            </div>
-            <div
-              className={
-                style.endCtaActions
-              }
-            >
-              <CampaignCta
-                cta={
-                  resolvedEndCta
-                }
-                context={
-                  endCtaContext
-                }
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

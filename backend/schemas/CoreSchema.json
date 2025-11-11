@@ -23,6 +23,10 @@
         "author": { "type": "string" },
         "description": { "type": "string" },
         "coverImage": { "type": "string" },
+        "logo": {
+          "type": "string",
+          "description": "Story / brand logo asset path (ugyanaz, amit a header + MediaFrame használ)."
+        },
         "tags": {
           "type": "array",
           "items": { "type": "string" }
@@ -39,7 +43,9 @@
           "description": "Alapértelmezett CTA preset az end / finálé oldalhoz.",
           "type": "string",
           "minLength": 1
-        }
+        },
+        "startPageId": { "type": "string" },
+        "campaignId": { "type": "string" }
       }
     },
     "engine": {
@@ -66,10 +72,9 @@
       }
     },
     "fragments": {
-      "description": "Global fragment bank (optional).",
-      "type": "array",
-      "items": { "$ref": "#/$defs/FragmentDef" },
-      "uniqueItems": true
+      "description": "Global fragment bank (object map formátum, runtime kompatibilis).",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/FragmentDef" }
     },
     "pages": {
       "type": "array",
@@ -131,7 +136,7 @@
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
           "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall"],
+          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end"],
           "default": "default"
         },
         "layout": {},
@@ -222,9 +227,13 @@
           "properties": {
             "type": { "const": "setFlag" },
             "flag": { "type": "string" },
+            "id": { "type": "string" },
             "value": {}
           },
-          "required": ["type", "flag"]
+          "anyOf": [
+            { "required": ["type", "flag"] },
+            { "required": ["type", "id"] }
+          ]
         },
         {
           "properties": {

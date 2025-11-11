@@ -184,14 +184,15 @@ body {
 
 .endCtaCard {
   pointer-events: auto;
-  position:absolute;
-  top: 55%;
 
-  /* 🔸 kizárólag a kártyára hasson a blur */
+  /* ⬇️ overlay layout OFF: normál kártya a dockban */
+  position: static;
+  top: auto;
+
+  /* 🔹 csak a kártya blur-ölt, vizuál marad */
   backdrop-filter: blur(var(--cta-ol-blur, var(--cta-backdrop-blur, 6px)));
   background: var(--cta-ol-bg, var(--cta-overlay-color, rgba(0, 0, 0, .55)));
 
-  /* stabil kompozíció */
   isolation: isolate;
   contain: paint;
 
@@ -201,8 +202,12 @@ body {
   border-radius: var(--cta-ol-radius, 16px);
   padding: var(--cta-ol-pad, clamp(14px, 2cqi, 20px));
   box-shadow: var(--cta-ol-shadow, 0 12px 28px rgba(0, 0, 0, .45));
+
+  /* 🔹 a dock oszlopához igazodjon, ne vándoroljon oldalra */
   max-width: min(92vw, 560px);
-  width: max-content;
+  width: 100%;
+  margin-inline: auto;
+  margin-top: var(--dock-gap, 24px);
 }
 
 .endCtaTitle {

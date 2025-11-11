@@ -69,13 +69,17 @@
   max-width: var(--choice-maxw, 480px);
   margin-inline: auto; /* center each button in column */
 
-  /* tipó */
+  /* tipó – token driven, nem font: inherit */
   color: var(--choice-color, #fff);
   text-align: center;
-  font: inherit;
+  font-family: var(
+    --choice-font-family,
+    var(--contract-text-font-family, var(--contract-typography-b-font-family, var(--contract-font-family, sans-serif)))
+  );
   font-size: var(--choice-font, 16px);
-  line-height: 1.25;
-  letter-spacing: .2px;
+  line-height: var(--choice-line-height, 1.25);
+  font-weight: var(--choice-text-weight, 600);
+  letter-spacing: var(--choice-text-letter-spacing, .2px);
 
   /* spacing / radius to match InteractionDock */
   padding: var(--choice-padding-y, 14px) var(--choice-padding-x, 16px);

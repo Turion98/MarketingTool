@@ -67,10 +67,16 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: -30px;
 
   /* Alap: desktop */
   transform: translateY(calc(-1 * var(--np-title-shift, 100%)));
+
+  /* FONT: minden skinből tokenen át jön
+     - elsődleges: --np-title-font-family (skin specifikus)
+     - fallback:   --contract-text-font-family (narrációs text család)
+  */
+  font-family: var(--np-title-font-family, var(--contract-text-font-family, sans-serif));
 
   font-weight: var(--np-title-weight, 700);
   line-height: var(--np-title-lineh, 1.1);
@@ -82,7 +88,12 @@
 }
 
 /* Mobil finomítások — csak token-átvétel, nem fix érték! */
-@media (max-width: 900px) {
+@media (max-width: 700px) {
+    /* Extra térköz a narratív PANEL köré mobil layoutban */
+  .textboxContainer {
+    margin-top: 36px;
+    margin-bottom: 16px;
+  }
   .titleOverlay {
     transform: translateY(calc(-1 * var(--np-title-shift-mobile, var(--np-title-shift, 100%))));
     font-size: var(--np-title-size-mobile, var(--np-title-size, 22px));
