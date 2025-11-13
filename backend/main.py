@@ -57,6 +57,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         return response
 
+# --- Image prompt defaults (backend-only) ---
+DEFAULT_IMAGE_STYLE = "2D animation, soft natural light, gentle depth"
+DEFAULT_NEGATIVE_BLOCK = "no text, no typography, no logos, no brand identities, no watermark, no captions, no UI"
+DEFAULT_PROMPT_LIMIT = 900  # karakter limit a laposított promptra
+
 
 print("=== Backend indul ===")
 
@@ -333,7 +338,7 @@ def _collect_fragment_ids_from_text(text: Any) -> set[str]:
 def _collect_fragment_ids(page: Dict[str, Any]) -> set[str]:
     ids: set[str] = set()
     # fragmentRefs tömb
-    refs = page.get("fragmentRefs")
+    refs = page.get("fragments") or page.get("fragmentRefs")
     if isinstance(refs, list):
         for r in refs:
             if isinstance(r, dict) and r.get("id"):
@@ -351,6 +356,108 @@ def _inject_fragments_global_for(story: Dict[str, Any], page: Dict[str, Any]) ->
         if need:
             out["fragmentsGlobal"] = {fid: fr_all[fid] for fid in need if fid in fr_all}
     return out
+
+def _assemble_image_prompt_from_fragments(story: Dict[str, Any], page: Dict[str, Any]) -> tuple[Dict[str, str], str]:
+    """
+    Összeállítja az effektív image promptot:
+      - oldalszintű imagePrompt (string vagy object)
+      - + fragmentek opcionális imagePromptParts mezői (string vagy object)
+      - + globális defaultok (DEFAULT_IMAGE_STYLE, DEFAULT_NEGATIVE_BLOCK)
+    Vissza: (obj_prompt, flat_string)
+    """
+    def push(dst_list: list[str], val: Any):
+        if not val:
+            return
+        if isinstance(val, str):
+            v = val.strip()
+            if not v:
+                return
+            # egyszerű dedup case-insensitive
+            if v.lower() not in {x.lower() for x in dst_list}:
+                dst_list.append(v)
+        elif isinstance(val, list):
+            for it in val:
+                push(dst_list, it)
+
+    # 1) kiinduló slotok
+    global_parts: list[str] = []
+    chapter_parts: list[str] = []
+    page_parts: list[str] = []
+    negative_parts: list[str] = []
+
+    # 2) oldalszintű base imagePrompt
+    base_p = page.get("imagePrompt")
+    if isinstance(base_p, str):
+        push(page_parts, base_p)
+    elif isinstance(base_p, dict):
+        push(global_parts, base_p.get("global"))
+        push(chapter_parts, base_p.get("chapter"))
+        push(page_parts, base_p.get("page") or base_p.get("combinedPrompt"))
+        push(negative_parts, base_p.get("negativePrompt"))
+
+    # 3) fragmentek kiválogatása
+    fr_global = page.get("fragmentsGlobal") or {}
+    include_ids = _collect_fragment_ids(page)
+
+    # include/exclude finomhangolás (oldalszintű opció)
+    merge_ctl = page.get("imagePromptMerge") or {}
+    only_include = set(merge_ctl.get("include") or [])
+    exclude = set(merge_ctl.get("exclude") or [])
+
+    if only_include:
+        include_ids = {fid for fid in include_ids if fid in only_include}
+    if exclude:
+        include_ids = {fid for fid in include_ids if fid not in exclude}
+
+    for fid in include_ids:
+        fr = fr_global.get(fid)
+        if not isinstance(fr, dict):
+            continue
+        ipp = fr.get("imagePromptParts")
+        if not ipp:
+            continue
+        if isinstance(ipp, str):
+            push(page_parts, ipp)
+        elif isinstance(ipp, dict):
+            push(global_parts, ipp.get("global"))
+            push(chapter_parts, ipp.get("chapter"))
+            push(page_parts, ipp.get("page") or ipp.get("combinedPrompt"))
+            push(negative_parts, ipp.get("negative") or ipp.get("negativePrompt"))
+
+    # 4) globális defaultok
+    push(global_parts, DEFAULT_IMAGE_STYLE)
+    push(negative_parts, DEFAULT_NEGATIVE_BLOCK)
+
+    # 5) objektum és lapos string előállítása + hosszlimit és egyszerű csonkolás
+    obj = {
+        "global": ", ".join(global_parts) if global_parts else None,
+        "chapter": ", ".join(chapter_parts) if chapter_parts else None,
+        "page": ", ".join(page_parts) if page_parts else None,
+        "negativePrompt": ", ".join(negative_parts) if negative_parts else None,
+    }
+    obj = {k: v for k, v in obj.items() if v}
+
+    flat = _normalize_prompt_incoming(obj)
+
+    if len(flat) > DEFAULT_PROMPT_LIMIT:
+        # durva, de elég: előbb a 'page' részt kurtítjuk, majd a 'global'-t
+        overflow = len(flat) - DEFAULT_PROMPT_LIMIT
+
+        def _shrink(txt: str, cut: int) -> str:
+            return txt[: max(0, len(txt) - cut)].rstrip(", ;")
+
+        if obj.get("page") and overflow > 0:
+            old = obj["page"]
+            obj["page"] = _shrink(old, min(len(old)//3, overflow))
+            flat = _normalize_prompt_incoming(obj)
+
+        if len(flat) > DEFAULT_PROMPT_LIMIT and obj.get("global"):
+            need = len(flat) - DEFAULT_PROMPT_LIMIT
+            old = obj["global"]
+            obj["global"] = _shrink(old, min(len(old)//3, need))
+            flat = _normalize_prompt_incoming(obj)
+
+    return obj, flat
 
 # =========================
 #   ANALYTICS TÁR (JSONL)
@@ -394,7 +501,6 @@ class NoCacheStoriesMiddleware(BaseHTTPMiddleware):
             response.headers["Expires"] = "0"
         return response
 
-app.add_middleware(NoCacheStoriesMiddleware)
 app.add_middleware(NoCacheStoriesMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
@@ -472,6 +578,7 @@ async def api_generate_image(req: Request):
     body = await req.json()
     page_id = body.get("pageId") or body.get("page_id") or "page"
 
+
     # 🔽 ITT LAPOSÍTJUK MÁR A BELÉPÉSKOR
     raw_prompt = body.get("prompt") or None
     prompt = _normalize_prompt_incoming(raw_prompt)
@@ -484,6 +591,25 @@ async def api_generate_image(req: Request):
     reuse = body.get("reuseExisting", True)
     fmt = body.get("format", "png")
 
+    # Ha nincs prompt a kérésben: próbáld az oldalból összerakni (effectiveImagePromptString)
+    if not prompt:
+        try:
+            story_path = _normalize_src_to_path(
+                body.get("src") or ((story_slug + ".json") if story_slug else DEFAULT_STORY)
+            )
+            story = _load_story(story_path)
+            page = _find_page_recursive(story, page_id)
+            if page:
+                page_with_fr = _inject_fragments_global_for(story, page)
+                _, prompt_built = _assemble_image_prompt_from_fragments(story, page_with_fr)
+                prompt = _normalize_prompt_incoming(prompt_built)
+        except Exception:
+            # marad üres, majd alább hibát dobunk
+            pass
+
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Missing prompt and could not assemble from page")
+
     try:
         res = generate_image_asset(
             prompt=prompt,               # ← már a laposított megy be
@@ -495,15 +621,12 @@ async def api_generate_image(req: Request):
             reuse_existing=reuse,
             api_key=api_key,
             mode=mode,
-            story_slug=story_slug,
+            story_slug=story_slug or "story",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"ok": True, "url": res.get("url"), "path": res.get("path")}
-
-from pathlib import Path
-
 
 @app.get("/api/image/{story_slug}/{image_name}")
 def get_generated_image(story_slug: str, image_name: str):
@@ -523,8 +646,7 @@ def get_generated_image(story_slug: str, image_name: str):
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return resp
 
-    # content type-et adhatunk fixen is
-    return FileResponse(str(base), media_type="image/png")
+   
 
 # --- Landing endpoint (API) ---
 @app.get("/api/landing")
@@ -593,25 +715,89 @@ def _find_page_recursive(node: Any, page_id: str) -> Dict[str, Any] | None:
 
     return None
 
+def _build_page_response_for(page: Dict[str, Any], story: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Build a safe page response for the frontend by:
+      - applying SFX overrides and normalizing the sfx list,
+      - normalizing logic-related fields,
+      - injecting only the needed global fragments,
+      - assembling an effective image prompt (object + flattened string).
+    This is intentionally conservative and avoids raising on assembly errors.
+    """
+    # Start from a copy so we don't mutate original structures
+    p = deepcopy(page or {})
+
+    # Apply SFX overrides / normalization
+    try:
+        p = _apply_sfx_overrides(p)
+    except Exception:
+        # fallback to original copy
+        p = deepcopy(page or {})
+
+    # Normalize logical fields (needsFragment, showIfHasFragment, logic.ifHasFragment, etc.)
+    try:
+        p = _normalize_page_logic_fields(p)
+    except Exception:
+        # keep best-effort result
+        pass
+
+    # Inject only the required global fragments for this page
+    try:
+        p = _inject_fragments_global_for(story or {}, p)
+    except Exception:
+        pass
+
+    # Assemble image prompt object + flat string (non-fatal)
+    try:
+        obj, flat = _assemble_image_prompt_from_fragments(story or {}, p)
+        if obj:
+            p["imagePrompt"] = obj
+        if flat:
+            p["effectiveImagePromptString"] = flat
+    except Exception:
+        # ignore prompt assembly errors
+        pass
+
+    return p
+
 @app.post("/api/testVoice")
 def test_voice(): return {"ok": True}
 
 @app.post("/api/testImage")
 def test_image(): return {"ok": True}
-
-# --- Page endpoint (✅ cached final response) ---
 @app.get("/page/{page_id}")
 def get_page(page_id: str, src: str | None = Query(default=None)):
     story_path = _normalize_src_to_path(src)
     story = _load_story(story_path)
 
-    def _build_page_response_for(page_obj: Dict[str, Any], story: Dict[str, Any]) -> Dict[str, Any]:
-        # 0) logikai mezők egységesítése
-        norm = _normalize_page_logic_fields(page_obj)
-        # 1) SFX normalize / override
-        p = _apply_sfx_overrides(norm)
-        # 2) fragmentsGlobal injektálás
-        return _inject_fragments_global_for(story, p)
+    # 1) Globális "pages" dict kezelés (ha a story.pages dict)
+    if "pages" in story and isinstance(story["pages"], dict) and page_id in story["pages"]:
+        def _builder():
+            return _build_page_response_for(story["pages"][page_id], story)
+        data = get_page_cached(story_path, page_id, _builder)
+        hit = was_last_page_hit()
+        resp = JSONResponse(content=data)
+        if hit is not None:
+            resp.headers["X-Backend-Cache"] = "HIT" if hit else "MISS"
+        resp.headers["Cache-Control"] = "public, max-age=120"
+        return resp
+
+    # 2) Rekurzív keresés beágyazott struktúrákban
+    page = _find_page_recursive(story, page_id)
+    if page:
+        def _builder():
+            return _build_page_response_for(page, story)
+        data = get_page_cached(story_path, page_id, _builder)
+        hit = was_last_page_hit()
+        resp = JSONResponse(content=data)
+        if hit is not None:
+            resp.headers["X-Backend-Cache"] = "HIT" if hit else "MISS"
+        resp.headers["Cache-Control"] = "public, max-age=120"
+        return resp
+
+    # 3) Nincs találat
+    raise HTTPException(status_code=404, detail=f"Page {page_id} not found")
+
 
 
     # 1) Globális "pages" dict kezelés (ha van ilyen)

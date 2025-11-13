@@ -28,6 +28,17 @@ type NextSwitch =
 /** —————————————————————————————————————
  * Oldal adat típus (backend normalizált válasza)
  * ————————————————————————————————————— */
+// ÚJ: objektumos image prompt támogatás
+type ImagePromptObj = {
+  global?: string;
+  chapter?: string;
+  page?: string;
+  combinedPrompt?: string;
+  negativePrompt?: string;
+  styleProfile?: string;
+  seed?: number;
+};
+
 type PageData = {
   id: string;
   type?: string;
@@ -36,7 +47,25 @@ type PageData = {
   next?: NextSwitch;
   choices?: any[];
   layout?: any;
-  imagePrompt?: string | null;
+
+  // CSERE: string → string | ImagePromptObj | null
+  imagePrompt?: string | ImagePromptObj | null;
+
+  // ÚJ: backend által számolt, csak olvasás (nem kötelező, de jó ha típusozzuk)
+  effectiveImagePrompt?: {
+    global?: string;
+    chapter?: string;
+    page?: string;
+    negativePrompt?: string;
+  };
+  effectiveImagePromptString?: string;
+
+  // ÚJ: include/exclude merge vezérlés
+  imagePromptMerge?: {
+    include?: string[];
+    exclude?: string[];
+  };
+
   imageTiming?: {
     generate?: boolean;
     preloadNextPages?: string[];
@@ -47,27 +76,34 @@ type PageData = {
   audio?: any;
   replayImage?: any;
   replayOverlay?: any;
-  voicePrompt?: {
-    prompt: string;
-    voice?: string;
-    style?: string;
-  } | null;
+  voicePrompt?:
+    | {
+        prompt: string;
+        voice?: string;
+        style?: string;
+      }
+    | null;
   styleProfile?: Record<string, any>;
   sfx?: { file: string; time: number }[];
   fragmentsGlobal?: Record<string, any>;
   unlockFragments?: string[];
+
+  // (maradhat a visszafelé kompatibilitás miatt, de a backend most már `fragments`-et használ)
   fragmentRefs?: Array<{ id: string; prefix?: string; suffix?: string }>;
+
   fragmentRecall?:
     | { id?: string; textFallback?: string }
     | Array<{ id?: string; textFallback?: string }>;
+
   onAnswer?: {
     nextSwitch?: {
       switch: string;
       cases: Record<string, string>;
-      __default?: string;   // támogatjuk az __default kulcsot is
-      default?: string;     // és a default-ot is
+      __default?: string; // támogatjuk az __default kulcsot is
+      default?: string;   // és a default-ot is
     };
   };
+
   /** 🔹 ÚJ: logikai mezők, amiket a backend már küld */
   logic?: {
     ifHasFragment?: { fragment: string; goTo: string }[];
@@ -216,6 +252,40 @@ function sanitizePageId(x: string | null | undefined): string {
   const v = (x ?? "").trim();
   if (!v || v === "feedback" || v === "__END__") return "landing";
   return v;
+}
+
+export function normalizeImagePrompt(
+  p?: string | ImagePromptObj | null
+): {
+  prompt: string | undefined;
+  negative?: string;
+  styleProfile?: string;
+  seed?: number;
+} {
+  if (!p) return { prompt: undefined };
+
+  if (typeof p === "string") {
+    const trimmed = p.trim();
+    return { prompt: trimmed.length ? trimmed : undefined };
+  }
+
+  const prompt =
+    p.combinedPrompt ||
+    [p.global, p.chapter, p.page].filter(Boolean).join(" ").trim() ||
+    undefined;
+
+  // 🔹 alias: támogasd a `negative` mezőt is
+  const negative =
+    (p as any).negativePrompt ??
+    (p as any).negative ??
+    undefined;
+
+  return {
+    prompt,
+    negative,
+    styleProfile: (p as any).styleProfile || undefined,
+    seed: typeof p.seed === "number" ? p.seed : undefined,
+  };
 }
 
 /** —————————————————————————————————————
@@ -549,6 +619,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     } catch {}
   }, []);
 
+  
   /** UNLOCK + write-through bank update */
   const unlockFragment = useCallback((idOrIds: string | string[]) => {
     const ids = (Array.isArray(idOrIds) ? idOrIds : [idOrIds]).filter(Boolean);

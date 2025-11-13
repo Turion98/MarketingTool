@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "test_prompt_build",
+  "locale": "hu-HU",
+  "meta": {
+    "id": "test_prompt_build",
+    "title": "Prompt-építés – 4 oldalas teszt",
+    "logo": "/assets/default_logo.png",
+    "startPageId": "start",
+    "endDefaultCta": { "kind": "restart", "label": "Újra" }
+  },
+
+  "fragmentBank": {
+    "color_green": { "text": "zöld" },
+    "color_blue": { "text": "kék" },
+    "shape_cube": { "text": "kocka" },
+    "shape_circle": { "text": "kör" },
+    "recap_color": {
+      "text": "Háttérszíned: {fragment:color_green}{fragment:color_blue}."
+    },
+    "recap_shape": {
+      "text": "Választott alakzat: {fragment:shape_cube}{fragment:shape_circle}."
+    }
+  },
+
+  "pages": {
+    "start": {
+      "id": "start",
+      "title": "Színválasztás",
+      "text": [
+        { "default": "1. oldal — Válassz egy háttérszínt a generált képhez." },
+        { "text": "Két opció van: zöld vagy kék." }
+      ],
+      "choices": [
+        {
+          "id": "pick_green",
+          "text": "Zöld háttér",
+          "next": "p2",
+          "reward": { "unlockFragments": ["color_green"] }
+        },
+        {
+          "id": "pick_blue",
+          "text": "Kék háttér",
+          "next": "p2",
+          "reward": { "unlockFragments": ["color_blue"] }
+        }
+      ]
+    },
+
+    "p2": {
+      "id": "p2",
+      "title": "Alakzat választás",
+      "text": [
+        { "default": "2. oldal — Válassz egy alakzatot a kompozícióhoz." },
+        {
+          "ifUnlocked": "color_green",
+          "text": "Előzőleg {fragment:color_green} hátteret jelöltél ki."
+        },
+        {
+          "ifUnlocked": "color_blue",
+          "text": "Előzőleg {fragment:color_blue} hátteret jelöltél ki."
+        }
+      ],
+      "choices": [
+        {
+          "id": "pick_cube",
+          "text": "Kocka",
+          "next": "p3",
+          "reward": { "unlockFragments": ["shape_cube"] }
+        },
+        {
+          "id": "pick_circle",
+          "text": "Kör",
+          "next": "p3",
+          "reward": { "unlockFragments": ["shape_circle"] }
+        }
+      ]
+    },
+
+    "p3": {
+      "id": "p3",
+      "title": "Előkészítés",
+      "text": [
+        { "default": "3. oldal — Előkészítjük a generálást." },
+        {
+          "ifUnlocked": "color_green",
+          "text": "{fragment:recap_color}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "color_blue",
+          "text": "{fragment:recap_color}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "shape_cube",
+          "text": "{fragment:recap_shape}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "shape_circle",
+          "text": "{fragment:recap_shape}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Következőn készül a kép. Kattints a Tovább gombra.",
+          "mode": "append_after"
+        }
+      ],
+      "next": "p4",
+      "imageTiming": {
+        "preloadNextPages": ["p4"]
+      }
+    },
+
+    "p4": {
+      "id": "p4",
+      "title": "Kép generálás",
+      "text": [
+        { "default": "4. oldal — Generált vizuál a választott beállításokból." }
+      ],
+      "imagePrompt": {
+        "combinedPrompt": "Minimalista kompozíció {fragment:color_green}{fragment:color_blue} háttérrel, középen egy {fragment:shape_cube}{fragment:shape_circle}. Tiszta stúdiófény, lágy árnyékok, nagy felbontás, éles fókusz.",
+        "negative": "szöveg, vízjel, torz arc, torz kéz, zajos részletek",
+        "styleProfile": {
+          "mood": "clean-minimal",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "mode": "draft",
+        "delayMs": 0
+      },
+      "type": "end",
+      "endMeta": {
+        "cta": { "kind": "restart", "label": "Újra" }
+      }
+    }
+  }
+}

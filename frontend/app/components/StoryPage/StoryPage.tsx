@@ -43,7 +43,7 @@ import CampaignCta from "../CampaignCta/CampaignCta";
 
 import {
   useGameState,
-  resolveNextFromPage,
+  resolveNextFromPage, normalizeImagePrompt
 } from "../../lib/GameStateContext";
 
 import { preloadImage } from "../../lib/preloadImage";
@@ -134,6 +134,26 @@ function resolveFragmentTokens(
   );
 }
 
+function resolvePromptFragments(
+  raw: string | undefined,
+  unlocked: Set<string> | string[],
+  bank?: FragmentBank,
+  globalBank?: FragmentBank
+): string {
+  if (!raw) return "";
+  const unlockedSet = Array.isArray(unlocked) ? new Set(unlocked) : unlocked;
+
+  // {fragment:foo} → csak akkor cseréljük be, ha az adott fragment UNLOCKED
+  const resolved = String(raw).replace(/\{fragment:([\w\-]+)\}/g, (_, id: string) => {
+    if (!unlockedSet.has(id)) return ""; // kulcs: nem unlocked → töröljük
+    const txt = (bank?.[id]?.text || globalBank?.[id]?.text || "").trim();
+    return txt;
+  });
+
+  // apró takarítás, ne maradjon dupla szóköz, space írásjelek előtt, stb.
+  return resolved.replace(/\s{2,}/g, " ").replace(/\s+([,.!?:;])/g, "$1").trim();
+}
+
 function composeBlocks(
   pageData: any,
   unlocked: string[] | Set<string>,
@@ -171,6 +191,9 @@ function composeBlocks(
     groupDefault = defStr;
     groupMatched = false;
   };
+
+
+
   const flushGroupIfPending = () => {
     if (groupHasDefault && !groupMatched && groupDefault) {
       pushOrAppend(groupDefault);
@@ -539,6 +562,17 @@ const StoryPage: React.FC = () => {
 
   /** --- URL params / analytics --- */
   const params = useSearchParams();
+
+  useEffect(() => {
+  const skinParam = params.get("skin");
+ 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+const skin = useMemo(() => {
+  return (globals as any)?.skin || params.get("skin") || "legacy-default";
+}, [(globals as any)?.skin, params]);
+
   const showAnalytics = params.get("analytics") === "1";
 
   const derivedStoryId = useMemo(() => {
@@ -587,8 +621,7 @@ const StoryPage: React.FC = () => {
       />
     ) : null;
 
-  /** --- runePack megjelenítés --- */
-  const runePackForDisplay = useMemo(() => {
+    const runePackForDisplay = useMemo(() => {
     const rp: any = globals?.runePack;
     if (!rp || typeof rp !== "object") return undefined;
 
@@ -618,6 +651,17 @@ const StoryPage: React.FC = () => {
       palette: rp.palette,
     };
   }, [globals?.runePack]);
+
+  // 🔹 ITT LEGYEN
+  const unlockedPlus = useMemo(
+    () =>
+      new Set<string>([
+        ...unlockedFragments,
+        ...Array.from(flags ?? new Set<string>()),
+      ]),
+    [unlockedFragments, flags]
+  );
+
 
   /** --- setup effects --- */
 
@@ -1169,8 +1213,7 @@ const StoryPage: React.FC = () => {
     registerAbort,
     derivedStoryId,
   ]);
-
-  // preload images for preloadNextPages
+  // preload images for preloadNextPages (FRAGMENT-RESOLVED)
   useEffect(() => {
     if (!globals?.storySrc) return;
     const ids = pageData?.imageTiming?.preloadNextPages;
@@ -1197,10 +1240,58 @@ const StoryPage: React.FC = () => {
         );
 
         if (nextPageData?.imagePrompt) {
+          // 1) normalizáljuk az imagePrompt-ot
+          const raw = normalizeImagePrompt(
+            nextPageData.imagePrompt as any
+          );
+
+          // 2) fragmentek feloldása a JELENLEGI állapot szerint
+          const basePrompt = raw.prompt || "";
+          const baseNegative = raw.negative || "";
+
+          const resolvedPrompt = resolvePromptFragments(
+            basePrompt,
+            unlockedPlus,
+            fragments,
+            globalFragments
+          );
+          const resolvedNegative = resolvePromptFragments(
+            baseNegative,
+            unlockedPlus,
+            fragments,
+            globalFragments
+          );
+
+          // 3) paraméterek összeollózása (seed, negativePrompt stb.)
+          const mergedParams: any = {
+            ...(nextPageData.imageParams || {}),
+            negativePrompt:
+              resolvedNegative ||
+              (nextPageData.imageParams as any)?.negativePrompt,
+            seed:
+              typeof raw.seed === "number"
+                ? raw.seed
+                : (nextPageData.imageParams as any)?.seed,
+            styleProfile:
+              raw.styleProfile ??
+              (nextPageData.imageParams as any)?.styleProfile,
+          };
+
+          // 4) preload ugyanazzal a FELDOLGOZOTT prompttal, mint amit a render is használ
           await preloadImage(
             nextPageData.id,
-            nextPageData.imagePrompt,
-            nextPageData.imageParams || {},
+            {
+              // megtartjuk az objektum formát, csak a combinedPrompt/negativePrompt már feloldott
+              ...(typeof nextPageData.imagePrompt === "object"
+                ? nextPageData.imagePrompt
+                : {}),
+              combinedPrompt: resolvedPrompt,
+              negativePrompt:
+                resolvedNegative ??
+                (nextPageData.imagePrompt as any)?.negativePrompt ??
+                (nextPageData.imagePrompt as any)?.negative,
+            } as any,
+            mergedParams,
             nextPageData.styleProfile || {},
             "draft"
           );
@@ -1227,6 +1318,9 @@ const StoryPage: React.FC = () => {
     pageData?.imageTiming?.preloadNextPages,
     registerAbort,
     derivedStoryId,
+    unlockedPlus,        // 🔹 fontos: függjön az unlocked-tól is
+    fragments,
+    globalFragments,
   ]);
 
   // animateNext flag after choices appear
@@ -1479,14 +1573,6 @@ const dockChoicesForThisPage = useMemo(() => {
     [recallTexts]
   );
 
-  const unlockedPlus = useMemo(
-    () =>
-      new Set<string>([
-        ...unlockedFragments,
-        ...Array.from(flags ?? new Set<string>()),
-      ]),
-    [unlockedFragments, flags]
-  );
 
   const composed = useMemo(
     () =>
@@ -1503,6 +1589,8 @@ const dockChoicesForThisPage = useMemo(() => {
     () => [...recallBlocks, ...composed],
     [recallBlocks, composed]
   );
+
+
 
   // puzzle page flags
   const isRiddlePage = useMemo(
@@ -1682,13 +1770,39 @@ const dockChoicesForThisPage = useMemo(() => {
     [pageData?.imageTiming]
   );
 
-  const shouldGenerate = useMemo(
-    () =>
-      Boolean(
-        pageData?.imageTiming?.generate && pageData?.imagePrompt
-      ),
-    [pageData?.imageTiming?.generate, pageData?.imagePrompt]
-  );
+    const imgPrompt = useMemo(
+  () => normalizeImagePrompt(pageData?.imagePrompt as any),
+  [pageData?.imagePrompt]
+);
+
+// 🔹 új: a combined prompt feloldása csak unlocked fragmentekre
+const resolvedImgPrompt = useMemo(() => {
+  const base = imgPrompt?.prompt || "";
+  const neg  = imgPrompt?.negative || "";
+  const promptResolved  = resolvePromptFragments(base, unlockedPlus, fragments, globalFragments);
+  const negativeResolved = resolvePromptFragments(neg,  unlockedPlus, fragments, globalFragments);
+  return { ...imgPrompt, prompt: promptResolved, negative: negativeResolved };
+}, [imgPrompt, unlockedPlus, fragments, globalFragments]);
+
+useEffect(() => {
+  console.log("[IMG PROMPT DEBUG]", {
+    pageId: pageData?.id,
+    rawPrompt: pageData?.imagePrompt,
+    normalized: imgPrompt,
+    resolved: resolvedImgPrompt,
+    unlocked: Array.from(unlockedPlus),
+  });
+}, [pageData?.id, imgPrompt, resolvedImgPrompt, unlockedPlus]);
+
+
+const shouldGenerate = useMemo(() => {
+  if (!pageData?.imageTiming?.generate) return false;
+  const p = pageData?.imagePrompt as any;
+  if (!p) return false;
+  if (typeof p === "string") return p.trim().length > 0;
+  return Boolean(p.combinedPrompt || p.global || p.chapter || p.page);
+}, [pageData?.imageTiming?.generate, pageData?.imagePrompt]);
+
 
   const showFrame = useMemo(() => {
     const forcePages =
@@ -2526,6 +2640,7 @@ const dockChoicesForThisPage = useMemo(() => {
     <div
       ref={pageRootRef}
       className={style.storyPage}
+      data-skin={skin}
     >
       <AdminQuickPanel />
       {analyticsSync}
@@ -2544,7 +2659,7 @@ const dockChoicesForThisPage = useMemo(() => {
         topbar={
           <>
             <HeaderBar
-              data-skin="legacy-default"
+              data-skin={skin}
               variant="transparent"
               elevated
               left={
@@ -2617,29 +2732,24 @@ const dockChoicesForThisPage = useMemo(() => {
             pageId={pageData.id}
             pageIsFadingOut={isFadingOut}
             logoSrc={logoUrl}>
-              <GeneratedImage_with_fadein
-                pageId={pageData.id}
-                
-                prompt={
-                  shouldGenerate
-                    ? pageData.imagePrompt
-                    : undefined
-                }
-                params={
-                  stableParams
-                }
-                imageTiming={{
-                  ...stableImageTiming,
-                  generate:
-                    shouldGenerate,
-                }}
-                mode={
-                  pageData
-                    .imageTiming
-                    ?.mode || "draft"
-                }
-                 pageIsFadingOut={isFadingOut}
-              />
+<GeneratedImage_with_fadein
+  pageId={pageData.id}
+  prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
+  params={{
+    ...stableParams,
+    negativePrompt: resolvedImgPrompt.negative ?? (stableParams as any)?.negativePrompt,
+    seed: typeof resolvedImgPrompt.seed === "number" ? resolvedImgPrompt.seed : (stableParams as any)?.seed,
+    styleProfile: resolvedImgPrompt.styleProfile ?? (stableParams as any)?.styleProfile,
+  }}
+  imageTiming={{
+    ...stableImageTiming,
+    generate: shouldGenerate,
+  }}
+  mode={pageData.imageTiming?.mode || "draft"}
+  pageIsFadingOut={isFadingOut}
+/>
+
+
             </MediaFrame>
           ) : null
         }

@@ -35,9 +35,7 @@
           "description": "Globális CTA presetek, kulcs: presetId (pl. 'default').",
           "type": "object",
           "minProperties": 1,
-          "additionalProperties": {
-            "$ref": "#/$defs/CtaPreset"
-          }
+          "additionalProperties": { "$ref": "#/$defs/CtaPreset" }
         },
         "endDefaultCta": {
           "description": "Alapértelmezett CTA preset az end / finálé oldalhoz.",
@@ -132,6 +130,22 @@
           "items": { "$ref": "#/$defs/SfxEvent" }
         },
         "imagePrompt": { "$ref": "#/$defs/ImagePrompt" },
+        "imagePromptMerge": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            },
+            "exclude": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            }
+          }
+        },
         "imageTiming": { "$ref": "#/$defs/ImageTiming" },
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
@@ -256,8 +270,7 @@
           },
           "required": ["type", "key"]
         }
-      ],
-      "additionalProperties": false
+      ]
     },
     "Reward": {
       "type": "object",
@@ -290,9 +303,27 @@
       "required": ["id"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "replayImage": { "type": "string" },
+        "imagePromptParts": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "global": { "type": "string" },
+                "chapter": { "type": "string" },
+                "page": { "type": "string" },
+                "combinedPrompt": { "type": "string" },
+                "negative": { "type": "string" },
+                "negativePrompt": { "type": "string" }
+              }
+            }
+          ]
+        },
         "extras": { "type": "object" },
         "x-*": {}
       },
@@ -365,10 +396,12 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["prompt"],
           "properties": {
-            "prompt": { "type": "string" },
-            "negative": { "type": "string" },
+            "global": { "type": "string" },
+            "chapter": { "type": "string" },
+            "page": { "type": "string" },
+            "combinedPrompt": { "type": "string" },
+            "negativePrompt": { "type": "string" },
             "styleProfile": { "type": "string" },
             "seed": { "type": "integer" }
           }
@@ -380,10 +413,7 @@
       "additionalProperties": false,
       "properties": {
         "generate": { "type": "boolean" },
-        "on": {
-          "type": "string",
-          "enum": ["pageEnter", "afterVoice"]
-        }
+        "on": { "type": "string", "enum": ["pageEnter", "afterVoice"] }
       }
     },
     "TransitionPage": {
@@ -415,11 +445,7 @@
         "answer": {
           "oneOf": [
             { "type": "string" },
-            {
-              "type": "array",
-              "items": { "type": "string" },
-              "minItems": 1
-            }
+            { "type": "array", "items": { "type": "string" }, "minItems": 1 }
           ]
         },
         "maxAttempts": { "type": "integer", "minimum": 1 }
@@ -446,14 +472,8 @@
       "additionalProperties": false,
       "required": ["kind", "label"],
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": ["link"]
-        },
-        "label": {
-          "type": "string",
-          "minLength": 1
-        },
+        "kind": { "type": "string", "enum": ["link"] },
+        "label": { "type": "string", "minLength": 1 },
         "urlTemplate": {
           "description": "Cél URL vagy templét (pl. query paramokkal).",
           "type": "string",
@@ -461,9 +481,7 @@
         },
         "x-*": {}
       },
-      "patternProperties": {
-        "^x-.*$": {}
-      }
+      "patternProperties": { "^x-.*$": {} }
     }
   }
 }
