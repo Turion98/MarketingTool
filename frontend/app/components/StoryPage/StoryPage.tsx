@@ -71,6 +71,7 @@ import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 
 import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
+import ProfileCardFrame from "../layout/ProfileCardFrame/ProfileCardFrame";
 
 const DEBUG_RUNES = true;
 const DELAY_MS = 3000;
@@ -1346,6 +1347,10 @@ const skin = useMemo(() => {
     );
   }, [pageData, globals]);
 
+  const mediaMode = pageData?.layout?.mediaMode || "image";
+  const isProfileCardPage = mediaMode === "profile-card";
+
+
   const canInteractHere =
     !!pageData &&
     pageUnlockedForInteraction === pageData.id &&
@@ -1783,6 +1788,38 @@ const resolvedImgPrompt = useMemo(() => {
   const negativeResolved = resolvePromptFragments(neg,  unlockedPlus, fragments, globalFragments);
   return { ...imgPrompt, prompt: promptResolved, negative: negativeResolved };
 }, [imgPrompt, unlockedPlus, fragments, globalFragments]);
+
+  const effectiveImageParams = useMemo(() => {
+    const base: any = {
+      ...stableParams,
+      negativePrompt:
+        resolvedImgPrompt.negative ??
+        (stableParams as any)?.negativePrompt,
+      seed:
+        typeof resolvedImgPrompt.seed === "number"
+          ? resolvedImgPrompt.seed
+          : (stableParams as any)?.seed,
+      styleProfile:
+        resolvedImgPrompt.styleProfile ??
+        (stableParams as any)?.styleProfile,
+    };
+
+    // 🔹 profilkártya eset: 1:1-es kép + négyzetes méret
+    if (isProfileCardPage) {
+      base.aspect_ratio = "1:1";
+
+      if (!base.width && !base.height) {
+        base.width = 1024;
+        base.height = 1024;
+      } else if (base.width && !base.height) {
+        base.height = base.width;
+      } else if (!base.width && base.height) {
+        base.width = base.height;
+      }
+    }
+
+    return base;
+  }, [stableParams, resolvedImgPrompt, isProfileCardPage]);
 
 useEffect(() => {
   console.log("[IMG PROMPT DEBUG]", {
@@ -2726,33 +2763,57 @@ const shouldGenerate = useMemo(() => {
             }
           />
         }
-        media={
+                media={
           showFrame ? (
-            <MediaFrame mode="image"
-            pageId={pageData.id}
-            pageIsFadingOut={isFadingOut}
-            logoSrc={logoUrl}>
-<GeneratedImage_with_fadein
-  pageId={pageData.id}
-  prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
-  params={{
-    ...stableParams,
-    negativePrompt: resolvedImgPrompt.negative ?? (stableParams as any)?.negativePrompt,
-    seed: typeof resolvedImgPrompt.seed === "number" ? resolvedImgPrompt.seed : (stableParams as any)?.seed,
-    styleProfile: resolvedImgPrompt.styleProfile ?? (stableParams as any)?.styleProfile,
-  }}
-  imageTiming={{
-    ...stableImageTiming,
-    generate: shouldGenerate,
-  }}
-  mode={pageData.imageTiming?.mode || "draft"}
-  pageIsFadingOut={isFadingOut}
-/>
-
-
-            </MediaFrame>
+            isProfileCardPage ? (
+              <ProfileCardFrame
+                pageId={pageData.id}
+                pageIsFadingOut={isFadingOut}
+                logoSrc={logoUrl}
+              >
+                <GeneratedImage_with_fadein
+                  pageId={pageData.id}
+                  prompt={
+                    shouldGenerate
+                      ? resolvedImgPrompt.prompt
+                      : undefined
+                  }
+                  params={effectiveImageParams}
+                  imageTiming={{
+                    ...stableImageTiming,
+                    generate: shouldGenerate,
+                  }}
+                  mode={pageData.imageTiming?.mode || "draft"}
+                  pageIsFadingOut={isFadingOut}
+                />
+              </ProfileCardFrame>
+            ) : (
+              <MediaFrame
+                mode="image"
+                pageId={pageData.id}
+                pageIsFadingOut={isFadingOut}
+                logoSrc={logoUrl}
+              >
+                <GeneratedImage_with_fadein
+                  pageId={pageData.id}
+                  prompt={
+                    shouldGenerate
+                      ? resolvedImgPrompt.prompt
+                      : undefined
+                  }
+                  params={effectiveImageParams}
+                  imageTiming={{
+                    ...stableImageTiming,
+                    generate: shouldGenerate,
+                  }}
+                  mode={pageData.imageTiming?.mode || "draft"}
+                  pageIsFadingOut={isFadingOut}
+                />
+              </MediaFrame>
+            )
           ) : null
         }
+
         narr={
           <div
             ref={narrFreezeRef}

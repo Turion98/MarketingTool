@@ -1,0 +1,25 @@
+{
+  "pageId": "p4",
+  "promptKey": "08ff07b71edb305a4d0bd4ccac3773b4322ffb68",
+  "seed": null,
+  "mode": "draft",
+  "cacheHit": true,
+  "durationMs": 961,
+  "flags": {
+    "ENABLE_IMAGE_CACHE": true,
+    "ENABLE_IMAGE_PRELOAD": true
+  },
+  "source": "cache",
+  "storySlug": "default",
+  "prompt": "2D animation, soft natural light, gentle depth Minimalista profilkártya-kompozíció zöld háttérrel, középen egy kocka. Tiszta stúdiófény, lágy árnyékok, nagy felbontás, éles fókusz.",
+  "rawPrompt": "2D animation, soft natural light, gentle depth Minimalista profilkártya-kompozíció zöld háttérrel, középen egy kocka. Tiszta stúdiófény, lágy árnyékok, nagy felbontás, éles fókusz.",
+  "params": {
+    "negativePrompt": "no text, no typography, no logos, no brand identities, no watermark, no captions, no UI",
+    "aspect_ratio": "1:1",
+    "width": 1024,
+    "height": 1024,
+    "steps": 12,
+    "cfg": 3.5
+  },
+  "styleProfile": {}
+}

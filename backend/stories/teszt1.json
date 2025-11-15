@@ -10,7 +10,7 @@
     "endDefaultCta": { "kind": "restart", "label": "Újra" }
   },
 
-  "fragmentBank": {
+  "fragments": {
     "color_green": { "text": "zöld" },
     "color_blue": { "text": "kék" },
     "shape_cube": { "text": "kocka" },
@@ -119,12 +119,22 @@
 
     "p4": {
       "id": "p4",
-      "title": "Kép generálás",
+      "title": "Profilkártya generálás",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
       "text": [
-        { "default": "4. oldal — Generált vizuál a választott beállításokból." }
+        {
+          "default": "4. oldal — Profilkártya, a választott szín és alakzat alapján generált vizuállal."
+        }
       ],
+      "profile": {
+        "name": "Teszt profil",
+        "subtitle": "A választásaid alapján generált kártya",
+        "extra": "Demo szöveg: itt fog látszani a polaroid alsó szövegsávja."
+      },
       "imagePrompt": {
-        "combinedPrompt": "Minimalista kompozíció {fragment:color_green}{fragment:color_blue} háttérrel, középen egy {fragment:shape_cube}{fragment:shape_circle}. Tiszta stúdiófény, lágy árnyékok, nagy felbontás, éles fókusz.",
+        "combinedPrompt": "Minimalista profilkártya-kompozíció {fragment:color_green}{fragment:color_blue} háttérrel, középen egy {fragment:shape_cube}{fragment:shape_circle}. Tiszta stúdiófény, lágy árnyékok, nagy felbontás, éles fókusz.",
         "negative": "szöveg, vízjel, torz arc, torz kéz, zajos részletek",
         "styleProfile": {
           "mood": "clean-minimal",
