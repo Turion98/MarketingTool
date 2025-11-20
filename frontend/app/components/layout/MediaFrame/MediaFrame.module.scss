@@ -87,10 +87,6 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: var(--mf-radius, 14px);
-  border-width: var(--mf-border-w, 8px);
-  border-style: var(--mf-border-style, solid);
-  border-color: var(--mf-border-color, transparent);
   background:
     var(--mf-border-gradient, transparent) border-box,
     var(--mf-bg, transparent) padding-box;

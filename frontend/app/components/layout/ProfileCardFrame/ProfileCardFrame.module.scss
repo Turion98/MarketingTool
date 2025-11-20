@@ -1,173 +1,103 @@
-/* app/components/layout/ProfileCardFrame/ProfileCardFrame.module.scss */
-
 .profileFrame {
-  position: relative;
+    position: relative;
+
+  /* a grid cellen belül húzza középre */
   inline-size: 100%;
-  /* 🔹 ne az egész MediaFrame-et foglalja, legyen normál kártya-méret */
-  max-inline-size: var(--pc-max-w, 460px);
+  max-inline-size: 370px; /* vagy var(--pc-max-w, 400px) */
   margin-inline: auto;
-
-  transition:
-    opacity 220ms ease,
-    transform 220ms ease;
-}
-
-.isFadingOut {
-  opacity: 0;
-  transform: translateY(8px);
 }
 
 .cardInner {
   position: relative;
-  padding: var(--mf-pad, 8px);
-  border-radius: var(--mf-radius, 14px);
-  background: var(
-    --mf-bg,
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 55%),
-      rgba(0, 0, 0, 0.6)
-  );
-  box-shadow: var(--mf-shadow, 0 18px 40px rgba(0, 0, 0, 0.6));
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 12px;
+  border-radius: 16px;
+
+  // 🔸 Ugyanaz a “Lux Gold / MediaFrame” brand háttér
+  background:
+    radial-gradient(
+      circle at top,
+      var(--mf-svg-base-1, rgba(255, 213, 106, 0.2)),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      var(--mf-svg-base-2, rgba(255, 213, 106, 0.16)),
+      var(--mf-svg-base-3, rgba(255, 213, 106, 0.02))
+    ),
+    rgba(10, 10, 10, 0.92);
+
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   overflow: hidden;
 }
 
-/* felső logo box – overlay a kártyán, mf-tokenekkel */
-.logoBox {
-  position: absolute;
-  top: calc(var(--mf-logo-margin-top, 12) * 1px);
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: calc(var(--mf-logo-box-w, 220) * 1px);
-  height: calc(var(--mf-logo-box-h, 72) * 1px);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: calc(var(--mf-logo-pad-y, 6) * 1px)
-    calc(var(--mf-logo-pad-x, 12) * 1px);
-
-  border-radius: calc(var(--mf-logo-panel-radius, 22) * 1px);
-
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklch, #000 85%, var(--mf-gold, #d4af37) 15%),
-    color-mix(in oklch, #111 70%, var(--mf-gold, #d4af37) 30%)
-  );
-  border: 1px solid color-mix(
-      in oklch,
-      var(--mf-gold, #d4af37) 65%,
-      transparent
-    );
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-
-  img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block;
-  }
-}
-
-/* felső 1:1 kép-blokk – szűkebb, középre húzott, hogy legyen oldalsó keret is */
 .imageSlot {
-  position: relative;
-  margin-top: calc(var(--mf-image-offset-top, 40) * 1px);
-
-  /* 🔹 polaroid: a bitmap ne érjen ki teljes szélességre */
-  inline-size: var(--pc-image-w, 78%);
-  margin-inline: auto;
-
-  border-radius: var(--mf-radius, 14px);
+  margin-block-start: 0px;
+  inline-size: 100%;
+  display: block;
   overflow: hidden;
-
-  background: radial-gradient(
-    circle at top,
-    color-mix(in oklch, #ffffff 10%, var(--mf-bg, #000) 90%),
-    color-mix(in oklch, #000 80%, var(--mf-bg, #000) 20%)
-  );
-
-  /* itt kényszerítjük az 1:1 arányt a kártyán belül */
-  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  margin-inline: auto;
 }
 
 .imageInner {
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-
-  > * {
-    width: 100%;
-    height: 100%;
-  }
+  inline-size: 100%;
+  block-size: auto;     /* a kép magassága nő a saját arányával */
+  
 }
 
-/* alsó infó-sáv */
+.imageInner :global(.generatedImage) {
+  inline-size: 100%;
+  block-size: auto;     /* natív arány */
+  object-fit: contain;  /* semmi vágás */
+  display: block;
+}
+
+
+/* BOTTOM */
+.bottomRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  inline-size: 100%;
+  block-size: calc(100% - 5px - (400px * 9 / 16)); /* kb. maradék magasság */
+  padding-block-start: 12px;
+}
+
 .infoSlot {
-  margin-top: calc(var(--mf-info-gap, 16) * 1px);
-  padding-inline: calc(var(--mf-info-pad-x, 4) * 1px);
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-
-  text-align: center;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-/* név – typót a contract tokenek vezérlik */
 .profileName {
-  font-family: var(--contract-typography-a-font-family, var(--contract-font-family, inherit));
-  font-size: var(--contract-typography-a-font-size, 1.1rem);
-  line-height: var(--contract-typography-a-line-height, 1.25);
-  letter-spacing: var(--contract-typography-a-letter-spacing, 0.04em);
-  font-weight: var(--contract-typography-a-weight, 600);
-  color: var(--contract-typography-a-color, #ffffff);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* subtitle / szerep */
 .profileSubtitle {
-  font-family: var(--contract-typography-b-font-family, var(--contract-font-family, inherit));
-  font-size: var(--contract-typography-b-font-size, 0.95rem);
-  line-height: var(--contract-typography-b-line-height, 1.4);
-  letter-spacing: var(--contract-typography-b-letter-spacing, 0.02em);
-  font-weight: var(--contract-typography-b-weight, 400);
-  color: color-mix(
-    in oklch,
-    var(--contract-typography-b-color, #ffffff) 80%,
-    transparent
-  );
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-block-start: 2px;
 }
 
-/* extra meta-sor (pl. score, tag-ek) */
 .profileMeta {
-  margin-top: 4px;
-  font-family: var(--contract-typography-b-font-family, var(--contract-font-family, inherit));
-  font-size: calc(var(--contract-typography-b-font-size, 0.95rem) * 0.9);
-  line-height: 1.4;
-  font-weight: 400;
-  color: color-mix(
-    in oklch,
-    var(--contract-typography-b-color, #ffffff) 65%,
-    transparent
-  );
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-block-start: 4px;
 }
 
-/* mobil finomhangolás */
-@media (max-width: 600px) {
-  .profileFrame {
-    max-inline-size: 100%;
-  }
+/* LOGO – jobb alsó sarok */
+.logoSlot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
 
-  .cardInner {
-    padding: calc(var(--mf-pad, 8px) * 0.8);
-  }
-
-  .imageSlot {
-    border-radius: calc(var(--mf-radius, 14px) * 0.9);
-  }
+.logoImage {
+  max-inline-size: 120px;
+  block-size: auto;
+  display: block;
 }
