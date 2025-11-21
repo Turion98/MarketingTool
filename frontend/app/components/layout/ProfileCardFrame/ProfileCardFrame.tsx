@@ -13,8 +13,8 @@ type ProfileCardFrameProps = {
 };
 
 // A kártya fizikai mérete a Canvas cellán belül
-const CARD_WIDTH = 400;
-const CARD_HEIGHT = 500;
+const CARD_WIDTH = 340;
+const CARD_HEIGHT = 440;
 
 // Polaroid-szerű, álló viewBox – ugyanaz az arány (0.8), mint a 400×500
 const VIEWBOX_W = 1600;
@@ -45,7 +45,8 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   pageId,
   pageIsFadingOut = false,
 }) => {
-  const { registerRewardFrame, currentPageData } = useGameState() as any;
+  const { registerRewardFrame, currentPageData, setRewardImageReady } =
+    useGameState() as any;
 
   const profile = (currentPageData as any)?.profile || {};
   const name: string | undefined = profile.name ?? profile.title;
@@ -64,16 +65,14 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
 
   // logó méretek – kereten belüli “logo-bay”-hez
-  const LOGO_BOX_W = readCssNumber("--mf-logo-box-w", 330);
-  const LOGO_BOX_H = readCssNumber("--mf-logo-box-h", 218);
-  const LOGO_MARGIN_RIGHT = readCssNumber("--mf-logo-margin-right", 32);
-  const LOGO_MARGIN_BOTTOM = readCssNumber("--mf-logo-margin-bottom", 32);
+  const LOGO_BOX_W = 300; // eddigi 330 helyett
+  const LOGO_BOX_H = 320;
+  const LOGO_MARGIN_RIGHT = 12;
+  const LOGO_MARGIN_BOTTOM = 0;
 
-  const LOGO_PAD_X_PCT = readCssNumber("--mf-logo-pad-x", 6); // belső padding %
-  const LOGO_PAD_Y_PCT = readCssNumber("--mf-logo-pad-y", 10);
+  const LOGO_PAD_X = 0;
+  const LOGO_PAD_Y = -20;
 
-  const LOGO_PAD_X = (LOGO_BOX_W * LOGO_PAD_X_PCT) / 100;
-  const LOGO_PAD_Y = (LOGO_BOX_H * LOGO_PAD_Y_PCT) / 100;
 
   // alap téglalap koordináták
   const left = BASE_INSET;
@@ -83,7 +82,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
 
   // 🔹 LOGO-BAY: a keret jobb alsó részén egy "felugró" polc
   const LOGO_STRIP_W = LOGO_BOX_W + 80; // mennyi szélességet kapjon a polc
-  const LOGO_STRIP_H = LOGO_BOX_H + 80; // mennyire menjen fel a polc a kártyába
+  const LOGO_STRIP_H = LOGO_BOX_H + 20; // mennyire menjen fel a polc a kártyába
   const LOGO_RISE = LOGO_STRIP_H; // ennyivel megy fel a keret alja ezen a részen
 
   const logoStripRight = right - LOGO_MARGIN_RIGHT;
@@ -91,9 +90,19 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   const logoStripBottom = bottom - LOGO_MARGIN_BOTTOM;
   const logoStripTop = logoStripBottom - LOGO_STRIP_H;
 
-  // ide kerül maga a logó hasznos téglalapja
-  const logoInnerX = logoStripLeft + (LOGO_STRIP_W - LOGO_BOX_W) / 2;
-  const logoInnerY = logoStripTop + (LOGO_STRIP_H - LOGO_BOX_H) / 2;
+// alap középre igazított pozíció
+const logoBaseX =
+  logoStripLeft + (LOGO_STRIP_W - LOGO_BOX_W) / 2;
+const logoBaseY =
+  logoStripTop + (LOGO_STRIP_H - LOGO_BOX_H) / 2;
+
+// kézi finomhangoló offset – ezt tudod állítani szemre
+const LOGO_TWEAK_X = 12;  // + jobbra, - balra
+const LOGO_TWEAK_Y = 0;   // + le, - fel
+
+// végső pozíció
+const logoInnerX = logoBaseX + LOGO_TWEAK_X;
+const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
 
   // 🔥 LÉPCSŐZETES keret-path: az alsó él jobb oldalán felugrik (logo-bay polc)
   const framePath = [
@@ -134,6 +143,11 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
       "rgba(255,255,255,0.0)"
     ),
   };
+
+  // 🔹 amikor a profilkártya DOM-ban van, engedjük a GET exportot
+  React.useEffect(() => {
+    setRewardImageReady(true);
+  }, [setRewardImageReady]);
 
   return (
     <div
@@ -267,16 +281,17 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
               opacity={0.6}
             />
 
-            {/* LOGO-BAY háttere – UGYANAZ a gradient, mint a fő kereten */}
-           <rect
-  x={logoStripLeft}
-  y={bottom - LOGO_RISE}          // pontosan a lépcső tetejétől indul
-  width={LOGO_STRIP_W}
-  height={LOGO_RISE}              // pont akkora magas, mint a felugrás
-  rx={12}                         // kisebb kerekítés
-  ry={12}
-  fill="url(#pc_bg)"
-/>
+            {/* LOGO-BAY háttere – ugyanaz a gradient, mint a fő kereten,
+                pontosan a lépcső tetejétől, a felugrás teljes magasságában */}
+            <rect
+              x={logoStripLeft}
+              y={bottom - LOGO_RISE}
+              width={LOGO_STRIP_W}
+              height={LOGO_RISE}
+              rx={12}
+              ry={12}
+              fill="url(#pc_bg)"
+            />
 
             {/* logó a logo-bay-en belül */}
             {logoSrc && (

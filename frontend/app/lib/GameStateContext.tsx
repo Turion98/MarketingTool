@@ -466,7 +466,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const rewardFrameRef = useRef<HTMLDivElement | null>(null);
 
   const registerRewardFrame = useCallback((el: HTMLDivElement | null) => {
+   if (el) {
     rewardFrameRef.current = el;
+   }
   }, []);
 
   const downloadRewardImage = useCallback(async () => {

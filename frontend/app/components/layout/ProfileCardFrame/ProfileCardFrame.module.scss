@@ -3,9 +3,9 @@
 .profileFrame {
   position: relative;
 
-  /* Canvas grid cellen belül középre húzva */
+  /* alap méret a Canvas grid cellán belül */
   inline-size: 100%;
-  max-inline-size: 400px;
+  max-inline-size: 340px;
   margin-inline: auto;
 }
 
@@ -16,9 +16,7 @@
   block-size: 100%;
   padding: 14px;
 
-  /* háttér KI – ezt most az SVG rect tölti be */
   background: transparent;
-
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   overflow: visible; /* hogy a jobb alsó panel ki tudjon lógni */
 }
@@ -36,7 +34,7 @@
 /* Dekor réteg – SVG keret + logo panel (pointer-events: none) */
 .decorLayer {
   position: absolute;
-  inset: 0;
+  inset: 0; /* az előző -4 unit nélkül bugos lehet */
   pointer-events: none;
   z-index: 0;
 }
@@ -80,31 +78,80 @@
 /* BOTTOM – szöveges rész */
 .bottomRow {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  justify-content: flex-start;
+  align-items: flex-start;
   gap: 12px;
   inline-size: 100%;
   padding-block-start: 16px;
 }
 
+/* Bal oldali szövegoszlop – ne fusson be a logó alá */
 .infoSlot {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
+  max-inline-size: 260px; /* kb. logó előtt törjön */
+  margin-left: 8px;
 }
 
+/* ===== TIPOGRÁFIA – csak betűcsalád tokenizálva ===== */
+
+/* Név / profil cím – ugyanaz a font-család, mint a NarrativePanel titleOverlay */
 .profileName {
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(
+    --np-title-font-family,
+    var(--contract-text-font-family, sans-serif)
+  );
+
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+
+  margin-block-start: 6px;
+  margin-block-end: 10px;
 }
 
+/* Subtitle – ugyanaz a család, mint a narrációs szöveg, fix layout értékekkel */
 .profileSubtitle {
+  font-family: var(--contract-text-font-family, sans-serif);
   font-size: 0.9rem;
-  opacity: 0.9;
-  margin-block-start: 2px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.9);
+
+  /* kb. 250px körül törjön */
+  max-inline-size: 250px;
+  word-wrap: break-word;
+
+  margin-block-start: 4px;
+  margin-left: 2px;
 }
 
+/* Extra szöveg – most nem használjuk, de bekötve marad ugyanarra a családra */
 .profileMeta {
+  font-family: var(--contract-text-font-family, sans-serif);
   font-size: 0.8rem;
-  opacity: 0.75;
+  font-weight: 400;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.75);
   margin-block-start: 4px;
+}
+
+/* ===== RESPONSIVE: az EGÉSZ kártya zsugorítása, belső térközök változtatása nélkül ===== */
+
+/* kisebb mobil: kicsit zsugorodjon az egész polaroid */
+@media (max-width: 480px) {
+  .profileFrame {
+    transform: translateX(-12) scale(0.9);
+    transform-origin: top center;
+    
+  }
+}
+
+/* nagyon szűk mobil: erősebb zsugorítás */
+@media (max-width: 360px) {
+  .profileFrame {
+    transform: translateX(-8) scale(0.8);
+    transform-origin: top center;
+  }
 }

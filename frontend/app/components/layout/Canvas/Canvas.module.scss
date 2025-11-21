@@ -111,6 +111,7 @@ body[data-skin="legacy-default"] {
   grid-area: narr;
   align-self: start;
   min-width: 0;
+  margin-block-start: 30px;
 }
 
 /* Fontos: mobilon NE középre igazítsuk a dockot grid-del.
@@ -184,6 +185,11 @@ body[data-skin="legacy-default"] {
   .showOnlyMobile { display: none !important; }
 }
 
+@media (max-width: 500px) {
+  .areaNarr {
+    margin-block-start: 0px;
+  }
+}
 /* ===== TABLET / DESKTOP ===== */
 @media (min-width: 641px) {
   .playfield {
