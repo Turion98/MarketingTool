@@ -21,29 +21,23 @@ type MediaFrameProps = {
 
   /** Mennyi késleltetés után nyíljon ki a keret oldalváltáskor (ms) */
   openDelayMs?: number;
+
+  /** 🔹 Első oldal: ne nyíljon ki automatikusan, csak ha tényleg jön media-gyerek */
+  suppressFirstAutoOpen?: boolean;
 };
 
 const VIEWBOX_W = 1600;
 const VIEWBOX_H = 900;
 
-/**
- * Helper: CSS változót olvasunk ki (számként).
- * px vagy unit nélküli szám esetén is működik.
- */
 function readCssNumber(varName: string, fallback: number): number {
   if (typeof window === "undefined") return fallback;
   const cs = getComputedStyle(document.documentElement);
   const raw = cs.getPropertyValue(varName).trim();
   if (!raw) return fallback;
-  // lehet "330", "330px", "26", stb.
   const num = parseFloat(raw);
   return Number.isFinite(num) ? num : fallback;
 }
 
-/**
- * Helper: CSS színváltozót olvasunk ki stringként.
- * Ha nincs vagy SSR-en fut, fallbacket ad.
- */
 function getCssVar(name: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
   const value = getComputedStyle(document.documentElement)
@@ -62,6 +56,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   pageId,
   pageIsFadingOut = false,
   openDelayMs = 3900, // 🔹 alap késleltetés oldalváltáskor
+  suppressFirstAutoOpen = false,
 }) => {
   const { registerRewardFrame } = useGameState();
 
@@ -73,7 +68,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     OUTER_STROKE
   );
 
-  // stroke felezés + kis ráhagyás
   const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
 
   // logó méret és hely – teljesen skinből
@@ -94,46 +88,85 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   const LOGO_PAD_X = (LOGO_BOX_W * LOGO_PAD_X_PCT) / 100;
   const LOGO_PAD_Y = (LOGO_BOX_H * LOGO_PAD_Y_PCT) / 100;
 
-  // 🔸 keret nyit/zár state
-  const [frameOpen, setFrameOpen] = React.useState(true);
-  const lastPageIdRef = React.useRef<string | undefined>(pageId);
+  // 🔸 keret nyit/zár state – KEZDŐDJEK ZÁRTAN!
+  const [frameOpen, setFrameOpen] = React.useState(false);
 
-  // 🔸 nyitási timer ref (hogy le tudjuk állítani)
+  // 🔸 volt-e már valaha kinyitva? (első oldal logikához)
+  const [hasEverOpened, setHasEverOpened] = React.useState(false);
+
+  // 🔸 az utolsó pageId – induljon undefined-ről, ne a current pageId-ről
+  const lastPageIdRef = React.useRef<string | undefined>(undefined);
+
   const openTimerRef = React.useRef<number | null>(null);
 
-  // cleanup: komponens unmountkor töröljük a timert
-  React.useEffect(() => {
-    return () => {
-      if (openTimerRef.current !== null && typeof window !== "undefined") {
-        window.clearTimeout(openTimerRef.current);
+  // 🔸 crossfade: aktuális és előző gyerek
+  const [currentChild, setCurrentChild] =
+    React.useState<React.ReactNode | null>(children ?? null);
+  const [prevChild, setPrevChild] =
+    React.useState<React.ReactNode | null>(null);
+  const crossfadeTimerRef = React.useRef<number | null>(null);
+  const [isCrossfading, setIsCrossfading] = React.useState(false);
+
+  // 🔸 dinamikus képarány a bitmap alapján
+  const [contentAspect, setContentAspect] = React.useState<number | null>(null);
+  const imageWrapRef = React.useRef<HTMLDivElement | null>(null);
+
+  // 🔸 közös nyitó-függvény, hogy mindenhol ugyanúgy állítsuk a state-et
+  const scheduleOpen = React.useCallback(
+    (delayMs: number) => {
+      if (typeof window === "undefined") {
+        setFrameOpen(true);
+        setHasEverOpened(true);
+        return;
       }
-    };
-  }, []);
 
-  // oldalváltás: csuk → kis késleltetéssel nyit
-  React.useEffect(() => {
-    if (pageId === undefined) return;
-    if (pageId === lastPageIdRef.current) return;
-
-    lastPageIdRef.current = pageId;
-
-    // először mindig csukjuk be
-    setFrameOpen(false);
-
-    if (typeof window !== "undefined") {
-      // korábbi timer, ha volt, töröljük
       if (openTimerRef.current !== null) {
         window.clearTimeout(openTimerRef.current);
       }
 
       openTimerRef.current = window.setTimeout(() => {
         setFrameOpen(true);
+        setHasEverOpened(true);
         openTimerRef.current = null;
-      }, openDelayMs);
-    } else {
-      setFrameOpen(true);
+      }, delayMs);
+    },
+    [setFrameOpen]
+  );
+
+  // cleanup: komponens unmountkor töröljük a timereket
+  React.useEffect(() => {
+    return () => {
+      if (openTimerRef.current !== null && typeof window !== "undefined") {
+        window.clearTimeout(openTimerRef.current);
+      }
+      if (crossfadeTimerRef.current !== null && typeof window !== "undefined") {
+        window.clearTimeout(crossfadeTimerRef.current);
+      }
+    };
+  }, []);
+
+  // oldalváltás: keret csuk → kis késleltetéssel nyit
+  React.useEffect(() => {
+    if (pageId === undefined) return;
+
+    const isFirstPage = lastPageIdRef.current === undefined;
+    const pageChanged = pageId !== lastPageIdRef.current;
+    if (!pageChanged) return;
+
+    lastPageIdRef.current = pageId;
+
+    // először mindig csukjuk be
+    setFrameOpen(false);
+
+    // 🔹 ha ez az első oldal és kérted, hogy NE nyíljon ki automatikusan,
+    // akkor itt megállunk. Majd a children-váltás nyitja ki.
+    if (suppressFirstAutoOpen && isFirstPage) {
+      return;
     }
-  }, [pageId, openDelayMs]);
+
+    // normál viselkedés: nyíljon ki késleltetéssel
+    scheduleOpen(openDelayMs);
+  }, [pageId, openDelayMs, suppressFirstAutoOpen, scheduleOpen]);
 
   // fade out fázis: csukjuk a keretet és ne nyíljon ki újra
   React.useEffect(() => {
@@ -146,6 +179,77 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     }
   }, [pageIsFadingOut]);
 
+  // 🔹 Első oldal speciális: ha eddig nem nyitottunk ki, de végre jött media-gyerek,
+  // akkor a normál openDelayMs késleltetéssel nyissuk ki.
+  React.useEffect(() => {
+    if (!suppressFirstAutoOpen) return;
+    if (hasEverOpened) return;
+    if (!children) return;
+
+    // csak egyszer fog lefutni: amikor először lesz valódi children
+    scheduleOpen(openDelayMs);
+  }, [children, suppressFirstAutoOpen, hasEverOpened, openDelayMs, scheduleOpen]);
+
+  // 🔸 crossfade logika: ha a children változik (uj media), fade-old
+  React.useEffect(() => {
+    // első render: csak állítsuk be
+    if (currentChild === null && children) {
+      setCurrentChild(children);
+      return;
+    }
+
+    // ha ténylegesen új tartalom jött
+    if (children && children !== currentChild) {
+      setPrevChild(currentChild);
+      setCurrentChild(children);
+      setIsCrossfading(true);
+
+      if (typeof window !== "undefined") {
+        if (crossfadeTimerRef.current !== null) {
+          window.clearTimeout(crossfadeTimerRef.current);
+        }
+
+        crossfadeTimerRef.current = window.setTimeout(() => {
+          setPrevChild(null);
+          setIsCrossfading(false);
+          crossfadeTimerRef.current = null;
+        }, 500); // kb. megegyezik a CSS 0.45s-el
+      } else {
+        setPrevChild(null);
+        setIsCrossfading(false);
+      }
+    }
+  }, [children, currentChild]);
+
+  // 🔸 képarány mérés – a látható img alapján
+  React.useEffect(() => {
+    const root = imageWrapRef.current;
+    if (!root) return;
+
+    const visibleSelector = `.${s.imageLayerVisible} img`;
+    let img = root.querySelector(visibleSelector) as HTMLImageElement | null;
+
+    if (!img) {
+      img = root.querySelector("img") as HTMLImageElement | null;
+    }
+    if (!img) return;
+
+    const updateAspect = () => {
+      if (!img!.naturalWidth || !img!.naturalHeight) return;
+      setContentAspect(img!.naturalWidth / img!.naturalHeight);
+    };
+
+    if (img.complete && img.naturalWidth && img.naturalHeight) {
+      updateAspect();
+      return;
+    }
+
+    img.addEventListener("load", updateAspect);
+    return () => {
+      img && img.removeEventListener("load", updateAspect);
+    };
+  }, [currentChild, isCrossfading]);
+
   // teljes, folyamatos keret
   function buildRectPath(inset: number = BASE_INSET): string {
     const left = inset;
@@ -157,11 +261,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
   const path = buildRectPath();
 
-  // jobb alsó sarok slot pozíciója – ez is skinből jövő méretek alapján
   const slotX = VIEWBOX_W - BASE_INSET - LOGO_MARGIN_RIGHT - LOGO_BOX_W;
   const slotY = VIEWBOX_H - BASE_INSET - LOGO_MARGIN_BOTTOM - LOGO_BOX_H;
 
-  // a panel, amit a keret “kitölt” a logó mögött
   const fillLeft = slotX - PANEL_EXPAND;
   const fillTop =
     VIEWBOX_H -
@@ -185,9 +287,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   const frameStyle: CSSProperties = {
     ...style,
     ["--mf-open" as any]: frameOpen ? 1 : 0,
+    ["--mf-aspect-ratio" as any]: contentAspect ?? 16 / 9,
   };
 
-  // 🔹 skin színek feloldása (konkrét stringgé, nem var(...) az SVG-ben)
   const svgColors = React.useMemo(
     () => ({
       base1: getCssVar("--mf-svg-base-1", "#f6f3ee"),
@@ -217,8 +319,31 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
       style={frameStyle}
     >
       <div className={s.content}>
-        {children}
+        {/* BITMAP CROSSFADE RÉTEGEK */}
+        <div ref={imageWrapRef} className={s.imageLayerWrap}>
+          {prevChild && (
+            <div
+              className={`${s.imageLayer} ${s.imageLayerHidden}`}
+              aria-hidden="true"
+            >
+              {prevChild}
+            </div>
+          )}
 
+          {currentChild && (
+            <div
+              className={`${s.imageLayer} ${
+                isCrossfading || !prevChild
+                  ? s.imageLayerVisible
+                  : s.imageLayerHidden
+              }`}
+            >
+              {currentChild}
+            </div>
+          )}
+        </div>
+
+        {/* Dekor keret + logo-bay */}
         {showGoldFrame && (
           <div className={s.decorLayer}>
             <svg
@@ -227,7 +352,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
               aria-hidden="true"
             >
               <defs>
-                {/* 1) ALAP: fehér arany */}
                 <linearGradient
                   id="platinumBase"
                   x1="0"
@@ -241,7 +365,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   <stop offset="100%" stopColor={svgColors.base3} />
                 </linearGradient>
 
-                {/* 2) BELSŐ: fehér arany + zöld */}
                 <linearGradient
                   id="platinumGreen"
                   x1="0"
@@ -255,7 +378,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   <stop offset="100%" stopColor={svgColors.inner3} />
                 </linearGradient>
 
-                {/* 3) OVERLAY: fémes fény */}
                 <linearGradient
                   id="metalOverlay"
                   x1="0"
@@ -269,7 +391,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                   <stop offset="100%" stopColor={svgColors.overlayBottom} />
                 </linearGradient>
 
-                {/* BELSŐ ÁRNYÉK FILTER */}
                 <filter
                   id="innerShadow"
                   x="-20%"
@@ -298,15 +419,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                 </clipPath>
               </defs>
 
-              {/* 0) KITÖLTÉS – panel a logó alatt */}
               <path d={logoFillPath} fill="url(#platinumBase)" />
-              <path
-                d={logoFillPath}
-                fill="url(#metalOverlay)"
-                opacity={0.6}
-              />
+              <path d={logoFillPath} fill="url(#metalOverlay)" opacity={0.6} />
 
-              {/* 1) KÜLSŐ KERET */}
               <g filter="url(#innerShadow)">
                 <path
                   d={path}
@@ -318,7 +433,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                 />
               </g>
 
-              {/* 2) BELSŐ CSÍK */}
               <path
                 d={path}
                 fill="none"
@@ -328,7 +442,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                 opacity={0.97}
               />
 
-              {/* 3) FÉNY OVERLAY */}
               <path
                 d={path}
                 fill="none"
@@ -338,7 +451,6 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
                 opacity={0.6}
               />
 
-              {/* 4) LOGÓ – klippelve */}
               <g clipPath="url(#logoClip)">
                 <image
                   href={logoSrc}

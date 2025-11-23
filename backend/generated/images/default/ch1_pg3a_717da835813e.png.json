@@ -1,0 +1,26 @@
+{
+  "pageId": "ch1_pg3a",
+  "promptKey": "ebb304aaaa4e1b8d0b52371414c2e56d17e58719",
+  "seed": null,
+  "mode": "draft",
+  "cacheHit": false,
+  "durationMs": 4236,
+  "flags": {
+    "ENABLE_IMAGE_CACHE": true,
+    "ENABLE_IMAGE_PRELOAD": true
+  },
+  "source": "replicate_saved",
+  "storySlug": "default",
+  "prompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, 2D animation, soft natural light, gentle depth ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience knight in doorway fastening cloak, family watching, farewell moment, medium shot",
+  "rawPrompt": "Dark fantasy, cinematic wide-angle, realistic medieval textures, muted cold tones, subtle rim light, 2D animation, soft natural light, gentle depth ancient stone fortress interiors, dim torchlight, damp walls, solemn medieval ambience knight in doorway fastening cloak, family watching, farewell moment, medium shot",
+  "params": {
+    "negativePrompt": "cartoon, anime, 3D render look, sci-fi tech, modern objects, bright saturated colors, text, watermark, logo, extra fingers, deformed hands, low-res, blurry, excessive noise, tiling, fisheye, open sky, lush foliage, snow, crowds, no text, no typography, no logos, no brand identities, no watermark, no captions, no UI",
+    "width": 960,
+    "height": 540,
+    "steps": 12,
+    "cfg": 3.5,
+    "aspect_ratio": "16:9"
+  },
+  "styleProfile": {},
+  "replicateUrl": "https://replicate.delivery/xezq/apVCN37TqGpLLFvpIheeKCiCFUDfKAWMEpxYWhdRquomoPYrA/tmpkw2ktls6.webp"
+}

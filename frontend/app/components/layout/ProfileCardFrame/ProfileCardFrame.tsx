@@ -12,15 +12,12 @@ type ProfileCardFrameProps = {
   pageIsFadingOut?: boolean;
 };
 
-// A kártya fizikai mérete a Canvas cellán belül
 const CARD_WIDTH = 340;
 const CARD_HEIGHT = 440;
 
-// Polaroid-szerű, álló viewBox – ugyanaz az arány (0.8), mint a 400×500
 const VIEWBOX_W = 1600;
 const VIEWBOX_H = 2000;
 
-/** CSS változó olvasása számmá */
 function readCssNumber(varName: string, fallback: number): number {
   if (typeof window === "undefined") return fallback;
   const cs = getComputedStyle(document.documentElement);
@@ -30,7 +27,6 @@ function readCssNumber(varName: string, fallback: number): number {
   return Number.isFinite(num) ? num : fallback;
 }
 
-/** CSS szín-/string változó olvasása */
 function getCssVar(name: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
   const value = getComputedStyle(document.documentElement)
@@ -48,13 +44,60 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   const { registerRewardFrame, currentPageData, setRewardImageReady } =
     useGameState() as any;
 
+  const [opened, setOpened] = React.useState(false);
+  const [nameReady, setNameReady] = React.useState(false);
+  const [subtitleReady, setSubtitleReady] = React.useState(false);
+
+  // Kártya nyitása/zárása
+  React.useEffect(() => {
+    if (pageIsFadingOut) {
+      setOpened(false);
+      setNameReady(false);
+      setSubtitleReady(false);
+      return;
+    }
+
+    setOpened(false);
+    setNameReady(false);
+    setSubtitleReady(false);
+
+    const t = setTimeout(() => {
+      setOpened(true);
+    }, 50);
+
+    return () => clearTimeout(t);
+  }, [pageIsFadingOut]);
+
+  // Szöveg lépcsőzetes animáció
+  React.useEffect(() => {
+    if (!opened) {
+      setNameReady(false);
+      setSubtitleReady(false);
+      return;
+    }
+
+    // 3s múlva jöjjön a name
+    const nameTimer = setTimeout(() => {
+      setNameReady(true);
+    }, 3000);
+
+    // 3s + 350ms múlva a subtitle + extra
+    const subtitleTimer = setTimeout(() => {
+      setSubtitleReady(true);
+    }, 3350);
+
+    return () => {
+      clearTimeout(nameTimer);
+      clearTimeout(subtitleTimer);
+    };
+  }, [opened]);
+
   const profile = (currentPageData as any)?.profile || {};
   const name: string | undefined = profile.name ?? profile.title;
   const subtitle: string | undefined =
     profile.subtitle ?? profile.tagline ?? profile.role;
   const extra: string | undefined = profile.extra ?? profile.meta;
 
-  // SVG stroke-ok (ugyanazok a tokenek, mint a MediaFrame-ben)
   const OUTER_STROKE = readCssNumber("--mf-svg-outer-stroke", 26);
   const INNER_STROKE = readCssNumber("--mf-svg-inner-stroke", 16);
   const OVERLAY_STROKE = readCssNumber(
@@ -64,8 +107,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
 
   const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
 
-  // logó méretek – kereten belüli “logo-bay”-hez
-  const LOGO_BOX_W = 300; // eddigi 330 helyett
+  const LOGO_BOX_W = 300;
   const LOGO_BOX_H = 320;
   const LOGO_MARGIN_RIGHT = 12;
   const LOGO_MARGIN_BOTTOM = 0;
@@ -73,60 +115,49 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   const LOGO_PAD_X = 0;
   const LOGO_PAD_Y = -20;
 
-
-  // alap téglalap koordináták
   const left = BASE_INSET;
   const top = BASE_INSET;
   const right = VIEWBOX_W - BASE_INSET;
   const bottom = VIEWBOX_H - BASE_INSET;
 
-  // 🔹 LOGO-BAY: a keret jobb alsó részén egy "felugró" polc
-  const LOGO_STRIP_W = LOGO_BOX_W + 80; // mennyi szélességet kapjon a polc
-  const LOGO_STRIP_H = LOGO_BOX_H + 20; // mennyire menjen fel a polc a kártyába
-  const LOGO_RISE = LOGO_STRIP_H; // ennyivel megy fel a keret alja ezen a részen
+  const LOGO_STRIP_W = LOGO_BOX_W + 80;
+  const LOGO_STRIP_H = LOGO_BOX_H + 20;
+  const LOGO_RISE = LOGO_STRIP_H;
 
   const logoStripRight = right - LOGO_MARGIN_RIGHT;
   const logoStripLeft = logoStripRight - LOGO_STRIP_W;
   const logoStripBottom = bottom - LOGO_MARGIN_BOTTOM;
   const logoStripTop = logoStripBottom - LOGO_STRIP_H;
 
-// alap középre igazított pozíció
-const logoBaseX =
-  logoStripLeft + (LOGO_STRIP_W - LOGO_BOX_W) / 2;
-const logoBaseY =
-  logoStripTop + (LOGO_STRIP_H - LOGO_BOX_H) / 2;
+  const logoBaseX = logoStripLeft + (LOGO_STRIP_W - LOGO_BOX_W) / 2;
+  const logoBaseY = logoStripTop + (LOGO_STRIP_H - LOGO_BOX_H) / 2;
 
-// kézi finomhangoló offset – ezt tudod állítani szemre
-const LOGO_TWEAK_X = 12;  // + jobbra, - balra
-const LOGO_TWEAK_Y = 0;   // + le, - fel
+  const LOGO_TWEAK_X = 12;
+  const LOGO_TWEAK_Y = 0;
 
-// végső pozíció
-const logoInnerX = logoBaseX + LOGO_TWEAK_X;
-const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
+  const logoInnerX = logoBaseX + LOGO_TWEAK_X;
+  const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
 
-  // 🔥 LÉPCSŐZETES keret-path: az alsó él jobb oldalán felugrik (logo-bay polc)
   const framePath = [
-    `M ${left} ${top}`, // bal felső
-    `H ${right}`, // top jobbig
-    `V ${bottom}`, // jobb oldal le
-    `H ${logoStripRight}`, // alul vissza a polc jobb széléig
-    `V ${bottom - LOGO_RISE}`, // felugrás
-    `H ${logoStripLeft}`, // polc teteje balra
-    `V ${bottom}`, // vissza az alsó élre
-    `H ${left}`, // vissza balra
+    `M ${left} ${top}`,
+    `H ${right}`,
+    `V ${bottom}`,
+    `H ${logoStripRight}`,
+    `V ${bottom - LOGO_RISE}`,
+    `H ${logoStripLeft}`,
+    `V ${bottom}`,
+    `H ${left}`,
     `Z`,
   ].join(" ");
 
-  // ➕ extra alsó szakasz, hogy a logó alatt is fusson egy egyenes keret
   const bottomExtraPath = `M ${logoStripLeft} ${bottom} H ${logoStripRight}`;
 
   const frameStyle: CSSProperties = {
-    ["--mf-open" as any]: pageIsFadingOut ? 0 : 1,
+    ["--mf-open" as any]: opened ? 1 : 0,
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
   };
 
-  // skin színek az SVG-nek
   const svgColors = {
     base1: getCssVar("--mf-svg-base-1", "#f6f3ee"),
     base2: getCssVar("--mf-svg-base-2", "#ddd2bf"),
@@ -138,13 +169,9 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
 
     overlayTop: getCssVar("--mf-svg-overlay-top", "rgba(255,255,255,0.0)"),
     overlayMid: getCssVar("--mf-svg-overlay-mid", "rgba(255,255,255,0.22)"),
-    overlayBottom: getCssVar(
-      "--mf-svg-overlay-bottom",
-      "rgba(255,255,255,0.0)"
-    ),
+    overlayBottom: getCssVar("--mf-svg-overlay-bottom", "rgba(255,255,255,0.0)"),
   };
 
-  // 🔹 amikor a profilkártya DOM-ban van, engedjük a GET exportot
   React.useEffect(() => {
     setRewardImageReady(true);
   }, [setRewardImageReady]);
@@ -156,8 +183,12 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
       data-page={pageId}
       style={frameStyle}
     >
-      <div className={s.cardInner}>
-        {/* Dekor keret + logo-bay – TELJES háttérként működik */}
+      <div
+        className={`${s.cardInner} ${
+          opened ? s.cardInnerOpen : s.cardInnerClosed
+        }`}
+      >
+        {/* Dekor keret + logo-bay */}
         <div className={s.decorLayer}>
           <svg
             className={s.goldOverlay}
@@ -165,7 +196,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
             aria-hidden="true"
           >
             <defs>
-              {/* TELJES HÁTTÉR GRADIENT */}
               <linearGradient
                 id="pc_bg"
                 x1="0"
@@ -178,7 +208,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
                 <stop offset="45%" stopColor={svgColors.base2} />
                 <stop offset="100%" stopColor="rgba(10,10,10,0.96)" />
               </linearGradient>
-
               <linearGradient
                 id="pc_base"
                 x1="0"
@@ -191,7 +220,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
                 <stop offset="45%" stopColor={svgColors.base2} />
                 <stop offset="100%" stopColor={svgColors.base3} />
               </linearGradient>
-
               <linearGradient
                 id="pc_inner"
                 x1="0"
@@ -204,7 +232,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
                 <stop offset="50%" stopColor={svgColors.inner2} />
                 <stop offset="100%" stopColor={svgColors.inner3} />
               </linearGradient>
-
               <linearGradient
                 id="pc_overlay"
                 x1="0"
@@ -218,7 +245,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
                 <stop offset="100%" stopColor={svgColors.overlayBottom} />
               </linearGradient>
 
-              {/* LOGO-BAY – ide clippingelünk logót */}
               <clipPath id="pc_logoClip">
                 <rect
                   x={logoInnerX}
@@ -231,10 +257,8 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
               </clipPath>
             </defs>
 
-            {/* 🔥 TELJES KÁRTYA HÁTTÉR – a polc “belül” kap sötét fillt */}
             <path d={framePath} fill="url(#pc_bg)" />
 
-            {/* teljes keret strokes – LÉPCSŐZETES PATH-ra */}
             <path
               d={framePath}
               fill="none"
@@ -259,7 +283,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
               opacity={0.6}
             />
 
-            {/* ➕ EXTRA: egyenes alsó szakasz, hogy a logó alatt is fusson a keret */}
             <path
               d={bottomExtraPath}
               fill="none"
@@ -281,8 +304,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
               opacity={0.6}
             />
 
-            {/* LOGO-BAY háttere – ugyanaz a gradient, mint a fő kereten,
-                pontosan a lépcső tetejétől, a felugrás teljes magasságában */}
             <rect
               x={logoStripLeft}
               y={bottom - LOGO_RISE}
@@ -293,7 +314,6 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
               fill="url(#pc_bg)"
             />
 
-            {/* logó a logo-bay-en belül */}
             {logoSrc && (
               <g clipPath="url(#pc_logoClip)">
                 <image
@@ -309,21 +329,43 @@ const logoInnerY = logoBaseY + LOGO_TWEAK_Y;
           </svg>
         </div>
 
-        {/* Tartalom a keret alatt */}
+        {/* Tartalom */}
         <div className={s.content}>
-          {/* TOP: 1:1 kép slot */}
           <div className={s.imageSlot}>
             <div className={s.imageInner}>{children}</div>
           </div>
 
-          {/* BOTTOM: bal oldalon szöveg */}
           <div className={s.bottomRow}>
             <div className={s.infoSlot}>
-              {name && <div className={s.profileName}>{name}</div>}
-              {subtitle && (
-                <div className={s.profileSubtitle}>{subtitle}</div>
+              {name && (
+                <div
+                  className={`${s.profileName} ${
+                    nameReady ? s.nameReady : ""
+                  }`}
+                >
+                  {name}
+                </div>
               )}
-              {extra && <div className={s.profileMeta}>{extra}</div>}
+
+              {subtitle && (
+                <div
+                  className={`${s.profileSubtitle} ${
+                    subtitleReady ? s.subtitleReady : ""
+                  }`}
+                >
+                  {subtitle}
+                </div>
+              )}
+
+              {extra && (
+                <div
+                  className={`${s.profileMeta} ${
+                    subtitleReady ? s.subtitleReady : ""
+                  }`}
+                >
+                  {extra}
+                </div>
+              )}
             </div>
           </div>
         </div>

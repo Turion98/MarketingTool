@@ -16,7 +16,7 @@
   overflow: visible;
   aspect-ratio: auto;
   text-align: center;
-  padding: var(--mf-pad, 8px);
+  padding: 0;
 }
 
 /* opcionális belépő animáció, a TSX használja */
@@ -35,16 +35,18 @@
   }
 }
 
-/* Content follows bitmap size (frame pontosan a bitmapet öleli) */
+/* Content: fix “vászon”, aspect-ratio-val, keret ezt öleli körbe */
 .content {
   position: relative;
-  display: inline-grid;
-  justify-content: center;
-  align-items: center;
-  width: fit-content;
-  height: fit-content;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
   box-sizing: border-box;
-   transform-origin: top center;
+
+  /* itt állítjuk be a vászon arányát – skin felülírhatja */
+  aspect-ratio: var(--mf-aspect-ratio, 16 / 9);
+
+  transform-origin: top center;
   transform: scaleY(var(--mf-open, 1));
   opacity: var(--mf-open, 1);
   transition:
@@ -52,16 +54,50 @@
     opacity 0.35s ease-in-out;
 }
 
-/* Bitmap: teljes tartalom látszik */
+/* === BITMAP LAYEREK – CROSSFADE === */
+
+/* konténer a képrétegeknek – EZ SZŰKÍTI A KÉP TERÉT A KERETEN BELÜL */
+.imageLayerWrap {
+  position: absolute;
+  inset: 0.5% 1.1%; /* top/right/bottom/left – ettől lesz kisebb a kép a kerethez képest */
+  display: grid;
+  place-items: center;
+  z-index: 0;
+}
+
+/* egy-egy képréteg (régi / új) */
+.imageLayer {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.45s ease-out;
+  
+}
+
+/* állapotok */
+.imageLayerVisible {
+  opacity: 1;
+}
+
+.imageLayerHidden {
+  opacity: 0;
+}
+
+/* Bitmap: a kép a kisebb wrap-en belül marad, NEM feszítjük ki 100% magasságra */
 .mediaFrame img,
 .mediaFrame canvas {
   display: block;
+
   max-inline-size: 100%;
-  inline-size: 100%;
+  max-block-size: 100%;
+  inline-size: auto;
   block-size: auto;
+
   object-fit: contain;
   object-position: center;
-  border-radius: var(--mf-radius, 14px);
 }
 
 .mediaFrame video {
@@ -161,7 +197,6 @@
   border-bottom-right-radius: calc(var(--mf-radius, 14px) - 2px);
   border-top-left-radius: calc(var(--mf-logo-panel-radius, 22) * 1px);
 
-  /* kicsi extra kiemelés, ha kell */
   transform: translateY(calc(var(--mf-logo-panel-raise, 0) * -1px));
   padding: calc(var(--mf-logo-pad-y, 1) * 1%) calc(var(--mf-logo-pad-x, 1) * 1%);
 }
