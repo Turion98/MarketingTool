@@ -3,6 +3,7 @@ import React from "react";
 import s from "./CampaignCta.module.scss";
 import { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { dispatchCta } from "../../core/cta/ctaDispatcher";
+import { useUiClickSound } from "./../../lib/useUiClickSound";
 
 type Props = { cta: CtaConfig; context: CtaContext; onShown?: () => void };
 
@@ -19,7 +20,7 @@ const isExternal = (url: string) => {
 const openDownload = (url: string, filename?: string, rel?: string) => {
   const a = document.createElement("a");
   a.href = url;
-  if (filename === true as any) a.setAttribute("download", "");
+  if (filename === (true as any)) a.setAttribute("download", "");
   else if (typeof filename === "string") a.setAttribute("download", filename);
   if (rel) a.setAttribute("rel", rel);
   a.style.display = "none";
@@ -29,10 +30,19 @@ const openDownload = (url: string, filename?: string, rel?: string) => {
 };
 
 const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
-  React.useEffect(() => { onShown?.(); }, [onShown]);
+  // 🔊 CTA megjelenési hang (mountkor)
+  const playCtaAppear = useUiClickSound("/sounds/cta.wav");
+
+  React.useEffect(() => {
+    // CTA láthatóvá vált → jelzés + SFX
+    onShown?.();
+    playCtaAppear();
+  }, [onShown, playCtaAppear]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    // ❗ ITT NINCS SFX – csak logika
 
     // LINK + opcionális letöltés
     if (cta.kind === "link") {
@@ -44,7 +54,11 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
       if (download) {
         openDownload(url, download as any, rel);
         // Analitika/mellékhatások aszinkron (popup-blocker kerülése miatt a megnyitás marad szinkron)
-        setTimeout(() => { try { dispatchCta(cta, context); } catch {} }, 0);
+        setTimeout(() => {
+          try {
+            dispatchCta(cta, context);
+          } catch {}
+        }, 0);
         return;
       }
 
@@ -55,7 +69,11 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
       window.open(url, target);
 
       // analitika késleltetve
-      setTimeout(() => { try { dispatchCta(cta, context); } catch {} }, 0);
+      setTimeout(() => {
+        try {
+          dispatchCta(cta, context);
+        } catch {}
+      }, 0);
       return;
     }
 
@@ -65,7 +83,11 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
       const filename = (cta as any).filename as string | undefined;
       const rel = (cta as any).rel as string | undefined;
       openDownload(url, filename, rel);
-      setTimeout(() => { try { dispatchCta(cta, context); } catch {} }, 0);
+      setTimeout(() => {
+        try {
+          dispatchCta(cta, context);
+        } catch {}
+      }, 0);
       return;
     }
 

@@ -130,7 +130,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
         openTimerRef.current = null;
       }, delayMs);
     },
-    [setFrameOpen]
+    []
   );
 
   // cleanup: komponens unmountkor töröljük a timereket
@@ -189,6 +189,26 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     // csak egyszer fog lefutni: amikor először lesz valódi children
     scheduleOpen(openDelayMs);
   }, [children, suppressFirstAutoOpen, hasEverOpened, openDelayMs, scheduleOpen]);
+
+  // 🔹 EXTRA BIZTOSÍTÉK: ha van pageId + vizuális tartalom, de valamiért
+  // nem futott le a fenti logika, legalább egyszer nyissuk ki a keretet.
+  React.useEffect(() => {
+    if (!pageId) return;
+    if (hasEverOpened) return;
+    if (!currentChild && !prevChild && !showGoldFrame) return;
+    if (frameOpen) return;
+
+    scheduleOpen(openDelayMs);
+  }, [
+    pageId,
+    hasEverOpened,
+    currentChild,
+    prevChild,
+    showGoldFrame,
+    frameOpen,
+    openDelayMs,
+    scheduleOpen,
+  ]);
 
   // 🔸 crossfade logika: ha a children változik (uj media), fade-old
   React.useEffect(() => {
@@ -309,6 +329,28 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     }),
     []
   );
+
+  // 🔹 Fallback: ha nincs pageId logika, de már van tartalom / keret, nyissuk ki egyszer
+  React.useEffect(() => {
+    if (pageId) return; // ha van pageId, marad a normál logika
+    if (frameOpen) return;
+    if (!(currentChild || prevChild || showGoldFrame)) return;
+
+    setFrameOpen(true);
+    setHasEverOpened(true);
+  }, [pageId, frameOpen, currentChild, prevChild, showGoldFrame]);
+
+  // ✅ akkor is rajzoljunk keretet, ha épp nyílik (frameOpen) vagy csak az arany keret látszik,
+  // hogy az első animáció se legyen üres
+  const shouldRender = Boolean(
+    currentChild ||
+      prevChild ||
+      showGoldFrame ||
+      frameOpen
+  );
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <div
@@ -469,4 +511,23 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   );
 };
 
-export default MediaFrame;
+function areEqualMediaFrameProps(
+  prev: MediaFrameProps,
+  next: MediaFrameProps
+) {
+  return (
+    prev.pageId === next.pageId &&
+    prev.mode === next.mode &&
+    prev.fadeIn === next.fadeIn &&
+    prev.pageIsFadingOut === next.pageIsFadingOut &&
+    prev.showGoldFrame === next.showGoldFrame &&
+    prev.logoSrc === next.logoSrc &&
+    prev.openDelayMs === next.openDelayMs &&
+    prev.suppressFirstAutoOpen === next.suppressFirstAutoOpen &&
+    prev.children === next.children &&  // ⬅️ fontos: referencián hasonlítjuk
+    prev.style === next.style            // ⬅️ csak ha ugyanaz az objektum
+  );
+}
+
+export default React.memo(MediaFrame, areEqualMediaFrameProps);
+

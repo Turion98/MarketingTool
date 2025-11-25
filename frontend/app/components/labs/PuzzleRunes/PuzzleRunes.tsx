@@ -1,9 +1,16 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import clsx from "clsx";
 import styles from "./PuzzleRunes.module.scss";
 import { trackPuzzleResult } from "../../../lib/analytics";
+import { useUiClickSound } from "../../../lib/useUiClickSound";
 
 type PuzzleRunesMode = "ordered" | "set";
 type PuzzleRunesFeedback = "keep" | "reset";
@@ -25,17 +32,20 @@ type PuzzleRunesProps = {
   buttonClassName?: string;
 
   // ⬇️ ÚJ: működési módok
-  mode?: PuzzleRunesMode;          // "ordered" | "set" (default: "ordered")
-  feedback?: PuzzleRunesFeedback;  // "keep" | "reset" (csak set-módban értelmezett; default: "reset")
+  mode?: PuzzleRunesMode; // "ordered" | "set" (default: "ordered")
+  feedback?: PuzzleRunesFeedback; // "keep" | "reset" (csak set-módban értelmezett; default: "reset")
 };
 
 // ===== Riddle-hez igazított időzítések (tokenizálva CSS-ben is) =====
-const COMMIT_DELAY_MS = 300;  // „locked/commit” ablak (ugyanaz, mint Riddle)
+const COMMIT_DELAY_MS = 300; // „locked/commit” ablak (ugyanaz, mint Riddle)
 const FEEDBACK_HOLD_MS = 300; // rövid tartás a correct/incorrect állapothoz
-const EXIT_FADE_MS = 420;     // kifade idő — TS → CSS-nek átadjuk --pr-dur-exit-ként
+const EXIT_FADE_MS = 420; // kifade idő — TS → CSS-nek átadjuk --pr-dur-exit-ként
 
 // Riddle mintájú exit-várakoztató (anim/transition end vagy timeout)
-function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void> {
+function waitForExitAnimation(
+  el: HTMLElement,
+  timeoutMs: number
+): Promise<void> {
   return new Promise((resolve) => {
     let done = false;
     const finish = () => {
@@ -53,7 +63,13 @@ function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void>
   });
 }
 
-function HeartIcon({ filled = false, title }: { filled?: boolean; title?: string }) {
+function HeartIcon({
+  filled = false,
+  title,
+}: {
+  filled?: boolean;
+  title?: string;
+}) {
   return (
     <svg
       aria-hidden={title ? undefined : true}
@@ -84,6 +100,14 @@ export default function PuzzleRunes({
   feedback = "reset",
 }: PuzzleRunesProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // 🔊 UI kattintáshang (InteractionDock-kal egységes)
+  const playClick = useUiClickSound();
+  // 🔊 pozitív (helyes) hang
+  const playSuccess = useUiClickSound("/sounds/puzzle-success.wav");
+  // 🔊 negatív (hibás) hang
+  const playError = useUiClickSound("/sounds/puzzle-error.wav");
+
   const [picked, setPicked] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
 
@@ -96,7 +120,9 @@ export default function PuzzleRunes({
 
   // ÚJ: Riddle-féle fázisgép
   // "idle" → "locked" (commit) → "correct"/"incorrect" (rövid tartás) → "exiting" (kifade)
-  const [phase, setPhase] = useState<"idle" | "locked" | "correct" | "incorrect" | "exiting">("idle");
+  const [phase, setPhase] = useState<
+    "idle" | "locked" | "correct" | "incorrect" | "exiting"
+  >("idle");
 
   const maxPick = answer.length;
   const answerSet = useMemo(() => new Set(answer), [answer]);
@@ -132,6 +158,8 @@ export default function PuzzleRunes({
     if (picked.includes(id)) return;
     if (picked.length + lockedCorrect.size >= maxPick) return;
 
+    playClick(); // 🔊 minden rúnaválasztásnál
+
     if (!firstPickDoneRef.current) {
       firstPickDoneRef.current = true;
       t0Ref.current = performance.now?.() ?? Date.now();
@@ -141,10 +169,15 @@ export default function PuzzleRunes({
 
   const undo = (id: string) => {
     if (lockedCorrect.has(id)) return;
+
+    playClick(); // 🔊 visszavonás hangja
+
     setPicked((p) => p.filter((x) => x !== id));
   };
 
   const hardReset = () => {
+    playClick(); // 🔊 reset gomb hangja
+
     setPicked([]);
     setLockedCorrect(new Set());
     setWrongFlash(new Set());
@@ -156,6 +189,8 @@ export default function PuzzleRunes({
   // Submit — a Riddle flow-ját követjük, de: SET+KEEP hibánál NINCS exiting
   const submit = useCallback(() => {
     if (!canSubmit || phase !== "idle") return;
+
+    playClick(); // 🔊 submit gomb hangja
 
     // 1) LOCKED ablak (finom hover/active beérkezés)
     setPhase("locked");
@@ -185,6 +220,13 @@ export default function PuzzleRunes({
 
       // 2) Jelöljük a végeredmény fázist vizuálisan
       setPhase(ok ? "correct" : "incorrect");
+
+      // 🔊 eredményi hangok
+      if (ok) {
+        playSuccess();
+      } else {
+        playError();
+      }
 
       // 3) Analitika – minden próbálkozásról log
       try {
@@ -298,6 +340,14 @@ export default function PuzzleRunes({
     pageId,
     puzzleId,
     options.length,
+    maxAttempts,
+    onResult,
+    softResetWrongFlashSoon,
+    lockedCorrect,
+    hardReset,
+    playClick,
+    playSuccess,
+    playError,
   ]);
 
   // ===== Render =====
@@ -320,7 +370,7 @@ export default function PuzzleRunes({
           const disabled =
             isLocked ||
             isPicked ||
-            (picked.length + lockedCorrect.size >= maxPick) ||
+            picked.length + lockedCorrect.size >= maxPick ||
             phase !== "idle";
 
           return (
@@ -332,7 +382,13 @@ export default function PuzzleRunes({
               className={clsx(styles.choice, buttonClassName)}
               aria-pressed={isPicked || isLocked}
               data-state={
-                isLocked ? "locked" : isWrong ? "wrong" : isPicked ? "picked" : "idle"
+                isLocked
+                  ? "locked"
+                  : isWrong
+                  ? "wrong"
+                  : isPicked
+                  ? "picked"
+                  : "idle"
               }
             >
               {id}
@@ -342,7 +398,11 @@ export default function PuzzleRunes({
       </div>
 
       {/* Kiválasztott / rögzített elemek */}
-      <div role="list" aria-label="Kiválasztott halmaz/sorrend" className={styles.pickedRow}>
+      <div
+        role="list"
+        aria-label="Kiválasztott halmaz/sorrend"
+        className={styles.pickedRow}
+      >
         {[...lockedCorrect].map((id) => (
           <button
             key={`locked-${id}`}
@@ -393,21 +453,18 @@ export default function PuzzleRunes({
         </button>
 
         <span
-  className={styles.attempts}
-  aria-label={`Próbálkozások: ${attempts}/${maxAttempts}`}
->
-  <img
-    src="/icons/heart.png"
-    alt=""
-    aria-hidden="true"
-    width="26px"
-    className={styles.heartIcon}
-  />
-
-  {/* a számláló változatlanul megmarad */}
-  {attempts}/{maxAttempts}
-</span>
-
+          className={styles.attempts}
+          aria-label={`Próbálkozások: ${attempts}/${maxAttempts}`}
+        >
+          <img
+            src="/icons/heart.png"
+            alt=""
+            aria-hidden="true"
+            width="26px"
+            className={styles.heartIcon}
+          />
+          {attempts}/{maxAttempts}
+        </span>
       </div>
     </div>
   );

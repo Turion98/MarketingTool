@@ -60,6 +60,7 @@ body[data-skin="legacy-default"] {
   max-inline-size: 100%;
 
   grid-template-columns: 1fr;
+  /* 🔹 Alapértelmezés: VAN media sor (6 soros grid) */
   grid-template-rows: auto auto auto auto auto auto;
   grid-template-areas:
     "progress"
@@ -74,6 +75,17 @@ body[data-skin="legacy-default"] {
   justify-items: stretch;
 
   min-width: 0;
+}
+
+/* 🔥 Ha NINCS media (Canvas data-has-media="0"), dobjuk ki a media sort */
+.playfield[data-has-media="0"] {
+  grid-template-rows: auto auto auto auto auto;
+  grid-template-areas:
+    "progress"
+    "topbar"
+    "narr"
+    "dock"
+    "action";
 }
 
 /* Területek */
@@ -190,6 +202,7 @@ body[data-skin="legacy-default"] {
     margin-block-start: 0px;
   }
 }
+
 /* ===== TABLET / DESKTOP ===== */
 @media (min-width: 641px) {
   .playfield {
@@ -207,15 +220,30 @@ body[data-skin="legacy-default"] {
   }
 }
 
-/* extra desktop finomhang (>=768px ugyanaz a grid mint most) */
+/* extra desktop finomhang (>=768px) */
 @media (min-width: 768px) {
   .playfield {
     grid-template-columns: 1fr;
+  }
+
+  /* 🔹 Desktopon is külön layout media-val / media nélkül */
+
+  .playfield[data-has-media="1"] {
     grid-template-rows: auto auto auto auto auto auto;
     grid-template-areas:
       "progress"
       "topbar"
       "media"
+      "narr"
+      "dock"
+      "action";
+  }
+
+  .playfield[data-has-media="0"] {
+    grid-template-rows: auto auto auto auto auto;
+    grid-template-areas:
+      "progress"
+      "topbar"
       "narr"
       "dock"
       "action";

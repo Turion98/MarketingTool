@@ -47,11 +47,19 @@
   aspect-ratio: var(--mf-aspect-ratio, 16 / 9);
 
   transform-origin: top center;
-  transform: scaleY(var(--mf-open, 1));
-  opacity: var(--mf-open, 1);
+  /* 🔹 ne animáljuk az opacity-t, fixen legyen 1 */
+  opacity: 1;
+
+  /* 🔹 GPU / compositing hint a villogás ellen */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0) scaleY(var(--mf-open, 1));
+
   transition:
-    transform 0.95s ease-in-out,
-    opacity 0.35s ease-in-out;
+    transform 0.95s ease-in-out;
+
+  /* 🔹 ne tudjon semmi kilógni a keret vizuális teréből */
+  overflow: hidden;
 }
 
 /* === BITMAP LAYEREK – CROSSFADE === */
@@ -63,6 +71,9 @@
   display: grid;
   place-items: center;
   z-index: 0;
+
+  /* 🔹 extra védelem, ha a gyerek nagyobbra nő */
+  overflow: hidden;
 }
 
 /* egy-egy képréteg (régi / új) */
@@ -74,7 +85,10 @@
   place-items: center;
   opacity: 0;
   transition: opacity 0.45s ease-out;
-  
+
+  /* 🔹 GPU hint a crossfade-hez */
+  will-change: opacity;
+  backface-visibility: hidden;
 }
 
 /* állapotok */

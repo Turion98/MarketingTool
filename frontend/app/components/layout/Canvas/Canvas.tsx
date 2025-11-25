@@ -24,6 +24,7 @@ type CanvasProps = {
 
   /** Skin token override (inline style), opcionális */
   style?: React.CSSProperties;
+
   /** Extra class, opcionális */
   className?: string;
 };
@@ -44,7 +45,9 @@ export default function Canvas({
   style,
   className,
 }: CanvasProps) {
-  const hasSlots = !!(topbar || progress || media || narr || dock || action);
+  // 🔹 ténylegesen csak akkor számítson "van mediának", ha van legalább 1 gyerek-node
+  const hasMedia = React.Children.toArray(media ?? []).length > 0;
+  const hasSlots = !!(topbar || progress || hasMedia || narr || dock || action);
 
   return (
     <main
@@ -53,29 +56,35 @@ export default function Canvas({
       data-layout="media-narrative-choices"
       aria-label="Interactive Story Canvas"
     >
-      {/* ÚJ: háttér réteg a playfield mögött */}
+      {/* ÚJ: háttér réteg */}
       {background && (
-        <div
-          className={styles.background}
-          aria-hidden
-          data-bg-present="1"
-        >
+        <div className={styles.background} aria-hidden data-bg-present="1">
           {background}
         </div>
       )}
 
-      <div className={styles.playfield} role="group" aria-label="Playfield">
+      {/* 🔹 data-has-media csak akkor 1, ha tényleg van media-tartalom */}
+      <div
+        className={styles.playfield}
+        role="group"
+        aria-label="Playfield"
+        data-has-media={hasMedia ? "1" : "0"}
+      >
         {hasSlots ? (
           <>
             <div className={styles.areaProgress}>{progress}</div>
             <div className={styles.areaTopbar}>{topbar}</div>
-            <div className={styles.areaMedia}>{media}</div>
+
+            {/* 🔥 Csak akkor rendereljük a media cellát, ha tényleg van! */}
+            {hasMedia && (
+              <div className={styles.areaMedia}>{media}</div>
+            )}
+
             <div className={styles.areaNarr}>{narr}</div>
             <div className={styles.areaDock}>{dock}</div>
             <div className={styles.areaAction}>{action}</div>
           </>
         ) : (
-          // RÉGI: ha nincs slot, a children megy változatlanul
           children
         )}
       </div>

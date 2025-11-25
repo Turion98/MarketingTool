@@ -3,6 +3,9 @@
 import React, { KeyboardEvent, useMemo } from "react";
 import s from "./InteractionDock.module.scss";
 
+// 🔊 hang hook import
+import { useUiClickSound } from "../../../lib/useUiClickSound";
+
 export type DockChoice = {
   id: string;
   label: string;
@@ -37,19 +40,21 @@ const InteractionDock: React.FC<InteractionDockProps> = ({
     [choices]
   );
 
+  // 🔊 hang inicializálása
+  const playClick = useUiClickSound();
+
   const onKeyActivate =
     (id: string, disabled?: boolean) =>
     (e: KeyboardEvent<HTMLButtonElement>) => {
       if (disabled) return;
-      // Button elemeknél Enter és Space az alapértelmezett aktivátor.
-      // Itt saját aktiválást adunk, és megakadályozzuk a duplikált triggerelést.
+
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
+        playClick();       // 🔊 billentyű aktiválás hangja
         onSelect(id);
       }
     };
 
-  // Ha nincs mit megjeleníteni, ne adjunk felesleges, üres konténert.
   if (safeChoices.length === 0) {
     return null;
   }
@@ -75,7 +80,11 @@ const InteractionDock: React.FC<InteractionDockProps> = ({
               aria-disabled={disabled || undefined}
               aria-label={c.label}
               title={c.title}
-              onClick={() => !disabled && onSelect(c.id)}
+              onClick={() => {
+                if (disabled) return;
+                playClick();         // 🔊 kattintási hang
+                onSelect(c.id);
+              }}
               onKeyDown={onKeyActivate(c.id, disabled)}
               data-choice-id={key}
               data-disabled={disabled ? "true" : "false"}

@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import clsx from "clsx";
 import styles from "./RiddleQuiz.module.scss";
-import { useGameState } from "../../../lib/GameStateContext"; // ← ha más az útvonalad, igazítsd
+import { useGameState } from "../../../lib/GameStateContext";
+
+// 🔊 csak alap kattintási hang
+import { useUiClickSound } from "../../../lib/useUiClickSound";
 
 export type RiddleQuizResult = {
   correct: boolean;
@@ -12,31 +21,16 @@ export type RiddleQuizResult = {
 };
 
 export type RiddleQuizProps = {
-  /** (Opcionális) az aktuális PageData, hogy a motor tudjon léptetni onAnswer alapján */
   page?: any;
-
-  /** Opcionális — ha nem adod meg, a kérdés a Narration/Text blokkban lehet */
   question?: string;
-  /** Kötelező — felkínált válaszlehetőségek */
   options: string[];
-  /** Kötelező — a helyes opció indexe */
   correctIndex: number;
-
-  /** Vizuális visszajelzés jó válasznál (háttér nélküli felirat) */
-  correctLabel?: string;                 // alap: "Helyes!"
-  /** Hol jelenjen meg a felirat: a lista felett vagy a gomb jobb oldalán */
-  showCorrectLabel?: "above" | "inline"; // alap: "above"
-
-  /** Komponens szintű tiltás (pl. betöltéskor) */
+  correctLabel?: string;
+  showCorrectLabel?: "above" | "inline";
   disabled?: boolean;
-
-  /** Külső className hozzáfűzése (wrapper) */
   className?: string;
-
-  /** Jelzés a motor/analitika felé */
   onResult?: (res: RiddleQuizResult) => void;
-
-  /** Opcionális SFX jelzés */
+  /** (Riddle most NEM használja az SFX routingot) */
   onPlaySfx?: (id: string) => void;
 };
 
@@ -45,7 +39,7 @@ const COMMIT_DELAY_MS = 300;
 const FEEDBACK_HOLD_MS = 700;
 const EXIT_FADE_MS = 420;
 
-// Segédfüggvény: megvárjuk az exit anim végét (animationend/transitionend vagy timeout)
+// Exit anim helper
 function waitForExitAnimation(el: HTMLElement, timeoutMs: number): Promise<void> {
   return new Promise((resolve) => {
     let done = false;
@@ -74,66 +68,73 @@ export default function RiddleQuiz({
   disabled = false,
   className,
   onResult,
-  onPlaySfx,
 }: RiddleQuizProps) {
-  const { handleAnswer } = useGameState(); // ← motor-léptetés
+  const { handleAnswer } = useGameState(); // motor-léptetés
   const rootRef = useRef<HTMLDivElement | null>(null);
   const t0Ref = useRef<number>(performance.now?.() ?? Date.now());
   const [picked, setPicked] = useState<number | null>(null);
-  const [phase, setPhase] = useState<"idle" | "locked" | "correct" | "incorrect" | "exiting">("idle");
+  const [phase, setPhase] = useState<"idle" | "locked" | "correct" | "incorrect" | "exiting">(
+    "idle"
+  );
 
-  // reset, ha az options vagy a helyes index változik
+  // 🔊 egységes kattintási hang
+  const playClick = useUiClickSound();
+
+  // reset if options change
   useEffect(() => {
     setPicked(null);
     setPhase("idle");
-    t0Ref.current = (performance.now?.() ?? Date.now());
+    t0Ref.current = performance.now?.() ?? Date.now();
   }, [options, correctIndex]);
 
   const canInteract = !disabled && phase === "idle";
 
-  const handlePick = useCallback((idx: number) => {
-    if (!canInteract) return;
+  const handlePick = useCallback(
+    (idx: number) => {
+      if (!canInteract) return;
 
-    // 1) azonnali választás + "locked" fázis
-    setPicked(idx);
-    setPhase("locked");
+      // 🔊 KATTINTÁSI HANG
+      playClick();
 
-    // 2) rövid commit-ablak
-    window.setTimeout(() => {
-      const now = performance.now?.() ?? Date.now();
-      const elapsedMs = Math.max(0, now - t0Ref.current);
-      const isCorrect = idx === correctIndex;
+      // 1) select + locked
+      setPicked(idx);
+      setPhase("locked");
 
-      setPhase(isCorrect ? "correct" : "incorrect");
+      // 2) commit phase delay
+      window.setTimeout(() => {
+        const now = performance.now?.() ?? Date.now();
+        const elapsedMs = Math.max(0, now - t0Ref.current);
+        const isCorrect = idx === correctIndex;
 
-      // SFX-ek
-      if (isCorrect) onPlaySfx?.("quiz_correct");
-      else onPlaySfx?.("quiz_incorrect");
+        setPhase(isCorrect ? "correct" : "incorrect");
 
-      // 3) feedback tartás → exiting → jelzés(ek)
-      window.setTimeout(async () => {
-        setPhase("exiting");
-        const el = rootRef.current;
-        if (el) {
-          await waitForExitAnimation(el, EXIT_FADE_MS);
-        } else {
-          await new Promise((r) => setTimeout(r, EXIT_FADE_MS));
-        }
+        // 🎵 NINCS success/error hang — csak vizuális feedback marad
 
-        const result = { correct: isCorrect, choiceIdx: idx, elapsedMs };
-
-        // ⬇️ 1) Külső callback (megmarad)
-        try {
-          onResult?.(result);
-        } finally {
-          // ⬇️ 2) Motor: onAnswer.nextSwitch feloldás + navigáció
-          if (handleAnswer && page) {
-            handleAnswer(page, result);
+        // 3) hold feedback → exit → report
+        window.setTimeout(async () => {
+          setPhase("exiting");
+          const el = rootRef.current;
+          if (el) {
+            await waitForExitAnimation(el, EXIT_FADE_MS);
+          } else {
+            await new Promise((r) => setTimeout(r, EXIT_FADE_MS));
           }
-        }
-      }, FEEDBACK_HOLD_MS);
-    }, COMMIT_DELAY_MS);
-  }, [canInteract, correctIndex, onResult, onPlaySfx, handleAnswer, page]);
+
+          const result = { correct: isCorrect, choiceIdx: idx, elapsedMs };
+
+          // external callback
+          try {
+            onResult?.(result);
+          } finally {
+            if (handleAnswer && page) {
+              handleAnswer(page, result);
+            }
+          }
+        }, FEEDBACK_HOLD_MS);
+      }, COMMIT_DELAY_MS);
+    },
+    [canInteract, correctIndex, onResult, handleAnswer, page, playClick]
+  );
 
   // ARIA
   const listRole = useMemo<"listbox" | "group">(
@@ -178,10 +179,13 @@ export default function RiddleQuiz({
                 aria-pressed={isPicked}
                 data-idx={idx}
                 data-state={
-                  isCorrect ? "picked-correct"
-                  : isIncorrect ? "picked-incorrect"
-                  : isPicked ? "picked"
-                  : "idle"
+                  isCorrect
+                    ? "picked-correct"
+                    : isIncorrect
+                    ? "picked-incorrect"
+                    : isPicked
+                    ? "picked"
+                    : "idle"
                 }
               >
                 <span className={styles.label}>{opt}</span>

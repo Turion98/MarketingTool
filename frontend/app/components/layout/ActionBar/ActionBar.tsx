@@ -4,6 +4,7 @@ import s from "./ActionBar.module.scss";
 import RestartButton from "../../RestartButton/RestartButton";
 import RestartGameButton from "../../RestartGameButton/RestartGameButton";
 import { useGameState } from "../../../lib/GameStateContext";
+import { useUiClickSound } from "../../../lib/useUiClickSound";
 
 type ActionBarProps = {
   canSkip: boolean;
@@ -29,15 +30,49 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
   const isAdmin = !!(globals as any)?.isAdmin;
 
+  // 🔊 Action bar hangok
+  const playClick = useUiClickSound("/sounds/actionbar-click.wav");
+  const playSlide = useUiClickSound("/sounds/actionbar-slide.mp3");
+
   const onKeyActivate =
     (cb: () => void, disabled?: boolean) =>
     (e: KeyboardEvent<HTMLButtonElement>) => {
       if (disabled) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
+        playClick(); // billentyűs aktiváláskor katt hang (panel gomboknál)
         cb();
       }
     };
+
+  // 🔊 mobil toggle – CSAK slide hang
+  const handleToggle = () => {
+    playSlide();           // panel ki/be csúszás hang
+    setOpen((v) => !v);
+  };
+
+  const handleSkip = () => {
+    if (!canSkip) return;
+    playClick();
+    onSkip();
+  };
+
+  const handleReplay = () => {
+    if (!canReplay) return;
+    playClick();
+    onReplay();
+  };
+
+  const handleDownloadReward = () => {
+    if (!rewardImageReady) return;
+    playClick();
+    downloadRewardImage();
+  };
+
+  const handleToggleMute = () => {
+    playClick();
+    onToggleMute();
+  };
 
   return (
     <>
@@ -49,7 +84,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
           aria-label="Open actions"
           aria-controls="actionbar"
           aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
+          onClick={handleToggle}
         >
           Actions
         </button>
@@ -68,8 +103,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
             type="button"
             className={s.btn}
             disabled={!canSkip}
-            onClick={onSkip}
-            onKeyDown={onKeyActivate(onSkip, !canSkip)}
+            onClick={handleSkip}
+            onKeyDown={onKeyActivate(handleSkip, !canSkip)}
             aria-label="Skip typing"
           >
             <span className={s.label}>Skip</span>
@@ -79,8 +114,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
             type="button"
             className={s.btn}
             disabled={!canReplay}
-            onClick={onReplay}
-            onKeyDown={onKeyActivate(onReplay, !canReplay)}
+            onClick={handleReplay}
+            onKeyDown={onKeyActivate(handleReplay, !canReplay)}
             aria-label="Replay"
           >
             <span className={s.label}>Replay</span>
@@ -91,8 +126,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
             type="button"
             className={s.btn}
             disabled={!rewardImageReady}
-            onClick={downloadRewardImage}
-            onKeyDown={onKeyActivate(downloadRewardImage, !rewardImageReady)}
+            onClick={handleDownloadReward}
+            onKeyDown={onKeyActivate(handleDownloadReward, !rewardImageReady)}
             aria-label="Download reward image"
             data-reward-ready={rewardImageReady ? "true" : "false"}
           >
@@ -102,8 +137,8 @@ const ActionBar: React.FC<ActionBarProps> = ({
           <button
             type="button"
             className={s.btn}
-            onClick={onToggleMute}
-            onKeyDown={onKeyActivate(onToggleMute)}
+            onClick={handleToggleMute}
+            onKeyDown={onKeyActivate(handleToggleMute)}
             aria-label={muted ? "Unmute" : "Mute"}
             data-state={muted ? "muted" : "unmuted"}
           >

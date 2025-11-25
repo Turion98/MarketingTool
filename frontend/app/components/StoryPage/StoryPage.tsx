@@ -1073,6 +1073,7 @@ const skin = useMemo(() => {
     unlockedFragments,
   ]);
 
+  
   // sidePreload voice/sfx/narration
   useEffect(() => {
     if (!globals?.storySrc) return;
@@ -1831,27 +1832,108 @@ useEffect(() => {
   });
 }, [pageData?.id, imgPrompt, resolvedImgPrompt, unlockedPlus]);
 
-
 const shouldGenerate = useMemo(() => {
   if (!pageData?.imageTiming?.generate) return false;
-  const p = pageData?.imagePrompt as any;
-  if (!p) return false;
-  if (typeof p === "string") return p.trim().length > 0;
-  return Boolean(p.combinedPrompt || p.global || p.chapter || p.page);
-}, [pageData?.imageTiming?.generate, pageData?.imagePrompt]);
 
+  // 🔹 Csak akkor generálunk, ha a FRAGMENT-FELDOLGOZOTT prompt nem üres
+  const resolved = (resolvedImgPrompt?.prompt || "").trim();
+  if (!resolved) return false;
 
-  const showFrame = useMemo(() => {
-    const forcePages =
-      pageData?.id === "ch4_pg1" ||
-      pageData?.id === "ch1_pg1";
-    const hasImageBox = !!(pageData as any)?.layout?.imageBox;
-    return forcePages || hasImageBox || shouldGenerate;
-  }, [
-    pageData?.id,
-    (pageData as any)?.layout?.imageBox,
-    shouldGenerate,
-  ]);
+  return true;
+}, [pageData?.imageTiming?.generate, resolvedImgPrompt]);
+
+const showFrame = useMemo(() => {
+  const timing = pageData?.imageTiming || {};
+
+  // 🔹 Statikus / meglévő kép CSAK akkor számít, ha van konkrét ID / flag
+  const hasStaticImage = Boolean(
+    (timing as any).staticImage ||
+      (timing as any).existingImageId ||
+      (timing as any).imageId
+  );
+
+  // 🔹 Hero-oldal: csak ch4_pg1 marad, de ott se erőből – kell media
+  const isHeroPage = pageData?.id === "ch4_pg1";
+
+  // 🔹 Ha a layout explicit kikapcsolja a médiát, SOHA ne legyen frame
+  if (pageData?.layout?.mediaMode === "none") {
+    return false;
+  }
+
+  // 🔹 Hero-oldal: ugyanaz a feltétel, csak kommentben megjelölve
+  if (isHeroPage) {
+    return shouldGenerate || hasStaticImage;
+  }
+
+  // 🔹 Normál oldalak: csak akkor van keret, ha tényleg van valamilyen media
+  return shouldGenerate || hasStaticImage;
+}, [
+  pageData?.id,
+  pageData?.layout?.mediaMode,
+  pageData?.imageTiming,
+  shouldGenerate,
+]);
+
+const mediaNode = useMemo(() => {
+  if (!showFrame) return null;
+  if (!pageData?.id) return null; // extra védelem
+
+  const pageId = pageData.id;
+
+  if (isProfileCardPage) {
+    return (
+      <ProfileCardFrame
+        pageId={pageId}
+        pageIsFadingOut={isFadingOut}
+        logoSrc={logoUrl}
+      >
+        <GeneratedImage_with_fadein
+          pageId={pageId}
+          prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
+          params={effectiveImageParams}
+          imageTiming={{
+            ...stableImageTiming,
+            generate: shouldGenerate,
+          }}
+          mode={pageData.imageTiming?.mode || "draft"}
+          pageIsFadingOut={isFadingOut}
+        />
+      </ProfileCardFrame>
+    );
+  }
+
+  return (
+    <MediaFrame
+      mode="image"
+      pageId={pageId}
+      pageIsFadingOut={isFadingOut}
+      logoSrc={logoUrl}
+    >
+      <GeneratedImage_with_fadein
+        pageId={pageId}
+        prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
+        params={effectiveImageParams}
+        imageTiming={{
+          ...stableImageTiming,
+          generate: shouldGenerate,
+        }}
+        mode={pageData.imageTiming?.mode || "draft"}
+        pageIsFadingOut={isFadingOut}
+      />
+    </MediaFrame>
+  );
+}, [
+  showFrame,
+  isProfileCardPage,
+  pageData?.id,                  // 🔹 itt is optional chain
+  isFadingOut,
+  logoUrl,
+  shouldGenerate,
+  resolvedImgPrompt.prompt,
+  effectiveImageParams,
+  stableImageTiming,
+  pageData?.imageTiming?.mode,   // 🔹 és itt is
+]);
 
   // timeout scheduler for sfx hook
   const scheduleTimeout = useCallback(
@@ -2672,6 +2754,8 @@ const shouldGenerate = useMemo(() => {
     );
   }
 
+
+
   // normal page
   return (
     <div
@@ -2763,56 +2847,8 @@ const shouldGenerate = useMemo(() => {
             }
           />
         }
-                media={
-          showFrame ? (
-            isProfileCardPage ? (
-              <ProfileCardFrame
-                pageId={pageData.id}
-                pageIsFadingOut={isFadingOut}
-                logoSrc={logoUrl}
-              >
-                <GeneratedImage_with_fadein
-                  pageId={pageData.id}
-                  prompt={
-                    shouldGenerate
-                      ? resolvedImgPrompt.prompt
-                      : undefined
-                  }
-                  params={effectiveImageParams}
-                  imageTiming={{
-                    ...stableImageTiming,
-                    generate: shouldGenerate,
-                  }}
-                  mode={pageData.imageTiming?.mode || "draft"}
-                  pageIsFadingOut={isFadingOut}
-                />
-              </ProfileCardFrame>
-            ) : (
-              <MediaFrame
-                mode="image"
-                pageId={pageData.id}
-                pageIsFadingOut={isFadingOut}
-                logoSrc={logoUrl}
-              >
-                <GeneratedImage_with_fadein
-                  pageId={pageData.id}
-                  prompt={
-                    shouldGenerate
-                      ? resolvedImgPrompt.prompt
-                      : undefined
-                  }
-                  params={effectiveImageParams}
-                  imageTiming={{
-                    ...stableImageTiming,
-                    generate: shouldGenerate,
-                  }}
-                  mode={pageData.imageTiming?.mode || "draft"}
-                  pageIsFadingOut={isFadingOut}
-                />
-              </MediaFrame>
-            )
-          ) : null
-        }
+                media={mediaNode}
+
 
         narr={
           <div
