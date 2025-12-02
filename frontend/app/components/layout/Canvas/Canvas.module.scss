@@ -117,13 +117,14 @@ body[data-skin="legacy-default"] {
   align-self: start;
   overflow: visible;
   min-width: 0;
+  margin-block-start: 20px
 }
 
 .areaNarr   {
   grid-area: narr;
   align-self: start;
   min-width: 0;
-  margin-block-start: 30px;
+  margin-block-start: 0px;
 }
 
 /* Fontos: mobilon NE középre igazítsuk a dockot grid-del.
@@ -199,7 +200,10 @@ body[data-skin="legacy-default"] {
 
 @media (max-width: 500px) {
   .areaNarr {
-    margin-block-start: 0px;
+    margin-block-start:  0px;
+  }
+  .areaMedia {
+    margin-block-start: 20px;
   }
 }
 

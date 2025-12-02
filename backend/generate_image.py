@@ -9,6 +9,18 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
+from io import BytesIO
+from PIL import Image
+import pytesseract
+# Állítsd be a Tesseract elérési útját Windows alatt
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+# =========================
+# OCR / SAFETY CONFIG
+# =========================
+ENABLE_OCR_TEXT_CHECK = os.getenv("ENABLE_OCR_TEXT_CHECK", "true").lower() == "true"
+OCR_TEXT_MIN_LENGTH = int(os.getenv("OCR_TEXT_MIN_LENGTH", "4"))
+OCR_RETRY_LIMIT = int(os.getenv("OCR_RETRY_LIMIT", "2"))  # max 2 retry (össz. 3 generálás)
 
 # =========================
 # REPLICATE KULCS + MODELL
@@ -124,6 +136,97 @@ def _write_sidecar_meta(image_path: str, meta: Dict[str, Any]) -> None:
         pass
 
 
+def _run_image_safety(
+    image_path: str,
+    *,
+    page_id: str,
+    story_slug: str,
+    prompt: str,
+) -> Dict[str, Any]:
+    """
+    Lokális OCR alapú safety:
+      - ha ENABLE_OCR_TEXT_CHECK = false → 'skipped'
+      - ha true → OCR-rel megnézi, van-e értelmezhető szöveg a képen.
+
+    Nem vizsgál brandet, nyelvet vagy jelentést – csak azt, VAN-E TEXT.
+    Ha a kiolvasott szöveg hossza >= OCR_TEXT_MIN_LENGTH → status = 'block'.
+    """
+    if not ENABLE_OCR_TEXT_CHECK:
+        _log({
+            "event": "image.safety_skipped",
+            "reason": "ocr_disabled",
+            "pageId": page_id,
+            "storySlug": story_slug,
+        })
+        return {"status": "skipped", "scores": None, "labels": []}
+
+    try:
+        with open(image_path, "rb") as f:
+            content = f.read()
+
+        img = Image.open(BytesIO(content))
+
+        # Generikus OCR – nyelv nélkül, csak text presence
+        raw_text = pytesseract.image_to_string(img)
+        text = (raw_text or "").strip()
+
+        has_text = len(text) >= OCR_TEXT_MIN_LENGTH
+
+        if has_text:
+            status = "block"
+            labels = ["text_detected"]
+        else:
+            status = "ok"
+            labels = ["no_text"]
+
+        scores = {
+            "text_length": len(text),
+        }
+
+        _log({
+            "event": "image.safety_result",
+            "pageId": page_id,
+            "storySlug": story_slug,
+            "prompt": prompt,
+            "status": status,
+            "scores": scores,
+            "labels": labels,
+        })
+
+        return {
+            "status": status,
+            "scores": scores,
+            "labels": labels,
+        }
+
+    except Exception as e:
+        _log({
+            "event": "image.safety_error",
+            "pageId": page_id,
+            "storySlug": story_slug,
+            "prompt": prompt,
+            "error": str(e),
+        })
+        # hiba esetén inkább ne blokkoljunk automatikusan
+        return {"status": "error", "scores": None, "labels": []}
+
+
+def _generate_safe_placeholder_image(
+    image_path: str,
+    *,
+    width: int = 960,
+    height: int = 540,
+) -> None:
+    """
+    B fallback:
+      - egyszerű, text-mentes 16:9 háttér generálása.
+      - cél: stabil, neutrális vizuál, ami nem tör meg semmilyen flow-t.
+    """
+    # sötét, neutrális háttér (pl. #121826)
+    img = Image.new("RGB", (width, height), (18, 24, 38))
+    img.save(image_path)
+
+
 def _normalize_prompt(prompt: Any) -> str:
     """
     A story motor küldhet összetett prompt-objektumot:
@@ -226,7 +329,6 @@ def generate_image_asset(
 
     # ha NINCS aspect_ratio a végén, tegyük be 16:9-re
     if "aspect_ratio" not in params:
-        # ha width/height már van, próbáljunk felismerni
         w = params.get("width")
         h = params.get("height")
         if w and h:
@@ -240,6 +342,10 @@ def generate_image_asset(
         else:
             params["aspect_ratio"] = "16:9"
 
+    # dimenziók a placeholderhez is
+    width = int(params.get("width") or default_params[mode]["width"])
+    height = int(params.get("height") or default_params[mode]["height"])
+
     # prompt key – már a LAPOSÍTOTT promptból számolunk
     pk = _compute_prompt_key(norm_prompt, {**params, "mode": mode}, style_profile, prompt_key)
 
@@ -251,10 +357,11 @@ def generate_image_asset(
     out_rel = os.path.relpath(out_file).replace("\\", "/")
     out_url = f"/{out_rel}" if not out_rel.startswith("/") else out_rel
 
-    # 1) TÉNYLEGES REPLICATE HÍVÁS (ELŐBB!)
     api_key = api_key or REPLICATE_API_TOKEN
-    got_real_image = False
-    real_url = None
+
+    # 🔁 OCR retry logika
+    max_retries = OCR_RETRY_LIMIT if ENABLE_OCR_TEXT_CHECK else 0
+    attempt = 0
 
     if not api_key:
         _log({
@@ -266,195 +373,290 @@ def generate_image_asset(
             "storySlug": effective_slug,
         })
     else:
-        try:
-            REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
+        while attempt <= max_retries:
+            try:
+                REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
 
-            # 🔽 itt MÁR a laposított promptot küldjük
-            replicate_input: Dict[str, Any] = {
-                "prompt": norm_prompt or "",
-            }
+                replicate_input: Dict[str, Any] = {
+                    "prompt": norm_prompt or "",
+                }
 
-            # ⚠️ KÜLDJÜK MIND A HÁRMAT, HOGY NE TUDJA IGNORÁLNI
-            if "width" in params:
-                replicate_input["width"] = params["width"]
-            if "height" in params:
-                replicate_input["height"] = params["height"]
-            if "aspect_ratio" in params:
-                replicate_input["aspect_ratio"] = params["aspect_ratio"]
+                if "width" in params:
+                    replicate_input["width"] = params["width"]
+                if "height" in params:
+                    replicate_input["height"] = params["height"]
+                if "aspect_ratio" in params:
+                    replicate_input["aspect_ratio"] = params["aspect_ratio"]
+                if "steps" in params:
+                    replicate_input["num_inference_steps"] = params["steps"]
+                if "cfg" in params:
+                    replicate_input["guidance_scale"] = params["cfg"]
 
-            if "steps" in params:
-                # a legtöbb replicate-es SD/Flux ezt így szereti
-                replicate_input["num_inference_steps"] = params["steps"]
-            if "cfg" in params:
-                replicate_input["guidance_scale"] = params["cfg"]
-
-            # LOG: mit küldtünk ténylegesen
-            _log({
-                "event": "image.replicate_request",
-                "pageId": page_id,
-                "prompt": norm_prompt,
-                "input": replicate_input,
-                "mode": mode,
-                "storySlug": effective_slug,
-            })
-
-            create_resp = requests.post(
-                "https://api.replicate.com/v1/predictions",
-                headers={
-                    "Authorization": f"Token {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "version": REPLICATE_VERSION,
+                _log({
+                    "event": "image.replicate_request",
+                    "pageId": page_id,
+                    "prompt": norm_prompt,
                     "input": replicate_input,
-                },
-                timeout=30,
-            )
-            create_resp.raise_for_status()
-            pred = create_resp.json()
-            pred_id = pred.get("id")
+                    "mode": mode,
+                    "storySlug": effective_slug,
+                    "attempt": attempt,
+                })
 
-            if pred_id:
-                for _ in range(40):
-                    time.sleep(2)
-                    poll_resp = requests.get(
-                        f"https://api.replicate.com/v1/predictions/{pred_id}",
-                        headers={"Authorization": f"Token {api_key}"},
-                        timeout=30,
-                    )
-                    poll_resp.raise_for_status()
-                    poll = poll_resp.json()
-                    st = poll.get("status")
-                    if st == "succeeded":
-                        out = poll.get("output") or []
-                        if out:
-                            real_url = out[0] if isinstance(out, list) else out
-                            got_real_image = True
-                        else:
+                create_resp = requests.post(
+                    "https://api.replicate.com/v1/predictions",
+                    headers={
+                        "Authorization": f"Token {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "version": REPLICATE_VERSION,
+                        "input": replicate_input,
+                    },
+                    timeout=30,
+                )
+                create_resp.raise_for_status()
+                pred = create_resp.json()
+                pred_id = pred.get("id")
+
+                real_url = None
+
+                if pred_id:
+                    for _ in range(40):
+                        time.sleep(2)
+                        poll_resp = requests.get(
+                            f"https://api.replicate.com/v1/predictions/{pred_id}",
+                            headers={"Authorization": f"Token {api_key}"},
+                            timeout=30,
+                        )
+                        poll_resp.raise_for_status()
+                        poll = poll_resp.json()
+                        st = poll.get("status")
+                        if st == "succeeded":
+                            out = poll.get("output") or []
+                            if out:
+                                real_url = out[0] if isinstance(out, list) else out
+                            else:
+                                _log({
+                                    "event": "image.replicate_no_output",
+                                    "pageId": page_id,
+                                    "prompt": norm_prompt,
+                                    "rawPrompt": raw_prompt,
+                                    "mode": mode,
+                                    "storySlug": effective_slug,
+                                    "poll": poll,
+                                    "attempt": attempt,
+                                })
+                            break
+                        if st in ("failed", "canceled"):
                             _log({
-                                "event": "image.replicate_no_output",
+                                "event": "image.replicate_failed_status",
+                                "status": st,
                                 "pageId": page_id,
                                 "prompt": norm_prompt,
                                 "rawPrompt": raw_prompt,
                                 "mode": mode,
                                 "storySlug": effective_slug,
                                 "poll": poll,
+                                "attempt": attempt,
                             })
-                        break
-                    if st in ("failed", "canceled"):
+                            break
+
+                # ha nincs output → próbálkozunk cache-sel a loop után
+                if not real_url:
+                    break
+
+                # letöltés + mentés
+                duration_ms = int((time.perf_counter() - started) * 1000)
+                final_url = real_url
+                saved_local = False
+
+                if isinstance(real_url, str) and real_url.startswith(("http://", "https://")):
+                    try:
+                        resp = requests.get(real_url, timeout=60)
+                        resp.raise_for_status()
+
+                        os.makedirs(os.path.dirname(out_file), exist_ok=True)
+
+                        with open(out_file, "wb") as f:
+                            f.write(resp.content)
+
+                        final_url = out_url
+                        saved_local = True
+
+                        # OCR safety check
+                        safety = _run_image_safety(
+                            out_file,
+                            page_id=page_id,
+                            story_slug=effective_slug,
+                            prompt=norm_prompt or "",
+                        )
+
+                        # ha block, és még van retry
+                        if safety.get("status") == "block" and attempt < max_retries:
+                            _log({
+                                "event": "image.safety_block_retry",
+                                "pageId": page_id,
+                                "storySlug": effective_slug,
+                                "prompt": norm_prompt,
+                                "rawPrompt": raw_prompt,
+                                "safety": safety,
+                                "attempt": attempt,
+                            })
+                            try:
+                                os.remove(out_file)
+                            except Exception:
+                                pass
+                            attempt += 1
+                            continue  # új generate
+
+                        # ha block, és NINCS több retry → B fallback
+                        if safety.get("status") == "block" and attempt >= max_retries:
+                            _log({
+                                "event": "image.safety_block_placeholder_fallback",
+                                "pageId": page_id,
+                                "storySlug": effective_slug,
+                                "prompt": norm_prompt,
+                                "rawPrompt": raw_prompt,
+                                "safety": safety,
+                                "attempt": attempt,
+                            })
+                            try:
+                                os.remove(out_file)
+                            except Exception:
+                                pass
+
+                            # safe 16:9 háttér generálása
+                            _generate_safe_placeholder_image(
+                                out_file,
+                                width=width,
+                                height=height,
+                            )
+                            final_url = out_url
+
+                            meta = {
+                                "pageId": page_id,
+                                "promptKey": pk,
+                                "seed": seed,
+                                "mode": mode,
+                                "cacheHit": False,
+                                "durationMs": duration_ms,
+                                "flags": {
+                                    "ENABLE_IMAGE_CACHE": ENABLE_IMAGE_CACHE,
+                                    "ENABLE_IMAGE_PRELOAD": ENABLE_IMAGE_PRELOAD,
+                                },
+                                "source": "placeholder",
+                                "storySlug": effective_slug,
+                                "prompt": norm_prompt,
+                                "rawPrompt": raw_prompt,
+                                "params": params,
+                                "styleProfile": style_profile,
+                                "replicateUrl": real_url,
+                                "safety": safety,
+                                "placeholder": True,
+                            }
+                            _write_sidecar_meta(out_file, meta)
+
+                            _log({
+                                "event": "image.placeholder_returned",
+                                "pageId": page_id,
+                                "storySlug": effective_slug,
+                                "path": final_url,
+                            })
+
+                            return {
+                                "path": final_url,
+                                "url": final_url,
+                                "seed": seed,
+                                "cacheHit": False,
+                                "promptKey": pk,
+                                "mode": mode,
+                                "storySlug": effective_slug,
+                                "source": "placeholder",
+                                "placeholder": True,
+                            }
+
+                        # ide csak akkor jutunk, ha NEM block (ok / skipped / error)
+                        meta = {
+                            "pageId": page_id,
+                            "promptKey": pk,
+                            "seed": seed,
+                            "mode": mode,
+                            "cacheHit": False,
+                            "durationMs": duration_ms,
+                            "flags": {
+                                "ENABLE_IMAGE_CACHE": ENABLE_IMAGE_CACHE,
+                                "ENABLE_IMAGE_PRELOAD": ENABLE_IMAGE_PRELOAD,
+                            },
+                            "source": "replicate_saved",
+                            "storySlug": effective_slug,
+                            "prompt": norm_prompt,
+                            "rawPrompt": raw_prompt,
+                            "params": params,
+                            "styleProfile": style_profile,
+                            "replicateUrl": real_url,
+                            "safety": safety,
+                        }
+                        _write_sidecar_meta(out_file, meta)
+
+                    except Exception as e:
                         _log({
-                            "event": "image.replicate_failed_status",
-                            "status": st,
+                            "event": "image.save_error",
+                            "error": str(e),
                             "pageId": page_id,
                             "prompt": norm_prompt,
                             "rawPrompt": raw_prompt,
                             "mode": mode,
                             "storySlug": effective_slug,
-                            "poll": poll,
+                            "replicateUrl": real_url,
+                            "attempt": attempt,
                         })
-                        break
 
-        except Exception as e:
-            # megpróbáljuk kiszedni a Replicate tényleges hiba-válaszát is
-            replicate_body = None
-            try:
-                if hasattr(e, "response") and e.response is not None:
-                    replicate_body = e.response.text
-            except Exception:
-                replicate_body = None
-
-            _log({
-                "event": "image.replicate_error",
-                "error": str(e),
-                "replicateResponse": replicate_body,
-                "pageId": page_id,
-                "prompt": norm_prompt,
-                "rawPrompt": raw_prompt,
-                "mode": mode,
-                "storySlug": effective_slug,
-            })
-
-    # 2) HA SIKERÜLT, AKKOR (ÉS CSAK AKKOR) MENTSÜK LE LOKÁLISAN IS
-    if got_real_image and real_url:
-        duration_ms = int((time.perf_counter() - started) * 1000)
-
-        final_url = real_url
-        saved_local = False
-
-        # Ha HTTP(S) URL-t kaptunk a Replicate-től, próbáljuk letölteni
-        if isinstance(real_url, str) and real_url.startswith(("http://", "https://")):
-            try:
-                resp = requests.get(real_url, timeout=60)
-                resp.raise_for_status()
-
-                # biztosítsuk a mappát
-                os.makedirs(os.path.dirname(out_file), exist_ok=True)
-
-                with open(out_file, "wb") as f:
-                    f.write(resp.content)
-
-                # innentől a saját /generated/images/... URL-t használjuk
-                final_url = out_url
-                saved_local = True
-
-                _write_sidecar_meta(
-                    out_file,
-                    {
-                        "pageId": page_id,
-                        "promptKey": pk,
-                        "seed": seed,
-                        "mode": mode,
-                        "cacheHit": False,
-                        "durationMs": duration_ms,
-                        "flags": {
-                            "ENABLE_IMAGE_CACHE": ENABLE_IMAGE_CACHE,
-                            "ENABLE_IMAGE_PRELOAD": ENABLE_IMAGE_PRELOAD,
-                        },
-                        "source": "replicate_saved",
-                        "storySlug": effective_slug,
-                        "prompt": norm_prompt,
-                        "rawPrompt": raw_prompt,
-                        "params": params,
-                        "styleProfile": style_profile,
-                        "replicateUrl": real_url,
-                    },
-                )
-            except Exception as e:
                 _log({
-                    "event": "image.save_error",
-                    "error": str(e),
+                    "event": "image.replicate_success",
                     "pageId": page_id,
                     "prompt": norm_prompt,
                     "rawPrompt": raw_prompt,
                     "mode": mode,
                     "storySlug": effective_slug,
                     "replicateUrl": real_url,
+                    "savedLocal": saved_local,
+                    "path": final_url,
+                    "durationMs": duration_ms,
+                    "attempt": attempt,
                 })
 
-        _log({
-            "event": "image.replicate_success",
-            "pageId": page_id,
-            "prompt": norm_prompt,
-            "rawPrompt": raw_prompt,
-            "mode": mode,
-            "storySlug": effective_slug,
-            "replicateUrl": real_url,
-            "savedLocal": saved_local,
-            "path": final_url,
-            "durationMs": duration_ms,
-        })
+                return {
+                    "path": final_url,
+                    "url": final_url,
+                    "seed": seed,
+                    "cacheHit": False,
+                    "promptKey": pk,
+                    "mode": mode,
+                    "storySlug": effective_slug,
+                    "source": "replicate_saved" if saved_local else "replicate_remote",
+                }
 
-        return {
-            "path": final_url,
-            "url": final_url,
-            "seed": seed,
-            "cacheHit": False,
-            "promptKey": pk,
-            "mode": mode,
-            "storySlug": effective_slug,
-            "source": "replicate_saved" if saved_local else "replicate_remote",
-        }
+            except Exception as e:
+                replicate_body = None
+                try:
+                    if hasattr(e, "response") and e.response is not None:
+                        replicate_body = e.response.text
+                except Exception:
+                    replicate_body = None
 
+                _log({
+                    "event": "image.replicate_error",
+                    "error": str(e),
+                    "replicateResponse": replicate_body,
+                    "pageId": page_id,
+                    "prompt": norm_prompt,
+                    "rawPrompt": raw_prompt,
+                    "mode": mode,
+                    "storySlug": effective_slug,
+                    "attempt": attempt,
+                })
+                # itt nem retry-olunk végtelenül, kilépünk a loopból
+                break
 
     # 3) HA NEM SIKERÜLT → PRÓBÁLJUK A CACHE-T (MÁSODLAGOS!)
     if ENABLE_IMAGE_CACHE and cache and os.path.exists(out_file):

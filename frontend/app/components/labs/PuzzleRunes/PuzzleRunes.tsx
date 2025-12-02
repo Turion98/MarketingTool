@@ -452,19 +452,20 @@ export default function PuzzleRunes({
           Reset
         </button>
 
-        <span
-          className={styles.attempts}
-          aria-label={`Próbálkozások: ${attempts}/${maxAttempts}`}
-        >
-          <img
-            src="/icons/heart.png"
-            alt=""
-            aria-hidden="true"
-            width="26px"
-            className={styles.heartIcon}
-          />
-          {attempts}/{maxAttempts}
-        </span>
+       <span
+  className={styles.attempts}
+  aria-label={`Hátralévő életek: ${maxAttempts - attempts}/${maxAttempts}`}
+>
+  <img
+    src="/icons/heart.png"
+    alt=""
+    aria-hidden="true"
+    width="26px"
+    className={styles.heartIcon}
+  />
+  {maxAttempts - attempts}/{maxAttempts}
+</span>
+
       </div>
     </div>
   );

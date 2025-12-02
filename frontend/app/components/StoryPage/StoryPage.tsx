@@ -466,6 +466,7 @@ const StoryPage: React.FC = () => {
   const firstLockTimer = useRef<number | null>(null);
   const processedRunesForPage = useRef<string | null>(null);
   const canvasRootRef = useRef<HTMLDivElement | null>(null);
+  const [hideNarration, setHideNarration] = useState(false);
 
   /** --- helpers: lock/unlock layout a page váltás alatt --- */
 
@@ -771,6 +772,7 @@ const skin = useMemo(() => {
       setIsFadingOut(false);
       setDockJustAppeared(false);
       setPageUnlockedForInteraction(null);
+      setHideNarration(false); 
       setLocalPageId(pageData?.id);
     }
   }, [pageData?.id, localPageId]);
@@ -2341,7 +2343,6 @@ const mediaNode = useMemo(() => {
         lockHeightsForTransition();
 
         setIsFadingOut(true);
-        setSkipRequested(true);
 
         const FADE_MS = 600;
         const SCROLL_MS = FADE_MS * 2;
@@ -2381,11 +2382,17 @@ const mediaNode = useMemo(() => {
           });
         };
 
-        // fade timer
-        window.setTimeout(() => {
-          fadeDone = true;
-          tryProceed();
-        }, FADE_MS);
+     // fade timer
+window.setTimeout(() => {
+  fadeDone = true;
+
+  // 🔹 Amint a kifelé animáció LEFUTOTT, szedd ki a narrációt a DOM-ból
+  flushSync(() => {
+    setHideNarration(true);
+  });
+
+  tryProceed();
+}, FADE_MS);
 
         // scroll anim
         const el = scrollContainerRef.current;
@@ -2850,109 +2857,66 @@ const mediaNode = useMemo(() => {
                 media={mediaNode}
 
 
-        narr={
-          <div
-            ref={narrFreezeRef}
-            className={`${style["textbox-container"]} ${
-              expanded
-                ? style.expanded
-                : ""
-            } ${
-              isFadingOut
-                ? style.fadingOut
-                : ""
-            }`}
-            role="region"
-            aria-label="Narration box"
-          >
-            <NarrativePanel
-              lines={blocks}
-              skipRequested={
-                skipRequested
-              }
-              replayTrigger={
-                replayKey
-              }
-              delayMs={
-                DELAY_MS
-              }
-              onReady={() =>
-                setSkipAvailable(
-                  true
-                )
-              }
-              onComplete={() => {
-                setTypingDone(
-                  true
-                );
-                setPageUnlockedForInteraction(
-                  pageData.id
-                );
+       narr={
+  !hideNarration && (                       // 🔹 ha már kifade-elt, ne is legyen DOM-ban
+    <div
+      ref={narrFreezeRef}
+      className={`${style["textbox-container"]} ${
+        expanded ? style.expanded : ""
+      }`}
+      role="region"
+      aria-label="Narration box"
+    >
+      <NarrativePanel
+        key={pageData.id}                  // ha még nincs bent, érdemes meghagyni
+        lines={blocks}
+        skipRequested={skipRequested}
+        replayTrigger={replayKey}
+        delayMs={DELAY_MS}
+        onReady={() => setSkipAvailable(true)}
+        onComplete={() => {
+          setTypingDone(true);
+          setPageUnlockedForInteraction(pageData.id);
 
-                requestAnimationFrame(
-                  () => {
-                    setDockJustAppeared(
-                      true
-                    );
-                    setShowChoices(
-                      true
-                    );
-                    setChoicePageId(
-                      pageData.id
-                    );
-                  }
-                );
-              }}
-              onMeasure={(m: Measure) => {
-                setMeasure(m);
-              }}
-              typingDone={
-                typingDone
-              }
-              lockedMeasure={
-                lockedMeasure
-              }
-              setLockedMeasure={(
-                m: Measure
-              ) =>
-                setLockedMeasure(
-                  m
-                )
-              }
-              firstLockTimerRef={
-                firstLockTimer
-              }
-              pageId={
-                pageData.id
-              }
-              title={
-                (pageData as any)
-                  ?.title
-              }
-              backdrop={
-                anchorPortal ? (
-                  <>
-                    <BrickBottomOverlay
-                      usePortal
-                      anchor={
-                        anchorPortal as any
-                      }
-                      position="bottom"
-                    />
-                    <BrickBottomOverlay
-                      usePortal
-                      anchor={
-                        anchorPortal as any
-                      }
-                      src="/ui/brick.png"
-                      position="top"
-                    />
-                  </>
-                ) : null
-              }
-            />
-          </div>
+          requestAnimationFrame(() => {
+            setDockJustAppeared(true);
+            setShowChoices(true);
+            setChoicePageId(pageData.id);
+          });
+        }}
+        onMeasure={(m: Measure) => {
+          setMeasure(m);
+        }}
+        typingDone={typingDone}
+        lockedMeasure={lockedMeasure}
+        setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
+        firstLockTimerRef={firstLockTimer}
+        pageId={pageData.id}
+        title={(pageData as any)?.title}
+        exiting={isFadingOut}              // ha már bekötötted, maradjon
+        exitMs={600}
+        backdrop={
+          anchorPortal ? (
+            <>
+              <BrickBottomOverlay
+                usePortal
+                anchor={anchorPortal as any}
+                position="bottom"
+              />
+              <BrickBottomOverlay
+                usePortal
+                anchor={anchorPortal as any}
+                src="/ui/brick.png"
+                position="top"
+              />
+            </>
+          ) : null
         }
+      />
+    </div>
+  )
+}
+
         dock={
           showChoices &&
           choicePageId ===

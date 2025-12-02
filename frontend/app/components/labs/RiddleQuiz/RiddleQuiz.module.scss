@@ -111,22 +111,33 @@
 
 /* ===== Kérdés (TITLE) ===== */
 .question{
-  display: flex;
-  justify-content: center;
+  /* NE legyen szélesebb, mint az option gombok */
+  display: block;
+  max-width: min(100%, var(--rq-maxw)); /* ugyanaz a logika, mint a .btn-nél */
+  margin-inline: auto;
 
-  /* ÚJ: teljes tipó binding a contract/legacy aliasokra */
-  font-family: var(--quiz-title-font-family, inherit);
-  font-size: var(--quiz-title-size, 22px);
-  font-weight: var(--quiz-title-weight, 600);
-  line-height: var(--quiz-title-lineh, 1.35);
-  letter-spacing: var(--quiz-title-letter-spacing, .2px);
-  text-transform: var(--quiz-title-transform, none);
-  color: var(--quiz-title-color, currentColor);
+  /* ugyanaz a tipó, mint a choice, csak kicsit nagyobb */
+  color: var(--choice-color, #fff);
+  text-align: center;
+  font-family: var(
+    --choice-font-family,
+    var(--contract-text-font-family, var(--contract-typography-b-font-family, var(--contract-font-family, sans-serif)))
+  );
+  font-size: calc(var(--choice-font, 16px) * 1.08); /* +8% */
+  line-height: var(--choice-line-height, 1.25);
+  font-weight: var(--choice-text-weight, 600);
+  letter-spacing: var(--choice-text-letter-spacing, .2px);
+  text-transform: none;
 
-  margin: 0;
-  padding: 0;            /* inset a .quizRoot-on van */
-  text-wrap: balance;    /* szebb törés (opcionális) */
+  margin-block: 0;
+  padding: 0;
+
+  /* tördelés, hogy sose nyúljon túl a gomboknál */
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: break-word;
 }
+
 
 /* ===== Lista (FULL-WIDTH TRACK!) ===== */
 .options{
@@ -137,7 +148,7 @@
   list-style:none;
   margin:0;
   padding:0;
-  justify-items:center; /* gombok közepe a maxw miatt */
+  justify-items:center;
 }
 
 /* minden elem kapjon teljes sávot, hogy a gomb 100%-ot tudjon felvenni */
@@ -156,16 +167,23 @@
   border-radius: var(--rq-radius);
   border: 1px solid var(--rq-border);
   background: linear-gradient(180deg, var(--rq-bg-top), var(--rq-bg-bot));
-  color: var(--rq-color);
-  text-align:left;
+  text-align: center;
 
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 0px;
 
-  font-size: var(--rq-font);
-  line-height:1.1;
+  /* TIPÓ: pontosan a ChoiceButtons-é */
+  color: var(--choice-color, #fff);
+  font-family: var(
+    --choice-font-family,
+    var(--contract-text-font-family, var(--contract-typography-b-font-family, var(--contract-font-family, sans-serif)))
+  );
+  font-size: var(--choice-font, 16px);
+  line-height: var(--choice-line-height, 1.25);
+  font-weight: var(--choice-text-weight, 600);
+  letter-spacing: var(--choice-text-letter-spacing, .2px);
 
   /* Backdrop + kompozit árnyék/glow */
   -webkit-backdrop-filter: blur(var(--rq-backdrop-blur-rest));
@@ -205,15 +223,12 @@
 
 .btn:focus-visible{
   outline:none;
-  /* ring-ek külön box-shadow rétegként */
   box-shadow:
     var(--rq-shadow-rest), var(--rq-glow-rest),
     var(--rq-ring-inner), var(--rq-ring-outer);
 }
 
 /* ===== Állapotok ===== */
-
-/* korábban outline volt accenttel – ez ütközött a success/error kerettel */
 .picked{
   outline: none;
 }
@@ -221,7 +236,6 @@
 .quizRoot[data-quiz-phase="locked"] .btn.picked{ animation: rqCommit var(--rq-dur-commit) var(--rq-ease-emph) 1; }
 @keyframes rqCommit{ 0%{transform:scale(var(--rq-scale-active))} 100%{transform:scale(var(--rq-scale-commit))} }
 
-/* === Kiválasztott (általános) */
 .btn.picked{
   border-color: var(--rq-border-hover);
   -webkit-backdrop-filter: blur(var(--rq-backdrop-blur-picked));
@@ -240,10 +254,16 @@
 }
 
 /* ===== Szövegek ===== */
-.label{ pointer-events:none; user-select:none; display:inline-block; flex:1 1 auto; }
+.label{
+  pointer-events:none;
+  user-select:none;
+  display:inline-block;
+  flex:1 1 auto;
+  color: inherit;
+  font: inherit;
+}
 
 /* === Extra/megjegyzés (SUBTITLE/BODY) – ÚJ === */
-/* FIX: pure selector – minden attribútum-szelektor lokális osztály alatt */
 .quizRoot .extra,
 .quizRoot .note,
 .quizRoot .meta,
@@ -296,15 +316,15 @@
 /* ===== Mobil finomhang ===== */
 @media (max-width: 640px){
   .btn{
-    font-size: var(--riddle-font-mobile, var(--choice-font-mobile, var(--rq-font)));
+    font-size: var(--choice-font-mobile, var(--choice-font, 16px));
     padding:
       var(--riddle-pad-y-mobile, var(--choice-padding-y-mobile, var(--rq-pad-y)))
       var(--riddle-pad-x-mobile, var(--choice-padding-x-mobile, var(--rq-pad-x)));
   }
 
-  /* opcionális: mobil cím méret külön aliasról */
+  /* kérdés: choice mobil méret * 1.08 */
   .question{
-    font-size: var(--quiz-title-size-mobile, var(--quiz-title-size, 22px));
+    font-size: calc(var(--choice-font-mobile, var(--choice-font, 16px)) * 1.08);
   }
 }
 
@@ -312,7 +332,6 @@
 /*                FINAL STATE OVERRIDES – MUST COME LAST                   */
 /* ======================================================================= */
 
-/* Sikeres választás – fix zöld keret/glow/shadow (brand-független) */
 .btn[data-state="picked-correct"]{
   border-color: var(--rq-border-correct);
   box-shadow:
@@ -323,7 +342,6 @@
   backdrop-filter: blur(var(--rq-backdrop-blur-correct));
 }
 
-/* Hibás választás – fix piros keret/glow/shadow (brand-független) */
 .btn[data-state="picked-incorrect"]{
   border-color: var(--rq-border-incorrect);
   box-shadow:
@@ -335,7 +353,6 @@
   backdrop-filter: blur(var(--rq-backdrop-blur-incorrect));
 }
 
-/* Ha már döntés született, hover/active ne írja felül a state-et */
 .btn[data-state^="picked-"]:hover,
 .btn[data-state^="picked-"]:active{
   border-color: inherit;
@@ -344,7 +361,6 @@
   background: inherit;
 }
 
-/* A döntés után a nem kiválasztott opciók halványodjanak */
 .options:has(.btn[data-state^="picked-"]) .btn:not([data-state^="picked-"]){
   opacity: var(--rq-unpicked-opacity);
   filter: saturate(0.85);

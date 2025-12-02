@@ -188,12 +188,17 @@ const TypingText: React.FC<Props> = ({
     };
   }, [joined, replayTrigger, delayMs, baseInterval]);
 
-  // skip
+  // skip csak élváltásra (false -> true), ne már-mountolt true-ra
+  const prevSkipRef = useRef(skipRequested);
+
   useEffect(() => {
-    if (skipRequested) {
+    // csak akkor finishNow, ha most lett true (előző renderen még false volt)
+    if (!prevSkipRef.current && skipRequested) {
       finishNow();
     }
+    prevSkipRef.current = skipRequested;
   }, [skipRequested]);
+
 
   return (
     <div

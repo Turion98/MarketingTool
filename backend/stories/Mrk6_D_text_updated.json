@@ -1,0 +1,776 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "marketing_story_v5",
+  "locale": "hu",
+  "meta": {
+    "id": "marketing_story_v5",
+    "title": "Marketing Story v5",
+    "author": "Qzera",
+    "description": "Interaktív marketing döntési játék: marketing, fejlesztői és stratégiai szálak összehangolása Questell-alapú kampányhoz.",
+    "coverImage": "/assets/covers/forest.jpg",
+    "startPageId": "start",
+    "campaignId": "marketing_story_v5",
+    "logo": "assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Nyisd meg a jutalmat",
+        "urlTemplate": "https://www.google.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "start",
+      "title": "Reggeli kávé",
+      "choices": [
+        {
+          "next": "client_brief",
+          "text": "Megnyitom"
+        },
+        {
+          "next": "coffee",
+          "text": "Inkább iszom még egy kávét"
+        }
+      ],
+      "text": [
+        {
+          "text": "Most tetted le a reggeli kávés bögrét az asztalra, amikor felvillan az értesítés: új e-mail az ügyféltől, természetesen „URGENT” jelöléssel."
+        }
+      ]
+    },
+    {
+  "id": "coffee",
+  "title": "Még egy kávé",
+  "text": [
+    {
+      "text": "Adtál magadnak fél perc nyugalmat a kávéval.\nMost már készen állsz megnézni, mi lesz a mai „sürgős” feladat."
+    }
+  ],
+  "choices": [
+    {
+      "next": "client_brief",
+      "text": "Megnyitom az e-mailt"
+    }
+  ]
+},
+    {
+      "id": "client_brief",
+      "title": "Ügyfél megkeresés",
+      "choices": [
+        {
+          "next": "A_entry",
+          "text": "Itt az ideje egy kick-off meetingnek"
+        },
+        {
+          "next": "B1",
+          "text": "Egyből a fejlesztőkhöz megyek"
+        },
+        {
+          "next": "C1",
+          "text": "Álljunk meg egy pillanatra…"
+        }
+      ],
+      "text": [
+        {
+          "text": "Az ügyfél interaktív, megosztható, insight-alapú kampányt kér, másfél hónapon belül.\n\nExtra kérés: minden user kapjon egy egyedi vizuális megjelenést a végén.\n\nVagyis:\nLegyen látványos, érdekes, olcsó, és ne hasonlítson semmire, amit eddig csináltunk, mindezt gyorsan."
+        }
+      ]
+    },
+    {
+      "id": "A_entry",
+      "title": "Csapatmeeting",
+      "logic": {
+        "ifHasFragment": [
+          {
+            "fragment": "A_done",
+            "goTo": "A5"
+          }
+        ],
+        "elseGoTo": "A1"
+      },
+      "text": "(A képernyő sötét. Halk zúgás. A meeting link már nyitva, csak még senki nem szólal meg.)\nBetöltés… Aztán egyszerre felvillannak a kamerák, és hirtelen mindenki rád néz:\nMi lenne a legjobb megoldás? Ki mit gondol?"
+    },
+    {
+      "id": "A1",
+      "title": "Csapatmeeting",
+      "unlockEnterFragments": [
+        "A_done"
+      ],
+      "choices": [
+        {
+          "next": "A1B",
+          "reward": {
+            "unlockFragments": [
+              "A1_storyly"
+            ]
+          },
+          "text": "Lapozható storyly formátum"
+        },
+        {
+          "next": "A1B",
+          "reward": {
+            "unlockFragments": [
+              "A1_logic_puzzle"
+            ]
+          },
+          "text": "Apester, interaktív quiz"
+        },
+        {
+          "next": "A2",
+          "reward": {
+            "unlockFragments": [
+              "A1_game"
+            ]
+          },
+          "text": "Döntésalapú játék"
+        }
+      ],
+      "text": [
+        {
+          "text": "Oké, kezdjük az alapoknál: mivel vonjuk be az embereket?\nFontos, hogy ne legyen bonyolult, mobilon is működjön, és legyen benne valami, amit az ügyfél még nem látott tőlünk."
+        }
+      ]
+    },
+    {
+      "id": "A1B",
+      "title": "Csapatmeeting",
+      "choices": [
+        {
+          "next": "A2",
+          "text": "Ez elfogadható megoldás..."
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A1_storyly",
+          "text": "{fragment:A1_storyly}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A1_logic_puzzle",
+          "text": "{fragment:A1_logic_puzzle}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Ennél egy komplexebb, magasabb interaktivitást kínáló élményre, akár egyedi játékra van most szükségünk."
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "title": "Csapatmeeting",
+      "choices": [
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_graphic"
+            ]
+          },
+          "text": "Meglévő képek használata"
+        },
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_ai_risky"
+            ]
+          },
+          "text": "AI-generált, de bizonytalan"
+        },
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_ai_safe"
+            ]
+          },
+          "text": "AI-generált, moderáció alatt"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A1_game",
+          "text": "{fragment:A1_game}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Oké, körvonalasan megvan a formátum. Most beszéljünk az egyedi vizuális megjelenésről. Olyan kell, ami nem tucat, nem ismétli önmagát, mégis biztonságos, kontrollálható, és olcsón skálázható."
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "title": "Csapatmeeting",
+      "choices": [
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_draw"
+            ]
+          },
+          "text": "Sorsolás"
+        },
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_reward"
+            ]
+          },
+          "text": "Minden résztvevő nyer"
+        },
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_ai_flow"
+            ]
+          },
+          "text": "Élményalapú jutalom"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A2_graphic",
+          "text": "{fragment:A2_graphic}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A2_ai_risky",
+          "text": "{fragment:A2_ai_risky}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A2_ai_safe",
+          "text": "{fragment:A2_ai_safe}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Most pedig térjünk vissza a lényeghez: ahhoz, hogy a felhasználó végigmenjen az élményen, végig fenn kell tartanunk az érdeklődését.\nKonkretizáljuk, hogyan jutalmazzuk őket a részvételért."
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "title": "Csapatmeeting",
+      "choices": [
+        {
+          "next": "B1",
+          "hideIfHasFragment": [
+            "B_done"
+          ],
+          "text": "Beszéljünk a fejlesztőkkel"
+        },
+        {
+          "next": "A5",
+          "showIfHasFragment": [
+            "B_done"
+          ],
+          "text": "Mondjuk el, mit mondtak a fejlesztők"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A3_draw",
+          "text": "{fragment:A3_draw}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A3_reward",
+          "text": "{fragment:A3_reward}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A3_ai_flow",
+          "text": "{fragment:A3_ai_flow}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Oké, most már kezd formát ölteni: döntésalapú játék, AI-vizuál, élmény alapú jutalum.\nEgyeztessünk a fejlesztőkkel, hogy lehet ezt technikailag megoldani."
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "title": "Csapatmeeting",
+      "needsFragment": [
+        "B_final_solution"
+      ],
+      "choices": [
+        {
+          "next": "A6",
+          "text": "Tovább a konklúzióhoz"
+        }
+      ],
+      "text": [
+        {
+          "text": "A fejlesztőkkel átbeszéled mind a három irányt.\nAz egyedi fejlesztésű játék az egyetlen olyan megoldás, ami valóban lefedi az ügyfél elvárásait: élmény, adat, megoszthatóság."
+        }
+      ]
+    },
+    {
+      "id": "A6",
+      "title": "Csapatmeeting",
+      "choices": [
+        {
+          "next": "C1",
+          "text": "Gondoljuk végig egyedül"
+        }
+      ],
+      "text": [
+        {
+          "text": "Ezt így, ebben a formában valószínűleg nem tudjuk házon belül gyorsan és költséghatékonyan legyártani. Legalábbis nem úgy, ahogy szeretnénk.\nOké, keressük meg azt a verziót, ami tényleg működik."
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "title": "Fejlesztői meeting",
+      "unlockEnterFragments": [
+        "B_done"
+      ],
+      "choices": [
+        {
+          "next": "BA1",
+          "text": "Egyből a véleményüket kérdezem."
+        },
+        {
+          "next": "BB1",
+          "text": "Ma kicsit lassabban indul a csapat."
+        },
+        {
+          "next": "BC1",
+          "text": "Már beszéltem a csapattal, megvan a kész koncepció",
+          "showIfHasFragment": [
+            "A_done"
+          ]
+        }
+      ],
+      "text": "Belépsz a fejlesztőkhöz a friss koncepcióval. Itt most tényleg az a kérdés, hogyan lehet ezt stabilan és időben megcsinálni."
+    },
+    {
+      "id": "BA1",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "BA2",
+          "text": "Elmagyarázod, miért kevés a quiz"
+        }
+      ],
+      "text": "Előveszed az ügyfél igényeit, lényegre törően felvázolod.\nAz egyik fejlesztő fel sem néz:\n„Miért nem jó egy sima quiz?”\nA többiek bólintanak, nekik ez a legegyszerűbb megoldás."
+    },
+    {
+      "id": "BA2",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "BA3",
+          "text": "Rákérdezel a valós költségre és időre"
+        }
+      ],
+      "text": "Ekkor az egyikük végre felpillant:\n„Vagy… csinálhatnánk egy Interactive AI-asszisztenst.”\nA többiek is rákapnak a gondolatra — egyből technológiai lehetőségeket kezdenek sorolni, gyors egymásutánban."
+    },
+    {
+      "id": "BA3",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "BA4",
+          "text": "Újrafogalmazod az igényt, konkrétabb technikai kerettel"
+        }
+      ],
+      "text": "A lelkesedés egy pillanat alatt elcsendesedik, amikor kimondják a számokat: féléves fejlesztés, és olyan költség, amit az ügyfél sosem fog elfogadni.\nEgyértelmű: ez most nem a reális megoldás iránya."
+    },
+    {
+      "id": "BA4",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "Visszamész a csapathoz egyeztetni"
+        }
+      ],
+      "text": "Néhány perc vissza-visszatérő ötletelés után kialakul egy köztes javaslat:\n„Legyen egy egyedi fejlesztésű játék. Megcsinálható, kiszámítható, működni fog.”\nA csapat bólint — technikailag ez valóban kivitelezhető.\nTe pedig gyorsan végiggondolod, hogy ez mennyire tér el az ügyfél reális budgetjétől."
+    },
+    {
+      "id": "BB1",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "BB3",
+          "text": "Saját fejlesztésű, márkához igazított játék"
+        },
+        {
+          "next": "BB2",
+          "text": "Sablonos, gyorsan összerakható verzió"
+        }
+      ],
+      "text": "A vezető fejlesztő összefoglalja a helyzetet:\n„Két irány van: saját fejlesztésű játék, vagy egy meglévő sablon.”\nA saját a rugalmasabb, testreszabhatóbb.\nA sablon gyorsabb, de kötöttebb — lényegében kompromisszum minden ponton."
+    },
+    {
+      "id": "BB2",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "BB3",
+          "text": "Megnézed a másik opciót"
+        }
+      ],
+      "text": "Előkerül a sablonos verzió: minimális testreszabási lehetőség, ráadásul már többször használtuk a brandnél.\nMár látod magad előtt az ügyfél arcát, amikor ránéz.\nEz nem lesz jó megoldás."
+    },
+    {
+      "id": "BB3",
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "Visszamész a csapathoz egyeztetni"
+        }
+      ],
+      "text": "A saját fejlesztés jól hangzik — amíg el nem hangzik a valós ideje és költsége.\nA csapat őszinte: ez már platform-szintű munka, nem pilot.\nAz ügyfélnek nincs ekkora kerete erre, de nem is készül el időre.\nEz most nem lesz jó megoldás."
+    },
+    {
+      "id": "BC1",
+      "needsFragment": [
+        "A_done"
+      ],
+      "title": "Fejlesztői meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "Visszamész a csapatodhoz egyeztetni"
+        }
+      ],
+      "text": "A specifikáció adott: nemlineáris élmény, emlékező kampánymotor, AI-alapú vizuális kimenet.\nAz egyedi fejlesztés megoldás lenne, de nagyon magas az ára, hosszú idő lefejleszteni és átalakítás nélkül csak egyszer használható.\nÚjra kell gondolni, mert ezek a javaslatok nem fognak most működni."
+    },
+    {
+      "id": "C1",
+      "title": "Álljunk meg egy pillanatra",
+      "choices": [
+        {
+          "next": "B1",
+          "text": "Visszamész a fejlesztőkhöz tisztázni",
+          "hideIfHasFragment": [
+            "B_done"
+          ]
+        },
+        {
+          "next": "A1",
+          "text": "Visszamész a csapathoz egyeztetni",
+          "hideIfHasFragment": [
+            "A_done"
+          ]
+        },
+        {
+          "next": "C2",
+          "text": "Összefoglalod magadnak a helyzetet"
+        }
+      ],
+      "text": [
+        {
+          "text": "A házon belüli egyeztetések alapján egyértelmű lenne, hogy mire van szükségünk, de ezt most nem tudjuk kivitelezni.\nKözelítsük meg más irányból."
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "keep",
+      "title": "Kulcselemek kiválasztása",
+      "text": "Kezdjük az elején. Gondoljuk végig, mire van szüksége az ügyfélnek.\nVálaszd ki a 3 helyes opciót.",
+      "options": [
+        "Egyedi élmény",
+        "Több mint egy quiz",
+        "Felejthető élmény",
+        "Olcsó stock vizuál",
+        "Hosszú egyedi fejlesztés",
+        "Insight riport"
+      ],
+      "answer": [
+        "Egyedi élmény",
+        "Több mint egy quiz",
+        "Insight riport"
+      ],
+      "maxAttempts": 3,
+      "onSuccess": {
+        "goto": "C3",
+        "setFlags": [
+          "c2_core_elements_ok"
+        ]
+      },
+      "onFail": {
+        "goto": "C2",
+        "setFlags": [
+          "c2_core_elements_retry"
+        ]
+      }
+    },
+    {
+      "id": "C3",
+      "title": "Következő lépés",
+      "text": [
+        {
+          "default": "Rövid kutatás után rátalálsz a Questellre: egy platformra, amely nemlineáris, döntésalapú élményeket épít, követi a felhasználói választásokat, és személyre szabott vizuális kimenetet generál, gyorsan és költséghatékonyan.\n\nEz pontosan az a megoldás, amelyre a marketing építhet, és amely a fejlesztői terheket is csökkenti."
+        },
+        {
+          "ifUnlocked": "B_final_solution",
+          "text": "{fragment:B_final_solution}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "next": "D1",
+          "text": "Tovább az ügyfélhez"
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "title": "Ügyfél szobája",
+      "choices": [
+        {
+          "next": "D2",
+          "text": "Kezdhetjük"
+        }
+      ],
+      "text": [
+        {
+          "text": "Leültök az ügyféllel egy rövid egyeztetésre.\n„Rendben. Hallgatom.Csak egy dolgot kérek:\nlegyen világos, hogy ez üzletileg is erős döntés, nem csak látványos megoldás.”\n\nHárom kérdést tesz fel."
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Ügyfélprezentáció",
+      "text": [
+        {
+          "default": "Ügyfél: „Kezdjük a legfontosabbal. A rendszer biztosítja, hogy csak brand-kompatibilis tartalom jelenjen meg? Nem kerülhet ki olyan AI-vizuál, ami eltér a márkától.”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "Az ügyfél már kissé türelmetlen: „Biztonságos az AI-élmény? Nem kerülhet ki nem brandelt tartalom.” ",
+          "mode": "override"
+        }
+      ],
+      "question": "Mi a legjobb üzleti érv a brand-biztos AI-élményre?",
+      "options": [
+        "Brand-biztos AI-vizuál és moderáció van beépítve.",
+        "Reméljük, hogy az AI nem hibázik.",
+        "Ha gond van, majd gyorsan levesszük a kampányt."
+      ],
+      "correctIndex": 0,
+      "correctLabel": "Pontosan. Brand-biztos AI-vizuál, moderációval.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "correct",
+          "cases": {
+            "true": "D3",
+            "false": "D3",
+            "__default": "D3"
+          }
+        }
+      }
+    },
+    {
+      "id": "D3",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Ügyfélprezentáció",
+      "text": [
+        {
+          "default": "Ügyfél: „Rendben. És az élmény? Ez valóban interaktív, döntésalapú folyamat lesz — vagy a végén úgy működik majd, mint egy kérdőív?”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "Ugyanaz a kérdés, csak most már a szemöldöke is mozgásban van.",
+          "mode": "override"
+        }
+      ],
+      "question": "Mit emelsz ki, hogy ne csak kérdőívnek tűnjön, hanem valódi élménynek?",
+      "options": [
+        "Nemlineáris story, döntési pontok és emlékező rendszer.",
+        "Küldünk plusz kérdőívet follow-upnak.",
+        "Időnként bedobunk egy random kérdést."
+      ],
+      "correctIndex": 0,
+      "correctLabel": "Így van: nemlineáris, emlékező flow, nem sima kérdőív.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "correct",
+          "cases": {
+            "true": "D4",
+            "false": "D4",
+            "__default": "D4"
+          }
+        }
+      }
+    },
+    {
+      "id": "D4",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Ügyfélprezentáció",
+      "text": [
+        {
+          "default": "Ügyfél: „Utolsó kérdés. Kapok belőle valódi insightot? Nem csak számláljuk a kattintásokat, hanem látom, hogyan gondolkodnak a felhasználók?”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "Ismétli a kérdést, csak most már lassabban mondja.",
+          "mode": "override"
+        }
+      ],
+      "question": "Mi bizonyítja legjobban, hogy valódi insight keletkezik, nem csak számok?",
+      "options": [
+        "Csak alap statisztikát adunk: hányan kattintottak.",
+        "Döntési utak, drop-off pontok és remarketing szegmensek épülnek az interakciókból.",
+        "Az ügyfél megérzéseire bízzuk az insightot."
+      ],
+      "correctIndex": 1,
+      "correctLabel": "Igen. Döntési utak, drop-off és remarketing szegmensek = valódi insight.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "score",
+          "cases": {
+            "3": "finale",
+            "0": "D_retry",
+            "1": "D_retry",
+            "2": "D_retry",
+            "__default": "D_retry"
+          }
+        }
+      }
+    },
+    {
+      "id": "D_retry",
+      "title": "Ügyfélprezentáció",
+      "choices": [
+        {
+          "next": "D2",
+          "actions": [
+            {
+              "type": "setFlag",
+              "id": "route_d_second_run"
+            }
+          ],
+          "reward": {
+            "setGlobal": {
+              "score": 0
+            }
+          },
+          "text": "Újrapróbálom az elejéről"
+        }
+      ],
+      "text": [
+        {
+          "text": "Az ügyfél hátradől, és halkan felsóhajt. „Ez így kevés. Gondold át, mi volt a briefben.”\n\nA pillanatnyi csend mindent elmond: újra kell kezdened — de legalább most már tudod, mi nem működik."
+        }
+      ]
+    },
+    {
+      "id": "finale",
+      "type": "end",
+      "title": "Finalé",
+      "text": "A kampányterv átment.\n\nAz ügyfél bólintott, a marketing mosolyog, a fejlesztők nem tiltakoznak.\n\nA Questell-alapú, nemlineáris, emlékező, AI-vizuálos élmény alapú játékotS elfogadták.\n\nMindenki hirtelen csendben van – talán mert először nincs mit vitatni.\n\nA projekt nemcsak működik, hanem még értelme is lett.",
+      "endMeta": {
+        "cta": "default"
+      }
+    }
+  ],
+  "fragments": {
+    "A1_storyly": {
+      "id": "A1_storyly",
+      "text": "A lapozható story-formátum gyors és vizuális, de a bevonódás pár másodperces. Nincs valódi döntési helyzet, sztori-ív."
+    },
+    "A1_logic_puzzle": {
+      "id": "A1_logic_puzzle",
+      "text": "Az Apester-jellegű quiz vagy poll hasznos gyors visszajelzésre, de kérdőívszerű működése miatt korlátozott bevonódást ad, így mély élményhez kevés."
+    },
+    "A1_game": {
+      "id": "A1_game",
+      "text": "A döntésalapú, játékos formátum erős megoldás: rövid történet, választások, visszacsatolás és közben értékes insight gyűlik. A brandre szabható látvány és a kedvező élmény–mérhetőség–költség arány ideálissá teszi egy bevezető kampányhoz."
+    },
+    "A2_graphic": {
+      "id": "A2_graphic",
+      "text": "A meglévő fotókból vagy stockokból nem tudunk minden felhasználónak külön képet adni; ehhez egyszerűen túl kevés variáció áll rendelkezésre."
+    },
+    "A2_ai_risky": {
+      "id": "A2_ai_risky",
+      "text": "A moderálatlan AI-vizuálok látványosak és gyorsak, de kiszámíthatatlanok. Egyetlen hibás generálás is komoly jogi és márkabiztonsági kockázatot jelenthet."
+    },
+    "A2_ai_safe": {
+      "id": "A2_ai_safe",
+      "text": "A kontrollált AI-vizuálok előre definiált stílussal és jóváhagyási folyamattal működnek, így gyorsan készülhetnek egységes, személyre szabott képek, miközben nem kerül ki semmi vállalhatatlan."
+    },
+    "A3_draw": {
+      "id": "A3_draw",
+      "text": "Egy sima sorsolás gyors, de nem teremt kapcsolatot a márkával: kitöltik, elküldik, és továbblépnek. Ha jutalmat adunk, annak magába az élménybe kell beépülnie, nem csupán a végére"
+    },
+    "A3_reward": {
+      "id": "A3_reward",
+      "text": "A minden résztvevőnek járó jutalom biztonságos, de önmagában kevésbé ösztönöz mélyebb bevonódást.\nKönnyen válik formalitássá, amit gyorsan igénybe vesznek, majd továbblépnek"
+    },
+    "A3_ai_flow": {
+      "id": "A3_ai_flow",
+      "text": "Maga a flow-élmény a jutalom. Amikor a user érzi, hogy számítanak a döntései, és a sztori reagál rájuk, adatot gyűjtünk anélkül, hogy bárki panaszkodna. Ritka win–win helyzet, ami hosszú távon is értelmessé tesz egy kampányt."
+    },
+    "A_done": {
+      "id": "A_done",
+      "text": "A marketing már elmondta, hogy „minden csak kreatív döntés kérdése”."
+    },
+    "B_done": {
+      "id": "B_done",
+      "text": "A fejlesztők már elmondták, hogy „ez technikailag lehetetlen, de majd egyszer”."
+    },
+    "B_final_solution": {
+      "id": "B_final_solution",
+      "text": "Ez egyezik a fejlesztők és a marketingesek ajánlásával is — valószínűleg először a projekt történetében."
+    }
+  }
+}

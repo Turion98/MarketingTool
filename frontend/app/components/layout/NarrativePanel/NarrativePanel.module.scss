@@ -30,6 +30,8 @@
   opacity: 0;
   transform: translateY(8px) scale(.98);
   pointer-events: none;
+  /* FIX: kifelé animációnál tiltsuk le minden belépő animációt */
+  animation: none !important;
 }
 
 .textboxContainer {
@@ -43,26 +45,31 @@
   justify-self: stretch; /* grid esetén */
   flex: 1 1 auto;
 
-  /* finom beléptető animáció */
+  /* belépésnél most NINCS keyframe fade-in, csak stabil állapot */
   transform: translateY(0);
-  animation: npFadeIn var(--np-fade-dur, .25s) ease both;
 
   /* Belső optikai margó, hogy a szöveg ne “lóghasson” ki a kép síkján túl */
   padding-left: var(--np-content-inset);
   padding-right: var(--np-content-inset);
+
+  /* 🔹 Narrációs szöveg színe + token override = choice szín */
+  --tt-color: var(--choice-text-color, var(--choice-color, #fff));
+  color: var(--choice-text-color, var(--choice-color, #fff));
 }
 
+/* npFadeIn már nem kell, teljesen kivéve
 @keyframes npFadeIn {
   from { opacity: 0; transform: translateY(var(--np-fade-shift, 6px)); }
   to   { opacity: 1; transform: translateY(0); }
 }
+*/
 
 .textClamp {
   position: relative;
   overflow: visible; /* hogy a felfelé lógó cím ne vágódjon le */
 }
 
-/* Látható cím a TypingText felett – stabil pozicionálás */
+/* Látható cím a TypingText felett – stabil pozicionálás + finom belépő animáció */
 .titleOverlay {
   position: absolute;
   left: 0;
@@ -81,18 +88,37 @@
   font-weight: var(--np-title-weight, 700);
   line-height: var(--np-title-lineh, 1.1);
   font-size: var(--np-title-size, 22px);
-  color: var(--np-title-color, #fff);
+
+  /* 🔹 Cím színe is ugyanaz, mint a choice-oké */
+  color: var(--choice-text-color, var(--choice-color, #fff));
+
   text-shadow: var(--np-title-shadow, 0 1px 2px rgba(0,0,0,.35));
   z-index: 2;
   /* pointer-events: none;  // ha nem kell kattinthatónak lennie */
+
+  /* 🔹 ÚJ: finom fade-in, hogy ne “bevillanjon” */
+  opacity: 0;
+  animation: npTitleIn var(--np-title-fade-dur, 220ms) ease-out forwards;
+  animation-delay: var(--np-title-delay, 80ms);
+}
+
+/* egyszerű, tiszta opacity-animáció – nem piszkáljuk a transformot, hogy a pozíció stabil maradjon */
+@keyframes npTitleIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Mobil finomítások — csak token-átvétel, nem fix érték! */
 @media (max-width: 700px) {
-    /* Extra térköz a narratív PANEL köré mobil layoutban */
+  /* Extra térköz a narratív PANEL köré mobil layoutban */
   .textboxContainer {
     margin-top: 36px;
     margin-bottom: 16px;
+    margin-block-start: 60px;
   }
   .titleOverlay {
     transform: translateY(calc(-1 * var(--np-title-shift-mobile, var(--np-title-shift, 100%))));

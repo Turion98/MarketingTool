@@ -59,8 +59,29 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 # --- Image prompt defaults (backend-only) ---
 DEFAULT_IMAGE_STYLE = "2D animation, soft natural light, gentle depth"
-DEFAULT_NEGATIVE_BLOCK = "no text, no typography, no logos, no brand identities, no watermark, no captions, no UI"
-DEFAULT_PROMPT_LIMIT = 900  # karakter limit a laposított promptra
+DEFAULT_NEGATIVE_BLOCK = (
+    "no text, no typography, no captions, no subtitles, no user interface, "
+    "no UI, no buttons, no menus, no windows, no chat bubbles, no screenshots, "
+    "no watermarks, no signatures, no overlays, "
+    "no logos, no brand names, no trademarks, no product labels, "
+    "no recognizable packaging, no real-world brands, no brand signage, "
+    "no storefront logos, no brand mascots, "
+    "no copyrighted characters, no movie characters, no game characters, "
+    "no superheroes, no comic characters, no cartoon mascots, "
+    "no celebrities, no influencers, no public figures, "
+    "no realistic likeness of specific people, "
+    "no political logos, no political posters, no campaign material, "
+    "no extremist symbols, no hate symbols, "
+    "no nudity, no sexual content, no fetish, "
+    "no violence, no blood, no gore, no self-harm, "
+    "no drugs, no pills, no syringes, no cigarettes, no vaping, no alcohol bottles, "
+    "no beer cans, no wine labels, "
+    "no guns, no rifles, no knives, no weapons, "
+    "no license plates, no readable documents, no ID cards, "
+    "no website UI, no app UI, no social media UI, "
+    "no stock-photo watermarks"
+)
+DEFAULT_PROMPT_LIMIT = 9000 # karakter limit a laposított promptra
 
 
 print("=== Backend indul ===")
@@ -607,12 +628,20 @@ async def api_generate_image(req: Request):
             # marad üres, majd alább hibát dobunk
             pass
 
-    if not prompt:
-        raise HTTPException(status_code=400, detail="Missing prompt and could not assemble from page")
+        if not prompt:
+            raise HTTPException(status_code=400, detail="Missing prompt and could not assemble from page")
+
+    # 🔒 Globális brand-safe negatív blokk ráfűzése, ha még nincs benne
+    # Itt már mindig LAPOSÍTOTT stringünk van (prompt: str)
+    if DEFAULT_NEGATIVE_BLOCK:
+        low = prompt.lower()
+        # ha a globális blokk még nem szerepel benne, fűzzük hozzá
+        if DEFAULT_NEGATIVE_BLOCK.lower() not in low:
+            prompt = f"{prompt}, Negative: {DEFAULT_NEGATIVE_BLOCK}".strip(", ")
 
     try:
         res = generate_image_asset(
-            prompt=prompt,               # ← már a laposított megy be
+            prompt=prompt,               # ← már a globális brand-safe negatívval
             page_id=page_id,
             params=params,
             style_profile=style,
@@ -623,6 +652,7 @@ async def api_generate_image(req: Request):
             mode=mode,
             story_slug=story_slug or "story",
         )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
