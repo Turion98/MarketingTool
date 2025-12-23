@@ -1,0 +1,741 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "creative_profiler_demo",
+  "locale": "hu",
+  "meta": {
+    "id": "creative_profiler_demo",
+    "title": "Creative Problem-Solving Profiler – Demo",
+    "author": "Qzera",
+    "description": "Rövid, háromkérdéses döntésalapú élmény, amely a felhasználó kreatív problémamegoldási stílusa alapján három archetípus egyikéhez irányít.",
+    "coverImage": "/assets/covers/creative.jpg",
+    "startPageId": "Q1",
+    "campaignId": "creative_profiler_demo",
+    "logo": "/assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "fragments": {
+    "Q2_A": {
+      "id": "Q2_A",
+      "text": "A Fény, Amely Új Irányt Mutat\n\nEgy másik nézőpont nálad nem kizökkent, hanem megnyit egy új teret — mint amikor a fény más szögből esik be, és hirtelen láthatóvá válik, merre érdemes továbbmenni."
+    },
+    "Q2_B": {
+      "id": "Q2_B",
+      "text": "A Fény, Amelyből Kirajzolódik a Forma\n\nA szabad áramlás nálad nem szétszórtság: ha hagyod futni az impulzusokat, a fény végül összeáll, és megmutatja, melyik irány hordozza a legerősebb lehetőséget."
+    },
+    "Q2_C": {
+      "id": "Q2_C",
+      "text": "A Fény, Amely Keretet Ad a Fókusznak\n\nA struktúra számodra nem korlát, hanem tájékozódási pont. Mint egy stabil horizontvonal, segít tisztán látni az arányokat, és fókuszban tartani azt, ami előrevisz."
+    },
+    "Q2_D": {
+      "id": "Q2_D",
+      "text": "A Fény, Amely a Csendben Tisztul Ki\n\nEgy rövid megállás nálad nem lassít, hanem letisztítja a látást: a csendben élesebbé válik, mi a következő valódi kapcsolódási vagy továbbhaladási pont."
+    },
+    "SCENE_CONTEXT_1": {
+      "id": "SCENE_CONTEXT_1",
+      "text": "a minimal creative workspace with a clean desk and soft neutral background"
+    },
+    "SCENE_CONTEXT_2": {
+      "id": "SCENE_CONTEXT_2",
+      "text": "a tidy studio environment with subtle organizational structure around the workstation"
+    },
+    "SCENE_CONTEXT_3": {
+      "id": "SCENE_CONTEXT_3",
+      "text": "a focused work area with muted tones and a calm, orderly atmosphere"
+    },
+    "SCENE_CONTEXT_4": {
+      "id": "SCENE_CONTEXT_4",
+      "text": "a simple concept board in the background with lightly suggested shapes and faint markers"
+    },
+    "SCENE_CONTEXT_5": {
+      "id": "SCENE_CONTEXT_5",
+      "text": "a well-organized workstation where only the essential creative materials are visible"
+    },
+    "SCENE_CONTEXT_6": {
+      "id": "SCENE_CONTEXT_6",
+      "text": "a minimal, abstractly hinted backdrop with very soft geometric cues"
+    },
+    "IDEA_STATE_1": {
+      "id": "IDEA_STATE_1",
+      "text": "the scene suggests early-stage preparation, as if the idea is about to take shape"
+    },
+    "IDEA_STATE_2": {
+      "id": "IDEA_STATE_2",
+      "text": "a sense of gentle exploration, with the first traces of direction appearing"
+    },
+    "IDEA_STATE_3": {
+      "id": "IDEA_STATE_3",
+      "text": "a quiet moment where patterns seem to be forming and elements begin to align"
+    },
+    "IDEA_STATE_4": {
+      "id": "IDEA_STATE_4",
+      "text": "a refined phase where the noise has settled and the concept feels more defined"
+    },
+    "IDEA_STATE_5": {
+      "id": "IDEA_STATE_5",
+      "text": "a thoughtful evaluation stage, as if options are being compared before a final choice"
+    },
+    "IDEA_STATE_6": {
+      "id": "IDEA_STATE_6",
+      "text": "a calm presence indicating that clarity is emerging from the previous steps"
+    },
+    "MICRO_DETAILS_1": {
+      "id": "MICRO_DETAILS_1",
+      "text": "a few light notes or sketches resting on the desk, nothing overwhelming"
+    },
+    "MICRO_DETAILS_2": {
+      "id": "MICRO_DETAILS_2",
+      "text": "very subtle connecting marks or faint diagram hints around the workspace"
+    },
+    "MICRO_DETAILS_3": {
+      "id": "MICRO_DETAILS_3",
+      "text": "a single clearly placed concept card suggesting the current focus"
+    },
+    "MICRO_DETAILS_4": {
+      "id": "MICRO_DETAILS_4",
+      "text": "a barely visible trace of movement, suggesting the idea is still evolving"
+    },
+    "MICRO_DETAILS_5": {
+      "id": "MICRO_DETAILS_5",
+      "text": "a neatly arranged notebook and pen adding structure to the scene"
+    },
+    "MICRO_DETAILS_6": {
+      "id": "MICRO_DETAILS_6",
+      "text": "soft tonal accents around the edges of the frame, giving a touch of creative energy"
+    },
+    "MICRO_DETAILS_7": {
+      "id": "MICRO_DETAILS_7",
+      "text": "tiny, precise marks or clean lines indicating careful refinement"
+    },
+    "MICRO_DETAILS_8": {
+      "id": "MICRO_DETAILS_8",
+      "text": "a gentle highlight on one element of the workspace, signaling importance"
+    },
+    "OVR_SYNTH_Q3_1": {
+      "id": "OVR_SYNTH_Q3_1",
+      "text": "Akkor döntesz, amikor megérzed az összhangot: azt a halk, mégis egyértelmű pillanatot, amikor minden részlet a helyére billen. Nálad a választás nem villanás, hanem egy finom, stabil koherencia felismerése — mint a napkelte, amely egyszer csak mindent láthatóvá tesz."
+    },
+    "OVR_SYNTH_Q3_2": {
+      "id": "OVR_SYNTH_Q3_2",
+      "text": "Bár alapvetően a rend vezet, a karakteres impulzusokat is képes vagy befogadni. A döntéseid akkor születnek meg, amikor egy erős, tisztán ragyogó irány hirtelen értelmet ad a körvonalaknak. Olyan ez, mint amikor a nap áttör a felhőkön: hirtelen minden határozottabbnak tűnik."
+    },
+    "OVR_SYNTH_Q3_3": {
+      "id": "OVR_SYNTH_Q3_3",
+      "text": "A végső döntésed mögött a finom részletek logikai aránya áll. Amikor látod, hogy a vonalak tisztán találkoznak, onnantól nincs kérdés. A te „napfelkeltéd” a szerkezet tiszta megmutatkozása — a kontúrok élessége hozza meg a választ."
+    },
+    "OVR_SYNTH_Q3_4": {
+      "id": "OVR_SYNTH_Q3_4",
+      "text": "Te az adott pillanat ritmusából olvasol. A döntésed akkor születik meg, amikor a környezet fényviszonyai — a hangulat, a dinamika, a helyzet puha jelei — egy irányba mutatnak. Olyan vagy, mint a hajnal, amely mindig a körülményhez alkalmazkodva tárja fel a világot."
+    },
+    "OVR_EXPL_Q3_1": {
+      "id": "OVR_EXPL_Q3_1",
+      "text": "A sok impulzusból gyorsan kiszúrod azt, amelyik természetes egységet alkot. Számodra a döntés akkor születik meg, amikor a mozgásból kirajzolódik a rend."
+    },
+    "OVR_EXPL_Q3_2": {
+      "id": "OVR_EXPL_Q3_2",
+      "text": "Akkor döntesz, amikor egy irány hirtelen megmozdít benned valamit. Nem az óvatosságot követed, hanem azt, ami él, vibrál és előre húz."
+    },
+    "OVR_EXPL_Q3_3": {
+      "id": "OVR_EXPL_Q3_3",
+      "text": "A kísérletezés közepén is pontosan érzed, melyik verzió hordozza a tiszta arányokat. A döntésed a letisztulás pillanatában születik meg."
+    },
+    "OVR_EXPL_Q3_4": {
+      "id": "OVR_EXPL_Q3_4",
+      "text": "A környezet hangulatából olvasol, és azt választod, ami rezonál a helyzettel. A döntés nálad nem szabály, hanem érzékeny ráhangolódás."
+    },
+    "OVR_REFIN_Q3_1": {
+      "id": "OVR_REFIN_Q3_1",
+      "text": "A végső döntés akkor születik meg, amikor a részletek naplemente-szerűen letisztulnak, és a szerkezet élesen kirajzolódik. Nálad a minőség mindig a formai rendből indul ki: ha a vonalak a helyükre billennek, a választás már magától értetődik."
+    },
+    "OVR_REFIN_Q3_2": {
+      "id": "OVR_REFIN_Q3_2",
+      "text": "A karakteres ötleteket nem kerülöd — inkább a fényükből indulva csiszolod egységes, prémiumminőségű formává. A döntéseid akkor állnak össze, amikor érzed, hogy a merész irány mögött is ott van a tiszta arány és a megnyugtató struktúra."
+    },
+    "OVR_REFIN_Q3_3": {
+      "id": "OVR_REFIN_Q3_3",
+      "text": "A választásodat a mikroszintű egyensúly dönti el: ritmus, tipográfiai arány, vizuális súlypont. Nálad az a megoldás lesz a befutó, amely a naplemente finom kontrasztjaihoz hasonlóan éretten, harmonikusan és precízen áll össze."
+    },
+    "OVR_REFIN_Q3_4": {
+      "id": "OVR_REFIN_Q3_4",
+      "text": "A döntéseid a helyzet fényviszonyaihoz igazodnak. Figyelsz időre, csatornára, formátumra — és azt az irányt választod, amely ezek között is megőrzi a tiszta arányokat. Úgy optimalizálsz, mint a nap utolsó fénye: kiemeled, ami működik, és elengeded, ami nem."
+    }
+  },
+  "pages": [
+    {
+      "id": "Q1",
+      "title": "Milyen ritmusban indul be nálad a nap?",
+      "text": [
+        {
+          "text": "Válaszd ki azt a kezdőhangulatot, amely a leginkább elkapja, hogyan ébred fel benned az energia egy új nap elején — akár kreatív, akár hétköznapi helyzetről van szó."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Lassan kinyílik minden, és először csak figyelem, hogyan áll össze a világ.",
+          "next": "Q2",
+          "value": "A",
+          "reward": {
+            "locks": [
+              "Q1_A"
+            ],
+            "unlockFragments": [
+              "SCENE_CONTEXT_1"
+            ]
+          }
+        },
+        {
+          "text": "Egyből beindulok: gyors lendület, első szikrák, hirtelen ötletek.",
+          "next": "Q2",
+          "value": "B",
+          "reward": {
+            "locks": [
+              "Q1_B"
+            ],
+            "unlockFragments": [
+              "SCENE_CONTEXT_2"
+            ]
+          }
+        },
+        {
+          "text": "Kis lépések, apró finomítások: úgy indulok, hogy egyből beleállok valamibe.",
+          "next": "Q2",
+          "value": "C",
+          "reward": {
+            "locks": [
+              "Q1_C"
+            ],
+            "unlockFragments": [
+              "SCENE_CONTEXT_3"
+            ]
+          }
+        },
+        {
+          "text": "A nap ritmusa vezet: hagyom, hogy a hangulat állítsa be az indulást.",
+          "next": "Q2",
+          "value": "D",
+          "reward": {
+            "locks": [
+              "Q1_D"
+            ],
+            "unlockFragments": [
+              "SCENE_CONTEXT_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q2",
+      "title": "Mi billent át, amikor megtörik a nap lendülete?",
+      "text": [
+        {
+          "text": "Előfordul, hogy a nap ritmusa hirtelen lelassul. Válaszd ki azt a mozdulatot vagy hangulatváltást, amely a leginkább segít újra sínre hozni az energiát."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Kicsit hátralépek, és megnézem másik szögből, hogyan esik a fény.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": [
+              "Q2_A",
+              "IDEA_STATE_1"
+            ]
+          }
+        },
+        {
+          "text": "Megmozgatom a gondolatokat: hagyom, hogy szétfussanak, amíg valami meg nem csillan.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": [
+              "Q2_B",
+              "IDEA_STATE_2"
+            ]
+          }
+        },
+        {
+          "text": "Visszatérek ahhoz a ponthoz, ahol minden rendezett volt — onnan építek tovább.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": [
+              "Q2_C",
+              "IDEA_STATE_3"
+            ]
+          }
+        },
+        {
+          "text": "Teszek egy csendes szünetet: amikor a nap megszelídül, tisztábban látok.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": [
+              "Q2_D",
+              "IDEA_STATE_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q3",
+      "title": "Mi alapján áll be nálad a nap végső ritmusa?",
+      "text": [
+        {
+          "text": "Amikor eljutsz oda, hogy már csak rá kell érezni a napod irányára, mi az a jel, hangulat vagy villanás, ami segít eldönteni, merre billen benned a napfény?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Amikor minden a helyére simul, és tisztán látom az összhangot.",
+          "next": "logic",
+          "value": "1",
+          "reward": {
+            "locks": [
+              "Q3_1"
+            ],
+            "unlockFragments": [
+              "MICRO_DETAILS_1",
+              "OVR_SYNTH_Q3_1",
+              "OVR_EXPL_Q3_1",
+              "OVR_REFIN_Q3_1"
+            ]
+          }
+        },
+        {
+          "text": "Azt választom, ami a legerősebben felvillan — ami átüti a fényt.",
+          "next": "logic",
+          "value": "2",
+          "reward": {
+            "locks": [
+              "Q3_2"
+            ],
+            "unlockFragments": [
+              "MICRO_DETAILS_2",
+              "OVR_SYNTH_Q3_2",
+              "OVR_EXPL_Q3_2",
+              "OVR_REFIN_Q3_2"
+            ]
+          }
+        },
+        {
+          "text": "A részletek finom aránya dönt: ahol minden apróság szépen összeáll.",
+          "next": "logic",
+          "value": "3",
+          "reward": {
+            "locks": [
+              "Q3_3"
+            ],
+            "unlockFragments": [
+              "MICRO_DETAILS_3",
+              "OVR_SYNTH_Q3_3",
+              "OVR_EXPL_Q3_3",
+              "OVR_REFIN_Q3_3"
+            ]
+          }
+        },
+        {
+          "text": "A belső ritmust figyelem: ami a nap hangulatával a legjobban rezonál.",
+          "next": "logic",
+          "value": "4",
+          "reward": {
+            "locks": [
+              "Q3_4"
+            ],
+            "unlockFragments": [
+              "MICRO_DETAILS_4",
+              "OVR_SYNTH_Q3_4",
+              "OVR_EXPL_Q3_4",
+              "OVR_REFIN_Q3_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Elemzés...",
+      "text": [
+        {
+          "text": "A választások alapján meghatározzuk a kreatív problémamegoldó karaktered."
+        }
+      ],
+      "logic": [
+        {
+          "if": [
+            "Q1_A",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_4"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_4"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_4"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_3"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_4"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "default": "end_synthesizer"
+        }
+      ]
+    },
+    {
+      "id": "end_synthesizer",
+      "title": "PROFILOD: THE SUNRISE",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "The Sunrise",
+        "subtitle": "A friss rend, a tiszta kezdet, a kiegyensúlyozott ébredés energiája.",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "A benned működő ritmus a nap első fényeire emlékeztet. Úgy áll össze körülötted minden, ahogy a reggel lassan kibontja a világ kontúrjait: tisztán, rendezetten, megnyugtató összhanggal.\n\nTe nem rohansz bele a dolgokba — inkább hagyod, hogy a minták lassan kirajzolódjanak, és amikor meglátod a struktúrát, pontosan tudod, merre érdemes lépni.\n\nA környezeted gyakran érzi úgy, hogy melletted letisztulnak a gondolatok: mintha szétnyílna a fény és láthatóvá válna a rendezőelv. Erősséged a csendes koherencia: képes vagy egy helyzetet úgy összefogni, hogy minden elem természetesen illeszkedik valamibe, ami nagyobbnak és tisztábbnak hat, mint ami előtte volt."
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_SYNTH_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_SYNTH_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_SYNTH_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_SYNTH_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+     "imagePrompt": {
+  "global": "portrait of a creative professional in a minimal, softly lit studio, waist-up, natural diffused light with early-day tones, calm atmospheric depth, subtle abstract light streaks suggesting the beginning of an idea, no text, no logos, no brands, no watermark, modern clean realism with a slight illustrative softness, high resolution, gentle sharpness, muted warm–cool palette",
+
+  "chapter": "the person appears at the start of a creative process, calm and observant, soft sunrise-like gradients behind them, subtle emerging shapes suggesting new ideas forming, atmosphere of openness and quiet clarity",
+
+  "page": "the scene reflects an early-stage creative moment with soft minimal lighting and gentle workspace hints; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, the environment subtly mirrors the first spark of a creative idea, minimal and softly illuminated, {page}",
+
+  "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+
+  "styleProfile": {
+    "mood": "clean-minimal",
+    "camera": "front",
+    "lighting": "soft studio"
+  }
+}
+,
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_explorer",
+      "title": "PROFILOD: DAYLIGHT",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Daylight",
+        "subtitle": "Kíváncsi, inspiráció-vezérelt kreatív profil",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "A jelenléted olyan, mint a nap ereje, amikor teljes fényben megmutatkozik minden. Mozgás, lendület, impulzusok és gyors felismerések jellemzik a döntéseidet. Ott hozod a legjobb formád, ahol az energia áramlik, és a pillanat kijelöli a következő lépést."
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_EXPL_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_EXPL_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_EXPL_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_EXPL_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "imagePrompt": {
+  "global": "portrait of a creative professional in a minimal studio, waist-up, natural soft daylight with a brighter energetic tone, gentle highlights suggesting movement, subtle abstract shapes indicating idea flow, no text, no logos, no brands, no watermark, modern clean realism with a slightly expressive illustrative touch, high resolution, crisp but soft edges, balanced warm–cool daylight palette",
+
+  "chapter": "the person appears curious and energized, slight motion in posture or hair, soft dynamic blur hints suggesting active exploration, playful abstract color accents forming behind them like emerging ideas, atmosphere of experimentation, openness and intuitive creative momentum",
+
+  "page": "the scene reflects an in-motion creative moment illuminated by bright soft daylight, with subtle workspace cues and evolving abstract hints; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, the environment conveys daylight energy and intuitive discovery, soft motion cues and spontaneous abstract shapes, {page}",
+
+  "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+
+  "styleProfile": {
+    "mood": "clean-minimal",
+    "camera": "front",
+    "lighting": "soft studio"
+  }
+}
+,
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_refiner",
+      "title": "PROFILOD: THE SUNSET REFINER",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "The Sunset Refiner",
+        "subtitle": "Minőségorientált, részlet- és arányérzékeny kreatív profil",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "A munkád lényege a letisztítás. Úgy látod a részleteket, mint naplementében az élessé vált kontúrokat: mi túl sok, mi csúszik el, hol borul az arány. Nem a mennyiség vezet — hanem az, hogy a legerősebb irányt csiszold prémiumszintre. A te kezed alatt minden kissé csendesebb, precízebb és érettebb lesz."
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_REFIN_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_REFIN_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_REFIN_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_REFIN_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+     "imagePrompt": {
+  "global": "portrait of a creative professional in a minimal, softly lit studio, waist-up, natural diffused sunset-toned light with controlled warm–cool contrast, subtle geometric structure hints in the background, clean modern realism with precise detailing, no text, no logos, no brands, no watermark, high resolution, refined crispness, calm and disciplined visual tone",
+
+  "chapter": "the person appears focused and exacting, slightly leaned in as if refining details, soft sunset-edge highlights defining contours, subtle grid lines and micro-annotations behind them, atmosphere of precision, clarity, and thoughtful quality-polishing",
+
+  "page": "the scene reflects a late-stage refinement moment with structured minimal lighting and quiet, precise workspace cues; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, the environment conveys sunset-clarity and meticulous fine-tuning, structured highlights and subtle geometric cues, {page}",
+
+  "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+
+  "styleProfile": {
+    "mood": "clean-minimal",
+    "camera": "front",
+    "lighting": "soft studio"
+  }
+},
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    }
+  ]
+}

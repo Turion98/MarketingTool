@@ -1,0 +1,1254 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "coffee_quiz_demo",
+  "locale": "hu",
+  "meta": {
+    "id": "coffee_quiz_demo",
+    "title": "Milyen kávé vagy most?",
+    "author": "Qzera",
+    "description": "Háromkérdéses, könnyed kvíz arról, hogy jelenleg melyik kávé-hangulat áll hozzád a legközelebb.",
+    "coverImage": "/assets/covers/coffee.jpg",
+    "startPageId": "Q1",
+    "campaignId": "coffee_quiz_demo",
+    "logo": "/assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+  "id": "Q1",
+  "title": "",
+  "text": [
+    {
+      "text": "Válaszd ki azt a helyzetet, ami a leginkább ismerős neked a mindennapokból."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Ha valami kiesik a kezedből, felnevetsz rajta.",
+      "next": "Q2",
+      "value": "A",
+      "reward": {
+        "locks": ["Q1_A"],
+        "unlockFragments": ["FRAG_PAGE_SITUATION_1"]
+      }
+    },
+    {
+      "text": "Automatikusan elkezded elpakolni a körülötted lévő dolgokat.",
+      "next": "Q2",
+      "value": "B",
+      "reward": {
+        "locks": ["Q1_B"],
+        "unlockFragments": ["FRAG_PAGE_SITUATION_2"]
+      }
+    },
+    {
+      "text": "Körbenézel, és rögtön észreveszel valami érdekeset.",
+      "next": "Q2",
+      "value": "C",
+      "reward": {
+        "locks": ["Q1_C"],
+        "unlockFragments": ["FRAG_PAGE_SITUATION_3"]
+      }
+    },
+    {
+      "text": "Inkább csak megállsz egy pillanatra, és veszel egy mély levegőt.",
+      "next": "Q2",
+      "value": "D",
+      "reward": {
+        "locks": ["Q1_D"],
+        "unlockFragments": ["FRAG_PAGE_SITUATION_4"]
+      }
+    }
+  ]
+}
+,
+    {
+      "id": "Q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Képzeld el, hogy hirtelen kapsz 10 percet magadra. Mire menne el ez az idő a legszívesebben?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Gyorsan elintéznék valami apróságot.",
+          "next": "Q3",
+          "value": "A",
+          "reward": {
+            "locks": [
+              "Q2_A"
+            ],
+            "unlockFragments": [
+              "FRAG_Q2_VARIANT_1"
+            ]
+          }
+        },
+        {
+          "text": "Kicsit rendbe tenném a környezetem.",
+          "next": "Q3",
+          "value": "B",
+          "reward": {
+            "locks": [
+              "Q2_B"
+            ],
+            "unlockFragments": [
+              "FRAG_Q2_VARIANT_2"
+            ]
+          }
+        },
+        {
+          "text": "Megnéznék valami új dolgot / videót / ötletet.",
+          "next": "Q3",
+          "value": "C",
+          "reward": {
+            "locks": [
+              "Q2_C"
+            ],
+            "unlockFragments": [
+              "FRAG_Q2_VARIANT_3"
+            ]
+          }
+        },
+        {
+          "text": "Leülnék csendben, és pihennék.",
+          "next": "Q3",
+          "value": "D",
+          "reward": {
+            "locks": [
+              "Q2_D"
+            ],
+            "unlockFragments": [
+              "FRAG_Q2_VARIANT_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q3",
+      "title": "",
+      "text": [
+        {
+          "text": "Válaszd ki azt a mondatot, amelyik mostanában a leginkább igaz rád."
+        }
+      ],
+      "choices": [
+        {
+          "text": "„Jó, ha a dolgok haladnak.”",
+          "next": "logic",
+          "value": "1",
+          "reward": {
+            "locks": [
+              "Q3_1"
+            ]
+          }
+        },
+        {
+          "text": "„Jó, ha a dolgok kisimulnak.”",
+          "next": "logic",
+          "value": "2",
+          "reward": {
+            "locks": [
+              "Q3_2"
+            ]
+          }
+        },
+        {
+          "text": "„Jó, ha van egy kis játékosság.”",
+          "next": "logic",
+          "value": "3",
+          "reward": {
+            "locks": [
+              "Q3_3"
+            ]
+          }
+        },
+        {
+          "text": "„Jó, ha van tér lélegezni.”",
+          "next": "logic",
+          "value": "4",
+          "reward": {
+            "locks": [
+              "Q3_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Elemzés...",
+      "text": [
+        {
+          "text": "A választásaid alapján megmutatjuk, hogy most éppen milyen kávé-hangulat áll hozzád a legközelebb."
+        }
+      ],
+      "logic": [
+        {
+          "if": [
+            "Q1_A",
+            "Q2_A",
+            "Q3_1"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_A",
+            "Q3_2"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_A",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_A",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_B",
+            "Q3_1"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_B",
+            "Q3_2"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_B",
+            "Q3_3"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_B",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_C",
+            "Q3_1"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_C",
+            "Q3_2"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_C",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_C",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_D",
+            "Q3_1"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_D",
+            "Q3_2"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_D",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q2_D",
+            "Q3_4"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_A",
+            "Q3_1"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_A",
+            "Q3_2"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_A",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_A",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_B",
+            "Q3_1"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_B",
+            "Q3_2"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_B",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_B",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_C",
+            "Q3_1"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_C",
+            "Q3_2"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_C",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_C",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_D",
+            "Q3_1"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_D",
+            "Q3_2"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_D",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q2_D",
+            "Q3_4"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_A",
+            "Q3_1"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_A",
+            "Q3_2"
+          ],
+          "goto": "end_espresso"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_A",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_A",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_B",
+            "Q3_1"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_B",
+            "Q3_2"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_B",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_B",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_C",
+            "Q3_1"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_C",
+            "Q3_2"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_C",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_C",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_D",
+            "Q3_1"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_D",
+            "Q3_2"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_D",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q2_D",
+            "Q3_4"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_A",
+            "Q3_1"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_A",
+            "Q3_2"
+          ],
+          "goto": "end_latte"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_A",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_A",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_B",
+            "Q3_1"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_B",
+            "Q3_2"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_B",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_B",
+            "Q3_4"
+          ],
+          "goto": "end_filter"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_C",
+            "Q3_1"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_C",
+            "Q3_2"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_C",
+            "Q3_3"
+          ],
+          "goto": "end_cappuccino"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_C",
+            "Q3_4"
+          ],
+          "goto": "end_coldbrew"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_D",
+            "Q3_1"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_D",
+            "Q3_2"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_D",
+            "Q3_3"
+          ],
+          "goto": "end_decaf"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q2_D",
+            "Q3_4"
+          ],
+          "goto": "end_decaf"
+        }
+      ]
+    },
+    {
+  "id": "end_espresso",
+  "title": "TE EGY ESPRESSO VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Espresso",
+    "subtitle": "Gyors, egyértelmű, nincs mellébeszélés.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "A dolgokat szereted minél hamarabb elintézni. Nem húzod az időt, nem körözöl a téma körül: mész előre. Olyan típus vagy, akitől sokan megkérdezik: „Na, akkor hogyan legyen?”, és te egyszerűen megmondod."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "Ebben a verziódban az espresso egy feszes, koncentrált erőt képvisel. Határozott kisugárzásoddal könnyen irányt adsz a helyzeteknek."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Itt az espresso letisztult, precíz oldala jelenik meg benned. Jól áll neked ez a csendes, fókuszált intenzitás."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Most az espresso élénkebb, vibrálóbb arca köszön vissza rajtad. A jelenléted energikus, mégis kontrollált marad."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "Ez az espresso-változatod mélyebb és visszafogottabb. A kevesebb szó mögött most több jelentés van."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "espresso as an archetypal state: concentrated, decisive, compressed energy, strong inner density, minimal but intentional presence, visual tension created through contrast and focus, a sense of immediacy and clarity, nothing excessive, everything purposeful, the feeling of something small yet powerful asserting itself without explanation",
+
+    "page": "the environment defines where and how the archetypal state appears: a minimal interior, abstract spatial setting, or quiet surface-based composition, guided by soft directional light and restrained details, allowing the mood to manifest naturally; the setting supports the chapter energy without overt storytelling or literal interpretation",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "focused-minimal",
+      "camera": "neutral",
+      "lighting": "soft directional"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+},
+    {
+  "id": "end_latte",
+  "title": "TE EGY LATTE VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Latte",
+    "subtitle": "Kiegyensúlyozott, nyugodt, komfortos.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "Nem rohansz, de nem is állsz le teljesen. Szeretsz kényelmes, rendezett ritmusban haladni. Ha feszültség van, te vagy az, aki kisimítja. Ha nagy a káosz, te vagy az, aki rendet rak – szó szerint vagy átvitt értelemben."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "A latte most benned egy stabil, kiegyensúlyozott alapot jelent. Megnyugtató jelenléted természetes rendet hoz a környezetedbe."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Ebben a változatban a latte krémes lágysága dominál. Finoman simítod ki magad körül a hangulatot, minden erőlködés nélkül."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Itt a latte játékosabb, könnyedebb tónusa jelenik meg benned. Nyitott vagy a kötetlenebb ötletekre és a puha ritmusokra."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "Ez a latte-változat szellősebb és lazább érzetű. Kényelmesen, saját tempóban fogadod be a nap történéseit."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "latte as an archetypal state: balanced and steady energy, soft cohesion rather than force, a sense of comfort and continuity, visual calm created through gentle transitions instead of sharp contrast, supportive presence that stabilizes the surrounding elements, nothing rushed, nothing abrupt, an atmosphere where things naturally settle into place, conveying reassurance, smoothness, and quiet reliability",
+
+    "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "calm-balanced",
+      "camera": "neutral",
+      "lighting": "soft diffuse"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+,
+    {
+  "id": "end_cappuccino",
+  "title": "TE EGY CAPPUCCINO VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Cappuccino",
+    "subtitle": "Kreatív, játékos, ötletes.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "Könnyen ugrasz bele új dolgokba, és legtöbbször működik is. Gyorsan kapcsolsz, jó ötleteid vannak, és szereted, ha egy helyzetnek van egy kis csavarja. Néha kicsit kaotikus vagy – de pont ettől vagy érdekes."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "A cappuccino most határozottabb, lendületesebb arcát mutatja rajtad keresztül. Kreatív energiád mögött most tiszta irány is látszik."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Itt a cappuccino lágyabb, kiegyensúlyozottabb verziója jelenik meg benned. A játékosságod egy rendezett keretben működik."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Ez a cappuccino-állapot élénk, ötletes és tele van apró inspirációkkal. Könnyen teszel hozzá valami váratlant bármilyen helyzethez."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "Most a cappuccino csendesebb, harmonikusabb oldala érvényesül benned. A kreativitásod nem harsány, inkább finoman rezonál."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "cappuccino as an archetypal state: playful yet structured energy, lightness layered over a stable base, a sense of creative lift and variation, visual rhythm created through soft contrasts and subtle layering, moments of surprise balanced by coherence, an atmosphere where ideas can bounce and recombine, expressive without being chaotic, suggesting curiosity, spontaneity, and inventive flow",
+
+    "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "playful-balanced",
+      "camera": "neutral",
+      "lighting": "soft directional"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+,
+    {
+  "id": "end_filter",
+  "title": "TE EGY FILTER KÁVÉ VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Filter coffee",
+    "subtitle": "Türelmes, megfontolt, csendes erő.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "Szereted átgondolni a dolgokat, mielőtt lépsz. Ha neked kell dönteni, az általában jó döntés lesz. Nem feltétlenül vagy hangos, de amikor megszólalsz, annak súlya van. Inkább tisztán, lassabban haladsz, mint kapkodva."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "Ebben a verzióban a filterkávé tiszta, egyenes karaktere jelenik meg benned. A gondolkodásod világos és jól követhető."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Itt a filter kávé lassabb, kiegyensúlyozott áramlása hat át. Minden mozdulatod mögött megfontoltság van."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Ebben a változatban a filter friss, éles aromái tükröződnek benned. A részletekre való érzéked most különösen erős."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "Ez a filter-állapot mélyebb és nyugodtabb hatást kelt. A jelenléted stabil, és finoman, de biztosan irányít."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "filter coffee as an archetypal state: slow and deliberate clarity, patience expressed through continuity and flow, a sense of quiet depth rather than intensity, visual calm built from openness and breathing space, gentle progression without urgency, focus on balance and proportion, an atmosphere where understanding unfolds gradually, suggesting thoughtfulness, reliability, and steady presence",
+
+    "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "calm-reflective",
+      "camera": "neutral",
+      "lighting": "soft ambient"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+,
+    {
+  "id": "end_coldbrew",
+  "title": "TE EGY COLD BREW VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Cold brew",
+    "subtitle": "Friss, könnyed, kicsit más, mint a többiek.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "Gyakran máshonnan indulsz, mint mindenki más – és ez jól áll neked. Szereted a szokatlan ötleteket, nem félsz új megoldásokhoz nyúlni. A többiek néha néznek, hogy „ez most honnan jutott eszedbe?”, de végül sokszor pont ez működik."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "A cold brew most élénkebb, energikusabb kiadásban jelenik meg rajtad. A könnyedséged mögött most tiszta dinamika is van."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Itt a cold brew letisztult, hűvös tónusa dominál. A távolságod nem elzárkózás — egyszerűen áramolsz a saját ritmusodban."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Ez a cold brew-változat játékosabb, szokatlan oldaladat emeli ki. Lazán reagálsz, és hagyod, hogy új ötletek csússzanak be."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "Most a cold brew szellős, könnyed aromája jelenik meg benned. Nem kapkodsz, mégis minden mozdulatod friss érzetű."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "cold brew as an archetypal state: fresh and unconventional clarity, relaxed yet alert energy, a sense of distance from urgency, smooth confidence without pressure, visual coolness expressed through openness and restraint rather than coldness, subtle contrast that feels modern and slightly unexpected, an atmosphere of quiet originality, independence, and ease, suggesting a different rhythm that still moves forward",
+
+    "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "fresh-relaxed",
+      "camera": "neutral",
+      "lighting": "soft cool-diffuse"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+,
+    {
+  "id": "end_decaf",
+  "title": "TE EGY DECAF VAGY",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "Decaf",
+    "subtitle": "Nyugodt, figyelmes, emberséges.",
+    "extra": ""
+  },
+  "text": [
+    {
+      "default": "Nem vagy harsány, inkább jelen vagy. Nem tolod túl a dolgokat, és fontos neked, hogy mások is jól legyenek körülötted. Ha valaki ideges, te vagy a nyugi-pont. Ha valaki beszél hozzád, tényleg meghallgatod."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "mode": "override",
+      "text": "Ez a decaf-változat tiszta, egyszerű jelenlétet kölcsönöz neked. Nélkülözöl minden zajt, és ettől vagy áttekinthető."
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "mode": "override",
+      "text": "Itt a decaf melegebb, barátságosabb tónusa látszik rajtad. A nyugalmad könnyen átragad másokra is."
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "mode": "override",
+      "text": "Ez a decaf-profil könnyedebb, lazábban áramló energiát hoz. Figyelmes maradsz, de van benned egy kis játékos oldás."
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "mode": "override",
+      "text": "A decaf most mélyebb, bensőségesebb formában jelenik meg. Csendben vagy jelen, de annál nagyobb hatással."
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_1}"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_2}"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_3}"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "mode": "append_after",
+      "separator": "\n\n",
+      "text": "{fragment:FRAG_Q2_VARIANT_4}"
+    }
+  ],
+  "imagePrompt": {
+    "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
+
+    "chapter": "decaf as an archetypal state: calm and humane presence, gentle attentiveness without urgency, emotional softness paired with inner stability, a sense of quiet support rather than direction, visual warmth expressed through subtle balance and restraint, nothing pushing forward yet nothing stagnant, an atmosphere of listening, care, and grounded calm, suggesting empathy, patience, and a reassuring steadiness",
+
+    "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
+
+    "combinedPrompt": "{global}, {chapter}, {page}",
+
+    "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
+
+    "styleProfile": {
+      "mood": "gentle-warm",
+      "camera": "neutral",
+      "lighting": "soft warm-ambient"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+  ],
+  "fragments": {
+  "FRAG_Q2_VARIANT_1": {
+    "id": "FRAG_Q2_VARIANT_1",
+    "text": "Szereted, ha a dolgok végül a helyükre kerülnek, és letisztultan állnak előtted."
+  },
+  "FRAG_Q2_VARIANT_2": {
+    "id": "FRAG_Q2_VARIANT_2",
+    "text": "Fontos számodra, hogy a környezetedben legyen valamiféle természetes rend és áramlás."
+  },
+  "FRAG_Q2_VARIANT_3": {
+    "id": "FRAG_Q2_VARIANT_3",
+    "text": "Könnyen találsz magadnak apró új impulzusokat, amelyek frissen tartják a figyelmed."
+  },
+  "FRAG_Q2_VARIANT_4": {
+    "id": "FRAG_Q2_VARIANT_4",
+    "text": "Jól esik, ha marad egy kis belső csend és tér, ahol csak jelen lehetsz."
+  },
+
+  "FRAG_PAGE_SITUATION_1": {
+    "id": "FRAG_PAGE_SITUATION_1",
+    "text": "the coffee appears during a transition moment, between two activities or mental states, when something has just ended and the next thing has not fully begun yet; the environment feels paused, as if allowing a brief reset before moving on"
+  },
+  "FRAG_PAGE_SITUATION_2": {
+    "id": "FRAG_PAGE_SITUATION_2",
+    "text": "the coffee is present within an active ongoing situation, not as a break but as a companion; the environment suggests that something is already happening, and the coffee naturally integrates into that flow without stopping it"
+  },
+  "FRAG_PAGE_SITUATION_3": {
+    "id": "FRAG_PAGE_SITUATION_3",
+    "text": "the coffee appears in a brief pause that does not fully interrupt momentum; the situation feels momentarily softened, as if space has opened for reflection without losing direction"
+  },
+  "FRAG_PAGE_SITUATION_4": {
+    "id": "FRAG_PAGE_SITUATION_4",
+    "text": "the coffee exists in an independent moment with no immediate task attached; the situation feels self-contained, as if the moment is valuable on its own, without needing justification or outcome"
+  }
+}
+}

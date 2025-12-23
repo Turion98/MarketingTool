@@ -1,0 +1,217 @@
+{
+  "id": "contract_skincare_lux_softgold",
+  "title": "Skincare – Lux Soft Gold",
+  "version": 4,
+  "tokens": {
+    "--brand-accent": "#d9b87c",
+
+    "--contract-font-family": "\"Inter\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+
+
+
+
+  "--contract-media-svg-base-1": "#EDE7DF",
+  "--contract-media-svg-base-2": "#EDE7DF",
+  "--contract-media-svg-base-3": "#D8CABE",
+
+  "--contract-media-svg-inner-1": "#EDE7DF",
+  "--contract-media-svg-inner-2": "#EDE7DF",
+  "--contract-media-svg-inner-3": "#EDE7DF",
+
+  "--contract-media-svg-overlay-top": "rgba(255,255,255,0.00)",
+  "--contract-media-svg-overlay-mid": "rgba(255,255,255,0.16)",
+  "--contract-media-svg-overlay-bottom": "rgba(255,255,255,0.00)",
+
+  "--contract-media-logo-bay-fill": "#E4D9CC",
+  "--contract-media-logo-bay-overlay": "rgba(255,255,255,0.08)",
+
+    "--typography-a-weight-regular": "400",
+    "--typography-a-weight-medium": "800",
+    "--typography-a-weight-semibold": "600",
+    "--typography-b-weight-regular": "400",
+    "--typography-b-weight-medium": "500",
+
+    "--contract-typography-a-font-family": "var(--contract-font-family)",
+    "--contract-typography-a-font-size": "16px",
+    "--contract-typography-a-line-height": "1.25",
+    "--contract-typography-a-letter-spacing": "0.2px",
+    "--contract-typography-a-weight": "600",
+    "--contract-typography-a-color": "#3c2e1f",
+
+    "--contract-typography-b-font-family": "var(--contract-font-family)",
+    "--contract-typography-b-font-size": "17px",
+    "--contract-typography-b-line-height": "1.4",
+    "--contract-typography-b-letter-spacing": "0.1px",
+    "--contract-typography-b-weight": "400",
+    "--contract-typography-b-color": "#3c2e1f",
+
+    "--contract-text-font-family": "var(--contract-typography-b-font-family)",
+    "--contract-text-color": "#3c2e1f",
+
+    "--choice-text-weight": "500",
+    "--quiz-title-weight": "500",
+    "--contract-cta-overlay-title-weight": "500",
+    "--contract-header-title-weight": "500",
+
+    "--mf-max-w": "900px",
+    "--mf-pad": "0px",
+
+    "--mf-opacity": "0.1",
+    "--mf-radius": "30px",
+    "--mf-border-w": "10px",
+    "--mf-border-style": "solid",
+    "--mf-border-color": "transparent",
+
+    "--mf-bg": "linear-gradient(180deg, rgba(250,244,235,0.96) 0%, rgba(241,229,213,0.96) 45%, rgba(230,214,194,0.92) 100%), radial-gradient(140% 120% at 50% 0%, rgba(255,250,240,0.75) 0%, rgba(232,220,202,0.0) 70%)",
+    "--mf-border-gradient": "linear-gradient(180deg, rgba(255,247,230,0.95) 0%, rgba(234,210,161,0.92) 48%, rgba(196,160,101,0.7) 100%)",
+    "--mf-border-image": "none",
+
+    "--mf-shadow": "0 14px 40px rgba(0,0,0,.18), 0 0 0 1px rgba(234,210,161,.32) inset",
+
+    "--mf-inner-gap": "8px",
+    "--mf-inner-fill": "radial-gradient(130% 110% at 50% 0%, rgba(255,255,255,0.85) 0%, rgba(245,234,220,0.9) 55%, rgba(236,222,204,0.9) 100%)",
+
+    "--mf-overlay": "linear-gradient(180deg, rgba(255,252,244,.7) 0%, rgba(255,252,244,0) 40%, rgba(0,0,0,0) 100%)",
+    "--mf-overlay-opacity": "1",
+    "--mf-overlay-blend": "screen",
+
+    "--mf-svg-base-1": "#fff8ee",
+    "--mf-svg-base-2": "#f2ddba",
+    "--mf-svg-base-3": "#ceb17a",
+
+    "--mf-svg-inner-1": "#fffaf3",
+    "--mf-svg-inner-2": "#88b39a",
+    "--mf-svg-inner-3": "#e5cfaa",
+
+    "--mf-svg-overlay-top": "rgba(255,248,233,0.96)",
+    "--mf-svg-overlay-mid": "rgba(255,248,233,0.12)",
+    "--mf-svg-overlay-bottom": "rgba(207,177,125,0.24)",
+
+    "--mf-svg-outer-stroke": "22",
+    "--mf-svg-inner-stroke": "14",
+    "--mf-svg-overlay-stroke": "22",
+
+    "--contract-profile-card-bg-top": "#fff8ee",
+    "--contract-profile-card-bg-bot": "#f2e2c0",
+    "--contract-profile-svg-bg-bottom": "rgba(217,184,124,0.32)",
+
+    "--mf-logo-box-w": "360",
+    "--mf-logo-box-h": "230",
+    "--mf-logo-margin-right": "10",
+    "--mf-logo-margin-bottom": "10",
+    "--mf-logo-panel-radius": "22",
+    "--mf-logo-panel-extra": "4",
+    "--mf-logo-panel-raise": "10",
+    "--mf-logo-pad-x": "2",
+    "--mf-logo-pad-y": "2",
+
+    "--mf-gold": "#d9b87c",
+
+    "--contract-media-border-w": "8px",
+    "--contract-media-border-style": "solid",
+    "--contract-media-border-color": "rgba(217,184,124,.45)",
+    "--contract-media-border-gradient": "linear-gradient(180deg, rgba(217,184,124,.38), rgba(217,184,124,.12))",
+    "--contract-media-border-image": "none",
+
+    "--contract-header-bg-color-top": "#f0e3cf",
+    "--contract-header-bg-color-bot": "#e1cfb5",
+    "--contract-header-bg-angle": "180deg",
+    "--contract-header-border-color": "rgba(196,160,101,.7)",
+    "--contract-header-border-width": "1px",
+    "--contract-header-border-style": "solid",
+    "--contract-header-radius": "16px",
+    "--contract-header-backdrop-blur": "10px",
+    "--contract-header-shadow-rest": "0 10px 26px rgba(150,129,93,.32)",
+    "--contract-header-shadow-hover": "0 12px 32px rgba(150,129,93,.4)",
+
+    "--contract-header-logo-scale": "1.35",
+    "--contract-header-logo-max-w": "100%",
+    "--contract-header-logo-fit": "contain",
+    "--contract-header-logo-pad-inline-start": "10px",
+    "--contract-header-logo-vertical-shift": "0px",
+
+    "--contract-header-title-font-size": "22px",
+    "--contract-header-title-tracking": "0.25px",
+    "--contract-header-title-color": "#7a5a2b",
+    "--contract-header-title-margin": "0 24px 0 0",
+    "--contract-header-title-shift": "-10px",
+    "--contract-header-text-color": "#4e3a22",
+
+    "--contract-choice-bg-color-top": "#f7edde",
+    "--contract-choice-bg-color-bot": "#ecddc7",
+    "--contract-choice-bg-angle": "180deg",
+    "--contract-choice-overlay-color": "rgba(233,201,145,.25)",
+    "--contract-choice-overlay-alpha": "0.25",
+    "--contract-choice-backdrop-blur": "2px",
+    "--contract-choice-border-color": "rgba(196,160,101,.7)",
+    "--contract-choice-border-width": "1px",
+    "--contract-choice-border-style": "solid",
+    "--contract-choice-radius": "12px",
+    "--contract-choice-shadow-rest": "0 6px 18px rgba(169,142,100,.26)",
+
+    "--contract-choice-font-size": "17px",
+    "--contract-choice-font-size-mobile": "15px",
+    "--contract-choice-pad-x": "16px",
+    "--contract-choice-pad-y": "14px",
+    "--contract-choice-text-color": "#3a2c1d",
+
+    "--contract-actionbar-bg-color-top": "#efe0cb",
+    "--contract-actionbar-bg-color-bot": "#e1cfb4",
+    "--contract-actionbar-bg-angle": "180deg",
+    "--contract-actionbar-overlay-color": "rgba(255,255,255,0.35)",
+    "--contract-actionbar-overlay-alpha": "0.35",
+    "--contract-actionbar-backdrop-blur": "10px",
+    "--contract-actionbar-border-color": "rgba(196,160,101,.6)",
+    "--contract-actionbar-border-width": "1px",
+    "--contract-actionbar-border-style": "solid",
+    "--contract-actionbar-radius": "18px",
+    "--contract-actionbar-shadow-rest": "0 16px 32px rgba(169,142,100,.32)",
+    "--contract-actionbar-font-size": "16px",
+    "--contract-actionbar-font-size-mobile": "16px",
+    "--contract-actionbar-pad-x": "12px",
+    "--contract-actionbar-pad-y": "12px",
+    "--contract-actionbar-text-color": "#3f301f",
+
+    "--contract-cta-bg-color-top": "#e4c283",
+    "--contract-cta-bg-color-bot": "#c79f57",
+    "--contract-cta-bg-angle": "180deg",
+    "--contract-cta-overlay-color": "rgba(255,255,255,0.2)",
+    "--contract-cta-overlay-alpha": "0.2",
+    "--contract-cta-backdrop-blur": "0px",
+    "--contract-cta-border-color": "rgba(196,160,101,.85)",
+    "--contract-cta-border-width": "1px",
+    "--contract-cta-border-style": "solid",
+    "--contract-cta-radius": "999px",
+    "--contract-cta-shadow-rest": "0 12px 26px rgba(169,142,100,.45)",
+    "--contract-cta-font-size": "16px",
+    "--contract-cta-font-size-mobile": "15px",
+    "--contract-cta-pad-x": "20px",
+    "--contract-cta-pad-y": "0px",
+    "--contract-cta-icon-size": "18px",
+    "--contract-cta-letter-spacing": "0.22px",
+    "--contract-cta-text-color": "#302318",
+
+    "--contract-bg-color": "#f7f0e6",
+    "--contract-bg-image": "radial-gradient(120% 160% at 10% 0%, #fffaf3 0%, #f5ebdd 40%, #e7d6c0 100%)",
+    "--contract-bg-position": "center center",
+    "--contract-bg-size": "cover",
+    "--contract-bg-repeat": "no-repeat",
+    "--contract-bg-overlay": "radial-gradient(140% 120% at 80% 0%, rgba(233,201,145,0.35), transparent 70%)",
+    "--contract-bg-overlay-opacity": "1",
+    "--contract-bg-blur": "0px",
+
+    "/* ===== NEW: canonical interaction tokens (Choice / Riddle / Puzzle) ===== */": "",
+    "--contract-interaction-text-color": "var(--contract-choice-text-color)",
+    "--contract-interaction-border-color": "var(--contract-choice-border-color)",
+    "--contract-interaction-shadow-rest": "var(--contract-choice-shadow-rest)",
+    "--contract-interactive-hover-shadow": "0 10px 24px rgba(150,129,93,.28)",
+    "--contract-interactive-active-shadow": "0 6px 16px rgba(150,129,93,.34)",
+    "--contract-interaction-hover-tint": "12%",
+    "--contract-interaction-active-tint": "20%",
+
+    "--mf-svg-outer-stroke-color": "rgba(231,196,107,0.22)",
+"--mf-svg-inner-stroke-color": "rgba(231,196,107,0.16)",
+"--mf-svg-overlay-stroke-color": "rgba(0,0,0,0.28)"
+
+}
+}

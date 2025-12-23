@@ -1,0 +1,973 @@
+
+/* ================================
+   PresentLandingPage.module.scss
+   ================================ */
+
+.page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  color: var(--present-fg, #f5f5f7);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+
+  /* page legyen “átlátszó”, csak blur */
+  background: transparent;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* háttér mesh canvas – minden alatt fut, csak vizuális réteg */
+.meshBackgroundCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none; /* ne blokkolja a klikkeket */
+  justify-content: stretch;
+}
+
+body {
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(58, 130, 255, 0.16),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #0a0f1a 0%, #0f1828 60%, #162237 100%);
+  background-attachment: fixed;
+  color: #e9ecf3;
+}
+
+/* Kis helper konténer – most lágy, félig átlátszó panelek,
+   de nem erős “card” look, inkább finom réteg a háttéren */
+
+.heroInner,
+.platformInner,
+.whyInner,
+.examplesInner,
+.collabInner,
+.pricingInner,
+.audienceInner,
+.techInner,
+.finalCtaInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: clamp(1.5rem, 4vw, 3rem);
+  padding-block: clamp(2rem, 4vw, 2.8rem);
+
+  position: relative;
+  border-radius: 28px;
+
+  /* nagyon lágy, félig átlátszó háttér – a page blur + body háttérrel együtt működik */
+  background: radial-gradient(
+      circle at top left,
+      rgba(34, 68, 120, 0.75),
+      rgba(6, 10, 22, 0.78)
+    );
+
+  /* NINCS éles border, csak leheletnyi kontúr */
+  border: 1px solid rgba(255, 255, 255, 0.03);
+
+  /* shadow visszafogva, hogy ne legyen külön “z-szint” érzés */
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.6);
+
+  /* finom edge-softening – ne legyen kemény dobozérzet */
+  overflow: hidden;
+}
+
+/* Alap szekció spacing – a tagolást a panelek + spacing adják */
+
+.heroSection,
+.platformSection,
+.whySection,
+.examplesSection,
+.collabSection,
+.pricingSection,
+.audienceSection,
+.techSection,
+.finalCtaSection {
+  width: 100%;
+  padding-block: clamp(3rem, 7vw, 3rem);
+  position: relative;
+}
+
+/* ===========================
+   HERO
+   =========================== */
+.heroSection {
+  padding-top: clamp(4rem, 8vw, 6rem);
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: center;
+}
+
+.heroLogoSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroLogo {
+  max-width: 260px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.heroLogoPlaceholder {
+  width: 220px;
+  height: 80px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  opacity: 0.5;
+}
+
+.heroContent {
+  text-align: left;
+}
+
+.heroTitle {
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  margin-bottom: 1rem;
+}
+
+.heroSubtitle {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  opacity: 0.86;
+  margin-bottom: 0.5rem;
+}
+
+.heroCtas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Reusable CTA gombok */
+
+.primaryCta,
+.secondaryCta {
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.75rem 1.6rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+  white-space: nowrap;
+}
+
+.primaryCta {
+  background: linear-gradient(135deg, #ffd76b, #ff9f3f);
+  color: #1b1204;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.primaryCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.6);
+}
+
+.secondaryCta {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.secondaryCta:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ✅ intent gomb active state (aria-pressed) */
+.secondaryCta[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  transform: translateY(-1px);
+}
+
+.secondaryCta[aria-pressed="true"]:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+.primaryCta:focus-visible,
+.secondaryCta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 215, 107, 0.25),
+    0 14px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* ===========================
+   MIT TUD A PLATFORM
+   =========================== */
+
+.platformTitle {
+  font-size: clamp(1.9rem, 2.4vw, 1.9rem);
+  margin-bottom: 2rem;
+}
+
+.platformLead {
+  display: block;
+  font-size: 1.26rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 70%;
+}
+
+.platformLeadek {
+  display: block;
+  font-size: 1.56rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 70%;
+}
+
+.platformLeader {
+  display: block;
+  font-size: 1.6rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 70%;
+}
+
+.platformLead + .platformLead {
+  margin-top: 0.4rem;
+}
+
+/* ✅ intent state variables a platform szekción (TSX: data-intent="none|engage|convert") */
+.platformSection {
+  --campaign-dim-opacity: 0.6;
+  --campaign-dim-saturate: 0.86;
+  --campaign-dim-blur: 0px;
+
+  --campaign-emph-scale: 1.02;
+  --campaign-emph-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+  --campaign-emph-border: rgba(255, 255, 255, 0.22);
+}
+
+/* default: nincs intent => minden neutrál */
+.platformSection[data-intent="none"] {
+  --campaign-dim-opacity: 1;
+  --campaign-dim-saturate: 1;
+  --campaign-dim-blur: 0px;
+
+  --campaign-emph-scale: 1;
+  --campaign-emph-shadow: none;
+  --campaign-emph-border: rgba(255, 255, 255, 0.22);
+}
+
+/* 6 kártya – grid desktopon */
+.campaignGrid {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: 2.5rem;
+  margin-bottom: 2rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.campaignCard {
+  padding: 0;
+  position: relative;
+  min-height: 140px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  flex-direction: column;
+
+  /* ✅ intent anim alap (hogy szépen reagáljon) */
+  transition:
+    transform 220ms ease,
+    opacity 220ms ease,
+    filter 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease;
+  will-change: transform, opacity, filter;
+}
+
+/* ✅ intent: háttérbe tolás */
+.campaignCardDeemphasized {
+  opacity: var(--campaign-dim-opacity);
+  filter: saturate(var(--campaign-dim-saturate)) blur(var(--campaign-dim-blur));
+}
+
+/* ✅ intent: hangsúly */
+.campaignCardEmphasized {
+  opacity: 1;
+  transform: translateY(-2px) scale(var(--campaign-emph-scale));
+  box-shadow: var(--campaign-emph-shadow);
+  border-color: var(--campaign-emph-border);
+}
+
+/* hover: emphasized kártyánál finom extra */
+.campaignCardEmphasized:hover {
+  transform: translateY(-3px) scale(calc(var(--campaign-emph-scale) + 0.01));
+}
+
+/* hover: deemphasized kártya ne legyen túl erős */
+.campaignCardDeemphasized:hover {
+  opacity: min(0.76, calc(var(--campaign-dim-opacity) + 0.12));
+  transform: translateY(-1px);
+}
+
+/* TITLE — középen, hoverkor fade-out + slide-up */
+.campaignTitle {
+  font-size: 1.35rem;
+  font-weight: 600;
+  text-align: center;
+
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  transition:
+    opacity 200ms ease,
+    transform 220ms ease;
+}
+
+/* hover: title eltűnés */
+.campaignCard:hover .campaignTitle {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 1rem));
+}
+
+/* ✅ intent alatt is: ha a title eltűnik, a deemphasized is olvasható maradjon */
+.campaignCardDeemphasized:hover .campaignTitle {
+  opacity: 0;
+}
+
+/* LEÍRÁS BLOKKOK — rejtve indulnak */
+.campaignDesc,
+.campaignNote,
+.campaignIdeal {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0;
+  display: block;
+  width: 100%;
+  transform: translateY(0.8rem);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    margin-top 220ms ease;
+}
+
+/* Speciális formázások */
+.campaignNote {
+  font-style: italic;
+}
+
+.campaignIdeal {
+  font-weight: 500;
+}
+
+/* hover — leírások fade-in + felcsúszás */
+.campaignCard:hover .campaignDesc,
+.campaignCard:hover .campaignNote,
+.campaignCard:hover .campaignIdeal {
+  opacity: 0.9;
+  transform: translateY(0);
+  margin-top: 0.2rem;
+}
+
+/* ✅ intent esetén a deemphasized hover-on se legyen "túl kiabálós" */
+.campaignCardDeemphasized:hover .campaignDesc,
+.campaignCardDeemphasized:hover .campaignNote,
+.campaignCardDeemphasized:hover .campaignIdeal {
+  opacity: 0.78;
+}
+
+/* ✅ prefer-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .primaryCta,
+  .secondaryCta,
+  .campaignCard,
+  .campaignTitle,
+  .campaignDesc,
+  .campaignNote,
+  .campaignIdeal {
+    transition: none !important;
+  }
+}
+
+/* ✅ mobil: hero és grid igazítás */
+@media (max-width: 700px) {
+  .heroInner {
+    grid-template-columns: 1fr;
+  }
+
+  .platformLead,
+  .platformLeader {
+    max-width: 100%;
+  }
+
+  .campaignGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.platformClosing {
+  font-size: 1.06rem;
+  opacity: 0.9;
+  max-width: 48rem;
+  line-height: 1.9;
+  margin-top: 1.8rem;
+}
+
+/* ===========================
+   MIÉRT MÁS, MINT EGY SABLONOS MINIJÁTÉK?
+   – ugyanaz a listaminta, gridben
+   =========================== */
+.whyHeader {
+  margin-bottom: 1.5rem;
+}
+
+/* nagyobb, fejezet-szerű cím */
+.whyTitle {
+  font-size: clamp(2.3rem, 2.6vw, 2.35rem);
+  margin-bottom: 2.45rem;
+  text-align: center;
+
+  /* belépés anim alap */
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 520ms ease, transform 520ms ease;
+  will-change: opacity, transform;
+}
+
+.whyLead {
+  font-size: 1.08rem;
+  line-height: 1.75;
+  opacity: 0.9;
+  max-width: 52rem;
+}
+
+.whyLead + .whyLead {
+  margin-top: 0.15rem;
+}
+
+/* 2×2 grid logika (max 2 oszlop) */
+.whyList {
+  display: grid;
+  gap: 1.35rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.75rem;
+
+  /* Mobil: 1 oszlop */
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+/* Tablet+ (>= 768px): 2 oszlop (desktopon is marad 2) */
+@media (min-width: 768px) {
+  .whyList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.6rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .whyList {
+    gap: 1.75rem;
+  }
+}
+
+/* =========================
+   ITEM: reveal/stagger itt
+   ========================= */
+.whyItem {
+  position: relative;
+
+  /* reveal */
+  --reveal-y: 12px;
+
+  /* 🔥 stagger vezérlés (kártya + csík) */
+  --stagger: 0ms;
+  --stripe-offset: 140ms;
+
+  opacity: 0;
+  transform: translateY(var(--reveal-y)); /* ✅ nincs scale itt */
+  transition: opacity 520ms ease, transform 520ms ease;
+  transition-delay: var(--stagger);
+  will-change: opacity, transform;
+}
+
+/* =========================
+   INNER: panel + hover scale
+   (hover mindig azonnali)
+   ========================= */
+.whyItemInner {
+  position: relative; /* ✅ a csík ehhez kötődik */
+
+  /* panel */
+  padding: 0.3rem 1.1rem 1.05rem 1.25rem;
+  padding-left: 1.6rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(10px);
+
+  /* hover scale külön property-n */
+  transform: scale(1);
+  transition:
+    transform 160ms ease,
+    background-color 260ms ease,
+    border-color 260ms ease; /* ✅ nincs delay */
+  will-change: transform;
+}
+
+/* ✅ csík: INNER-en van, így scale-el együtt a panellel */
+.whyItemInner::before {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  top: 0.95rem;
+  bottom: 0.95rem;
+  width: 3px;
+  border-radius: 999px;
+
+  opacity: 0;
+  transition: opacity 260ms ease;
+  transition-delay: calc(var(--stagger) + var(--stripe-offset));
+
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* címsor: nagyobb + balra zárt */
+.whyItemTitle {
+  font-size: 1.42rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  text-align: left;
+  line-height: 1.35;
+  letter-spacing: 0.1px;
+}
+
+/* törzsszöveg: nagyobb + levegősebb, balra zárt */
+.whyText p {
+  font-size: 1.02rem;
+  line-height: 1.62;
+  opacity: 0.88;
+  text-align: left;
+  margin: 0;
+}
+
+.whyText p + p {
+  margin-top: 0.5rem;
+}
+
+/* Aktiválás (data-inview="true") */
+.whySection[data-inview="true"] .whyTitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.whySection[data-inview="true"] .whyItem {
+  opacity: 1;
+  --reveal-y: 0px;
+}
+
+/* ✅ csík aktiválás: INNER::before */
+.whySection[data-inview="true"] .whyItemInner::before {
+  opacity: 1;
+}
+
+/* Stagger: változót állítunk */
+.whySection[data-inview="true"] .whyItem:nth-child(1) { --stagger: 80ms; }
+.whySection[data-inview="true"] .whyItem:nth-child(2) { --stagger: 160ms; }
+.whySection[data-inview="true"] .whyItem:nth-child(3) { --stagger: 240ms; }
+.whySection[data-inview="true"] .whyItem:nth-child(4) { --stagger: 320ms; }
+
+/* Hover micro-interaction: scale az INNER-en, azonnal */
+@media (hover: hover) and (pointer: fine) {
+  .whyItem:hover .whyItemInner {
+    transform: scale(1.02);
+    background: rgba(0, 0, 0, 0.18);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  /* ✅ csík hover: INNER::before */
+  .whyItem:hover .whyItemInner::before {
+    background: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .whyTitle,
+  .whyItem,
+  .whyItemInner,
+  .whyItemInner::before {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+
+/* ===========================
+   PÉLDA KAMPÁNYOK – 4 KÁRTYA
+   =========================== */
+
+.examplesHeader {
+  margin-bottom: 1.5rem;
+}
+
+.examplesTitle {
+  font-size: clamp(1.4rem, 2.1vw, 1.8rem);
+}
+
+.examplesGrid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+
+  /* Mobil/tablet: 1 oszlop */
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+/* Desktop: 4 oszlop → 1 sor */
+@media (min-width: 1024px) {
+  .examplesGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.exampleCard {
+  background: var(--present-card-bg, rgba(255, 255, 255, 0.06));
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+}
+
+.exampleCardTitle {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.exampleCard p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.exampleMeta {
+  margin-top: 0.4rem;
+}
+
+.examplesClosing {
+  font-size: 1.05rem;
+  opacity: 0.9;
+  line-height: 1.9;
+  margin-top: 2.4rem;
+}
+
+/* ===========================
+   COLLAB DIAGRAM – MODERN / GRID-HARMONIZÁLT
+   =========================== */
+
+/* A teljes diagram belesimul a mesh háttérbe */
+.collabDiagram {
+  position: relative;
+  margin-top: 2.4rem;
+  padding-block: 2.6rem 1.6rem;
+  display: flex;
+  justify-content: center;
+
+  /* finom üveg-hatás, hogy a háttérhez kötődjön */
+  backdrop-filter: blur(6px) saturate(1.2);
+}
+
+/* A teljes SVG tónusa */
+.collabSvg {
+  width: 100%;
+  max-width: 78%;
+  overflow: visible;
+
+  /* enyhe lebegés */
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+}
+
+/* ===== ÍV – finom grid-vonal, a mesh logikájára hangolva ===== */
+.collabSvg path {
+  stroke: rgba(255,255,255,0.22);       /* sokkal finomabb fehér */
+  stroke-width: 1.1;
+  stroke-linecap: round;
+
+  /* enyhén világító perem, mint a mesh vonalai */
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.09));
+}
+
+/* ===== DOT ===== */
+.collabDot {
+  fill: rgba(150,170,150,0.90);   
+  stroke: rgba(150,150,150,0.95);
+  stroke-width: 0.25;
+  
+  /* finom glow */
+  filter: 
+    drop-shadow(0 0 3px rgba(255,255,255,0.35))
+    drop-shadow(10px 10px 8px rgba(255,255,255,0.20));
+}
+
+/* ===== LABEL ===== */
+.collabLabel {
+  font-size: 2.3px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+
+  fill: rgba(255,255,255,0.80);    /* nem vakító fehér */
+  paint-order: stroke;
+  stroke: rgba(0,0,0,0.35);
+  stroke-width: 0.13;              /* nagyon vékony kontraszt */
+
+  /* valós glow, mint a mesh pontjain */
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.25));
+}
+.collabLead {
+   font-size: 1.05rem;
+  line-height: 1.8;
+  opacity: 0.9;
+  max-width: 48rem;
+  }
+
+.collabClosing {
+  margin-top: 1.6rem;
+  font-size: 1.06rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 80%;
+}
+@media (max-width: 900px) {
+  .collabSvg {
+    max-width: 100%;
+  }
+  .collabLabel {
+    font-size: 2px;
+  }
+}
+
+/* Kinek ajánljuk */
+
+.audienceInner {
+  margin-left: clamp(1.5rem, 6vw, 4rem);
+  margin-right: auto;
+  text-align: justify;
+}
+
+.audienceHeader {
+  margin-bottom: 1.5rem;
+}
+
+.audienceTitle {
+  font-size: clamp(1.4rem, 2.1vw, 1.8rem);
+  margin-bottom: 0.5rem;
+}
+
+.audienceLead {
+  font-size: 1.05rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.audienceList {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: 1.8rem;
+  margin-left: 1.1rem;
+  max-width: 70%;
+}
+
+.audienceItemTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.audienceItem p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.96;
+}
+
+/* Tech & biztonság */
+
+.techInner {
+  margin-left: clamp(1.5rem, 6vw, 4rem);
+  margin-right: auto;
+  text-align: justify;
+}
+
+.techHeader {
+  margin-bottom: 1.5rem;
+}
+
+.techTitle {
+  font-size: clamp(1.4rem, 2.1vw, 1.8rem);
+  margin-bottom: 0.5rem;
+}
+
+.techLead {
+  font-size: 1.05rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.techList {
+  display: grid;
+  gap: 1.3rem;
+  margin-top: 1.8rem;
+  max-width: 70%;
+  margin-left: 1.1rem;
+}
+
+.techItemTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.techItem p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.techBullets {
+  font-size: 0.9rem;
+  padding-left: 1.1rem;
+  margin: 0.4rem 0;
+}
+
+.techClosing {
+  margin-top: 1.6rem;
+  font-size: 1.06rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 80%;
+}
+
+/* ===========================
+   ZÁRÓ CTA – full width, középre
+   =========================== */
+
+
+
+.finalCtaInner {
+  text-align: center;
+}
+
+.finalCtaTitle {
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  margin-bottom: 0.9rem;
+}
+
+.finalCtaText {
+  max-width: 40rem;
+  margin: 0 auto 1.7rem;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.finalCtaButtons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+/*
+@media (min-width: 768px) {
+  .campaignGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .whyList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .examplesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pricingGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .audienceList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .techList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .campaignGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .whyList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .examplesGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .heroInner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .heroInner {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: left;
+  }
+
+  .heroLogoSlot {
+    justify-content: flex-start;
+  }
+
+  .collabInner,
+  .pricingInner,
+  .audienceInner,
+  .techInner {
+    margin-inline: auto;
+    text-align: left;
+  }
+}
+*/

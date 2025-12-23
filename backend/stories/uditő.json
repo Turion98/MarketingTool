@@ -1,0 +1,525 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "softdrink_quiz_demo",
+  "locale": "hu",
+  "meta": {
+    "id": "softdrink_quiz_demo",
+    "title": "Melyik NovaFizz üdítő passzol hozzád most?",
+    "author": "Qzera",
+    "description": "Könnyed, kétlépéses mini-ajánló, amely a NovaFizz öt üdítője közül segít kiválasztani azt, amelyik most a legjobban passzol hozzád.",
+    "coverImage": "/assets/covers/softdrink.jpg",
+    "startPageId": "Q1",
+    "campaignId": "softdrink_quiz_demo",
+    "logo": "/assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "Q1",
+      "title": "Milyen helyzetre keresel most üdítőt?",
+      "text": [
+        {
+          "text": "Válaszd ki azt a helyzetet, amelyik most a leginkább ismerős – ezt használjuk kiindulópontnak az ajánláshoz."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Ebéd vagy főétel mellé, inkább kísérőnek.",
+          "next": "L2_flavor_puzzle",
+          "value": "A",
+          "reward": {
+            "locks": ["Q1_A"],
+            "unlockFragments": ["Q1_A_note", "Q1_A_mood"]
+          }
+        },
+        {
+          "text": "Rohanós nap közben, két feladat között.",
+          "next": "L2_flavor_puzzle",
+          "value": "B",
+          "reward": {
+            "locks": ["Q1_B"],
+            "unlockFragments": ["Q1_B_note", "Q1_B_mood"]
+          }
+        },
+        {
+          "text": "Baráti beszélgetéshez, társasághoz.",
+          "next": "L2_flavor_puzzle",
+          "value": "C",
+          "reward": {
+            "locks": ["Q1_C"],
+            "unlockFragments": ["Q1_C_note", "Q1_C_mood"]
+          }
+        },
+        {
+          "text": "Este, sorozat vagy film mellé, lazításhoz.",
+          "next": "L2_flavor_puzzle",
+          "value": "D",
+          "reward": {
+            "locks": ["Q1_D"],
+            "unlockFragments": ["Q1_D_note", "Q1_D_mood"]
+          }
+        }
+      ]
+    },
+   {
+  "id": "L2_flavor_puzzle",
+  "type": "puzzle",
+  "kind": "runes",
+  "mode": "set",
+  "feedback": "keep",
+
+  "maxPick": 2,
+  "optionFlagsBase": "L2_opt_",
+
+  "title": "Mi a két legfontosabb szempont?",
+  "prompt": "Nézd végig a szempontokat, és válaszd ki azt a KÉT elemet, ami most a legjobban számít neked egy üdítőnél.",
+  "options": [
+    "Könnyű érzés, nem túl édes",
+    "Frissítő, szomjoltó",
+    "Ismerős, klasszikus íz",
+    "Karakteresebb, kicsit szokatlan",
+    "Játékos, gyümölcsös hangulat",
+    "Biztos választás társas helyzethez"
+  ],
+
+  "maxAttempts": 1,
+
+  "onSuccess": {
+    "goto": "logic",
+    "setFlags": ["L2_traits_selected"]
+  },
+  "onFail": {
+    "goto": "L2_flavor_puzzle",
+    "setFlags": ["L2_retry"]
+  }
+},
+{
+  "id": "logic",
+  "type": "logic",
+  "title": "Elemzés...",
+  "text": [
+    {
+      "text": "A választásaid alapján meghatározzuk, melyik NovaFizz üdítő passzol most hozzád a legjobban."
+    }
+  ],
+  "logic": [
+    { "if": ["L2_opt_1", "L2_opt_2"], "goto": "insight_citrus_light" },
+    { "if": ["L2_opt_1", "L2_opt_3"], "goto": "insight_cola_zero" },
+    { "if": ["L2_opt_1", "L2_opt_4"], "goto": "insight_ginger_lime" },
+    { "if": ["L2_opt_1", "L2_opt_5"], "goto": "insight_berry_breeze" },
+    { "if": ["L2_opt_1", "L2_opt_6"], "goto": "insight_cola_zero" },
+
+    { "if": ["L2_opt_2", "L2_opt_3"], "goto": "insight_classic_cola" },
+    { "if": ["L2_opt_2", "L2_opt_4"], "goto": "insight_ginger_lime" },
+    { "if": ["L2_opt_2", "L2_opt_5"], "goto": "insight_berry_breeze" },
+    { "if": ["L2_opt_2", "L2_opt_6"], "goto": "insight_citrus_light" },
+
+    { "if": ["L2_opt_3", "L2_opt_4"], "goto": "insight_ginger_lime" },
+    { "if": ["L2_opt_3", "L2_opt_5"], "goto": "insight_classic_cola" },
+    { "if": ["L2_opt_3", "L2_opt_6"], "goto": "insight_classic_cola" },
+
+    { "if": ["L2_opt_4", "L2_opt_5"], "goto": "insight_ginger_lime" },
+    { "if": ["L2_opt_4", "L2_opt_6"], "goto": "insight_ginger_lime" },
+
+    { "if": ["L2_opt_5", "L2_opt_6"], "goto": "insight_berry_breeze" },
+
+    { "default": "insight_classic_cola" }
+  ]
+}
+,
+    {
+      "id": "insight_classic_cola",
+      "title": "Ajánlat: NovaFizz Classic Cola",
+      "text": [
+        {
+          "text": "A választásaid alapján most egy ismerős, kiegyensúlyozott ízvilág áll hozzád közel. Szereted, ha az üdítő klasszikus, megbízható és jól működik szinte bármilyen helyzetben – étel mellé, társaságban vagy egy gyors felfrissüléshez.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Classic Cola** passzol a legjobban: egy stabil, „biztos kéz” jellegű kóla, amely pont annyira édes és karakteres, amennyire kell, túlzás nélkül."
+        },
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mutasd a termékkártyát",
+          "next": "end_classic_cola"
+        }
+      ]
+    },
+    {
+      "id": "insight_cola_zero",
+      "title": "Ajánlat: NovaFizz Cola Zero",
+      "text": [
+        {
+          "text": "A kombinációid azt mutatják, hogy fontos számodra a klasszikus ízélmény, de nem szeretnél túl sok cukrot. Szereted, ha az ital könnyű érzetet hagy maga után, mégis hozza a megszokott kóla-élményt.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Cola Zero** illik a legjobban: cukormentes, de ízben a klasszikus vonalat követi, így jó választás, ha kompromisszum nélkül figyelnél a bevitelre."
+        },
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mutasd a termékkártyát",
+          "next": "end_cola_zero"
+        }
+      ]
+    },
+    {
+      "id": "insight_citrus_light",
+      "title": "Ajánlat: NovaFizz Citrus Light",
+      "text": [
+        {
+          "text": "A választásaid alapján most egy frissítő, szomjoltó, könnyebb ital passzol hozzád leginkább. Olyasmit keresel, ami nem ül meg, nem túl szirupos, inkább felfrissít és tovább lendít.\n\nEbben az irányban a NovaFizz kínálatából a **NovaFizz Citrus Light** a legjobb jelölt: citrusos, élénk, csökkentett cukortartalommal – ideális napközbeni kortyolgatáshoz, akár munka, akár rohanós nap közben."
+        },
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mutasd a termékkártyát",
+          "next": "end_citrus_light"
+        }
+      ]
+    },
+    {
+      "id": "insight_berry_breeze",
+      "title": "Ajánlat: NovaFizz Berry Breeze – No Added Sugar",
+      "text": [
+        {
+          "text": "A párosításaid arra utalnak, hogy szívesen választasz gyümölcsös, játékos ízvilágot, de közben nem szeretnél túl sok hozzáadott cukrot. Fontos neked, hogy az ital élmény legyen, mégis könnyebb érzetet hagyjon.\n\nEhhez a preferenciához a NovaFizz portfóliójából a **NovaFizz Berry Breeze – No Added Sugar** illik: bogyós, gyümölcsös hangulat, hozzáadott cukor nélkül, amivel kapsz egy kis „desszert-élményt” komolyabb bűntudat nélkül."
+        },
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mutasd a termékkártyát",
+          "next": "end_berry_breeze"
+        }
+      ]
+    },
+    {
+      "id": "insight_ginger_lime",
+      "title": "Ajánlat: NovaFizz Ginger Lime Craft",
+      "text": [
+        {
+          "text": "A választásaid egy kicsit karakteresebb, szokatlanabb irányt rajzolnak ki. Nyitott vagy olyan ízekre, amelyekben van egy fűszeresebb vagy különlegesebb tónus, és nem baj, ha az ital egy kicsit „felnőttesebb” hangulatú.\n\nEhhez a mintához a NovaFizz kínálatából a **NovaFizz Ginger Lime Craft** passzol a legjobban: gyömbéres-lime-os, határozott karakterrel, ami kilóg a sorból – jó választás, ha nem a megszokottat keresed."
+        },
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mutasd a termékkártyát",
+          "next": "end_ginger_lime"
+        }
+      ]
+    },
+
+    {
+  "id": "end_classic_cola",
+  "title": "Ajánlott üdítőd: NovaFizz Classic Cola",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "NovaFizz Classic Cola",
+    "subtitle": "Klasszikus, kiegyensúlyozott kólaélmény.",
+    "extra": ""
+  },
+  "text": [],
+  "imagePrompt": {
+    "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+    "chapter": "warm balanced cola atmosphere with soft amber tones and calm highlights, stable and familiar mood",
+    "page": "the scene shows a cola beverage with warm amber reflections in the glass, soft balanced highlights and calm carbonation, with a subtle warm gradient background that reinforces the classic and reliable character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+    "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+    "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+    "styleProfile": {
+      "mood": "clean-commercial",
+      "camera": "front",
+      "lighting": "soft studio"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+},
+{
+  "id": "end_cola_zero",
+  "title": "Ajánlott üdítőd: NovaFizz Cola Zero",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "NovaFizz Cola Zero",
+    "subtitle": "Klasszikus íz, cukor nélkül.",
+    "extra": ""
+  },
+  "text": [],
+  "imagePrompt": {
+    "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+    "chapter": "clean light-toned zero-sugar atmosphere with cool reflections, crisp minimal contrast and a fresh modern feel",
+    "page": "the scene features a zero-sugar cola with clear sparkling texture in the glass, cool neutral highlights, more negative space around the product and a light gradient background that emphasizes a clean, easy-to-drink character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+    "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+    "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+    "styleProfile": {
+      "mood": "clean-commercial",
+      "camera": "front",
+      "lighting": "soft studio"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+},
+{
+  "id": "end_citrus_light",
+  "title": "Ajánlott üdítőd: NovaFizz Citrus Light",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "NovaFizz Citrus Light",
+    "subtitle": "Frissítő, citrusos, könnyed.",
+    "extra": ""
+  },
+  "text": [],
+  "imagePrompt": {
+    "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+    "chapter": "bright citrus-infused refreshing atmosphere with airy yellow-green accents and light playful reflections",
+    "page": "the scene emphasizes a refreshing citrus drink with bright translucent tones in the glass, lively small bubbles, clear highlights and an airy light-gradient background that conveys freshness, energy and an easy, uplifting character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+    "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+    "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+    "styleProfile": {
+      "mood": "clean-commercial",
+      "camera": "front",
+      "lighting": "soft studio"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+},
+{
+  "id": "end_berry_breeze",
+  "title": "Ajánlott üdítőd: NovaFizz Berry Breeze – No Added Sugar",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "NovaFizz Berry Breeze – No Added Sugar",
+    "subtitle": "Gyümölcsös élmény, hozzáadott cukor nélkül.",
+    "extra": ""
+  },
+  "text": [],
+  "imagePrompt": {
+    "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+    "chapter": "soft berry-tinted playful atmosphere with gentle purple-magenta gradients and light sparkling highlights",
+    "page": "the scene displays a berry-inspired drink with subtle purple tones in the glass, soft playful bubbles, delicate fruity highlights and a light gradient background that feels airy, fun and pleasantly sweet without being heavy; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+    "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+    "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+    "styleProfile": {
+      "mood": "clean-commercial",
+      "camera": "front",
+      "lighting": "soft studio"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+},
+{
+  "id": "end_ginger_lime",
+  "title": "Ajánlott üdítőd: NovaFizz Ginger Lime Craft",
+  "layout": {
+    "mediaMode": "profile-card"
+  },
+  "profile": {
+    "name": "NovaFizz Ginger Lime Craft",
+    "subtitle": "Karakteres, fűszeres-lime-os craft üdítő.",
+    "extra": ""
+  },
+  "text": [],
+  "imagePrompt": {
+    "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+    "chapter": "craft-inspired warm-spicy atmosphere with golden-amber accents and subtle lime-green highlights, refined and slightly bold",
+    "page": "the scene presents a ginger-lime craft drink with rich amber-golden tones in the glass, defined energetic bubbles, a touch of green citrus highlight and a softly textured gradient background that suggests warmth, character and a more mature flavor profile; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+    "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+    "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+    "styleProfile": {
+      "mood": "clean-commercial",
+      "camera": "front",
+      "lighting": "soft studio"
+    }
+  },
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+  "cta": "default"
+}
+
+  ],
+  "fragments": {
+    "Q1_A_note": {
+      "id": "Q1_A_note",
+      "text": "Jól esik most egy olyan íz, ami csendben teszi a dolgát, és hagyja érvényesülni a pillanatot."
+    },
+    "Q1_B_note": {
+      "id": "Q1_B_note",
+      "text": "Most minden korty számít: egy apró lendület, ami tovább visz a következő lépésig."
+    },
+    "Q1_C_note": {
+      "id": "Q1_C_note",
+      "text": "Ide egy olyan hangulat illik, ami észrevétlenül simul bele a beszélgetés folyásába."
+    },
+    "Q1_D_note": {
+      "id": "Q1_D_note",
+      "text": "Ez az a napszak, amikor jól esik egy íz, ami együtt lassul veled."
+    },
+
+    "Q1_A_mood": {
+      "id": "Q1_A_mood",
+      "text": "warm soft directional light, gentle golden gradient background, calm slow bubble pattern, relaxed balanced atmosphere"
+    },
+    "Q1_B_mood": {
+      "id": "Q1_B_mood",
+      "text": "crisp bright cool-toned light, clean silver-white gradient background, strong upward bubble motion, energetic focused atmosphere"
+    },
+    "Q1_C_mood": {
+      "id": "Q1_C_mood",
+      "text": "light playful mixed-tone lighting, soft teal-magenta gradient background, swirling playful bubble patterns, sociable easy-going atmosphere"
+    },
+    "Q1_D_mood": {
+      "id": "Q1_D_mood",
+      "text": "soft evening low-contrast lighting, deep teal-navy gradient background, slow gentle bubble drift, calm unwinding atmosphere"
+    }
+  }
+}

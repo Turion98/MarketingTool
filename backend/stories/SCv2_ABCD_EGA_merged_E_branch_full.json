@@ -1,0 +1,1846 @@
+
+  {
+  "schemaVersion": "1.0.0",
+  "storyId": "skincare_story_v2_full",
+  "locale": "hu",
+  "meta": {
+    "id": "skincare_story_v2_full",
+    "title": "SkinCare Story – Teljes útvonal (A–B–C–D + E ág)",
+    "author": "Qzera",
+    "description": "Interaktív döntésalapú bőrápolási útvonal, puzzle logikával, személyre szabott ajánlásokkal és kapu-fragmentekkel. A teljes A–B–C–D útvonal és az E-ág összevont logikája.",
+    "coverImage": "/assets/covers/skincare.jpg",
+    "startPageId": "L1_routine_style",
+    "campaignId": "skincare_story_v2_full",
+    "logo": "/assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább a márkaoldalra",
+        "urlTemplate": "https://www.google.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+
+  "pages": [
+    {
+      "id": "L1_routine_style",
+      "title": "Milyen bőrrutin passzol a személyiségedhez?",
+      "text": [
+        {
+          "text": "Nem csak a bőröd állapota számít, hanem az is, hogyan szeretsz gondoskodni magadról. Válaszd ki, melyik bőrápolási stílus áll hozzád a legközelebb – ez finomhangolja a hangnemet és a javaslatokat a későbbiekben."
+        }
+      ],
+      "choices": [
+        {
+          "next": "L2_care_puzzle",
+          "reward": {
+            "unlockFragments": [
+              "routine_minimal",
+              "E_gate_minimal"
+            ]
+          },
+          "text": "Gyors, egyszerű, hatékony – 5 perces, átlátható rutinra vágyom."
+        },
+        {
+          "next": "L2_care_puzzle",
+          "reward": {
+            "unlockFragments": [
+              "routine_innovator",
+              "E_gate_innovator"
+            ]
+          },
+          "text": "Szeretem tesztelni az újdonságokat – jöhetnek az innovatív formulák."
+        },
+        {
+          "next": "L2_care_puzzle",
+          "reward": {
+            "unlockFragments": [
+              "routine_premium",
+              "E_gate_premium"
+            ]
+          },
+          "text": "Prémium, letisztult élményt keresek – fontos az érzés és a vibe is."
+        },
+        {
+          "next": "L2_care_puzzle",
+          "reward": {
+            "unlockFragments": [
+              "routine_sensitive",
+              "E_gate_sensitive"
+            ]
+          },
+          "text": "Érzékeny a bőröm, a kíméletesség mindenek felett."
+        }
+      ]
+    },
+    {
+  "id": "L2_care_puzzle",
+  "type": "puzzle",
+  "kind": "runes",
+  "mode": "set",
+  "feedback": "keep",
+
+  "maxPick": 2,
+  "optionFlagsBase": "L2_opt_",
+
+  "title": "Válaszd ki a két legfontosabb fókuszt",
+  "text": "Most jön a finomhangolás: hat fókuszt látsz a bőrápolásodból. Válaszd ki azt a KÉT elemet, ami számodra most a legfontosabb – ezek alapján választjuk ki, melyik útvonal illik hozzád a legjobban.",
+  "options": [
+    "Hidratálás",
+    "Fényvédelem",
+    "Bőrkisimítás",
+    "Gyors felszívódás",
+    "Illatmentesség",
+    "Feszesség / lifting"
+  ],
+  "maxAttempts": 1,
+  "onSuccess": {
+    "goto": "L3_route_switch",
+    "setFlags": [
+      "L2_traits_selected"
+    ]
+  },
+  "onFail": {
+    "goto": "L2_care_puzzle",
+    "setFlags": [
+      "L2_retry"
+    ]
+  }
+},
+   {
+  "id": "L3_route_switch",
+  "type": "logic",
+  "title": "Útvonal meghatározása",
+  "logic": [
+    {
+      "if": [
+        "L2_opt_1",
+        "L2_opt_6"
+      ],
+      "goto": "Route_A_intro"
+    },
+    {
+      "if": [
+        "L2_opt_1",
+        "L2_opt_3"
+      ],
+      "goto": "Route_A_intro"
+    },
+    {
+      "if": [
+        "L2_opt_3",
+        "L2_opt_6"
+      ],
+      "goto": "Route_A_intro"
+    },
+    {
+      "if": [
+        "L2_opt_3",
+        "L2_opt_4"
+      ],
+      "goto": "Route_B_intro"
+    },
+    {
+      "if": [
+        "L2_opt_1",
+        "L2_opt_4"
+      ],
+      "goto": "Route_B_intro"
+    },
+    {
+      "if": [
+        "L2_opt_2",
+        "L2_opt_4"
+      ],
+      "goto": "Route_B_intro"
+    },
+    {
+      "if": [
+        "L2_opt_2",
+        "L2_opt_5"
+      ],
+      "goto": "Route_C_intro"
+    },
+    {
+      "if": [
+        "L2_opt_4",
+        "L2_opt_5"
+      ],
+      "goto": "Route_C_intro"
+    },
+    {
+      "if": [
+        "L2_opt_5",
+        "L2_opt_6"
+      ],
+      "goto": "Route_C_intro"
+    },
+    {
+      "if": [
+        "L2_opt_1",
+        "L2_opt_2"
+      ],
+      "goto": "Route_D_intro"
+    },
+    {
+      "if": [
+        "L2_opt_2",
+        "L2_opt_3"
+      ],
+      "goto": "Route_D_intro"
+    },
+    {
+      "if": [
+        "L2_opt_2",
+        "L2_opt_6"
+      ],
+      "goto": "Route_D_intro"
+    },
+    {
+      "if": [
+        "L2_opt_1",
+        "L2_opt_5"
+      ],
+      "goto": "Route_E_intro"
+    },
+    {
+      "if": [
+        "L2_opt_3",
+        "L2_opt_5"
+      ],
+      "goto": "Route_E_intro"
+    },
+    {
+      "if": [
+        "L2_opt_4",
+        "L2_opt_6"
+      ],
+      "goto": "Route_E_intro"
+    },
+    {
+      "default": "Route_E_intro"
+    }
+  ]
+},
+    {
+      "id": "Route_A_intro",
+      "title": "Finomhangoljuk, mi a legfontosabb most a bőrödnek",
+      "text": [
+        {
+          "ifUnlocked": "routine_minimal",
+          "text": "{fragment:routine_minimal}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_innovator",
+          "text": "{fragment:routine_innovator}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_premium",
+          "text": "{fragment:routine_premium}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_sensitive",
+          "text": "{fragment:routine_sensitive}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "default": "A fókuszod alapján egy hidratáló–kisimító–feszesítő irányt javaslok. Nézzük meg pontosabban, mi a legjellemzőbb most a bőrödre."
+        }
+        
+      ],
+      "fragmentRefs": [
+        {
+          "id": "routine_minimal"
+        },
+        {
+          "id": "routine_innovator"
+        },
+        {
+          "id": "routine_premium"
+        },
+        {
+          "id": "routine_sensitive"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_A2_pair_HS",
+          "text": "Az első finom ráncok, kontúrok vesztése zavar leginkább."
+        },
+        {
+          "next": "Route_A2_pair_HW",
+          "text": "Inkább vízhiány és lapos bőrérzet: jó lenne frissebb, rugalmasabb hatás."
+        },
+        {
+          "next": "Route_A2_pair_SW",
+          "text": "A textúra, apró egyenetlenségek és az azonnali komfort számítanak."
+        }
+      ]
+    },
+    {
+      "id": "Route_A2_pair_HS",
+      "title": "Melyik áll közelebb a mostani célodhoz?",
+      "text": [
+        {
+          "text": "Mindkét irány segít kisimítani és feltölteni a bőrt – csak más módon. Melyik lenne fontosabb most?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_A_final_HS_lifting",
+          "text": "Kifejezettebb feszesség, kontúrfrissítés."
+        },
+        {
+          "next": "Route_A_final_HS_texture",
+          "text": "Simább textúra, puhább felszín, kevesebb apró egyenetlenség."
+        }
+      ]
+    },
+    {
+      "id": "Route_A2_pair_HW",
+      "title": "Hogyan szeretnéd használni a megoldást?",
+      "text": [
+        {
+          "text": "A friss, rugalmas hatást kétféle út is adhatja. Melyik illik jobban a napi rutinodba?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_A_final_HW_serum",
+          "text": "Estére vagy célzottan keresek egy koncentráltabb szérumot."
+        },
+        {
+          "next": "Route_A_final_HW_gel",
+          "text": "Nappalra szeretnék egy könnyű, gyorsan beszívódó hidratálót."
+        }
+      ]
+    },
+    {
+      "id": "Route_A2_pair_SW",
+      "title": "Mi zavar jobban most a bőrödön?",
+      "text": [
+        {
+          "text": "Mindkét irány azonnali komfortot ad – csak másképp. Melyik fontosabb neked?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_A_final_SW_softfocus",
+          "text": "Az apró egyenetlenségek, textúra és pórusok."
+        },
+        {
+          "next": "Route_A_final_SW_watergel",
+          "text": "A húzódó, fakó, vízhiányos bőrérzet."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_HS_lifting",
+      "title": "A célzott feszességre ez a legjobb választás",
+      "text": [
+        {
+          "text": "A válaszaid alapján most a kontúrok frissítése, a rugalmasabb, teltebb bőr a fő fókuszod. Ehhez egy koncentrált, feszesítő-hidratáló szérum működik a legjobban."
+        },
+        {
+          "text": "Ajánlásod: **HydraLift szérum** – intenzív hidratálás + enyhe lifting a finom ráncokra."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_HS_texture",
+      "title": "A simább textúrához ez lesz a legjobb lépés",
+      "text": [
+        {
+          "text": "A válaszaid azt mutatják, hogy a feszesség mellett a textúra finomítása a fontosabb."
+        },
+        {
+          "text": "Ajánlásod: **Soft Focus bőrkisimító szérum** – puhább, simább bőrfelszín."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_HW_serum",
+      "title": "A koncentrált esti megoldásod",
+      "text": [
+        {
+          "text": "A napi rutin alapján egy célzott, esti szérum illik hozzád."
+        },
+        {
+          "text": "Ajánlásod: **HydraLift szérum** – erős hidratáló-töltő hatás."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_HW_gel",
+      "title": "A könnyű nappali hidratáló a legjobb választás",
+      "text": [
+        {
+          "text": "A gyors felszívódás és komfort a fő fókuszod."
+        },
+        {
+          "text": "Ajánlásod: **Water Gel hidratáló krém** – intenzív hidratálás nehézség nélkül."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_SW_softfocus",
+      "title": "A textúra-egyenletesség most a kulcs",
+      "text": [
+        {
+          "text": "A felszíni egyenetlenségek vannak előtérben most."
+        },
+        {
+          "text": "Ajánlásod: **Soft Focus bőrkisimító szérum** – egységesebb textúra."
+        }
+      ]
+    },
+    {
+      "id": "Route_A_final_SW_watergel",
+      "title": "A kényelmes, friss érzet a legfontosabb most",
+      "text": [
+        {
+          "text": "A húzódás és komforthiány a meghatározó probléma."
+        },
+        {
+          "text": "Ajánlásod: **Water Gel hidratáló krém** – gyors komfort + hidratálás."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_intro",
+      "title": "Gyors rutin, azonnali komfort – mire kell igazán figyelnünk?",
+      "text": [
+        {
+          "default": "Az eddigi válaszaid alapján egy modern, gyorsan beszívódó, mindennapi rutin iránya rajzolódik ki. Olyan megoldást keresel, ami nem ül meg a bőrön, smink alá is működik, és nem igényel túl sok lépést."
+        },
+        {
+          "ifUnlocked": "routine_minimal",
+          "text": "{fragment:routine_minimal}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_innovator",
+          "text": "{fragment:routine_innovator}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_premium",
+          "text": "{fragment:routine_premium}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_sensitive",
+          "text": "{fragment:routine_sensitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "routine_minimal"
+        },
+        {
+          "id": "routine_innovator"
+        },
+        {
+          "id": "routine_premium"
+        },
+        {
+          "id": "routine_sensitive"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_B2_pair_SW",
+          "text": "Smink alá vagy városi napokra kell valami – fontos a glow és az egységesebb textúra."
+        },
+        {
+          "next": "Route_B2_pair_SC",
+          "text": "Sokat vagyok kint nap közben – legyen szép a bőr, de kapjon fényvédelmet is."
+        },
+        {
+          "next": "Route_B2_pair_WC",
+          "text": "Minimalista napokra kell – egy gyors hidratáló + fényvédő kombó is elég."
+        }
+      ]
+    },
+    {
+      "id": "Route_B2_pair_SW",
+      "title": "Glow vagy komfort – mit érzel sürgetőbbnek?",
+      "text": [
+        {
+          "text": "Ha smink alá vagy városi napokra gondolsz: fontosabb, hogy a bőröd optikailag szebb, glow-osabb legyen, vagy hogy azonnal hidratált és kényelmes érzetű legyen?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_B_final_SW_softfocus",
+          "text": "Jobban érdekel a kisimultabb textúra és a soft glow hatás."
+        },
+        {
+          "next": "Route_B_final_SW_watergel",
+          "text": "Fontosabb, hogy a bőröm azonnal hidratált, kényelmes érzetű legyen."
+        }
+      ]
+    },
+    {
+      "id": "Route_B2_pair_SC",
+      "title": "Textúra-finomítás vagy biztos fényvédelem legyen az első?",
+      "text": [
+        {
+          "text": "Ha sokat vagy kint napközben, mi adna többet az elején: egy lépés, ami esztétikailag szebb, egységesebb bőrfelszínt ad, vagy egy gyorsan beszívódó, kényelmes fényvédő, ami minden nap rajtad van?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_B_final_SC_softfocus",
+          "text": "Először legyen szebb, egységesebb a bőrképe, a textúra."
+        },
+        {
+          "next": "Route_B_final_SC_calmshield",
+          "text": "Először legyen stabil, kényelmes, megbízható fényvédelem."
+        }
+      ]
+    },
+    {
+      "id": "Route_B2_pair_WC",
+      "title": "Mi legyen az alap a minimalista napokon?",
+      "text": [
+        {
+          "text": "Amikor tényleg minimálra húzod a rutint, mi legyen a fix pont: egy gyors, kényelmes hidratáló, vagy egy mindennapi fényvédő, ami védi a bőrödet?"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_B_final_WC_watergel",
+          "text": "Először egy megbízható, könnyű hidratálót keresek, ami azonnal komfortos."
+        },
+        {
+          "next": "Route_B_final_WC_calmshield",
+          "text": "Először egy stabil, kényelmes fényvédőt szeretnék, amit mindig felteszek."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_SW_softfocus",
+      "title": "Ajánlásod: Soft Focus bőrkisimító szérum – glow, ami bírja a tempót",
+      "text": [
+        {
+          "text": "A válaszaid alapján nálad most a gyorsan beszívódó textúra-finomítás és a soft glow a fontos – smink alá vagy városi napokra."
+        },
+        {
+          "text": "Ajánlásod: **Soft Focus bőrkisimító szérum** – könnyű, gyorsan beszívódó szérum, ami segít egységesebb, „soft focus” hatású bőrképet adni anélkül, hogy elnehezítené a rutint."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_SW_watergel",
+      "title": "Ajánlásod: Water Gel hidratáló krém – instant komfort smink alá is",
+      "text": [
+        {
+          "text": "A válaszaidból az látszik, hogy a glow helyett most az azonnali komfort, hidratált érzet a fontosabb – főleg olyan helyzetekben, amikor gyorsan kell kész lenni."
+        },
+        {
+          "text": "Ajánlásod: **Water Gel hidratáló krém** – friss, géles állagú hidratáló, ami pillanatok alatt beszívódik, nem ragad, és jól működik smink alatt is."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_SC_softfocus",
+      "title": "Ajánlásod: Soft Focus bőrkisimító szérum – esztétikai upgrade a védelem előtt",
+      "text": [
+        {
+          "text": "Arra jutottál, hogy első körben a bőrfelszín esztétikája zavar jobban – a textúra, pórusok, kisebb egyenetlenségek."
+        },
+        {
+          "text": "Ajánlásod: **Soft Focus bőrkisimító szérum** – könnyű, mindennapokba illeszthető szérum, ami segít egységesebb, szebb bőrképet adni. Nappal mellé érdemes egy gyorsan beszívódó fényvédőt is használni."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_SC_calmshield",
+      "title": "Ajánlásod: Calm Shield SPF 50 ",
+      "text": [
+        {
+          "text": "A válaszaid alapján a stabil, kényelmes fényvédelem az első – olyasmi, ami nem nehéz, nem fénylik túl, és hosszú napokon is komfortos marad."
+        },
+        {
+          "text": "Ajánlásod: **Calm Shield SPF 50** – gyorsan beszívódó, könnyű fényvédő, amelyet mindennapi alapdarabként tudsz használni, akár városban, akár szabadtéren."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_WC_watergel",
+      "title": "Ajánlásod: Water Gel hidratáló krém – a minimalista rutin alapja",
+      "text": [
+        {
+          "text": "Minimalista, rohanós napokra olyan alapra van szükséged, ami egy lépésben ad komfortot, és nem igényel sok extra lépést."
+        },
+        {
+          "text": "Ajánlásod: **Water Gel hidratáló krém** – könnyű, gyorsan beszívódó hidratáló, ami stabil, kényelmes alapérzetet ad a bőrödnek akkor is, ha a rutinod épp nagyon rövid."
+        }
+      ]
+    },
+    {
+      "id": "Route_B_final_WC_calmshield",
+      "title": "Ajánlásod: Calm Shield SPF 50 – fényvédelem, ami minimalista rutinba is belefér",
+      "text": [
+        {
+          "text": "A válaszaid alapján a minimalista napokon is szeretnél legalább egy biztos pontot: egy olyan fényvédőt, ami nem macerás, és nem érzed „plusz rétegnek”."
+        },
+        {
+          "text": "Ajánlásod: **Calm Shield SPF 50** – könnyű, gyorsan beszívódó SPF, amelyet egy lépésben be tudsz illeszteni a legrövidebb rutinodba is."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_intro",
+      "title": "Érzékeny bőr, kíméletesség, védelem – pontosítsuk, mi a fókuszod",
+      "text": [
+        {
+          "default": "Az eddigi válaszaid alapján érzékenyebb, tudatosabb bőrről van szó, ahol a kíméletesség, az illatmentesség és a védelem is fontos. Nézzük meg, milyen helyzetben érzed a legkritikusabbnak, hogy a bőrápolód „ne bántson”."
+        },
+        {
+          "ifUnlocked": "routine_minimal",
+          "text": "{fragment:routine_minimal}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_innovator",
+          "text": "{fragment:routine_innovator}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_premium",
+          "text": "{fragment:routine_premium}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "routine_sensitive",
+          "text": "{fragment:routine_sensitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "routine_minimal"
+        },
+        {
+          "id": "routine_innovator"
+        },
+        {
+          "id": "routine_premium"
+        },
+        {
+          "id": "routine_sensitive"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_C2_pair_CB",
+          "text": "Mindennapi fényvédelemnél: ne irritáljon, ne legyen nehéz, de adjon stabil védelmet."
+        },
+        {
+          "next": "Route_C2_pair_CH",
+          "text": "Ha már kint vagyok, szeretném, hogy a fényvédő ne csak védjen, de kicsit fiatalítson is."
+        },
+        {
+          "next": "Route_C2_pair_BH",
+          "text": "Inkább a kipirosodás, húzódás, sérült barrier zavar, de közben a feszesség is fontos."
+        }
+      ]
+    },
+    {
+      "id": "Route_C2_pair_CB",
+      "title": "Biztos védelem vagy extra komfort legyen az első?",
+      "text": [
+        {
+          "text": "Itt egy kíméletes, gyorsan beszívódó fényvédő és egy nyugtató, illatmentes barrier-krém között balanszolunk. Mindkettő érzékeny bőrre való, csak más pillanatban adja a fő pluszt."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_C_final_CB_calmshield",
+          "text": "Először a stabil, megbízható fényvédelem legyen rendben."
+        },
+        {
+          "next": "Route_C_final_CB_barrier",
+          "text": "Először a nyugtatás és a komfort: a barrier helyrehozása fontosabb."
+        }
+      ]
+    },
+    {
+      "id": "Route_C2_pair_CH",
+      "title": "Védelem + anti-age – melyik oldal billenjen feljebb?",
+      "text": [
+        {
+          "text": "Ebben az irányban a cél egy olyan rutin, ahol a bőröd védve van, de közben finom anti-age fókusz is érvényesül. Döntsd el, melyik legyen hangsúlyosabb első lépésben."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_C_final_CH_calmshield",
+          "text": "Első körben legyen stabil, kényelmes fényvédelem – az anti-age inkább extra bónusz."
+        },
+        {
+          "next": "Route_C_final_CH_hydralift",
+          "text": "Fontos, hogy a kíméletes védelem mellett látványosabb feszesítő hatás is legyen."
+        }
+      ]
+    },
+    {
+      "id": "Route_C2_pair_BH",
+      "title": "Regenerálás vagy célzott feszesítés legyen az alap?",
+      "text": [
+        {
+          "text": "Ha érzékeny, könnyen irritálódó bőrről van szó, a barrier helyrehozása sokszor alaplépés. Közben lehet célzottan feszesíteni is – csak nem mindegy, milyen sorrendben."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_C_final_BH_barrier",
+          "text": "Először a nyugtatás, regenerálás, illatmentes komfort a fontosabb."
+        },
+        {
+          "next": "Route_C_final_BH_hydralift",
+          "text": "Most belefér, hogy egy kíméletes, de feszesítőbb szérum legyen előtérben."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_CB_calmshield",
+      "title": "Ajánlásod: Calm Shield SPF 50 – érzékeny bőrre hangolt, mindennapi fényvédelem",
+      "text": [
+        {
+          "text": "A válaszaid alapján első lépésként egy stabil, kényelmes fényvédőre van szükséged, ami nem irritál, nem nehéz, és érzékenyebb bőrön is jól viselkedik."
+        },
+        {
+          "text": "Ajánlásod: **Calm Shield SPF 50** – illatmentes, kíméletes, gyorsan beszívódó fényvédő, kifejezetten mindennapi használatra."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_CB_barrier",
+      "title": "Ajánlásod: Barrier Repair krém – a nyugtató, illatmentes védőréteg",
+      "text": [
+        {
+          "text": "A válaszaid azt mutatják, hogy először a bőröd komfortja, nyugalma és a sérült barrier helyrehozása a legfontosabb."
+        },
+        {
+          "text": "Ajánlásod: **Barrier Repair krém** – gazdagabb, mégis kíméletes, illatmentes krém, ami a bőr védőrétegét segít erősíteni."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_CH_calmshield",
+      "title": "Ajánlásod: Calm Shield SPF 50 – védelem, ami mellett az anti-age lépésekre is nyitva marad a tér",
+      "text": [
+        {
+          "text": "Elsőként stabil, mindennapi fényvédelemre van szükséged, ami érzékenyebb bőrön is kényelmes."
+        },
+        {
+          "text": "Ajánlásod: **Calm Shield SPF 50** – illatmentes, kíméletes fényvédő, amely alapot ad későbbi kíméletes anti-age lépésekhez."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_CH_hydralift",
+      "title": "Ajánlásod: HydraLift szérum – kíméletes feszesítés érzékeny bőrre is",
+      "text": [
+        {
+          "text": "A válaszaid alapján fontos, hogy a bőröd védve legyen, de mellette finom, nem irritáló feszesítést is szeretnél."
+        },
+        {
+          "text": "Ajánlásod: **HydraLift szérum** – hidratáló, enyhén lifting hatású szérum, amely érzékenyebb bőrrutinhoz is biztonságos."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_BH_barrier",
+      "title": "Ajánlásod: Barrier Repair krém – először a bőr nyugtatása, aztán minden más",
+      "text": [
+        {
+          "text": "A válaszaidból az jön le, hogy a pirosodás, húzódás, reaktív bőr az elsődleges gond."
+        },
+        {
+          "text": "Ajánlásod: **Barrier Repair krém** – illatmentes, nyugtató, védő krém, ami fokozatosan segíti a bőr komfortját."
+        }
+      ]
+    },
+    {
+      "id": "Route_C_final_BH_hydralift",
+      "title": "Ajánlásod: HydraLift szérum – feszesítő boost óvatos bőrre",
+      "text": [
+        {
+          "text": "A válaszaid alapján bár érzékenyebb a bőröd, mégis belefér egy kíméletes, de látványosabb feszesítő lépés."
+        },
+        {
+          "text": "Ajánlásod: **HydraLift szérum** – plumping, enyhén lifting hatás, érzékeny bőrhöz is alkalmas."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_intro",
+      "title": "Finomítsuk tovább – milyen változást szeretnél most érezni?",
+      "text": [
+        {
+          "default": "A válaszaid alapján több irány is működhet nálad: a rutinod rugalmas, és többféle eredmény is szóba jöhet – textúra, hidratáltság vagy feszesség. Nézzük meg, melyik hatás áll hozzád most a legközelebb, hogy személyre szabjuk a következő lépést."
+        },
+        {
+          "ifUnlocked": "routine_minimal",
+          "text": "{fragment:routine_minimal}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_innovator",
+          "text": "{fragment:routine_innovator}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_premium",
+          "text": "{fragment:routine_premium}",
+          "mode": "append_after",
+          "separator": "\n"
+        },
+        {
+          "ifUnlocked": "routine_sensitive",
+          "text": "{fragment:routine_sensitive}",
+          "mode": "append_after",
+          "separator": "\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "routine_minimal"
+        },
+        {
+          "id": "routine_innovator"
+        },
+        {
+          "id": "routine_premium"
+        },
+        {
+          "id": "routine_sensitive"
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D2_texture",
+          "text": "Finomabb, rendezettebb összhatás"
+        },
+        {
+          "next": "Route_D2_hydration",
+          "text": "Frissebb, kényelmesebb érzet"
+        },
+        {
+          "next": "Route_D2_lifting",
+          "text": "Határozottabb, feszesebb érzet"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_texture_minimal",
+      "title": "Mikor esne jobban?",
+      "text": [
+        {
+          "text": "Válaszd ki, mikor szeretnéd érezni a hatást."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_texture_minimal_day",
+          "text": "Nappal"
+        },
+        {
+          "next": "Route_D_final_texture_minimal_night",
+          "text": "Este"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_texture_advanced",
+      "title": "Hol legyen a rutinod súlypontja?",
+      "text": [
+        {
+          "text": "Döntsd el, melyik megközelítést választod."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_texture_advanced_spfbase",
+          "text": "Mindennapi alap"
+        },
+        {
+          "next": "Route_D_final_texture_advanced_serumbase",
+          "text": "Fókuszált központi elem"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_hydration_minimal",
+      "title": "Mikor szeretnéd jobban érezni?",
+      "text": [
+        {
+          "text": "Válaszd ki, melyik pillanathoz illik jobban."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_hydration_minimal_fresh",
+          "text": "Nappal"
+        },
+        {
+          "next": "Route_D_final_hydration_minimal_comfort",
+          "text": "Este"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_hydration_advanced",
+      "title": "Milyen jellegű hatást szeretnél?",
+      "text": [
+        {
+          "text": "Válaszd ki, mi fontosabb most."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_hydration_advanced_plump",
+          "text": "Gyors, látványos"
+        },
+        {
+          "next": "Route_D_final_hydration_advanced_barrier",
+          "text": "Nyugodt, kiegyensúlyozott"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_lifting_minimal",
+      "title": "Milyen legyen az összhatás?",
+      "text": [
+        {
+          "text": "Döntsd el, mennyire legyen észrevehető."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_lifting_minimal_gentle",
+          "text": "Finoman érzékelhető"
+        },
+        {
+          "next": "Route_D_final_lifting_minimal_plump",
+          "text": "Határozottabb"
+        }
+      ]
+    },
+    {
+      "id": "Route_D3_lifting_advanced",
+      "title": "Mikor essen jól a hangsúlyosabb hatás?",
+      "text": [
+        {
+          "text": "Válaszd ki a neked megfelelő időszakot."
+        }
+      ],
+      "choices": [
+        {
+          "next": "Route_D_final_lifting_advanced_dayfocus",
+          "text": "Nappal"
+        },
+        {
+          "next": "Route_D_final_lifting_advanced_nightfocus",
+          "text": "Este"
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_texture_minimal_day",
+      "title": "Ajánlásod: Soft Focus + Calm Shield SPF – nappali textúra-finomító duó",
+      "text": [
+        {
+          "text": "A nappali, könnyű textúra-finomítás a célod. Ajánlásod: Soft Focus szérum + Calm Shield SPF – együtt adják a sima, egységesebb bőrfelszínt és a stabil fényvédelmet."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_texture_minimal_night",
+      "title": "Ajánlásod: Soft Focus + Barrier Repair – esti simító duó",
+      "text": [
+        {
+          "text": "A textúra javítását esti rutinban szeretnéd. Ajánlásod: Soft Focus szérum + Barrier Repair – együtt adják a simább felszínt és a nyugtató regenerálást estére."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_texture_advanced_spfbase",
+      "title": "Ajánlásod: Calm Shield SPF + Soft Focus – védelemre épülő textúra-duó",
+      "text": [
+        {
+          "text": "Összetettebb rutint szeretnél, ahol az SPF a fix pont. Ajánlásod: Calm Shield SPF + Soft Focus – együtt adják a védelmet és a látványosabb textúra-finomítást."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_texture_advanced_serumbase",
+      "title": "Ajánlásod: Soft Focus + HydraLift – mélyebb, aktív textúra-duó",
+      "text": [
+        {
+          "text": "A textúra-finomító szérum legyen a rutin alapja. Ajánlásod: Soft Focus + HydraLift – a kettő együtt ad puhább, rugalmasabb, frissebb bőrképet."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_hydration_minimal_fresh",
+      "title": "Ajánlásod: Water Gel + Calm Shield SPF – friss nappali hidratáló duó",
+      "text": [
+        {
+          "text": "A friss, könnyű nappali érzet a célod. Ajánlásod: Water Gel + Calm Shield SPF – együtt adják a könnyed komfortot és a stabil fényvédelmet."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_hydration_minimal_comfort",
+      "title": "Ajánlásod: Water Gel + Barrier Repair – esti komfort duó",
+      "text": [
+        {
+          "text": "A teltebb, komfortosabb esti hidratálást keresed. Ajánlásod: Water Gel + Barrier Repair – együtt adják a puha nappali alapot és az esti nyugtató regenerálást."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_hydration_advanced_plump",
+      "title": "Ajánlásod: HydraLift + Water Gel + Calm Shield SPF – plump nappali–esti rendszer",
+      "text": [
+        {
+          "text": "Erősebb plump hatást szeretnél nappal és este. Ajánlásod: HydraLift + Water Gel + Calm Shield SPF – egy komplett, hidratáló–védő rutin."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_hydration_advanced_barrier",
+      "title": "Ajánlásod: HydraLift + Barrier Repair + Calm Shield SPF – hidratálás + barrier",
+      "text": [
+        {
+          "text": "A hidratáltság mellett fontos számodra a barrier támogatása. Ajánlásod: HydraLift + Barrier Repair + Calm Shield SPF – ez a három együtt ad teljes nappali–esti egyensúlyt."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_lifting_minimal_gentle",
+      "title": "Ajánlásod: HydraLift + Calm Shield SPF – kíméletes nappali lifting duó",
+      "text": [
+        {
+          "text": "Finom feszesítést szeretnél minimál rutinban. Ajánlásod: HydraLift + Calm Shield SPF – együtt adják a nappali plump érzetet és a biztos védelmet."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_lifting_minimal_plump",
+      "title": "Ajánlásod: HydraLift + Water Gel – plump boost duó",
+      "text": [
+        {
+          "text": "Erősebb, plumpabb feszesítő érzetet szeretnél. Ajánlásod: HydraLift + Water Gel – együtt adják a rugalmasabb, frissebb bőrképet."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_lifting_advanced_dayfocus",
+      "title": "Ajánlásod: HydraLift + Barrier Repair – célzott feszesítés + komfort",
+      "text": [
+        {
+          "text": "A nappali feszesítő hatás a fontosabb. Ajánlásod: HydraLift + Barrier Repair – együtt adják a feszesebb érzetet és a biztos komfortot."
+        }
+      ]
+    },
+    {
+      "id": "Route_D_final_lifting_advanced_nightfocus",
+      "title": "Ajánlásod: HydraLift + Calm Shield SPF + Barrier Repair – esti regeneráló feszesítés",
+      "text": [
+        {
+          "text": "Erősebb esti regeneráló rutint szeretnél. Ajánlásod: HydraLift + Calm Shield SPF + Barrier Repair – egy teljes, regeneráló éjszakai rendszer."
+        }
+      ]
+    },
+    {
+      "id": "Route_E_intro",
+      "title": "Több irány is passzol rád – nézzük meg közelebbről",
+      "text": [
+        {
+          "text": "Úgy tűnik, többféle megoldás is működhetne nálad. Kezdjük azzal, hogyan döntesz általában, amikor több jó opció közül kell választanod."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Gyorsan és határozottan.",
+          "next": "Route_E2_focus",
+          "reward": {
+            "unlockFragments": [
+              "E_style_decisive"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_sensitive"
+          ]
+        },
+        {
+          "text": "Átgondoltan, mérlegelve.",
+          "next": "Route_E2_focus",
+          "reward": {
+            "unlockFragments": [
+              "E_style_reflective"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_innovator"
+          ]
+        },
+        {
+          "text": "Érzésből, intuitívan.",
+          "next": "Route_E2_focus",
+          "reward": {
+            "unlockFragments": [
+              "E_style_intuitive"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_premium"
+          ]
+        },
+        {
+          "text": "Szeretek kipróbálni több irányt.",
+          "next": "Route_E2_focus",
+          "reward": {
+            "unlockFragments": [
+              "E_style_explorer"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_minimal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Route_E2_focus",
+      "title": "Milyen típusú eredmény lenne most a legfontosabb?",
+      "text": [
+        {
+          "text": "Most válaszd ki, milyen bőrérzet vagy eredmény áll hozzád legközelebb. Ez segít megtalálni azt az irányt, ami a leginkább támogat téged."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Simább, rendezettebb összhatás.",
+          "next": "Route_E3_use",
+          "reward": {
+            "unlockFragments": [
+              "E_focus_texture"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_sensitive"
+          ]
+        },
+        {
+          "text": "Frissebb, könnyebb, rugalmasabb érzet.",
+          "next": "Route_E3_use",
+          "reward": {
+            "unlockFragments": [
+              "E_focus_fresh"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_premium"
+          ]
+        },
+        {
+          "text": "Biztonságosabb, védettebb érzet a mindennapokban.",
+          "next": "Route_E3_use",
+          "reward": {
+            "unlockFragments": [
+              "E_focus_protect"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_innovator"
+          ]
+        },
+        {
+          "text": "Nyugodtabb, kiegyensúlyozottabb bőrérzet.",
+          "next": "Route_E3_use",
+          "reward": {
+            "unlockFragments": [
+              "E_focus_calm"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_minimal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Route_E3_use",
+      "title": "Hogyan illeszkedjen a napodba?",
+      "text": [
+        {
+          "text": "Végül nézzük meg, hogyan szeretnéd beépíteni a választott megoldást a napodba."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Gyors, könnyen tartható lépésként.",
+          "next": "Route_E_result_logic",
+          "reward": {
+            "unlockFragments": [
+              "E_use_quick"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_premium",
+            "E_gate_sensitive"
+          ]
+        },
+        {
+          "text": "Nappali rutin részeként, smink alá is.",
+          "next": "Route_E_result_logic",
+          "reward": {
+            "unlockFragments": [
+              "E_use_day"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_minimal"
+          ]
+        },
+        {
+          "text": "Esti, nyugtató lezárásként.",
+          "next": "Route_E_result_logic",
+          "reward": {
+            "unlockFragments": [
+              "E_use_night"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_innovator"
+          ]
+        },
+        {
+          "text": "Olyan alapdarabként, amihez könnyen igazítok mást is.",
+          "next": "Route_E_result_logic",
+          "reward": {
+            "unlockFragments": [
+              "E_use_anchor"
+            ]
+          },
+          "hiddenIfFragments": [
+            "E_gate_minimal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Route_E_result_logic",
+      "type": "logic",
+      "logic": [
+        {
+          "if": [
+            "frag:E_style_decisive",
+            "frag:E_use_quick"
+          ],
+          "goto": "Route_E_final_watergel"
+        },
+        {
+          "if": [
+            "frag:E_style_decisive",
+            "frag:E_use_day"
+          ],
+          "goto": "Route_E_final_calmshield"
+        },
+        {
+          "if": [
+            "frag:E_style_decisive",
+            "frag:E_use_night"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "if": [
+            "frag:E_style_decisive",
+            "frag:E_use_anchor"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "if": [
+            "frag:E_style_reflective",
+            "frag:E_use_quick"
+          ],
+          "goto": "Route_E_final_watergel"
+        },
+        {
+          "if": [
+            "frag:E_style_reflective",
+            "frag:E_use_day"
+          ],
+          "goto": "Route_E_final_calmshield"
+        },
+        {
+          "if": [
+            "frag:E_style_reflective",
+            "frag:E_use_night"
+          ],
+          "goto": "Route_E_final_barrier"
+        },
+        {
+          "if": [
+            "frag:E_style_reflective",
+            "frag:E_use_anchor"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "if": [
+            "frag:E_style_intuitive",
+            "frag:E_use_quick"
+          ],
+          "goto": "Route_E_final_watergel"
+        },
+        {
+          "if": [
+            "frag:E_style_intuitive",
+            "frag:E_use_day"
+          ],
+          "goto": "Route_E_final_softfocus"
+        },
+        {
+          "if": [
+            "frag:E_style_intuitive",
+            "frag:E_use_night"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "if": [
+            "frag:E_style_intuitive",
+            "frag:E_use_anchor"
+          ],
+          "goto": "Route_E_final_softfocus"
+        },
+        {
+          "if": [
+            "frag:E_style_explorer",
+            "frag:E_use_quick"
+          ],
+          "goto": "Route_E_final_softfocus"
+        },
+        {
+          "if": [
+            "frag:E_style_explorer",
+            "frag:E_use_day"
+          ],
+          "goto": "Route_E_final_softfocus"
+        },
+        {
+          "if": [
+            "frag:E_style_explorer",
+            "frag:E_use_night"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "if": [
+            "frag:E_style_explorer",
+            "frag:E_use_anchor"
+          ],
+          "goto": "Route_E_final_hydralift"
+        },
+        {
+          "default": "Route_E_final_watergel"
+        }
+      ]
+    },
+    {
+      "id": "Route_E_final_softfocus",
+      "title": "Ajánlásod: Soft Focus",
+      "text": [
+        {
+          "text": "A válaszaid alapján a simább, rendezettebb bőrfelszín hozza a legnagyobb különbséget. A Soft Focus könnyed bőrkisimító szérum, amely finom, egységesebb összhatást ad."
+        },
+        {
+          "ifUnlocked": "E_style_decisive",
+          "text": "{fragment:E_style_decisive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_reflective",
+          "text": "{fragment:E_style_reflective}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_intuitive",
+          "text": "{fragment:E_style_intuitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_explorer",
+          "text": "{fragment:E_style_explorer}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_quick",
+          "text": "{fragment:E_use_quick}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_day",
+          "text": "{fragment:E_use_day}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_night",
+          "text": "{fragment:E_use_night}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_anchor",
+          "text": "{fragment:E_use_anchor}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "E_style_decisive"
+        },
+        {
+          "id": "E_style_reflective"
+        },
+        {
+          "id": "E_style_intuitive"
+        },
+        {
+          "id": "E_style_explorer"
+        },
+        {
+          "id": "E_use_quick"
+        },
+        {
+          "id": "E_use_day"
+        },
+        {
+          "id": "E_use_night"
+        },
+        {
+          "id": "E_use_anchor"
+        }
+      ]
+    },
+    {
+      "id": "Route_E_final_watergel",
+      "title": "Ajánlásod: Water Gel",
+      "text": [
+        {
+          "text": "A friss, könnyű, komfortos érzet most hangsúlyos nálad. A Water Gel légies hidratáló gél, amely gyorsan rugalmasabbá teszi a bőrt."
+        },
+        {
+          "ifUnlocked": "E_style_decisive",
+          "text": "{fragment:E_style_decisive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_reflective",
+          "text": "{fragment:E_style_reflective}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_intuitive",
+          "text": "{fragment:E_style_intuitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_explorer",
+          "text": "{fragment:E_style_explorer}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_quick",
+          "text": "{fragment:E_use_quick}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_day",
+          "text": "{fragment:E_use_day}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_night",
+          "text": "{fragment:E_use_night}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_anchor",
+          "text": "{fragment:E_use_anchor}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "E_style_decisive"
+        },
+        {
+          "id": "E_style_reflective"
+        },
+        {
+          "id": "E_style_intuitive"
+        },
+        {
+          "id": "E_style_explorer"
+        },
+        {
+          "id": "E_use_quick"
+        },
+        {
+          "id": "E_use_day"
+        },
+        {
+          "id": "E_use_night"
+        },
+        {
+          "id": "E_use_anchor"
+        }
+      ]
+    },
+    {
+      "id": "Route_E_final_calmshield",
+      "title": "Ajánlásod: Calm Shield SPF",
+      "text": [
+        {
+          "text": "Most a stabil, biztonságos, védettebb bőrérzet az elsődleges. A Calm Shield SPF könnyű, nyugtató fényvédő, amely megbízható védelmet ad a mindennapokban."
+        },
+        {
+          "ifUnlocked": "E_style_decisive",
+          "text": "{fragment:E_style_decisive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_reflective",
+          "text": "{fragment:E_style_reflective}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_intuitive",
+          "text": "{fragment:E_style_intuitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_explorer",
+          "text": "{fragment:E_style_explorer}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_quick",
+          "text": "{fragment:E_use_quick}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_day",
+          "text": "{fragment:E_use_day}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_night",
+          "text": "{fragment:E_use_night}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_anchor",
+          "text": "{fragment:E_use_anchor}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "E_style_decisive"
+        },
+        {
+          "id": "E_style_reflective"
+        },
+        {
+          "id": "E_style_intuitive"
+        },
+        {
+          "id": "E_style_explorer"
+        },
+        {
+          "id": "E_use_quick"
+        },
+        {
+          "id": "E_use_day"
+        },
+        {
+          "id": "E_use_night"
+        },
+        {
+          "id": "E_use_anchor"
+        }
+      ]
+    },
+    {
+      "id": "Route_E_final_barrier",
+      "title": "Ajánlásod: Barrier Repair",
+      "text": [
+        {
+          "text": "A nyugodtabb, kiegyensúlyozottabb bőrérzet áll hozzád most a legközelebb. A Barrier Repair tápláló krém, amely a bőrvédőréteg egyensúlyát támogatja."
+        },
+        {
+          "ifUnlocked": "E_style_decisive",
+          "text": "{fragment:E_style_decisive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_reflective",
+          "text": "{fragment:E_style_reflective}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_intuitive",
+          "text": "{fragment:E_style_intuitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_explorer",
+          "text": "{fragment:E_style_explorer}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_quick",
+          "text": "{fragment:E_use_quick}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_day",
+          "text": "{fragment:E_use_day}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_night",
+          "text": "{fragment:E_use_night}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_anchor",
+          "text": "{fragment:E_use_anchor}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "E_style_decisive"
+        },
+        {
+          "id": "E_style_reflective"
+        },
+        {
+          "id": "E_style_intuitive"
+        },
+        {
+          "id": "E_style_explorer"
+        },
+        {
+          "id": "E_use_quick"
+        },
+        {
+          "id": "E_use_day"
+        },
+        {
+          "id": "E_use_night"
+        },
+        {
+          "id": "E_use_anchor"
+        }
+      ]
+    },
+    {
+      "id": "Route_E_final_hydralift",
+      "title": "Ajánlásod: HydraLift szérum",
+      "text": [
+        {
+          "text": "A válaszaid alapján most a teltebb, feszesebb, plumpabb bőrérzet hozná a legnagyobb különbséget. A HydraLift szérum intenzív hidratáló–feltöltő hatással támogatja a bőr rugalmasságát és frissebb összhatását."
+        },
+        {
+          "ifUnlocked": "E_style_decisive",
+          "text": "{fragment:E_style_decisive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_reflective",
+          "text": "{fragment:E_style_reflective}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_intuitive",
+          "text": "{fragment:E_style_intuitive}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_style_explorer",
+          "text": "{fragment:E_style_explorer}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_quick",
+          "text": "{fragment:E_use_quick}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_day",
+          "text": "{fragment:E_use_day}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_night",
+          "text": "{fragment:E_use_night}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "E_use_anchor",
+          "text": "{fragment:E_use_anchor}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "E_style_decisive"
+        },
+        {
+          "id": "E_style_reflective"
+        },
+        {
+          "id": "E_style_intuitive"
+        },
+        {
+          "id": "E_style_explorer"
+        },
+        {
+          "id": "E_use_quick"
+        },
+        {
+          "id": "E_use_day"
+        },
+        {
+          "id": "E_use_night"
+        },
+        {
+          "id": "E_use_anchor"
+        }
+      ]
+    }
+  ],
+"fragments": {
+  "routine_minimal": {
+    "id": "routine_minimal",
+    "text": "Egy letisztult, gyors bőrápolási szemlélet rajzolódik ki."
+  },
+  "routine_innovator": {
+    "id": "routine_innovator",
+    "text": "Látszik, hogy nyitott vagy az újdonságokra és az okos megoldásokra."
+  },
+  "routine_premium": {
+    "id": "routine_premium",
+    "text": "Úgy érzem fontos számodra a letisztult élmény és a prémium hangulat."
+  },
+  "routine_sensitive": {
+    "id": "routine_sensitive",
+    "text": "Látszik, hogy fontos számodra a kíméletesség és a nyugalom."
+  },
+
+  "E_style_decisive": {
+    "id": "E_style_decisive",
+    "text": "Tetszik, hogy gyorsan és határozottan döntesz – jó hír, hogy ez a lépés is egyszerűen illeszkedik a rutinodba, felesleges bonyolítás nélkül."
+  },
+  "E_style_reflective": {
+    "id": "E_style_reflective",
+    "text": "Látszik, hogy átgondoltan közelíted meg a döntéseket – ez a választás is inkább stabil, hosszú távon is megbízható támogatást ad."
+  },
+  "E_style_intuitive": {
+    "id": "E_style_intuitive",
+    "text": "A válaszaidból érződik, hogy sokszor érzésből döntesz – ez a lépés is könnyű, természetes élményként simul bele a napodba."
+  },
+  "E_style_explorer": {
+    "id": "E_style_explorer",
+    "text": "Nyitott vagy új dolgokra és szeretsz kísérletezni – ez a megoldás jó terep arra, hogy lásd, hogyan reagál rá a bőröd."
+  },
+  "E_use_quick": {
+    "id": "E_use_quick",
+    "text": "Ha olyasmit keresel, ami gyorsan elvégezhető: ezt a lépést pár pillanat alatt fel tudod vinni."
+  },
+  "E_use_day": {
+    "id": "E_use_day",
+    "text": "Nappali használatra is jól működik: könnyen illeszthető a reggeli rutinodba, smink alá is."
+  },
+  "E_use_night": {
+    "id": "E_use_night",
+    "text": "Esti nyugtató lezárásként is jó választás: segít lelassítani és komfortosabbá tenni az estéidet."
+  },
+  "E_use_anchor": {
+    "id": "E_use_anchor",
+    "text": "Alapdarabként is számíthatsz rá: könnyű köré szervezni a többi lépést a rutinodban."
+  }
+}
+  }

@@ -1,0 +1,120 @@
+{
+  "id": "contract_softdrink_fresh",
+  "title": "Contract – Softdrink Fresh Fizz",
+  "version": 1,
+  "tokens": {
+    "--brand-accent": "#5BE3C6",
+
+    "--contract-font-family": "\"Inter\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+
+    "--typography-a-weight-regular": "400",
+    "--typography-a-weight-medium": "600",
+    "--typography-a-weight-semibold": "800",
+    "--typography-b-weight-regular": "400",
+    "--typography-b-weight-medium": "500",
+
+    "--contract-typography-a-font-family": "var(--contract-font-family)",
+    "--contract-typography-a-font-size": "15px",
+    "--contract-typography-a-line-height": "1.22",
+    "--contract-typography-a-letter-spacing": "0.18px",
+    "--contract-typography-a-weight": "800",
+    "--contract-typography-a-color": "#EAFDF8",
+
+    "--contract-typography-b-font-family": "var(--contract-font-family)",
+    "--contract-typography-b-font-size": "16px",
+    "--contract-typography-b-line-height": "1.45",
+    "--contract-typography-b-letter-spacing": "0.10px",
+    "--contract-typography-b-weight": "400",
+    "--contract-typography-b-color": "#DFF7F2",
+
+    "--contract-text-font-family": "var(--contract-typography-b-font-family)",
+    "--contract-text-color": "#DFF7F2",
+
+    "--choice-text-weight": "600",
+    "--quiz-title-weight": "800",
+    "--contract-cta-overlay-title-weight": "800",
+    "--contract-header-title-weight": "800",
+
+
+   "--contract-media-svg-base-1": "#2F8F8A",
+  "--contract-media-svg-base-2": "#2F8F8A",
+  "--contract-media-svg-base-3": "#2F8F8A",
+
+  "--contract-media-svg-inner-1": "#2F8F8A",
+  "--contract-media-svg-inner-2": "#2F8F8A",
+  "--contract-media-svg-inner-3": "#2F8F8A",
+
+  "--contract-media-svg-overlay-top": "#2F8F8A",
+  "--contract-media-svg-overlay-mid": "#2F8F8A",
+  "--contract-media-svg-overlay-bottom": "#2F8F8A",
+
+  "--contract-media-logo-bay-fill": "#2F8F8A",
+  "--contract-media-logo-bay-overlay": "#2F8F8A",
+  
+    "--mf-max-w": "920px",
+    "--mf-pad": "0px",
+    "--mf-opacity": "0.16",
+    "--mf-radius": "28px",
+    "--mf-border-w": "10px",
+    "--mf-border-style": "solid",
+    "--mf-border-color": "transparent",
+
+    "--mf-bg": "radial-gradient(120% 140% at 20% 10%, rgba(200,255,241,0.18) 0%, rgba(200,255,241,0.04) 42%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(12,46,54,0.92) 0%, rgba(5,15,19,0.96) 100%)",
+
+    "--mf-border-gradient": "linear-gradient(180deg, rgba(91,227,198,0.80) 0%, rgba(91,227,198,0.30) 55%, rgba(255,255,255,0.12) 100%)",
+
+    "--mf-shadow": "0 18px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(91,227,198,.14) inset",
+
+    "--mf-inner-gap": "10px",
+    "--mf-inner-fill": "radial-gradient(120% 110% at 50% 0%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.05) 55%, rgba(0,0,0,0.00) 100%)",
+
+    "--mf-overlay": "linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.00) 42%, rgba(0,0,0,0.00) 100%)",
+    "--mf-overlay-opacity": "1",
+    "--mf-overlay-blend": "screen",
+
+    "--mf-svg-base-1": "#0C2E36",
+    "--mf-svg-base-2": "#0A1F26",
+    "--mf-svg-base-3": "#050F13",
+
+    "--mf-svg-inner-1": "#EAFDF8",
+    "--mf-svg-inner-2": "#5BE3C6",
+    "--mf-svg-inner-3": "#7DE8FF",
+
+    "--mf-svg-overlay-top": "rgba(200,255,241,0.36)",
+    "--mf-svg-overlay-mid": "rgba(255,255,255,0.08)",
+    "--mf-svg-overlay-bottom": "rgba(125,232,255,0.18)",
+
+    "--mf-svg-outer-stroke": "22",
+    "--mf-svg-inner-stroke": "14",
+    "--mf-svg-overlay-stroke": "22",
+
+
+    "--contract-header-bg-color-top": "rgba(12,46,54,0.92)",
+    "--contract-header-bg-color-bot": "rgba(5,15,19,0.92)",
+    "--contract-header-border-color": "rgba(91,227,198,0.42)",
+    "--contract-header-radius": "16px",
+    "--contract-header-backdrop-blur": "14px",
+
+    "--contract-header-title-font-size": "21px",
+    "--contract-header-title-color": "#5BE3C6",
+    "--contract-header-text-color": "#EAFDF8",
+
+    "--contract-choice-bg-color-top": "rgba(255,255,255,0.14)",
+    "--contract-choice-bg-color-bot": "rgba(255,255,255,0.06)",
+    "--contract-choice-overlay-color": "rgba(91,227,198,0.28)",
+    "--contract-choice-border-color": "rgba(91,227,198,0.42)",
+    "--contract-choice-radius": "16px",
+    "--contract-choice-text-color": "#EAFDF8",
+
+
+    "--contract-cta-bg-color-top": "#7DE8FF",
+    "--contract-cta-bg-color-bot": "#5BE3C6",
+    "--contract-cta-text-color": "#042023",
+
+
+    "--contract-bg-color": "#040C10",
+    "--contract-bg-image": "radial-gradient(140% 160% at 20% 10%, rgba(91,227,198,0.16) 0%, rgba(91,227,198,0.04) 36%, rgba(0,0,0,0) 70%), radial-gradient(140% 140% at 85% 20%, rgba(125,232,255,0.12) 0%, rgba(125,232,255,0.02) 46%, rgba(0,0,0,0) 74%), linear-gradient(180deg, #0C2E36 0%, #040C10 100%)",
+    "--contract-bg-overlay-opacity": "1",
+    "--contract-bg-blur": "0px"
+  }
+}

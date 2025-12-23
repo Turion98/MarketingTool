@@ -1,0 +1,593 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "christmas_holiday_mode_demo",
+  "locale": "hu",
+  "meta": {
+    "id": "christmas_holiday_mode_demo",
+    "title": "Hogyan töltöd a karácsonyod idén?",
+    "author": "Qzera",
+    "description": "Rövid, háromkérdéses ünnepi mini-élmény, amely megmutatja, milyen karácsonyi üzemmódban vagy idén.",
+    "coverImage": "/assets/covers/christmas.jpg",
+    "startPageId": "Q1",
+    "campaignId": "christmas_holiday_mode_demo",
+    "logo": "/assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "fragments": {
+    "Q2_A": {
+      "id": "Q2_A",
+      "text": "Egy pillanatra megállsz\n\nAmikor kezd szétesni a napod, inkább lassítasz: leülsz egy teával, meggyújtasz egy gyertyát, és hagyod, hogy a meleg fény visszahozzon az ünnepi hangulatba."
+    },
+    "Q2_B": {
+      "id": "Q2_B",
+      "text": "Keresel egy kis ünnepi löketet\n\nHa kifáradsz, rákapcsolsz: elindítasz egy karácsonyi playlistet, felkapcsolod a fényfüzért, vagy kitalálsz egy spontán programot, hogy újra beinduljon az energia."
+    },
+    "Q2_C": {
+      "id": "Q2_C",
+      "text": "Visszanyúlsz egy bevált rituáléhoz\n\nHa kibillen a nap, előveszel egy ismerős ünnepi szokást: egy receptet, egy közös filmet vagy egy esti sétát a fények között, ami segít visszaállítani a hangulatot."
+    },
+    "Q2_D": {
+      "id": "Q2_D",
+      "text": "Adsz magadnak egy csendes szünetet\n\nAmikor túl sok minden történik, inkább kiszállsz egy időre: kikapcsolod a zajt, elvonulsz pár percre, és hagyod, hogy lenyugodjon benned az ünnepi nap."
+    },
+    "SCENE_CONTEXT_1": {
+  "id": "SCENE_CONTEXT_1",
+  "text": "living room shelves with warm golden string lights softly glowing"
+},
+"SCENE_CONTEXT_2": {
+  "id": "SCENE_CONTEXT_2",
+  "text": "windowsill with a lit candle, pine branches and a steaming mug"
+},
+"SCENE_CONTEXT_3": {
+  "id": "SCENE_CONTEXT_3",
+  "text": "tidy minimal interior with subtle modern christmas decorations"
+},
+"SCENE_CONTEXT_4": {
+  "id": "SCENE_CONTEXT_4",
+  "text": "gentle snowfall visible outside, warm ambient interior light inside"
+},
+"IDEA_STATE_1": {
+  "id": "IDEA_STATE_1",
+  "text": "soft beginning-of-holiday mood with gentle warm tones"
+},
+"IDEA_STATE_2": {
+  "id": "IDEA_STATE_2",
+  "text": "dynamic shifting mood with subtle festive highlights"
+},
+"IDEA_STATE_3": {
+  "id": "IDEA_STATE_3",
+  "text": "calm holiday fragments emerging between tasks"
+},
+"IDEA_STATE_4": {
+  "id": "IDEA_STATE_4",
+  "text": "clarified peaceful winter mood with simplified scene"
+},
+"MICRO_DETAILS_1": {
+  "id": "MICRO_DETAILS_1",
+  "text": "close-up of a steaming warm drink in soft light"
+},
+"MICRO_DETAILS_2": {
+  "id": "MICRO_DETAILS_2",
+  "text": "small glowing string-light bokeh in the background"
+},
+"MICRO_DETAILS_3": {
+  "id": "MICRO_DETAILS_3",
+  "text": "minimal curated holiday decor arranged neatly"
+},
+"MICRO_DETAILS_4": {
+  "id": "MICRO_DETAILS_4",
+  "text": "moment of stillness with soft ambient shadows"
+}
+  },
+  "pages": [
+    {
+  "id": "Q1",
+  "title": "Hogyan indul nálad az ünnepi időszak?",
+  "text": [
+    {
+      "text": "Válaszd ki, melyik indulás áll hozzád közel."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Lassan hangolódom: rend, gyertya, nyugalom.",
+      "next": "Q2",
+      "value": "A",
+      "reward": {
+        "locks": ["Q1_A"],
+        "unlockFragments": ["SCENE_CONTEXT_1"]
+      }
+    },
+    {
+      "text": "Gyorsan pörgök fel: programok, szervezés, lendület.",
+      "next": "Q2",
+      "value": "B",
+      "reward": {
+        "locks": ["Q1_B"],
+        "unlockFragments": ["SCENE_CONTEXT_2"]
+      }
+    },
+    {
+      "text": "Kicsiben kezdem: egy bevált kis rituáléval.",
+      "next": "Q2",
+      "value": "C",
+      "reward": {
+        "locks": ["Q1_C"],
+        "unlockFragments": ["SCENE_CONTEXT_3"]
+      }
+    },
+    {
+      "text": "A nap ritmusa dönt: néha pörgök, néha csendben vagyok.",
+      "next": "Q2",
+      "value": "D",
+      "reward": {
+        "locks": ["Q1_D"],
+        "unlockFragments": ["SCENE_CONTEXT_4"]
+      }
+    }
+  ]
+}
+,
+    {
+  "id": "Q2",
+  "title": "Mi segít visszahozni az ünnepi hangulatot?",
+  "text": [
+    {
+      "text": "Ha kicsit kizökkensz, mi hoz vissza legjobban az ünnepi hangulatba?"
+    }
+  ],
+  "choices": [
+    {
+      "text": "Lassítok egy meleg itallal és gyertyafénnyel.",
+      "next": "Q3",
+      "reward": {
+        "unlockFragments": ["Q2_A", "IDEA_STATE_1"]
+      }
+    },
+    {
+      "text": "Keresek egy kis plusz energiát: fények, zene, spontán program.",
+      "next": "Q3",
+      "reward": {
+        "unlockFragments": ["Q2_B", "IDEA_STATE_2"]
+      }
+    },
+    {
+      "text": "Visszatérek egy bevált ünnepi rutinomhoz.",
+      "next": "Q3",
+      "reward": {
+        "unlockFragments": ["Q2_C", "IDEA_STATE_3"]
+      }
+    },
+    {
+      "text": "Kiveszek pár perc csendet és félreteszem a teendőket.",
+      "next": "Q3",
+      "reward": {
+        "unlockFragments": ["Q2_D", "IDEA_STATE_4"]
+      }
+    }
+  ]
+}
+,
+    {
+  "id": "Q3",
+  "title": "Mi alapján áll össze benned az idei karácsony hangulata?",
+  "text": [
+    {
+      "text": "A nap végén mi határozza meg leginkább az ünnepi hangulatodat?"
+    }
+  ],
+  "choices": [
+    {
+      "text": "A rend és a nyugalom – amikor átlátható a nap.",
+      "next": "logic",
+      "value": "1",
+      "reward": {
+        "locks": ["Q3_1"],
+        "unlockFragments": [
+          "MICRO_DETAILS_1"
+        ]
+      }
+    },
+    {
+      "text": "Egy élmény vagy program, ami feldob.",
+      "next": "logic",
+      "value": "2",
+      "reward": {
+        "locks": ["Q3_2"],
+        "unlockFragments": [
+          "MICRO_DETAILS_2"
+          
+        ]
+      }
+    },
+    {
+      "text": "Az apró részletek: illatok, fények, gesztusok.",
+      "next": "logic",
+      "value": "3",
+      "reward": {
+        "locks": ["Q3_3"],
+        "unlockFragments": [
+          "MICRO_DETAILS_3"
+        ]
+      }
+    },
+    {
+      "text": "A nap ritmusa: mennyire áll össze a csend és a pörgés.",
+      "next": "logic",
+      "value": "4",
+      "reward": {
+        "locks": ["Q3_4"],
+        "unlockFragments": [
+          "MICRO_DETAILS_4"
+        ]
+      }
+    }
+  ]
+}
+,
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Elemzés...",
+      "text": [
+        {
+          "text": "A válaszaid alapján megmutatjuk, milyen ünnepi üzemmódban vagy idén."
+        }
+      ],
+      "logic": [
+        {
+          "if": [
+            "Q1_A",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_4"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_4"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_1"
+          ],
+          "goto": "end_synthesizer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_2"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_4"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_D",
+            "Q3_3"
+          ],
+          "goto": "end_explorer"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_C",
+            "Q3_4"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_A",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "if": [
+            "Q1_B",
+            "Q3_3"
+          ],
+          "goto": "end_refiner"
+        },
+        {
+          "default": "end_synthesizer"
+        }
+      ]
+    },
+    {
+  "id": "end_synthesizer",
+  "title": "The Quiet Holiday Mode",
+  "layout": {
+    "mediaMode": "image"
+  },
+  "text": [
+    {
+      "default": "Az idei ünneped alapvetően nyugodt, rendezett üzemmódban fut. Fontos neked, hogy átlásd a napot: legyen benne struktúra, levegő és pár csendesebb szakasz, amikor tényleg jelen tudsz lenni. Nem a maximális program a célod, hanem az, hogy kényelmesen, saját tempódban éld meg a karácsonyt."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "text": "{fragment:OVR_SYNTH_Q3_1}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "text": "{fragment:OVR_SYNTH_Q3_2}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "text": "{fragment:OVR_SYNTH_Q3_3}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "text": "{fragment:OVR_SYNTH_Q3_4}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "text": "{fragment:Q2_A}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "text": "{fragment:Q2_B}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "text": "{fragment:Q2_C}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "text": "{fragment:Q2_D}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    }
+  ],
+
+"imagePrompt": {
+  "global": "warm modern christmas interior, soft diffused lighting, natural materials, minimal festive decor, soft golden highlights, pine branches and candlelight hints, cozy winter atmosphere, shallow depth of field, premium lifestyle photography style, clean composition, no text, no logos, no branding, no people, high resolution",
+
+  "chapter": "calm minimal winter ambience, soft warm light, gentle shadows, uncluttered cozy interior, quiet and balanced atmosphere, subtle holiday accents, peaceful slow mood",
+
+  "page": "soft minimal winter scene with calm warm lighting, gentle textures and subtle festive details {fragment:SCENE_CONTEXT_1} {fragment:SCENE_CONTEXT_2} {fragment:SCENE_CONTEXT_3} {fragment:SCENE_CONTEXT_4} {fragment:IDEA_STATE_1} {fragment:IDEA_STATE_2} {fragment:IDEA_STATE_3} {fragment:IDEA_STATE_4} {fragment:MICRO_DETAILS_1} {fragment:MICRO_DETAILS_2} {fragment:MICRO_DETAILS_3} {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, {page}",
+
+  "negativePrompt": "no text, no watermark, no logos, no clutter, no distorted objects, no people, no hands"
+}
+,
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+
+  "cta": "default"
+},
+    {
+  "id": "end_explorer",
+  "title": "The Social Spark Mode",
+  "layout": {
+    "mediaMode": "image"
+  },
+  "text": [
+    {
+      "default": "Az idei karácsonyod inkább pörgős, társasági üzemmódba kapcsol. Jól érzed magad, ha történik valami: találkozók, közös programok, spontán ötletek. Az ad energiát, ha az ünnep nem statikus, hanem élő, mozgó és tele van kisebb-nagyobb élményekkel."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "text": "{fragment:OVR_EXPL_Q3_1}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "text": "{fragment:OVR_EXPL_Q3_2}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "text": "{fragment:OVR_EXPL_Q3_3}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "text": "{fragment:OVR_EXPL_Q3_4}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "text": "{fragment:Q2_A}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "text": "{fragment:Q2_B}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "text": "{fragment:Q2_C}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "text": "{fragment:Q2_D}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    }
+  ],
+
+"imagePrompt": {
+  "global": "warm modern christmas interior, soft diffused lighting, natural materials, minimal festive decor, soft golden highlights, pine branches and candlelight hints, cozy winter atmosphere, shallow depth of field, premium lifestyle photography style, clean composition, no text, no logos, no branding, no people, high resolution",
+
+  "chapter": "bright festive energy, modern holiday lights with soft bokeh, dynamic warm highlights, lively ambience, subtle motion cues, vibrant yet elegant winter atmosphere",
+
+  "page": "bright lively holiday scene with warm sparkling highlights, soft bokeh and dynamic festive cues; {fragment:SCENE_CONTEXT_1} {fragment:SCENE_CONTEXT_2} {fragment:SCENE_CONTEXT_3} {fragment:SCENE_CONTEXT_4} {fragment:IDEA_STATE_1} {fragment:IDEA_STATE_2} {fragment:IDEA_STATE_3} {fragment:IDEA_STATE_4} {fragment:MICRO_DETAILS_1} {fragment:MICRO_DETAILS_2} {fragment:MICRO_DETAILS_3} {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, {page}",
+
+  "negativePrompt": "no text, no watermark, no logos, no clutter, no distorted objects, no people, no hands"
+}
+,
+
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+
+  "cta": "default"
+},
+    {
+  "id": "end_refiner",
+  "title": "The Meaningful Moments Mode",
+  "layout": {
+    "mediaMode": "image"
+  },
+  "text": [
+    {
+      "default": "Nálad az idei karácsony lényege a kapcsolódás és a tartalom: nem a mennyiség számít, hanem az, hogy legyen egy-két olyan pillanat, ami igazán megmarad. Lehet ez egy beszélgetés, egy közös vacsora vagy egy apró gesztus – a fontos, hogy őszinte legyen és helye legyen benne mindenkinek."
+    },
+    {
+      "ifUnlocked": "Q3_1",
+      "text": "{fragment:OVR_REFIN_Q3_1}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_2",
+      "text": "{fragment:OVR_REFIN_Q3_2}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_3",
+      "text": "{fragment:OVR_REFIN_Q3_3}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q3_4",
+      "text": "{fragment:OVR_REFIN_Q3_4}",
+      "mode": "override"
+    },
+    {
+      "ifUnlocked": "Q2_A",
+      "text": "{fragment:Q2_A}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_B",
+      "text": "{fragment:Q2_B}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_C",
+      "text": "{fragment:Q2_C}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    },
+    {
+      "ifUnlocked": "Q2_D",
+      "text": "{fragment:Q2_D}",
+      "mode": "append_after",
+      "separator": "\n\n"
+    }
+  ],
+
+"imagePrompt": {
+  "global": "warm modern christmas interior, soft diffused lighting, natural materials, minimal festive decor, soft golden highlights, pine branches and candlelight hints, cozy winter atmosphere, shallow depth of field, premium lifestyle photography style, clean composition, no text, no logos, no branding, no people, high resolution",
+
+  "chapter": "warm intimate christmas setting, soft golden glow, emotional cozy depth, nostalgic light accents, close and comforting winter atmosphere, gentle immersive mood",
+
+  "page": "warm intimate holiday scene with soft golden lighting and close cozy details {fragment:SCENE_CONTEXT_1} {fragment:SCENE_CONTEXT_2} {fragment:SCENE_CONTEXT_3} {fragment:SCENE_CONTEXT_4} {fragment:IDEA_STATE_1} {fragment:IDEA_STATE_2} {fragment:IDEA_STATE_3} {fragment:IDEA_STATE_4} {fragment:MICRO_DETAILS_1} {fragment:MICRO_DETAILS_2} {fragment:MICRO_DETAILS_3} {fragment:MICRO_DETAILS_4}",
+
+  "combinedPrompt": "{global}, {chapter}, {page}",
+
+  "negativePrompt": "no text, no watermark, no logos, no clutter, no distorted objects, no people, no hands"
+}
+,
+
+  "imageTiming": {
+    "generate": true,
+    "trigger": "onPageLoad",
+    "delayMs": 300
+  },
+
+  "cta": "default"
+}
+  ]
+}

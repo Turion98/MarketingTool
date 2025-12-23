@@ -1,0 +1,224 @@
+{
+  "id": "contract_christmas_candy",
+  "title": "Contract – Christmas Candy",
+  "version": 2,
+  "tokens": {
+    "--brand-accent": "#E7C46B",
+
+    "--contract-font-family": "\"Inter\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    
+    "--typography-a-weight-regular": "400",
+    "--typography-a-weight-medium": "600",
+    "--typography-a-weight-semibold": "800",
+    "--typography-b-weight-regular": "400",
+    "--typography-b-weight-medium": "500",
+
+    "--contract-typography-a-font-family": "var(--contract-font-family)",
+    "--contract-typography-a-font-size": "15px",
+    "--contract-typography-a-line-height": "1.22",
+    "--contract-typography-a-letter-spacing": "0.18px",
+    "--contract-typography-a-weight": "800",
+    "--contract-typography-a-color": "#FFF6F2",
+
+    "--contract-typography-b-font-family": "var(--contract-font-family)",
+    "--contract-typography-b-font-size": "16px",
+    "--contract-typography-b-line-height": "1.45",
+    "--contract-typography-b-letter-spacing": "0.10px",
+    "--contract-typography-b-weight": "400",
+    "--contract-typography-b-color": "#F6ECE8",
+
+    "--contract-text-font-family": "var(--contract-typography-b-font-family)",
+    "--contract-text-color": "#F6ECE8",
+
+    "--choice-text-weight": "600",
+    "--quiz-title-weight": "800",
+    "--contract-cta-overlay-title-weight": "800",
+    "--contract-header-title-weight": "800",
+
+
+"--contract-media-svg-base-1": "#B3263D",
+  "--contract-media-svg-base-2": "#7A1C2F",
+  "--contract-media-svg-base-3": "#3A0F18",
+
+  "--contract-media-svg-inner-1": "#4A1420",
+  "--contract-media-svg-inner-2": "#FFE6B3",
+  "--contract-media-svg-inner-3": "#0E6A55",
+
+  "--contract-media-svg-overlay-top": "rgba(255,230,179,0.32)",
+  "--contract-media-svg-overlay-mid": "rgba(0,0,0,0.04)",
+  "--contract-media-svg-overlay-bottom": "rgba(14,106,85,0.18)",
+
+  "--contract-media-logo-bay-fill": "rgba(255,230,179,0.55)",
+  "--contract-media-logo-bay-overlay": "rgba(255,255,255,0.14)",
+
+
+    "--mf-max-w": "920px",
+    "--mf-pad": "0px",
+
+    "--mf-opacity": "0.14",
+    "--mf-radius": "28px",
+    "--mf-border-w": "10px",
+    "--mf-border-style": "solid",
+    "--mf-border-color": "transparent",
+
+    "--mf-bg": "radial-gradient(110% 120% at 14% 10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 40%, rgba(0,0,0,0) 70%), radial-gradient(120% 140% at 88% 0%, rgba(231,196,107,0.22) 0%, rgba(231,196,107,0.06) 46%, rgba(0,0,0,0) 72%), linear-gradient(180deg, rgba(54,10,14,0.92) 0%, rgba(16,6,10,0.94) 100%)",
+    "--mf-border-gradient": "linear-gradient(180deg, rgba(231,196,107,0.90) 0%, rgba(231,196,107,0.35) 55%, rgba(255,255,255,0.12) 100%)",
+    "--mf-border-image": "none",
+
+    "--mf-shadow": "0 18px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(231,196,107,.10) inset",
+
+    "--mf-inner-gap": "10px",
+    "--mf-inner-fill": "radial-gradient(120% 110% at 50% 0%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 55%, rgba(0,0,0,0.00) 100%)",
+
+    "--mf-overlay": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 42%, rgba(0,0,0,0.00) 100%)",
+    "--mf-overlay-opacity": "1",
+    "--mf-overlay-blend": "screen",
+
+    "--mf-svg-base-1": "#6B0F1A",
+    "--mf-svg-base-2": "#3A0A14",
+    "--mf-svg-base-3": "#12060A",
+
+    "--mf-svg-inner-1": "#FFF6F2",
+    "--mf-svg-inner-2": "#E7C46B",
+    "--mf-svg-inner-3": "#49C3A3",
+
+    "--mf-svg-overlay-top": "rgba(231,196,107,0.34)",
+    "--mf-svg-overlay-mid": "rgba(255,255,255,0.08)",
+    "--mf-svg-overlay-bottom": "rgba(73,195,163,0.16)",
+
+    "--mf-svg-outer-stroke": "22",
+    "--mf-svg-inner-stroke": "14",
+    "--mf-svg-overlay-stroke": "22",
+
+    "--contract-profile-card-bg-top": "#6B0F1A",
+    "--contract-profile-card-bg-bot": "#17070C",
+    "--contract-profile-svg-bg-bottom": "rgba(231,196,107,0.18)",
+
+    "--mf-logo-box-w": "360",
+    "--mf-logo-box-h": "230",
+    "--mf-logo-margin-right": "10",
+    "--mf-logo-margin-bottom": "10",
+    "--mf-logo-panel-radius": "22",
+    "--mf-logo-panel-extra": "4",
+    "--mf-logo-panel-raise": "10",
+    "--mf-logo-pad-x": "2",
+    "--mf-logo-pad-y": "2",
+
+    "--mf-gold": "#E7C46B",
+
+    "--contract-media-border-w": "8px",
+    "--contract-media-border-style": "solid",
+    "--contract-media-border-color": "rgba(231,196,107,.44)",
+    "--contract-media-border-gradient": "linear-gradient(180deg, rgba(231,196,107,.52), rgba(231,196,107,.10))",
+    "--contract-media-border-image": "none",
+
+    "--contract-header-bg-color-top": "rgba(118,20,28,0.92)",
+    "--contract-header-bg-color-bot": "rgba(32,9,16,0.92)",
+    "--contract-header-bg-angle": "180deg",
+    "--contract-header-border-color": "rgba(231,196,107,0.40)",
+    "--contract-header-border-width": "1px",
+    "--contract-header-border-style": "solid",
+    "--contract-header-radius": "16px",
+    "--contract-header-backdrop-blur": "14px",
+    "--contract-header-shadow-rest": "0 14px 34px rgba(0,0,0,.55)",
+    "--contract-header-shadow-hover": "0 16px 42px rgba(0,0,0,.65)",
+
+    "--contract-header-logo-scale": "1.25",
+    "--contract-header-logo-max-w": "100%",
+    "--contract-header-logo-fit": "contain",
+    "--contract-header-logo-pad-inline-start": "10px",
+    "--contract-header-logo-vertical-shift": "0px",
+
+    "--contract-header-title-font-size": "21px",
+    "--contract-header-title-tracking": "0.22px",
+    "--contract-header-title-color": "#E7C46B",
+    "--contract-header-title-margin": "0 22px 0 0",
+    "--contract-header-title-shift": "-8px",
+    "--contract-header-text-color": "#FFF6F2",
+
+    "/* ===== CHOICE BOOST (hangulat emelés) ===== */": "",
+
+    "--contract-choice-bg-color-top": "rgba(255,255,255,0.14)",
+    "--contract-choice-bg-color-bot": "rgba(255,255,255,0.06)",
+    "--contract-choice-bg-angle": "180deg",
+
+    "--contract-choice-overlay-color": "rgba(231,196,107,0.28)",
+    "--contract-choice-overlay-alpha": "0.24",
+
+    "--contract-choice-backdrop-blur": "16px",
+
+    "--contract-choice-border-color": "rgba(231,196,107,0.42)",
+    "--contract-choice-border-width": "1px",
+    "--contract-choice-border-style": "solid",
+    "--contract-choice-radius": "16px",
+
+    "--contract-choice-shadow-rest": "0 14px 34px rgba(0,0,0,.52), 0 0 0 1px rgba(231,196,107,.18) inset, 0 1px 0 rgba(255,255,255,.06) inset",
+
+    "--contract-choice-font-size": "17px",
+    "--contract-choice-font-size-mobile": "15px",
+    "--contract-choice-pad-x": "16px",
+    "--contract-choice-pad-y": "15px",
+    "--contract-choice-text-color": "#FFF6F2",
+
+    "/* Hover/Active érzet – a bridge a choice hover mixhez + shadowhoz ezt használja */": "",
+
+    "--contract-interactive-hover-bg-tint": "18%",
+    "--contract-interactive-active-bg-tint": "26%",
+    "--contract-interactive-hover-shadow": "0 18px 44px rgba(0,0,0,.62), 0 0 0 1px rgba(231,196,107,.20) inset",
+    "--contract-interactive-active-shadow": "0 12px 32px rgba(0,0,0,.58), 0 0 0 1px rgba(231,196,107,.18) inset",
+
+    "/* ACTIONBAR (megtartva, csak egységesen formázva) */": "",
+
+    "--contract-actionbar-bg-color-top": "rgba(118,20,28,0.92)",
+    "--contract-actionbar-bg-color-bot": "rgba(32,9,16,0.92)",
+    "--contract-actionbar-bg-angle": "180deg",
+
+    "--contract-actionbar-overlay-color": "rgba(231,196,107,0.18)",
+    "--contract-actionbar-overlay-alpha": "0.18",
+
+    "--contract-actionbar-backdrop-blur": "14px",
+
+    "--contract-actionbar-border-color": "rgba(231,196,107,0.40)",
+    "--contract-actionbar-border-width": "1px",
+    "--contract-actionbar-border-style": "solid",
+
+    "--contract-actionbar-radius": "18px",
+
+    "--contract-actionbar-shadow-rest": "0 14px 34px rgba(0,0,0,.55)",
+
+    "--contract-actionbar-font-size": "15px",
+    "--contract-actionbar-font-size-mobile": "15px",
+    "--contract-actionbar-pad-x": "14px",
+    "--contract-actionbar-pad-y": "14px",
+
+    "--contract-actionbar-text-color": "#FFF6F2",
+
+    "--contract-cta-bg-color-top": "#49C3A3",
+    "--contract-cta-bg-color-bot": "#1EA584",
+    "--contract-cta-bg-angle": "180deg",
+    "--contract-cta-overlay-color": "rgba(255,255,255,0.16)",
+    "--contract-cta-overlay-alpha": "0.16",
+    "--contract-cta-backdrop-blur": "0px",
+    "--contract-cta-border-color": "rgba(255,255,255,.18)",
+    "--contract-cta-border-width": "1px",
+    "--contract-cta-border-style": "solid",
+    "--contract-cta-radius": "999px",
+    "--contract-cta-shadow-rest": "0 14px 32px rgba(0,0,0,.50)",
+    "--contract-cta-font-size": "16px",
+    "--contract-cta-font-size-mobile": "15px",
+    "--contract-cta-pad-x": "20px",
+    "--contract-cta-pad-y": "0px",
+    "--contract-cta-icon-size": "18px",
+    "--contract-cta-letter-spacing": "0.18px",
+    "--contract-cta-text-color": "#071410",
+
+    "--contract-bg-color": "#08060A",
+    "--contract-bg-image": "radial-gradient(140% 160% at 18% 10%, rgba(231,196,107,0.16) 0%, rgba(231,196,107,0.04) 36%, rgba(0,0,0,0) 70%), radial-gradient(140% 140% at 86% 18%, rgba(73,195,163,0.12) 0%, rgba(73,195,163,0.02) 46%, rgba(0,0,0,0) 74%), radial-gradient(160% 160% at 50% 120%, rgba(255,246,242,0.06) 0%, rgba(255,246,242,0.00) 55%), repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 10px, rgba(0,0,0,0.00) 10px, rgba(0,0,0,0.00) 22px), linear-gradient(180deg, #6B0F1A 0%, #14070C 55%, #07050A 100%)",
+    "--contract-bg-position": "center center",
+    "--contract-bg-size": "cover",
+    "--contract-bg-repeat": "no-repeat",
+    "--contract-bg-overlay": "radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.00) 52%), radial-gradient(120% 120% at 12% 92%, rgba(231,196,107,0.10) 0%, rgba(231,196,107,0.00) 60%), radial-gradient(120% 120% at 90% 90%, rgba(73,195,163,0.08) 0%, rgba(73,195,163,0.00) 60%)",
+    "--contract-bg-overlay-opacity": "1",
+    "--contract-bg-blur": "0px"
+  }
+}
