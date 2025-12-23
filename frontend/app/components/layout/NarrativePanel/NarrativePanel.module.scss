@@ -125,3 +125,37 @@
     font-size: var(--np-title-size-mobile, var(--np-title-size, 22px));
   }
 }
+@media (max-width: 700px) {
+  .textClamp {
+    overflow: visible; /* 🔥 cím nőhet, nem vágjuk */
+    
+  }
+
+  .titleOverlay {
+    position: relative;
+    top: 0;
+    left: auto;
+    right: auto;
+
+    transform: none;
+    margin-bottom: var(--np-title-gap-mobile, 12px);
+    
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere; /* hosszú szavak törhetnek */
+    font-size: 1.3rem;
+  }
+
+  .textboxContainer {
+    margin-block-start: var(--np-mobile-top-gap, 16px);
+    margin-top: 0;
+    margin-bottom: 16px;
+    
+  }
+ @media (max-width: 700px) {
+  .textClamp > :not(.titleOverlay) {
+    padding-top:  24px;
+  }
+}
+
+}

@@ -5,6 +5,35 @@
     { "id": "forest_dark", "title": "Forest Dark", "preview": "/assets/skins/forest_dark.png" },
     { "id": "lux_gold", "title": "Lux Gold", "preview": "/assets/skins/lux_gold.png" },
     { "id": "aurora_pro", "title": "Aurora Pro", "preview": "/assets/skins/aurora_pro.png" },
-    { "id": "brand_chameleon", "title": "Brand Chameleon", "preview": "/assets/skins/brand_chameleon.png" }
+    { "id": "brand_chameleon", "title": "Brand Chameleon", "preview": "/assets/skins/brand_chameleon.png" },
+
+    {
+      "id": "skin_care",
+      "title": "Skincare – Soft Glow",
+      "preview": "/assets/skins/contract_skincare_soft.png"
+    },
+
+    {
+      "id": "karacsony",
+      "title": "Christmas",
+      "preview": "/assets/skins/contract_christmas_softgold.png"
+    },
+    {
+      "id": "kari",
+      "title": "kari",
+      "preview": "/assets/skins/contract_christmas_softgold.png"
+    },
+
+    {
+      "id": "contract_softdrink_fresh",
+      "title": "Softdrink – Fresh Fizz",
+      "preview": "/assets/skins/contract_softdrink_fresh.png"
+    },
+
+    {
+      "id": "contract_coffee_dark_roast",
+      "title": "Coffee – Dark Roast",
+      "preview": "/assets/skins/contract_coffee_dark_roast.png"
+    }
   ]
 }

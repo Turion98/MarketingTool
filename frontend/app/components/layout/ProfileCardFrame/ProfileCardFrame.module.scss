@@ -6,8 +6,8 @@
   max-inline-size: 340px;
   margin-inline: auto;
   transform-origin: top center;
+  margin-block-end: 4%;
 }
-
 /* 🔥 Alap kártya – ZÁRT állapot */
 .cardInner {
   position: relative;
@@ -15,9 +15,18 @@
   block-size: 100%;
   padding: 14px;
 
-  background: transparent;
+  /* ✅ BASE BG is tokenes (contractból jöhet) */
+  background: linear-gradient(
+    180deg,
+    var(--pf-card-bg-top, rgba(0, 0, 0, 0.35)) 0%,
+    var(--pf-card-bg-bot, rgba(0, 0, 0, 0.65)) 100%
+  );
+
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   overflow: hidden;
+
+  /* ✅ NINCS itt pf-overlay-grad-* DEFAULT, mert ez felülírná a contract bridge-et */
+  --pf-overlay-opacity: 0;
 
   transform-origin: top center;
   transform: scaleY(0);
@@ -25,20 +34,41 @@
   transition-delay: 1s;
 }
 
+/* ✅ PROFILE CARD INNER OVERLAY (TOKEN ALAPÚ, TSX NÉLKÜL) */
+.cardInner::before {
+  content: "";
+  position: absolute;
+  inset: 10;
+  pointer-events: none;
+  z-index: 0;
+
+  /* ✅ fallback itt van, nem a .cardInner-ben */
+  background: linear-gradient(
+    180deg,
+    var(--pf-overlay-grad-top, rgba(212, 175, 55, 0.22)) 0%,
+    var(--pf-overlay-grad-bot, rgba(212, 175, 55, 0.06)) 100%
+  );
+
+  opacity: var(--pf-overlay-opacity);
+  transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 /* 🔥 KINYÍLT állapot */
 .cardInnerOpen {
   transform: scaleY(1);
+  --pf-overlay-opacity: 1;
 }
 
 /* 🔥 ZÁRT állapot */
 .cardInnerClosed {
   transform: scaleY(0);
+  --pf-overlay-opacity: 0;
 }
 
-/* Tartalom konténer – itt NINCS animáció, csak layout */
+/* Tartalom konténer – layout only */
 .content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   inline-size: 100%;
@@ -50,7 +80,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .goldOverlay {
@@ -58,6 +88,49 @@
   inset: 0;
   width: 100%;
   height: 100%;
+
+  /* SVG gold token */
+  color: var(--pf-gold, var(--mf-gold, #d4af37));
+}
+
+/* ========================= */
+/* 🔸 PROFILE CARD SVG COLOR TOKENS */
+/* ========================= */
+
+/* fills */
+.svgBase1 {
+  fill: var(--pf-svg-base-1, var(--mf-svg-base-1));
+}
+.svgBase2 {
+  fill: var(--pf-svg-base-2, var(--mf-svg-base-2));
+}
+.svgBase3 {
+  fill: var(--pf-svg-base-3, var(--mf-svg-base-3));
+}
+
+/* inner fills */
+.svgInner1 {
+  fill: var(--pf-svg-inner-1, var(--mf-svg-inner-1));
+}
+.svgInner2 {
+  fill: var(--pf-svg-inner-2, var(--mf-svg-inner-2));
+}
+.svgInner3 {
+  fill: var(--pf-svg-inner-3, var(--mf-svg-inner-3));
+}
+
+/* strokes */
+.svgOuterStroke {
+  stroke: var(--pf-svg-outer-stroke, var(--mf-svg-outer-stroke));
+  fill: none;
+}
+.svgInnerStroke {
+  stroke: var(--pf-svg-inner-stroke, var(--mf-svg-inner-stroke));
+  fill: none;
+}
+.svgOverlayStroke {
+  stroke: var(--pf-svg-overlay-stroke, var(--mf-svg-overlay-stroke));
+  fill: none;
 }
 
 /* TOP IMAGE */
@@ -78,7 +151,6 @@
   block-size: 100%;
 }
 
-/* GeneratedImage – 1:1 kitöltés */
 .imageInner :global(.generatedImage) {
   inline-size: 100%;
   block-size: 100%;
@@ -96,15 +168,14 @@
   padding-block-start: 16px;
 }
 
-/* Szöveg konténer – NEM animál, csak layout */
 .infoSlot {
   flex: 0 1 auto;
   min-width: 0;
-  max-inline-size: 260px;
+  max-inline-size: 220px;
   margin-left: 8px;
 }
 
-/* Szöveg beúszó animáció */
+/* Text animation */
 @keyframes profileTextIn {
   from {
     opacity: 0;
@@ -116,7 +187,7 @@
   }
 }
 
-/* TIPOGRÁFIA – alapból rejtve, amíg nem kap Ready classt */
+/* Typography */
 .profileName,
 .profileSubtitle,
 .profileMeta {
@@ -125,7 +196,6 @@
   transform: translateY(6px);
 }
 
-/* Név: saját font + spacing */
 .profileName {
   font-family: var(--np-title-font-family, var(--contract-text-font-family));
   font-size: 1.05rem;
@@ -136,7 +206,6 @@
   margin-block-end: 10px;
 }
 
-/* Subtitle */
 .profileSubtitle {
   font-size: 0.9rem;
   font-weight: 400;
@@ -147,7 +216,6 @@
   margin-left: 2px;
 }
 
-/* Meta */
 .profileMeta {
   font-size: 0.8rem;
   font-weight: 400;
@@ -156,22 +224,20 @@
   margin-block-start: 4px;
 }
 
-/* READY classok – ezek indítják a beúszást */
+/* READY */
 .nameReady {
   animation: profileTextIn 0.45s ease-out forwards;
 }
-
 .subtitleReady {
   animation: profileTextIn 0.45s ease-out forwards;
 }
 
-/* MOBIL SCALE */
+/* MOBILE */
 @media (max-width: 480px) {
   .profileFrame {
     transform: translateX(-12px) scale(0.9);
   }
 }
-
 @media (max-width: 360px) {
   .profileFrame {
     transform: translateX(-8px) scale(0.8);

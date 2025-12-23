@@ -17,9 +17,15 @@ type PuzzleRunesFeedback = "keep" | "reset";
 
 type PuzzleRunesProps = {
   options: string[];
-  answer: string[];
+  /** Klasszikus módhoz: helyes megoldások listája. Open módban elhagyható. */
+  answer?: string[];
   maxAttempts?: number;
-  onResult: (ok: boolean) => void;
+
+  /** Hány runát lehet / kell kiválasztani. Ha nincs, answer.length vagy fallback. */
+  maxPick?: number;
+
+  /** onResult: eredmény + ténylegesen kiválasztott opciók */
+  onResult: (ok: boolean, picked: string[]) => void;
 
   // ⬇️ kötelező az analytics miatt:
   storyId: string;
@@ -31,7 +37,7 @@ type PuzzleRunesProps = {
   className?: string;
   buttonClassName?: string;
 
-  // ⬇️ ÚJ: működési módok
+  // ⬇️ működési módok
   mode?: PuzzleRunesMode; // "ordered" | "set" (default: "ordered")
   feedback?: PuzzleRunesFeedback; // "keep" | "reset" (csak set-módban értelmezett; default: "reset")
 };
@@ -89,6 +95,7 @@ export default function PuzzleRunes({
   options,
   answer,
   maxAttempts = 3,
+  maxPick: maxPickProp,
   onResult,
   storyId,
   sessionId,
@@ -124,8 +131,17 @@ export default function PuzzleRunes({
     "idle" | "locked" | "correct" | "incorrect" | "exiting"
   >("idle");
 
-  const maxPick = answer.length;
-  const answerSet = useMemo(() => new Set(answer), [answer]);
+  const effectiveAnswer = Array.isArray(answer) ? answer : [];
+  const hasAnswer = effectiveAnswer.length > 0;
+
+  const maxPick =
+    typeof maxPickProp === "number" && maxPickProp > 0
+      ? maxPickProp
+      : hasAnswer
+      ? effectiveAnswer.length
+      : 2; // open puzzle fallback: pl. 2 választás
+
+  const answerSet = useMemo(() => new Set(effectiveAnswer), [effectiveAnswer]);
 
   const canSubmit =
     mode === "ordered"
@@ -199,23 +215,34 @@ export default function PuzzleRunes({
       const now = performance.now?.() ?? Date.now();
       const durationMs = Math.max(0, now - (t0Ref.current || now));
 
+      const pickedSnapshot = [...picked];
       let ok = false;
 
-      if (mode === "ordered") {
-        ok = picked.length === maxPick && picked.every((x, i) => x === answer[i]);
-      } else {
-        const all = [...lockedCorrect, ...picked];
-        const uniqueAll = Array.from(new Set(all));
-        const correctCount = uniqueAll.filter((x) => answerSet.has(x)).length;
-        ok = correctCount === maxPick;
+      if (hasAnswer) {
+        // Klasszikus puzzle mód: van answer
+        if (mode === "ordered") {
+          ok =
+            pickedSnapshot.length === maxPick &&
+            pickedSnapshot.every((x, i) => x === effectiveAnswer[i]);
+        } else {
+          const all = [...lockedCorrect, ...pickedSnapshot];
+          const uniqueAll = Array.from(new Set(all));
+          const correctCount = uniqueAll.filter((x) =>
+            answerSet.has(x)
+          ).length;
+          ok = correctCount === maxPick;
 
-        if (!ok) {
-          const wrong = picked.filter((x) => !answerSet.has(x));
-          if (wrong.length) {
-            setWrongFlash(new Set(wrong));
-            softResetWrongFlashSoon();
+          if (!ok) {
+            const wrong = pickedSnapshot.filter((x) => !answerSet.has(x));
+            if (wrong.length) {
+              setWrongFlash(new Set(wrong));
+              softResetWrongFlashSoon();
+            }
           }
         }
+      } else {
+        // OPEN MODE: nincs answer → minden érvényes választás "ok"
+        ok = true;
       }
 
       // 2) Jelöljük a végeredmény fázist vizuálisan
@@ -241,8 +268,10 @@ export default function PuzzleRunes({
           {
             size: options.length,
             mode,
-            pickedCount: picked.length,
+            pickedCount: pickedSnapshot.length,
             keptCorrect: lockedCorrect.size,
+            hasAnswer,
+            maxPick,
           }
         );
       } catch {}
@@ -269,7 +298,7 @@ export default function PuzzleRunes({
           }
 
           if (ok) {
-            onResult(true);
+            onResult(true, pickedSnapshot);
             return;
           }
 
@@ -280,9 +309,13 @@ export default function PuzzleRunes({
             if (mode === "set") {
               if (feedback === "keep") {
                 // (elvileg ide most nem futunk be, mert isSetKeep == false eset)
-                const newlyCorrect = picked.filter((x) => answerSet.has(x));
+                const newlyCorrect = pickedSnapshot.filter((x) =>
+                  answerSet.has(x)
+                );
                 if (newlyCorrect.length) {
-                  setLockedCorrect((prevSet) => new Set([...prevSet, ...newlyCorrect]));
+                  setLockedCorrect(
+                    (prevSet) => new Set([...prevSet, ...newlyCorrect])
+                  );
                 }
                 setPicked([]);
               } else {
@@ -295,7 +328,7 @@ export default function PuzzleRunes({
             }
 
             if (next >= maxAttempts) {
-              onResult(false);
+              onResult(false, pickedSnapshot);
             }
             return next;
           });
@@ -305,9 +338,13 @@ export default function PuzzleRunes({
             const next = prev + 1;
 
             // ami helyes volt a választásban, azt rögzítjük
-            const newlyCorrect = picked.filter((x) => answerSet.has(x));
+            const newlyCorrect = pickedSnapshot.filter((x) =>
+              answerSet.has(x)
+            );
             if (newlyCorrect.length) {
-              setLockedCorrect((prevSet) => new Set([...prevSet, ...newlyCorrect]));
+              setLockedCorrect(
+                (prevSet) => new Set([...prevSet, ...newlyCorrect])
+              );
             }
 
             // ürítjük a még nem rögzített választásokat
@@ -318,7 +355,7 @@ export default function PuzzleRunes({
 
             if (next >= maxAttempts) {
               // Ha itt fogyna ki (ritka edge), adjuk vissza a bukást.
-              onResult(false);
+              onResult(false, pickedSnapshot);
             }
             return next;
           });
@@ -331,7 +368,7 @@ export default function PuzzleRunes({
     mode,
     feedback,
     picked,
-    answer,
+    effectiveAnswer,
     answerSet,
     maxPick,
     attempts,
@@ -348,6 +385,7 @@ export default function PuzzleRunes({
     playClick,
     playSuccess,
     playError,
+    hasAnswer,
   ]);
 
   // ===== Render =====
@@ -452,20 +490,19 @@ export default function PuzzleRunes({
           Reset
         </button>
 
-       <span
-  className={styles.attempts}
-  aria-label={`Hátralévő életek: ${maxAttempts - attempts}/${maxAttempts}`}
->
-  <img
-    src="/icons/heart.png"
-    alt=""
-    aria-hidden="true"
-    width="26px"
-    className={styles.heartIcon}
-  />
-  {maxAttempts - attempts}/{maxAttempts}
-</span>
-
+        <span
+          className={styles.attempts}
+          aria-label={`Hátralévő életek: ${maxAttempts - attempts}/${maxAttempts}`}
+        >
+          <img
+            src="/icons/heart.png"
+            alt=""
+            aria-hidden="true"
+            width="26px"
+            className={styles.heartIcon}
+          />
+          {maxAttempts - attempts}/{maxAttempts}
+        </span>
       </div>
     </div>
   );

@@ -15,7 +15,11 @@ body[data-skin="legacy-default"] {
   --contract-focus-ring-outer: 0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent);
 
   --contract-interactive-hover-bg-tint: 12%;
+
+  /* ✅ FIX: eredeti typo megtartva kompatibilitás miatt + helyes változó */
   --contract-interactive-hover-shadow: 0 10px 24px rgba(0,0,0,.36);
+  --contract-interactive-hover-hover-shadow: var(--contract-interactive-hover-shadow);
+
   --contract-interactive-hover-glow: 0 0 0 2px color-mix(in oklch, var(--brand-accent, #ffc861) 10%, transparent);
   --contract-interactive-hover-scale: 1.02;
 
@@ -24,14 +28,37 @@ body[data-skin="legacy-default"] {
   --contract-interactive-active-scale: .995;
   --contract-interactive-disabled-opacity: .5;
 
+  /* ===== CANONICAL INTERACTION (Choice / Riddle / Puzzle közös forrás) ===== */
+--contract-interaction-text-color: var(--contract-choice-text-color, #fff);
+  --contract-interaction-border-color: var(--contract-choice-border-color, rgba(255,255,255,.18));
+
+--contract-interaction-shadow-rest:  var(--contract-choice-shadow-rest, 0 6px 18px rgba(0,0,0,.30));
+--contract-interaction-shadow-hover: var(--contract-interactive-hover-shadow, 0 10px 24px rgba(0,0,0,.36));
+--contract-interaction-shadow-active:var(--contract-interactive-active-shadow, 0 6px 16px rgba(0,0,0,.44));
+
+/* hover/active tint már megvan nálad, csak “közös” néven is elérhető */
+--contract-interaction-hover-tint:   var(--contract-interactive-hover-bg-tint, 12%);
+--contract-interaction-active-tint:  var(--contract-interactive-active-bg-tint, 20%);
+
+
   /* ===== TYPO VARIÁNSOK (A = chrome, B = content) ===== */
+
+
+
+  /* KÖZÖS WEIGHT SKÁLA – minden komponens erre hivatkozik */
+  --typography-a-weight-regular: 400;
+  --typography-a-weight-medium: 500;
+  --typography-a-weight-semibold: 600;
+
+  --typography-b-weight-regular: 400;
+  --typography-b-weight-medium: 500;
 
   /* A – Header / ActionBar / CTA label */
   --contract-typography-a-font-family: var(--contract-font-family);
   --contract-typography-a-font-size: 16px;
   --contract-typography-a-line-height: 1.25;
   --contract-typography-a-letter-spacing: 0.2px;
-  --contract-typography-a-weight: 600;
+  --contract-typography-a-weight: var(--typography-a-weight-medium);
   --contract-typography-a-color: #ffffff;
 
   /* B – Narrative / choice / riddle / puzzle / misc text */
@@ -39,8 +66,8 @@ body[data-skin="legacy-default"] {
   --contract-typography-b-font-size: 18px;
   --contract-typography-b-line-height: 1.4;
   --contract-typography-b-letter-spacing: 0.1px;
-  --contract-typography-b-weight: 400;
-  --contract-typography-b-color: var(--choice-text-color, var(--choice-color, #ffffff));
+  --contract-typography-b-weight: var(--typography-b-weight-regular);
+  --contract-typography-b-color: var(--contract-interaction-text-color);
 
   /* ===== ZÓNÁK ===== */
   /* HEADER */
@@ -72,7 +99,7 @@ body[data-skin="legacy-default"] {
   --contract-header-font-family: var(--contract-typography-a-font-family, var(--contract-font-family));
 
   --contract-header-title-font-size: 16px;
-  --contract-header-title-weight: 600;
+  --contract-header-title-weight: var(--typography-a-weight-medium);
   --contract-header-title-tracking: 0.2px;
   --contract-header-title-color: #ffffff;
   --contract-header-title-margin: 0 30px 0 0;
@@ -188,7 +215,7 @@ body[data-skin="legacy-default"] {
   --contract-cta-overlay-pad: clamp(14px, 2cqi, 20px);
   --contract-cta-overlay-title-color: #ffffff;
   --contract-cta-overlay-title-size: clamp(16px, 2.2cqi, 20px);
-  --contract-cta-overlay-title-weight: 600;
+  --contract-cta-overlay-title-weight: var(--typography-a-weight-medium);
   --contract-cta-overlay-title-align: center;
   --contract-cta-overlay-gap: 10px;
 
@@ -242,7 +269,7 @@ body[data-skin="legacy-default"] {
   --header-pad-v: var(--contract-header-pad-y, 8px);
   --header-title-font: var(--contract-header-font-family, var(--contract-font-family, var(--font-sans)));
   --header-title-size: var(--contract-header-title-font-size, 22px);
-  --header-title-weight: var(--contract-header-title-weight, 600);
+  --header-title-weight: var(--contract-header-title-weight, var(--typography-a-weight-medium));
   --header-title-spacing: var(--contract-header-title-tracking, .2px);
   --header-title-color: var(--contract-header-title-color, var(--skin-fg, #fff));
   --header-title-margin: var(--contract-header-title-margin, 0 30px 0 0);
@@ -258,12 +285,18 @@ body[data-skin="legacy-default"] {
   --contract-text-font-family: var(--contract-typography-b-font-family, var(--contract-font-family));
   --contract-text-font-size: 18px;
   --contract-text-line-height: 1.4;
-  --contract-text-color: var(--choice-text-color, var(--choice-color, #ffffff));
+  --contract-text-color: var(--contract-interaction-text-color);
+  --contract-text-weight: var(--contract-typography-b-weight, var(--typography-b-weight-regular));
 
   --tt-font-family: var(--contract-text-font-family, var(--tt-font-family));
   --tt-font-size: var(--contract-text-font-size, var(--tt-font-size));
   --tt-line-height: var(--contract-text-line-height, var(--tt-line-height));
   --tt-color: var(--contract-text-color, var(--tt-color));
+  --tt-font-weight: var(--contract-text-weight, var(--tt-font-weight));
+
+  /* bekötés: choice & quiz súlyok a tipó skálára */
+  --choice-text-weight: var(--typography-b-weight-regular);
+  --quiz-title-weight: var(--typography-a-weight-medium);
 
   /* ===== CHOICE legacy ===== */
   --choice-bg-top: var(--contract-choice-bg-color-top);
@@ -272,7 +305,7 @@ body[data-skin="legacy-default"] {
   --choice-border-width: var(--contract-choice-border-width);
   --choice-border-style: var(--contract-choice-border-style);
   --choice-radius: var(--contract-choice-radius);
-  --choice-shadow: var(--contract-choice-shadow-rest);
+  --choice-shadow: var(--contract-interaction-shadow-rest);
   --choice-font-family: var(--contract-choice-font-family, var(--contract-typography-b-font-family, var(--contract-font-family)));
   --choice-font: var(--contract-choice-font-size);
   --choice-font-mobile: var(--contract-choice-font-size-mobile);
@@ -302,7 +335,7 @@ body[data-skin="legacy-default"] {
   --ab-shadow: var(--contract-actionbar-shadow-rest);
   --btn-bg: var(--ab-bg-top);
   --btn-bg-hover: color-mix(in oklch, var(--contract-quiz-accent-color) var(--contract-interactive-hover-bg-tint), var(--ab-bg-top));
-  --btn-fg: var(--contract-actionbar-text-color, #fff);
+  --btn-fg: var(--contract-header-title-color, var(--skin-fg, #fff));
   --btn-border: var(--ab-border);
   --btn-transition-dur: var(--contract-transition-dur);
   --btn-transition-ease: var(--contract-transition-ease);
@@ -353,7 +386,6 @@ body[data-skin="legacy-default"] {
   --cta-ol-gap: var(--contract-cta-overlay-gap);
 
   /* ===== MEDIA FRAME (javított híd) ===== */
-  /* ezek most NEM önmagukra esnek vissza, hanem a legacy-default fix értékeire */
   --mf-max-w: var(--contract-media-max-w, 900px);
   --mf-radius: var(--contract-media-radius, 32px);
   --mf-pad: var(--contract-media-pad, 0px);
@@ -387,6 +419,9 @@ body[data-skin="legacy-default"] {
   --mf-overlay-opacity: var(--contract-media-overlay-opacity, 0.35);
   --mf-overlay-blend: var(--contract-media-overlay-blend, screen);
 
+  /* ✅ ADD: gold token (szín) */
+  --mf-gold: var(--contract-media-gold, var(--brand-accent, #d4af37));
+
   /* SVG fémkeret tokenek – konkrét fallback */
   --mf-svg-base-1: var(--contract-media-svg-base-1, #f6f3ee);
   --mf-svg-base-2: var(--contract-media-svg-base-2, #ddd2bf);
@@ -400,9 +435,15 @@ body[data-skin="legacy-default"] {
   --mf-svg-overlay-mid: var(--contract-media-svg-overlay-mid, rgba(255, 255, 255, 0.08));
   --mf-svg-overlay-bottom: var(--contract-media-svg-overlay-bottom, rgba(0, 0, 0, 0.28));
 
+  /* stroke widths */
   --mf-svg-outer-stroke: var(--contract-media-svg-outer-stroke, 26);
   --mf-svg-inner-stroke: var(--contract-media-svg-inner-stroke, 16);
   --mf-svg-overlay-stroke: var(--contract-media-svg-overlay-stroke, 26);
+
+  /* ✅ ADD: stroke COLOR tokenek (színekhez) */
+  --mf-svg-outer-stroke-color: var(--contract-media-svg-outer-stroke-color, rgba(255, 255, 255, 0.22));
+  --mf-svg-inner-stroke-color: var(--contract-media-svg-inner-stroke-color, rgba(255, 255, 255, 0.16));
+  --mf-svg-overlay-stroke-color: var(--contract-media-svg-overlay-stroke-color, rgba(0, 0, 0, 0.28));
 
   /* Logópanel */
   --mf-logo-box-w: var(--contract-media-logo-box-w, 330);
@@ -414,6 +455,63 @@ body[data-skin="legacy-default"] {
   --mf-logo-panel-raise: var(--contract-media-logo-panel-raise, 12);
   --mf-logo-pad-x: var(--contract-media-logo-pad-x, 1);
   --mf-logo-pad-y: var(--contract-media-logo-pad-y, 1);
+
+  /* ===== PROFILE CARD SVG → MEDIAFRAME SVG BRIDGE (ONLY COLORS) ===== */
+  --pf-svg-base-1: var(--mf-svg-base-1);
+  --pf-svg-base-2: var(--mf-svg-base-2);
+  --pf-svg-base-3: var(--mf-svg-base-3);
+
+  --pf-svg-inner-1: var(--mf-svg-inner-1);
+  --pf-svg-inner-2: var(--mf-svg-inner-2);
+  --pf-svg-inner-3: var(--mf-svg-inner-3);
+  /* ✅ COLOR bridge (nem a 26/16 vastagság) */
+  --pf-svg-outer-stroke: var(--mf-svg-outer-stroke-color);
+  --pf-svg-inner-stroke: var(--mf-svg-inner-stroke-color);
+  --pf-svg-overlay-stroke: var(--mf-svg-overlay-stroke-color);
+
+  --pf-gold: var(--mf-gold);
+
+  /* =========================================================================
+     PROFILE CARD BASE BG + OVERLAY (STABIL, TOKENES, BRIDGED)
+     ========================================================================= */
+
+  /* 1) Profile Card alap háttér – NEM átlátszó */
+  --pf-card-bg-top: var(--contract-profile-card-bg-top, rgba(0, 0, 0, 0.35));
+  --pf-card-bg-bot: var(--contract-profile-card-bg-bot, rgba(0, 0, 0, 0.65));
+
+  /* 2) Profile Card belső overlay – BRAND-HEZ KÖTVE */
+  /*    Skin később felülírhatja ezeket a tokeneket */
+  --contract-profile-overlay-grad-top: var(--brand-accent-overlay-top, rgba(212, 175, 55, 0.22));
+  --contract-profile-overlay-grad-bot: var(--brand-accent-overlay-bot, rgba(212, 175, 55, 0.06));
+
+  /* 3) Komponens tokenek (SCSS EZEKET HASZNÁLJA) */
+  --pf-overlay-grad-top: var(--contract-profile-overlay-grad-top);
+  --pf-overlay-grad-bot: var(--contract-profile-overlay-grad-bot);
+
+    /* ===== PROFILE CARD / MEDIA FRAME SVG BG ===== */
+  --pf-svg-bg-bottom: var(--contract-profile-svg-bg-bottom, rgba(10, 10, 10, 0.96));
+
+
+  /* =========================================================================
+     ✅ NEW: PROFILE CARD INNER OVERLAY TOKENS (BRIDGED UNDER BRAND TOKENS)
+     - NINCS TSX
+     - Skin felülírhatja később: --contract-profile-overlay-*
+     ========================================================================= */
+
+  /* Contract-szintű neveken is elérhető (ha később skinbe akarod rakni) */
+  --contract-profile-overlay-grad-top: var(--contract-profile-overlay-grad-top,
+    color-mix(in srgb, var(--brand-accent, #d4af37) 22%, transparent)
+  );
+  --contract-profile-overlay-grad-bot: var(--contract-profile-overlay-grad-bot,
+    color-mix(in srgb, var(--brand-accent, #d4af37) 6%, transparent)
+  );
+
+  /* PF komponens tokenek – ezekre hivatkozik a ProfileCardFrame.module.scss */
+  --pf-overlay-grad-top: var(--contract-profile-overlay-grad-top);
+  --pf-overlay-grad-bot: var(--contract-profile-overlay-grad-bot);
+
+  /* opacity-t továbbra is a komponens állapota állítja (Open/Closed) */
+  /* --pf-overlay-opacity itt nem kell: SCSS kezeli state alapján */
 
   /* PROGRESS */
   --ph-track: var(--contract-progress-track, var(--ph-track));
@@ -430,11 +528,73 @@ body[data-skin="legacy-default"] {
   --bg-overlay-opacity: var(--contract-bg-overlay-opacity);
   --bg-blur: var(--contract-bg-blur);
 
-  /* SZÖVEGSZÍNEK BRIDGE */
-  --choice-color: var(--contract-choice-text-color, #fff);
-  --choice-text-color: var(--contract-choice-text-color, #fff);
-  --riddle-color: var(--contract-riddle-text-color, var(--contract-choice-text-color, #fff));
-  --puzzle-btn-color: var(--contract-puzzle-text-color, var(--contract-choice-text-color, #fff));
+ /* ===== CHOICE / RIDDLE / PUZZLE – UNIFIED BRIDGE (NO BORDER-WIDTH) ===== */
+
+/* Text */
+--choice-color:      var(--contract-interaction-text-color);
+--choice-text-color: var(--contract-interaction-text-color);
+--riddle-color:      var(--contract-interaction-text-color);
+--puzzle-btn-color:  var(--contract-interaction-text-color);
+
+/* Border color (rest) */
+--choice-border:     var(--contract-interaction-border-color);
+--riddle-border:     var(--contract-interaction-border-color);
+--puzzle-btn-border: var(--contract-interaction-border-color);
+
+--riddle-shadow-rest:   var(--contract-interaction-shadow-rest);
+--riddle-shadow-hover:  var(--contract-interaction-shadow-hover);
+--riddle-shadow-active: var(--contract-interaction-shadow-active);
+
+--puzzle-btn-shadow-rest:   var(--contract-interaction-shadow-rest);
+--puzzle-btn-shadow-hover:  var(--contract-interaction-shadow-hover);
+--puzzle-btn-shadow-active: var(--contract-interaction-shadow-active);
+
+/* Ensure riddle/puzzle a choice shadow tokeneket is megkapják */
+--choice-shadow:        var(--contract-interaction-shadow-rest);
+--choice-shadow-hover:  var(--contract-interaction-shadow-hover);
+--choice-shadow-active: var(--contract-interaction-shadow-active);
+
+/* Hover/Active “tint” (Choice már ezt használja a bg-top/bot-hover/active mixhez) */
+--contract-interactive-hover-bg-tint:  var(--contract-interaction-hover-tint);
+--contract-interactive-active-bg-tint: var(--contract-interaction-active-tint);
+
+/* Border hover/active színek (ha a komponensek ezeket várják) */
+--choice-border-hover:  color-mix(in oklch, var(--contract-quiz-accent-color) 42%, var(--choice-border));
+--choice-border-active: color-mix(in oklch, var(--contract-quiz-accent-color) 56%, var(--choice-border));
+
+--riddle-border-hover:  var(--choice-border-hover);
+--riddle-border-active: var(--choice-border-active);
+
+--puzzle-btn-border-hover:  var(--choice-border-hover);
+--puzzle-btn-border-active: var(--choice-border-active);
+
+
+html[data-skin],
+body[data-skin] {
+  /* Base metal / frame */
+  --contract-media-svg-base-1: #f6f3ee;
+  --contract-media-svg-base-2: #ddd2bf;
+  --contract-media-svg-base-3: #c0ad8d;
+
+  /* Inner accent */
+  --contract-media-svg-inner-1: #f2efe9;
+  --contract-media-svg-inner-2: #8ea98e;
+  --contract-media-svg-inner-3: #d9cba9;
+
+  /* Light / gloss overlay */
+  --contract-media-svg-overlay-top: rgba(255,255,255,0);
+  --contract-media-svg-overlay-mid: rgba(255,255,255,0.22);
+  --contract-media-svg-overlay-bottom: rgba(255,255,255,0);
+
+  /* ✅ NEW: LOGO BAY (panel a logó mögött) – default: ugyanaz a “metal” érzés */
+  --contract-media-logo-bay-fill: url(#platinumBase);
+  --contract-media-logo-bay-overlay: url(#metalOverlay);
+
+  /* ✅ OPTIONAL bridge: ha valahol még mf-* néven akarod állítani */
+  --mf-logo-bay-fill: var(--contract-media-logo-bay-fill);
+  --mf-logo-bay-overlay: var(--contract-media-logo-bay-overlay);
+}
+
 }
 
 /* gradientes header csak ha tudja */

@@ -17,7 +17,7 @@
     "--mf-max-w": "900px",
     "--mf-pad": "0px",
 
-    "--mf-opacity": "1",
+    "--mf-opacity": "0.1",
     "--mf-radius": "32px",
     "--mf-border-w": "12px",
     "--mf-border-style": "solid",

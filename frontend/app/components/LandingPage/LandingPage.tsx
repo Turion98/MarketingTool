@@ -8,6 +8,8 @@ import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 import { layers } from "../LayersConfig";
 import styles from "./LandingPage.module.scss";
 import UploadStoryPanel from "../UploadStoryPanel";
+import { clearSkinCache } from "../../lib/utils/skinCacheDebug";
+
 
 const LandingPage: React.FC = () => {
   const {
@@ -292,9 +294,31 @@ const LandingPage: React.FC = () => {
           {loading ? "Indítás..." : "Enter the Tower"}
         </button>
 
+        <button
+          className={styles.presentButton}
+          onClick={() => router.push("/present")}
+        >
+          Questell prezentáció
+        </button>
+
+
         <button className={styles.testButton} onClick={handleTestMode}>
           Teszt mód (API nélkül)
         </button>
+
+{process.env.NODE_ENV !== "production" && (
+  <button
+    className={styles.testerButton}
+    onClick={() => {
+      const n = clearSkinCache();
+      alert(`Skin cache törölve (${n} kulcs). Frissítek...`);
+      location.reload();
+    }}
+    title="mt:v1:skin:* + skinByCampaignId törlése"
+  >
+    DEV: Clear skin cache
+  </button>
+)}
 
         <button
           className={styles.adventuresButton}

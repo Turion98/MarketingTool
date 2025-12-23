@@ -168,7 +168,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
     inner3: getCssVar("--mf-svg-inner-3", "#d9cba9"),
 
     overlayTop: getCssVar("--mf-svg-overlay-top", "rgba(255,255,255,0.0)"),
-    overlayMid: getCssVar("--mf-svg-overlay-mid", "rgba(255,255,255,0.22)"),
+    overlayMid: getCssVar("--mf-svg-overlay-mid", "rgba(255,255,255,0.12)"),
     overlayBottom: getCssVar("--mf-svg-overlay-bottom", "rgba(255,255,255,0.0)"),
   };
 
@@ -206,7 +206,10 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
               >
                 <stop offset="0%" stopColor={svgColors.base1} />
                 <stop offset="45%" stopColor={svgColors.base2} />
-                <stop offset="100%" stopColor="rgba(10,10,10,0.96)" />
+                <stop
+  offset="100%"
+  stopColor="var(--pf-svg-bg-bottom, rgba(10, 10, 10, 0.96))"
+/>
               </linearGradient>
               <linearGradient
                 id="pc_base"
@@ -216,9 +219,10 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
                 y2={VIEWBOX_H}
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor={svgColors.base1} />
-                <stop offset="45%" stopColor={svgColors.base2} />
-                <stop offset="100%" stopColor={svgColors.base3} />
+                <stop offset="0%"   stopColor="var(--pf-svg-base-1, var(--mf-svg-base-1, #f6f3ee))" />
+<stop offset="45%"  stopColor="var(--pf-svg-base-2, var(--mf-svg-base-2, #ddd2bf))" />
+<stop offset="100%" stopColor="var(--pf-svg-base-3, var(--mf-svg-base-3, #c0ad8d))" />
+
               </linearGradient>
               <linearGradient
                 id="pc_inner"
@@ -228,9 +232,10 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
                 y2="0"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor={svgColors.inner1} />
-                <stop offset="50%" stopColor={svgColors.inner2} />
-                <stop offset="100%" stopColor={svgColors.inner3} />
+                <stop offset="0%"   stopColor="var(--pf-svg-inner-1, var(--mf-svg-inner-1, #f2efe9))" />
+<stop offset="50%"  stopColor="var(--pf-svg-inner-2, var(--mf-svg-inner-2, #8ea98e))" />
+<stop offset="100%" stopColor="var(--pf-svg-inner-3, var(--mf-svg-inner-3, #d9cba9))" />
+
               </linearGradient>
               <linearGradient
                 id="pc_overlay"
@@ -240,9 +245,10 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
                 y2={VIEWBOX_H}
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor={svgColors.overlayTop} />
-                <stop offset="35%" stopColor={svgColors.overlayMid} />
-                <stop offset="100%" stopColor={svgColors.overlayBottom} />
+                <stop offset="0%"   stopColor="var(--pf-svg-overlay-top, var(--mf-svg-overlay-top, rgba(255,255,255,0)))" />
+<stop offset="35%"  stopColor="var(--pf-svg-overlay-mid, var(--mf-svg-overlay-mid, rgba(255,255,255,0.22)))" />
+<stop offset="100%" stopColor="var(--pf-svg-overlay-bottom, var(--mf-svg-overlay-bottom, rgba(255,255,255,0)))" />
+
               </linearGradient>
 
               <clipPath id="pc_logoClip">
@@ -272,7 +278,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
               stroke="url(#pc_inner)"
               strokeWidth={INNER_STROKE}
               strokeLinejoin="round"
-              opacity={0.97}
+              opacity={0.67}
             />
             <path
               d={framePath}
@@ -280,7 +286,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
               stroke="url(#pc_overlay)"
               strokeWidth={OVERLAY_STROKE}
               strokeLinejoin="round"
-              opacity={0.6}
+              opacity={0.7}
             />
 
             <path
@@ -294,7 +300,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
               fill="none"
               stroke="url(#pc_inner)"
               strokeWidth={INNER_STROKE}
-              opacity={0.97}
+              opacity={0.67}
             />
             <path
               d={bottomExtraPath}

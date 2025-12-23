@@ -346,6 +346,31 @@
 }
 
 
+.presentButton {
+  position: absolute;
+  top: 62%; /* kicsit az uploadButton (72%) fölé húzva */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.6rem 1.6rem;
+  font-size: 1.1rem;
+  font-family: var(--font-cormorant), serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 184, 91, 0.65);
+  background: rgba(31, 58, 62, 0.5);
+  color: #f2b85b;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(242, 184, 91, 0.4);
+    transform: translateX(-50%) scale(1.03);
+  }
+}
+
 
 .adventuresButton {
   margin-top: 12px;
@@ -376,6 +401,24 @@
   position: absolute;
   top: 88%;
   left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-family: var(--font-cormorant), serif; /* ÚJ */
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: background 0.2s ease-in-out;
+
+  &:hover:enabled {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+.testerButton {
+  position: absolute;
+  top: 88%;
+  left: 20%;
   transform: translateX(-50%);
   padding: 0.5rem 1.5rem;
   font-size: 1rem;

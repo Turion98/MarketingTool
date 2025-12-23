@@ -29,21 +29,24 @@ type MediaFrameProps = {
 const VIEWBOX_W = 1600;
 const VIEWBOX_H = 900;
 
+/**
+ * ✅ Csak számokhoz használjuk (stroke vastagság, méretek).
+ * Fontos: body-ról is olvasunk, mert a skin tokenek gyakran ott vannak.
+ */
 function readCssNumber(varName: string, fallback: number): number {
   if (typeof window === "undefined") return fallback;
-  const cs = getComputedStyle(document.documentElement);
-  const raw = cs.getPropertyValue(varName).trim();
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  const raw =
+    getComputedStyle(root).getPropertyValue(varName).trim() ||
+    getComputedStyle(body).getPropertyValue(varName).trim();
+
   if (!raw) return fallback;
+
   const num = parseFloat(raw);
   return Number.isFinite(num) ? num : fallback;
-}
-
-function getCssVar(name: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  return value || fallback;
 }
 
 const MediaFrame: React.FC<MediaFrameProps> = ({
@@ -55,7 +58,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   logoSrc = "assets/my_logo.png",
   pageId,
   pageIsFadingOut = false,
-  openDelayMs = 3900, // 🔹 alap késleltetés oldalváltáskor
+  openDelayMs = 3900,
   suppressFirstAutoOpen = false,
 }) => {
   const { registerRewardFrame } = useGameState();
@@ -63,10 +66,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   // SVG stroke-ok (skin felülírhatja)
   const OUTER_STROKE = readCssNumber("--mf-svg-outer-stroke", 26);
   const INNER_STROKE = readCssNumber("--mf-svg-inner-stroke", 16);
-  const OVERLAY_STROKE = readCssNumber(
-    "--mf-svg-overlay-stroke",
-    OUTER_STROKE
-  );
+  const OVERLAY_STROKE = readCssNumber("--mf-svg-overlay-stroke", OUTER_STROKE);
 
   const BASE_INSET = Math.ceil(OUTER_STROKE / 2) + 2;
 
@@ -100,10 +100,10 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   const openTimerRef = React.useRef<number | null>(null);
 
   // 🔸 crossfade: aktuális és előző gyerek
-  const [currentChild, setCurrentChild] =
-    React.useState<React.ReactNode | null>(children ?? null);
-  const [prevChild, setPrevChild] =
-    React.useState<React.ReactNode | null>(null);
+  const [currentChild, setCurrentChild] = React.useState<React.ReactNode | null>(
+    children ?? null
+  );
+  const [prevChild, setPrevChild] = React.useState<React.ReactNode | null>(null);
   const crossfadeTimerRef = React.useRef<number | null>(null);
   const [isCrossfading, setIsCrossfading] = React.useState(false);
 
@@ -112,26 +112,23 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   const imageWrapRef = React.useRef<HTMLDivElement | null>(null);
 
   // 🔸 közös nyitó-függvény, hogy mindenhol ugyanúgy állítsuk a state-et
-  const scheduleOpen = React.useCallback(
-    (delayMs: number) => {
-      if (typeof window === "undefined") {
-        setFrameOpen(true);
-        setHasEverOpened(true);
-        return;
-      }
+  const scheduleOpen = React.useCallback((delayMs: number) => {
+    if (typeof window === "undefined") {
+      setFrameOpen(true);
+      setHasEverOpened(true);
+      return;
+    }
 
-      if (openTimerRef.current !== null) {
-        window.clearTimeout(openTimerRef.current);
-      }
+    if (openTimerRef.current !== null) {
+      window.clearTimeout(openTimerRef.current);
+    }
 
-      openTimerRef.current = window.setTimeout(() => {
-        setFrameOpen(true);
-        setHasEverOpened(true);
-        openTimerRef.current = null;
-      }, delayMs);
-    },
-    []
-  );
+    openTimerRef.current = window.setTimeout(() => {
+      setFrameOpen(true);
+      setHasEverOpened(true);
+      openTimerRef.current = null;
+    }, delayMs);
+  }, []);
 
   // cleanup: komponens unmountkor töröljük a timereket
   React.useEffect(() => {
@@ -155,16 +152,12 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
     lastPageIdRef.current = pageId;
 
-    // először mindig csukjuk be
     setFrameOpen(false);
 
-    // 🔹 ha ez az első oldal és kérted, hogy NE nyíljon ki automatikusan,
-    // akkor itt megállunk. Majd a children-váltás nyitja ki.
     if (suppressFirstAutoOpen && isFirstPage) {
       return;
     }
 
-    // normál viselkedés: nyíljon ki késleltetéssel
     scheduleOpen(openDelayMs);
   }, [pageId, openDelayMs, suppressFirstAutoOpen, scheduleOpen]);
 
@@ -179,19 +172,16 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     }
   }, [pageIsFadingOut]);
 
-  // 🔹 Első oldal speciális: ha eddig nem nyitottunk ki, de végre jött media-gyerek,
-  // akkor a normál openDelayMs késleltetéssel nyissuk ki.
+  // 🔹 Első oldal speciális: ha eddig nem nyitottunk ki, de végre jött media-gyerek
   React.useEffect(() => {
     if (!suppressFirstAutoOpen) return;
     if (hasEverOpened) return;
     if (!children) return;
 
-    // csak egyszer fog lefutni: amikor először lesz valódi children
     scheduleOpen(openDelayMs);
   }, [children, suppressFirstAutoOpen, hasEverOpened, openDelayMs, scheduleOpen]);
 
-  // 🔹 EXTRA BIZTOSÍTÉK: ha van pageId + vizuális tartalom, de valamiért
-  // nem futott le a fenti logika, legalább egyszer nyissuk ki a keretet.
+  // 🔹 EXTRA BIZTOSÍTÉK: ha van pageId + vizuális tartalom, de valamiért nem nyitottunk
   React.useEffect(() => {
     if (!pageId) return;
     if (hasEverOpened) return;
@@ -210,15 +200,13 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     scheduleOpen,
   ]);
 
-  // 🔸 crossfade logika: ha a children változik (uj media), fade-old
+  // 🔸 crossfade logika
   React.useEffect(() => {
-    // első render: csak állítsuk be
     if (currentChild === null && children) {
       setCurrentChild(children);
       return;
     }
 
-    // ha ténylegesen új tartalom jött
     if (children && children !== currentChild) {
       setPrevChild(currentChild);
       setCurrentChild(children);
@@ -233,7 +221,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
           setPrevChild(null);
           setIsCrossfading(false);
           crossfadeTimerRef.current = null;
-        }, 500); // kb. megegyezik a CSS 0.45s-el
+        }, 500);
       } else {
         setPrevChild(null);
         setIsCrossfading(false);
@@ -310,29 +298,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     ["--mf-aspect-ratio" as any]: contentAspect ?? 16 / 9,
   };
 
-  const svgColors = React.useMemo(
-    () => ({
-      base1: getCssVar("--mf-svg-base-1", "#f6f3ee"),
-      base2: getCssVar("--mf-svg-base-2", "#ddd2bf"),
-      base3: getCssVar("--mf-svg-base-3", "#c0ad8d"),
-
-      inner1: getCssVar("--mf-svg-inner-1", "#f2efe9"),
-      inner2: getCssVar("--mf-svg-inner-2", "#8ea98e"),
-      inner3: getCssVar("--mf-svg-inner-3", "#d9cba9"),
-
-      overlayTop: getCssVar("--mf-svg-overlay-top", "rgba(255,255,255,0.0)"),
-      overlayMid: getCssVar("--mf-svg-overlay-mid", "rgba(255,255,255,0.22)"),
-      overlayBottom: getCssVar(
-        "--mf-svg-overlay-bottom",
-        "rgba(255,255,255,0.0)"
-      ),
-    }),
-    []
-  );
-
   // 🔹 Fallback: ha nincs pageId logika, de már van tartalom / keret, nyissuk ki egyszer
   React.useEffect(() => {
-    if (pageId) return; // ha van pageId, marad a normál logika
+    if (pageId) return;
     if (frameOpen) return;
     if (!(currentChild || prevChild || showGoldFrame)) return;
 
@@ -340,17 +308,8 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     setHasEverOpened(true);
   }, [pageId, frameOpen, currentChild, prevChild, showGoldFrame]);
 
-  // ✅ akkor is rajzoljunk keretet, ha épp nyílik (frameOpen) vagy csak az arany keret látszik,
-  // hogy az első animáció se legyen üres
-  const shouldRender = Boolean(
-    currentChild ||
-      prevChild ||
-      showGoldFrame ||
-      frameOpen
-  );
-  if (!shouldRender) {
-    return null;
-  }
+  const shouldRender = Boolean(currentChild || prevChild || showGoldFrame || frameOpen);
+  if (!shouldRender) return null;
 
   return (
     <div
@@ -364,10 +323,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
         {/* BITMAP CROSSFADE RÉTEGEK */}
         <div ref={imageWrapRef} className={s.imageLayerWrap}>
           {prevChild && (
-            <div
-              className={`${s.imageLayer} ${s.imageLayerHidden}`}
-              aria-hidden="true"
-            >
+            <div className={`${s.imageLayer} ${s.imageLayerHidden}`} aria-hidden="true">
               {prevChild}
             </div>
           )}
@@ -375,9 +331,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
           {currentChild && (
             <div
               className={`${s.imageLayer} ${
-                isCrossfading || !prevChild
-                  ? s.imageLayerVisible
-                  : s.imageLayerHidden
+                isCrossfading || !prevChild ? s.imageLayerVisible : s.imageLayerHidden
               }`}
             >
               {currentChild}
@@ -385,136 +339,167 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
           )}
         </div>
 
-        {/* Dekor keret + logo-bay */}
-        {showGoldFrame && (
-          <div className={s.decorLayer}>
-            <svg
-              className={s.goldOverlay}
-              viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient
-                  id="platinumBase"
-                  x1="0"
-                  y1="0"
-                  x2={VIEWBOX_W}
-                  y2={VIEWBOX_H}
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop offset="0%" stopColor={svgColors.base1} />
-                  <stop offset="45%" stopColor={svgColors.base2} />
-                  <stop offset="100%" stopColor={svgColors.base3} />
-                </linearGradient>
+    {/* Dekor keret + logo-bay */}
+{showGoldFrame && (
+  <div className={s.decorLayer}>
+    <svg
+      className={s.goldOverlay}
+      viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          id="frameBase"
+          x1="0"
+          y1="0"
+          x2={VIEWBOX_W}
+          y2={VIEWBOX_H}
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%"   stopColor="var(--contract-media-svg-base-1, #6E0F1F)" />
+          <stop offset="55%"  stopColor="var(--contract-media-svg-base-2, #3A0A14)" />
+          <stop offset="100%" stopColor="var(--contract-media-svg-base-3, #12060A)" />
+        </linearGradient>
 
-                <linearGradient
-                  id="platinumGreen"
-                  x1="0"
-                  y1="0"
-                  x2={VIEWBOX_W}
-                  y2="0"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop offset="0%" stopColor={svgColors.inner1} />
-                  <stop offset="50%" stopColor={svgColors.inner2} />
-                  <stop offset="100%" stopColor={svgColors.inner3} />
-                </linearGradient>
+        <linearGradient
+          id="frameAccent"
+          x1={VIEWBOX_W}
+          y1={VIEWBOX_H}
+          x2={VIEWBOX_W * 0.24}
+          y2="0"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%"   stopColor="var(--contract-media-svg-inner-2, #FFD66B)" />
+          <stop offset="45%"  stopColor="var(--contract-media-svg-inner-3, #145C4A)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </linearGradient>
 
-                <linearGradient
-                  id="metalOverlay"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2={VIEWBOX_H}
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop offset="0%" stopColor={svgColors.overlayTop} />
-                  <stop offset="35%" stopColor={svgColors.overlayMid} />
-                  <stop offset="100%" stopColor={svgColors.overlayBottom} />
-                </linearGradient>
+        <linearGradient
+          id="logoBayFill"
+          x1={slotX + LOGO_BOX_W*0.4}
+          y1={slotY + LOGO_BOX_H*0.7}
+          x2={slotX }
+          y2={slotY}
+          gradientUnits="userSpaceOnUse"
+        >
 
-                <filter
-                  id="innerShadow"
-                  x="-20%"
-                  y="-20%"
-                  width="140%"
-                  height="140%"
-                >
-                  <feFlood floodColor="rgba(0,0,0,0.45)" />
-                  <feComposite
-                    operator="out"
-                    in2="SourceGraphic"
-                    in="SourceGraphic"
-                  />
-                  <feGaussianBlur stdDeviation="5" />
-                  <feOffset dx="0" dy="0" />
-                  <feComposite operator="atop" in2="SourceGraphic" />
-                </filter>
+          <stop offset="0%"   stopColor="var(--contract-media-svg-inner-3, #EFCB6A)" />
+          <stop offset="95%"  stopColor="var(--contract-media-svg-base-1, #145C4A)" />
+          <stop offset="100%" stopColor="var(--contract-media-svg-base-1, #2A0A12)" />
+        </linearGradient>
 
-                <clipPath id="logoClip">
-                  <rect
-                    x={slotX}
-                    y={slotY}
-                    width={LOGO_BOX_W}
-                    height={LOGO_BOX_H}
-                  />
-                </clipPath>
-              </defs>
 
-              <path d={logoFillPath} fill="url(#platinumBase)" />
-              <path d={logoFillPath} fill="url(#metalOverlay)" opacity={0.6} />
+        <linearGradient
+  id="logoBayHighlight"
+  x1={slotX + LOGO_BOX_W}
+  y1={slotY + LOGO_BOX_H}
+  x2={slotX + LOGO_BOX_W * 0.5}
+  y2={slotY + LOGO_BOX_H * 0.5}
+  gradientUnits="userSpaceOnUse"
+>
+  <stop offset="0%"   stopColor="var(--contract-media-logo-bay-overlay)" />
+  <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+</linearGradient>
 
-              <g filter="url(#innerShadow)">
-                <path
-                  d={path}
-                  fill="none"
-                  stroke="url(#platinumBase)"
-                  strokeWidth={OUTER_STROKE}
-                  strokeLinejoin="round"
-                  shapeRendering="geometricPrecision"
-                />
-              </g>
 
-              <path
-                d={path}
-                fill="none"
-                stroke="url(#platinumGreen)"
-                strokeWidth={INNER_STROKE}
-                strokeLinejoin="round"
-                opacity={0.97}
-              />
+        <linearGradient
+          id="frameOverlay"
+          x1="0"
+          y1="0"
+          x2={VIEWBOX_W}
+          y2={VIEWBOX_H}
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0%"   stopColor="var(--contract-media-svg-overlay-top, rgba(255,214,107,0.12))" />
+          <stop offset="50%"  stopColor="var(--contract-media-svg-overlay-mid, rgba(0,0,0,0.10))" />
+          <stop offset="100%" stopColor="var(--contract-media-svg-overlay-bottom, rgba(31,174,138,0.12))" />
+        </linearGradient>
 
-              <path
-                d={path}
-                fill="none"
-                stroke="url(#metalOverlay)"
-                strokeWidth={OVERLAY_STROKE}
-                strokeLinejoin="round"
-                opacity={0.6}
-              />
+        <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feFlood floodColor="var(--contract-media-shadow-color, rgba(0,0,0,0.35))" />
+          <feComposite operator="out" in2="SourceGraphic" in="SourceGraphic" />
+          <feGaussianBlur stdDeviation="var(--contract-media-shadow-blur, 4)" />
+          <feOffset dx="0" dy="0" />
+          <feComposite operator="atop" in2="SourceGraphic" />
+        </filter>
 
-              <g clipPath="url(#logoClip)">
-                <image
-                  href={logoSrc}
-                  x={slotX + LOGO_PAD_X}
-                  y={slotY + LOGO_PAD_Y}
-                  width={LOGO_BOX_W - LOGO_PAD_X * 2}
-                  height={LOGO_BOX_H - LOGO_PAD_Y * 2}
-                  preserveAspectRatio="xMidYMid meet"
-                />
-              </g>
-            </svg>
-          </div>
-        )}
+        <clipPath id="logoClip">
+          <rect x={slotX} y={slotY} width={LOGO_BOX_W} height={LOGO_BOX_H} />
+        </clipPath>
+      </defs>
+
+      <path d={logoFillPath} fill="var(--contract-media-logo-bay-fill)" opacity={0.96} />
+      <path d={logoFillPath} fill="url(#frameOverlay)" opacity={0.22} />
+      <linearGradient
+  id="logoBayHighlight"
+  x1={slotX + LOGO_BOX_W * 0.15}
+  y1={slotY + LOGO_BOX_H * 0.85}
+  x2={slotX + LOGO_BOX_W * 0.85}
+  y2={slotY + LOGO_BOX_H * 0.15}
+  gradientUnits="userSpaceOnUse"
+>
+  {/* szélek: 0 */}
+  <stop offset="0%"   stopColor="rgba(255,255,255,0)" />
+
+  {/* közép-sáv: fel → le (keskeny csík) */}
+  <stop offset="44%"  stopColor="var(--contract-media-logo-bay-overlay)" />
+  <stop offset="50%"  stopColor="var(--contract-media-logo-bay-overlay)" />
+  <stop offset="56%"  stopColor="rgba(255,255,255,0)" />
+
+  {/* szélek: 0 */}
+  <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+</linearGradient>
+
+
+      <g filter="url(#innerShadow)">
+        <path
+          d={path}
+          fill="none"
+          stroke="url(#frameBase)"
+          strokeWidth={OUTER_STROKE}
+          strokeLinejoin="round"
+          shapeRendering="geometricPrecision"
+        />
+      </g>
+
+      <path
+        d={path}
+        fill="none"
+        stroke="url(#frameAccent)"
+        strokeWidth={INNER_STROKE}
+        strokeLinejoin="round"
+        opacity={0.72}
+      />
+
+      <path
+        d={path}
+        fill="none"
+        stroke="url(#frameOverlay)"
+        strokeWidth={OVERLAY_STROKE}
+        strokeLinejoin="round"
+        opacity={0.32}
+      />
+
+      <g clipPath="url(#logoClip)">
+        <image
+          href={logoSrc}
+          x={slotX + LOGO_PAD_X}
+          y={slotY + LOGO_PAD_Y}
+          width={LOGO_BOX_W - LOGO_PAD_X * 2}
+          height={LOGO_BOX_H - LOGO_PAD_Y * 2}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      </g>
+    </svg>
+  </div>
+)}
+
       </div>
     </div>
   );
 };
 
-function areEqualMediaFrameProps(
-  prev: MediaFrameProps,
-  next: MediaFrameProps
-) {
+function areEqualMediaFrameProps(prev: MediaFrameProps, next: MediaFrameProps) {
   return (
     prev.pageId === next.pageId &&
     prev.mode === next.mode &&
@@ -524,10 +509,9 @@ function areEqualMediaFrameProps(
     prev.logoSrc === next.logoSrc &&
     prev.openDelayMs === next.openDelayMs &&
     prev.suppressFirstAutoOpen === next.suppressFirstAutoOpen &&
-    prev.children === next.children &&  // ⬅️ fontos: referencián hasonlítjuk
-    prev.style === next.style            // ⬅️ csak ha ugyanaz az objektum
+    prev.children === next.children &&
+    prev.style === next.style
   );
 }
 
 export default React.memo(MediaFrame, areEqualMediaFrameProps);
-

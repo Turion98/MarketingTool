@@ -360,11 +360,26 @@ type PuzzleRunesPage = {
   kind: "runes";
   prompt?: string;
   options: string[];
-  answer: string[];
+
+  /** Klasszikus módhoz: helyes megoldáslista. Open módban elhagyható. */
+  answer?: string[];
+
   maxAttempts?: number;
-  onSuccess: { goto: string; setFlags?: string[] | Record<string, boolean> };
-  onFail: { goto: string; setFlags?: string[] | Record<string, boolean> };
+
+  /** Open módhoz: hány runát választhat a user (pl. 2) */
+  maxPick?: number;
+
+  /** Open módhoz: flag prefix, pl. "L2_opt_" → L2_opt_1, L2_opt_2, ... */
+  optionFlagsBase?: string;
+
+  /** PuzzleRunes működési módjai – ha nincs, a komponens defaultot használ */
+  mode?: "ordered" | "set";
+  feedback?: "keep" | "reset";
+
+  onSuccess?: { goto: string; setFlags?: string[] | Record<string, boolean> };
+  onFail?: { goto: string; setFlags?: string[] | Record<string, boolean> };
 };
+
 
 const isRiddle = (p: any): p is PuzzleRiddle =>
   p?.type === "puzzle" && p?.kind === "riddle";
@@ -664,6 +679,55 @@ const skin = useMemo(() => {
     [unlockedFragments, flags]
   );
 
+  // 🔹 LOGIC típusú oldalak automatikus futtatása (L3_route_switch, Route_E_result_logic, stb.)
+  useEffect(() => {
+    if (!pageData || pageData.type !== "logic") return;
+
+    const rules = Array.isArray(pageData.logic) ? pageData.logic : [];
+    if (!rules.length) return;
+
+    const chosen = (() => {
+      for (const rule of rules) {
+        const conds = Array.isArray(rule?.if) ? rule.if : null;
+        if (!conds || !rule?.goto) continue;
+
+        const ok = conds.every((raw: string) => {
+          const t = String(raw || "").trim();
+          if (!t) return false;
+
+          // frag:ID → fragment ID
+          if (t.startsWith("frag:")) {
+            const id = t.slice(5);
+            return unlockedPlus.has(id);
+          }
+
+          // flag:ID → flag ID
+          if (t.startsWith("flag:")) {
+            const id = t.slice(5);
+            return unlockedPlus.has(id);
+          }
+
+          // plain ID: lehet flag vagy fragment is – elég, ha bármelyikben benne van
+          return unlockedPlus.has(t);
+        });
+
+        if (ok) {
+          return String(rule.goto);
+        }
+      }
+
+      // default ág (pl. { "default": "Route_E_intro" })
+      const fallback = rules.find((r: any) => typeof r?.default === "string");
+      return fallback ? String(fallback.default) : null;
+    })();
+
+    if (chosen && chosen !== pageData.id) {
+      try {
+        localStorage.setItem("currentPageId", chosen);
+      } catch {}
+      goToNextPage(chosen);
+    }
+  }, [pageData, unlockedPlus, goToNextPage]);
 
   /** --- setup effects --- */
 
@@ -1733,6 +1797,7 @@ const dockChoicesForThisPage = useMemo(() => {
   // handle "no text => show choices immediately"
   useEffect(() => {
     if (!pageData?.id) return;
+    if (pageData.type === "logic") return;
 
     // 🔹 Puzzle oldalak (riddle + runes): ne blokkoljuk őket a prevWasChoice guarddal
     const isPuzzlePage = isRiddlePage || isRunesPage;
@@ -1761,6 +1826,7 @@ const dockChoicesForThisPage = useMemo(() => {
     }
   }, [
     pageData?.id,
+    pageData?.type, 
     blocks.length,
     hasChoices,
     registerTimeout,
@@ -3015,113 +3081,66 @@ window.setTimeout(() => {
                   })()}
 
                   {!isRiddlePage &&
-                    isRunesPage &&
-                    (() => {
-                      const p =
-                        pageData as any;
-                      return (
-                        <PuzzleRunes
-                          options={
-                            p.options
-                          }
-                          answer={
-                            p.answer
-                          }
-                          maxAttempts={
-                            p.maxAttempts ??
-                            3
-                          }
-                          mode={
-                            p.mode ??
-                            "ordered"
-                          }
-                          feedback={
-                            p.feedback ??
-                            "reset"
-                          }
-                          className={
-                            dockStyles.grid
-                          }
-                          buttonClassName={
-                            dockStyles.choice
-                          }
-                          storyId={
-                            derivedStoryId ||
-                            "default_story"
-                          }
-                          sessionId={
-                            derivedSessionId ||
-                            "sess_unknown"
-                          }
-                          pageId={
-                            pageData.id
-                          }
-                          puzzleId={
-                            p.id ??
-                            `runes-${pageData.id}`
-                          }
-                          onResult={(
-                            ok
-                          ) => {
-                            const branch = ok
-                              ? p.onSuccess
-                              : p.onFail;
-                            if (!branch)
-                              return;
+  isRunesPage &&
+  (() => {
+    const p = pageData as any as PuzzleRunesPage;
+    const answer = Array.isArray(p.answer) ? p.answer : [];
 
-                            const fl =
-                              branch.setFlags;
-                            if (
-                              Array.isArray(
-                                fl
-                              )
-                            ) {
-                              fl.forEach(
-                                (f: string) =>
-                                  setFlag(
-                                    f
-                                  )
-                              );
-                            } else if (
-                              fl &&
-                              typeof fl ===
-                                "object"
-                            ) {
-                              Object.entries(
-                                fl
-                              ).forEach(
-                                ([
-                                  k,
-                                  v,
-                                ]) =>
-                                  v &&
-                                  setFlag(
-                                    k
-                                  )
-                              );
-                            }
+    return (
+      <PuzzleRunes
+        options={p.options}
+        answer={answer}                         // opcionális, open módban üres lehet
+        maxAttempts={p.maxAttempts ?? 3}
+        maxPick={p.maxPick}                    // L2_care_puzzle: 2
+        mode={p.mode ?? "ordered"}
+        feedback={p.feedback ?? "reset"}
+        className={dockStyles.grid}
+        buttonClassName={dockStyles.choice}
+        storyId={derivedStoryId || "default_story"}
+        sessionId={derivedSessionId || "sess_unknown"}
+        pageId={pageData.id}
+        puzzleId={(p as any).id ?? `runes-${pageData.id}`}
+        onResult={(ok, pickedIds) => {
+          // 🔹 OPEN mód (nincs answer): választásokból flag-ek generálása
+          const isOpenPuzzle = !answer.length;
 
-                            const nx =
-                              branch.goto;
-                            if (
-                              nx &&
-                              nx !==
-                                pageData?.id
-                            ) {
-                              try {
-                                localStorage.setItem(
-                                  "currentPageId",
-                                  nx
-                                );
-                              } catch {}
-                              goToNextPage(
-                                nx
-                              );
-                            }
-                          }}
-                        />
-                      );
-                    })()}
+          if (
+            isOpenPuzzle &&
+            typeof p.optionFlagsBase === "string" &&
+            Array.isArray(p.options)
+          ) {
+            pickedIds.forEach((label) => {
+              const idx = p.options.indexOf(label);
+              if (idx >= 0) {
+                const flagId = `${p.optionFlagsBase}${idx + 1}`;
+                setFlag(flagId);
+              }
+            });
+          }
+
+          const branch = ok ? p.onSuccess : p.onFail;
+          if (!branch) return;
+
+          const fl = branch.setFlags;
+          if (Array.isArray(fl)) {
+            fl.forEach((f) => setFlag(f));
+          } else if (fl && typeof fl === "object") {
+            Object.entries(fl).forEach(([k, v]) => {
+              if (v) setFlag(k);
+            });
+          }
+
+          const nx = branch.goto;
+          if (nx && nx !== pageData?.id) {
+            try {
+              localStorage.setItem("currentPageId", nx);
+            } catch {}
+            goToNextPage(nx);
+          }
+        }}
+      />
+    );
+  })()}
 
                   {!isRiddlePage &&
                     !isRunesPage &&

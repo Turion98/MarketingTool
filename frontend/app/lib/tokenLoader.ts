@@ -5,6 +5,20 @@ type TokensJson = { id?: string; title?: string; tokens: Record<string, string> 
 
 const hasWindow = typeof window !== "undefined";
 
+function normalizeCssVarValue(v: unknown): string {
+  let s = String(v ?? "").trim();
+
+  // ha teljesen idézőjelezett: "'...'" vagy "\"...\""
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+
+  return s;
+}
+
 function applyTokensInline(map: Record<string, string>) {
   if (!hasWindow) return; // SSR: nincs document
   const root = document.documentElement;
