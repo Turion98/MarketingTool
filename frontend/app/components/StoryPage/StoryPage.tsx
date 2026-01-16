@@ -2338,14 +2338,14 @@ const mediaNode = useMemo(() => {
             }
           });
 
-          setShowReward(true);
+         /* setShowReward(true); */
         });
 
-        const tid = window.setTimeout(
+       /* const tid = window.setTimeout(
           () => setShowReward(false),
           2000
         );
-        registerTimeout(tid);
+        registerTimeout(tid); */
       }
 
       // flags incl rune_*
@@ -3309,7 +3309,7 @@ window.setTimeout(() => {
           )
         }
       />
-
+{/* 
       {showReward && (
         <RewardOverlay
           message="Memory unlocked!"
@@ -3317,9 +3317,10 @@ window.setTimeout(() => {
             setShowReward(
               false
             )
-          }
+          } 
         />
       )}
+        */}
 
       {showReplay &&
         selectedReplay.imageId && (

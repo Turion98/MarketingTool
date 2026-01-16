@@ -34,6 +34,12 @@
       "id": "contract_coffee_dark_roast",
       "title": "Coffee – Dark Roast",
       "preview": "/assets/skins/contract_coffee_dark_roast.png"
-    }
+    },
+    {
+  "id": "contract_creative_light_breeze",
+  "title": "Creative – Light Breeze",
+  "preview": "/assets/skins/contract_creative_light_breeze.png"
+}
+
   ]
 }
