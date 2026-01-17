@@ -1,0 +1,23 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: deploy-backend-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            ~/deploy-backend.sh
