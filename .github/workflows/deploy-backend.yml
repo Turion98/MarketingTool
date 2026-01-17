@@ -3,7 +3,9 @@ name: Deploy backend
 on:
   push:
     branches: ["main"]
-workflow_dispatch:
+  workflow_dispatch:
+
+
 concurrency:
   group: deploy-backend-main
   cancel-in-progress: true
