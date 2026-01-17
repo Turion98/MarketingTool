@@ -12,7 +12,29 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+
+      - name: 🔍 Sanity check SSH_KEY
+        shell: bash
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          set -e
+          if [ -z "$SSH_KEY" ]; then
+            echo "❌ SSH_KEY secret is EMPTY"
+            exit 1
+          fi
+
+          FIRST_LINE=$(echo "$SSH_KEY" | head -n 1)
+
+          if echo "$FIRST_LINE" | grep -q "BEGIN .*PRIVATE KEY"; then
+            echo "✅ SSH_KEY looks like a PRIVATE KEY"
+          else
+            echo "❌ SSH_KEY does NOT look like a private key"
+            echo "First line format mismatch"
+            exit 1
+          fi
+
+      - name: 🚀 Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
