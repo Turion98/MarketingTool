@@ -5,7 +5,6 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-
 concurrency:
   group: deploy-backend-main
   cancel-in-progress: true
@@ -14,27 +13,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-
-      - name: 🔍 Sanity check SSH_KEY
+      - name: 🔍 Sanity check SSH_KEY fingerprint
         shell: bash
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
           set -e
-          if [ -z "$SSH_KEY" ]; then
-            echo "❌ SSH_KEY secret is EMPTY"
-            exit 1
-          fi
+          [ -n "$SSH_KEY" ] || (echo "SSH_KEY EMPTY" && exit 1)
 
-          FIRST_LINE=$(echo "$SSH_KEY" | head -n 1)
+          echo "$SSH_KEY" > key
+          chmod 600 key
 
-          if echo "$FIRST_LINE" | grep -q "BEGIN .*PRIVATE KEY"; then
-            echo "✅ SSH_KEY looks like a PRIVATE KEY"
-          else
-            echo "❌ SSH_KEY does NOT look like a private key"
-            echo "First line format mismatch"
-            exit 1
-          fi
+          echo "FIRST_LINE=$(head -n 1 key)"
+          PUB=$(ssh-keygen -y -f key)
+          echo "PUB=$PUB"
+          echo "$PUB" | ssh-keygen -lf -
 
       - name: 🚀 Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
