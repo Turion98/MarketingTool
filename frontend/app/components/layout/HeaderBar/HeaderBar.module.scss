@@ -96,21 +96,71 @@
   image-rendering: auto;
 }
 
-/* ===== MOBIL: a cím két középső oszlopon terül szét ===== */
+
+
+/* ===== MOBIL: logo bal, cím mellette 2 sorra törik, nem lóg ki ===== */
 @media (max-width: 640px) {
+  /* marad 3 oszlop: [left/logo] [title] [right] */
   .headerBar {
-    /* 4 oszlop: [left] [title-1] [title-2] [right] */
-    grid-template-columns: auto minmax(0,1fr) minmax(0,1fr) auto;
-    margin-bottom: 0px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    margin-bottom: 0;
   }
-  .left   { grid-column: 1; }
-  .center {
-    grid-column: 2 / 4;   /* a két középső oszlopon ül */
-    justify-self: center; /* vízszintes közép a saját sávján belül */
+
+  .left  { grid-column: 1; min-width: 0; }
+  .center{
+    grid-column: 2;
+    justify-self: stretch;
+    min-width: 0;
+
+    /* ha középre szeretnéd mobilon a címet: */
     text-align: center;
+    overflow: hidden; /* kell, hogy ne lógjon ki */
   }
-  .right  { grid-column: 4; }
+  .right { grid-column: 3; min-width: 0; }
+
+  /* A title-blokkot felülírjuk mobilon (mert lentebb definiáltad a nowrap+visible-t) */
+  .center [data-header-title] {
+    margin: 0 !important;
+
+    /* ✅ itt a lényeg: törhet + max 2 sor */
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+
+    /* mobil tipó */
+    font-size: var(--header-title-size-mobile, 16px);
+    letter-spacing: var(--header-title-spacing-mobile, 0.2px);
+    line-height: 1.15;
+    max-width: 100%;
+  }
+
+  /* ha a cím NEM data-header-title, akkor is törjön */
+  .center :where(h1,h2,h3,.title,.heading) {
+    margin: 0 !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* logo kicsit kisebb mobilon (opcionális) */
+  .logoBox { --_scale: var(--logo-scale-mobile, .9); 
+  min-block-size: 75px;
 }
+  
+}
+
+
+
 
 /* ===== TITLE stílus (csak tokenekből) ===== */
 .center [data-header-title] {
@@ -165,3 +215,4 @@
     
   }
 }
+

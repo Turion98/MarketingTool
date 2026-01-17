@@ -527,12 +527,11 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 
 @app.get("/api/story")
-def get_story(src: str = Query(default="story.json")):
-    base = os.path.join("data", os.path.basename(src))
-    if not os.path.exists(base):
-        return {"error": f"Story file {src} not found"}
-    with open(base, "r", encoding="utf-8") as f:
-        return json.load(f)
+def get_story(src: str | None = Query(default=None)):
+    # Kompat: ha nincs src, menjen DEFAULT_STORY
+    story_path = _normalize_src_to_path(src)
+    return _load_story(story_path)
+
 
 # --- CORS: engedjük a WL root alatt a wildcardot is ---
 WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost").replace(".", r"\.")  # pl. "wl.yoursaas.com" -> "wl\.yoursaas\.com"

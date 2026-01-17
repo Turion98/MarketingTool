@@ -58,9 +58,8 @@ export default function UploadStoryForm() {
 
        // Opcionális: már a választáskor szerver validáció (preflight)
     try {
-      await validateStoryServer(data);
+      await validateStoryServer(f, "warnOnly")
     } catch (sv: any) {
-      const svErrs = Array.isArray(sv?.errors) ? sv.errors : (sv?.cause || []);
       setErrors((prev) => [...prev, ...(sv?.errors || []).map((x:any)=>`${x.path ? x.path+": " : ""}${x.message}`)]);
     }
 
@@ -97,7 +96,8 @@ export default function UploadStoryForm() {
       }
        // Szerver-oldali ellenőrzés (biztonsági háló)
     try {
-      await validateStoryServer(data);
+      await validateStoryServer(file, "warnOnly");
+
     } catch (sv: any) {
       const svErrors = (sv as any).errors || [];
       setErrors((prev) => [

@@ -6,6 +6,22 @@
 /* ---- Safe-area helper ---- */
 :root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
 
+
+/* ===== Scope wrapper – token öröklés a toggle-nek is ===== */
+.actionBarScope {
+  /* csak scope, ne befolyásolja a layoutot */
+  position: relative;
+
+  /* ha a toggle a btn tokenekből él, itt kapjon aliasokat */
+  --ab-toggle-bg: var(--btn-bg);
+  --ab-toggle-fg: var(--btn-fg);
+  --ab-toggle-hover-bg: var(--btn-bg-hover);
+
+  --ab-toggle-font-size: var(--contract-actionbar-font-size, var(--contract-header-title-font-size, 16px));
+  --ab-toggle-font-weight: var(--contract-header-title-weight, var(--contract-typography-a-weight, 600));
+  --ab-toggle-letter-spacing: var(--contract-header-title-tracking, var(--contract-typography-a-letter-spacing, .2px));
+}
+
 /* ===== Sidebar (jobb oldal) ===== */
 .actionBar {
   position: fixed;

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.2.0",
+  "storyId": "demo_story",
+  "locale": "en",
+  "meta": {
+    "id": "demo_story",
+    "title": "Demo Story",
+    "author": "Qzera",
+    "description": "Minimal valid JSON to test the frontend validator success path.",
+    "coverImage": "/covers/demo.png"
+  },
+  "pages": [
+    {
+      "id": "ch1_pg1",
+      "text": [
+        "You wake up among the ruins.",
+        "A distant tower hums in the fog."
+      ],
+      "choices": [
+        {
+          "label": "Look around",
+          "next": "ch1_pg2"
+        }
+      ],
+      "sfxPlaylist": [
+        {
+          "atMs": 0,
+          "src": "/audio/ambient.mp3"
+        }
+      ],
+      "imagePrompt": "foggy ruins, mysterious tower in distance, cinematic"
+    },
+    {
+      "id": "ch1_pg2",
+      "text": "You step toward the sound, feeling the ground vibrate."
+    }
+  ]
+}

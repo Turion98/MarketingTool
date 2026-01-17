@@ -141,18 +141,18 @@ export async function uploadStory(
  * Vissza: { ok: true, warnings?: [...] } – hiba esetén kivétel normált üzenettel.
  */
 export async function validateStoryServer(
-  json: unknown,
+  file: File,
   mode: ImportMode = "strict"
 ): Promise<ImportOk> {
-  const url = buildUrl("/api/stories/import", { mode });
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const url = buildUrl("/api/stories/validate", { mode });
 
   const res = await fetch(url, {
     method: "POST",
+    body: fd,
     cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(json),
   });
 
   const payload = (await parseResponse(res)) as any;
@@ -164,7 +164,6 @@ export async function validateStoryServer(
         : { detail: typeof payload === "string" ? payload : undefined };
 
     const msg = humanizeImportError(errPayload, res.status);
-
     const e = new Error(msg);
     (e as any).errors =
       (errPayload.detail &&
@@ -184,3 +183,4 @@ export async function validateStoryServer(
 
   return (payload || { ok: true }) as ImportOk;
 }
+

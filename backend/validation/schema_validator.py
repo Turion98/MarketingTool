@@ -48,10 +48,21 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[ValidationError]]:
     return len(errs) == 0, errs
 
 def version_whitelist_ok(data: Dict[str, Any]) -> Tuple[bool, str]:
-    allowed = set(filter(None, (os.getenv("ALLOWED_SCHEMA_VERSIONS","1.0.0").split(","))))
-    sv = str(data.get("schemaVersion") or "")
+    raw = os.getenv("ALLOWED_SCHEMA_VERSIONS", "1.0.0,1.2.0")
+    allowed = {v.strip() for v in (raw or "").split(",") if v.strip()}
+
+    sv = data.get("schemaVersion")
+    sv = str(sv).strip() if sv is not None else ""
+
     if not re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", sv):
         return False, f"Érvénytelen schemaVersion formátum: '{sv}'."
+
+    # ha valaki direkt üresre állítja az env-et → ne whitelisteljünk (engedjük át)
     if allowed and sv not in allowed:
-        return False, f"Nem engedélyezett schemaVersion: '{sv}'. Engedélyezett: {', '.join(sorted(allowed))}"
+        return False, (
+            f"Nem engedélyezett schemaVersion: '{sv}'. "
+            f"Engedélyezett: {', '.join(sorted(allowed))}"
+        )
+
     return True, ""
+

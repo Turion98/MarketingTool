@@ -76,6 +76,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
   return (
     <>
+    <div className={s.actionBarScope}>
       {/* mobil toggle gomb a jobb alsó sarokban */}
       <div className={s.mobileRow}>
         <button
@@ -163,7 +164,9 @@ const ActionBar: React.FC<ActionBarProps> = ({
           </div>
         )}
       </aside>
+      </div>
     </>
+    
   );
 };
 
