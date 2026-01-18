@@ -10,6 +10,8 @@ import { Cormorant_Garamond } from "next/font/google";
 import PaperEffect from "./components/filters/PaperEffect";
 import "@/styles/skins/legacy-default.css";
 import "@/styles/skins/legacy-contract-overlay.css";
+import "./global.scss";
+
 
 // ✅ Auth (biztonsági keret, későbbi Auth0/Supabase/Clerk plug-inhoz)
 import { AuthProvider } from "./lib/auth/useAuth";

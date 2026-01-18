@@ -2,6 +2,7 @@
 
 import React from "react";
 import styles from "./Canvas.module.scss";
+import "./global.scss";
 
 /**
  * Canvas: slotos + visszafelé kompatibilis (children) API.
