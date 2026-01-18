@@ -208,6 +208,6 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-body .globalstartButton:hover {
+.globalstartButton:hover {
   cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApUlEQVR4nO3VwQ3CMAxF0e8fBhoO3lWkS7RPKkZIy3hQSN7YbEAGFjXjaMFXh6L6mUnCC+ZwQFMpDYb8y9awBBuhgwBpxnQQBbO0AxomgDE4PZAD50sZMyAPfB9eNsB5Bjc5QieHZDEoHgIQAbuhkA1z/8TFIkLQRBaCPJbiVvFJ0vEOdEd5tUX08BEtl++o4mR9AJP/0pI9N0D13pyItHR9e5fO2uugmJqSx4zrAuNR2bDGvg5uAAAAAElFTkSuQmCC") 0 0, auto !important;
 }/*# sourceMappingURL=LandingPage.module.css.map */
