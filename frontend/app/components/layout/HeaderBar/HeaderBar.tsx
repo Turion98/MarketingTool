@@ -3,7 +3,7 @@ import React from "react";
 import clsx from "clsx";
 import type { HeaderBarProps } from "./types";
 import styles from "./HeaderBar.module.scss";
-import "./global.scss";
+
 
 /** Képeket vagy explicit jelölt elemeket tekintünk logónak */
 function isLogoNode(node: React.ReactNode): boolean {

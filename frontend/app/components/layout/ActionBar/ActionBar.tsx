@@ -5,7 +5,7 @@ import RestartButton from "../../RestartButton/RestartButton";
 import RestartGameButton from "../../RestartGameButton/RestartGameButton";
 import { useGameState } from "../../../lib/GameStateContext";
 import { useUiClickSound } from "../../../lib/useUiClickSound";
-import "./global.scss";
+
 
 type ActionBarProps = {
   canSkip: boolean;

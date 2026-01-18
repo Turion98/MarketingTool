@@ -1,7 +1,7 @@
 /* ====== ChoiceButtons.module.scss (unified with InteractionDock layout) ====== */
 
 /* Timing / motion tokens */
-:root {
+.choiceButtons {
   --ch-dur-in:  var(--choice-dur-in, 480ms);
   --ch-dur-exit: var(--choice-dur-exit, 220ms);
   --ch-ease-in: var(--choice-ease-in, cubic-bezier(.22,.61,.36,1));
