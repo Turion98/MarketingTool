@@ -1,4 +1,5 @@
-:root {
+html[data-skin="legacy-default"],
+body[data-skin="legacy-default"]  {
   font-family: var(--font-cormorant), serif;
   font-size: 18px;
   font-weight: bold;

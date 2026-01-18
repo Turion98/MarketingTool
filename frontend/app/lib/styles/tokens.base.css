@@ -1,5 +1,6 @@
 /* app/styles/tokens.base.css */
-:root {
+html[data-skin="legacy-default"],
+body[data-skin="legacy-default"]  {
   /* Színtér (kampányonként felülírható a skin JSON-ból) */
   --surface-0: #0d0f13;
   --surface-1: color-mix(in oklch, white 6%, var(--surface-0));

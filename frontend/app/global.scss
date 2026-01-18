@@ -6,6 +6,12 @@ html {
 }
 
 
+:root {
+  font-family: var(--font-cormorant), serif;
+  font-size: 18px;
+  font-weight: bold;
+}
+
 
 /* Alap kurzor + teljes kifeszítés + nincs külső scroll */
 html, body, #__next {
