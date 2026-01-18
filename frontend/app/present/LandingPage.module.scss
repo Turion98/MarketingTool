@@ -2,7 +2,7 @@
 /* ================================
    PresentLandingPage.module.scss
    ================================ */
-.page {
+body[data-page="present-landing"] main {
   position: relative;
   width: 100%;
   min-height: 100vh;
