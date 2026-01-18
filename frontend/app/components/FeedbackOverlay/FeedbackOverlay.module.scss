@@ -8,7 +8,7 @@ $panel: rgba(255, 255, 255, 0.04);
 $border: rgba(255, 255, 255, 0.35);
 $shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 
-:root {
+.backdrop {
   --accent: #{$accent};
   --text: #{$text};
   --muted: #{$muted};
