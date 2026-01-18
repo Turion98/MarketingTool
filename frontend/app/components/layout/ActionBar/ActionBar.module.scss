@@ -3,10 +3,6 @@
    (legacy-default skin tokenekre épít)
    =========================== */
 
-/* ---- Safe-area helper ---- */
-:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
-
-
 /* ===== Scope wrapper – token öröklés a toggle-nek is ===== */
 .actionBarScope {
   /* csak scope, ne befolyásolja a layoutot */
@@ -146,8 +142,6 @@
 .btn img, .btn svg { display: none !important; }
 .label { line-height: 1; }
 
-
-
 @keyframes reward-metallic {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -158,7 +152,7 @@
   transform-origin: center;
   border-radius: 12px;
   will-change: box-shadow;
-  overflow: hidden; 
+  overflow: hidden;
   background: linear-gradient(
     120deg,
     color-mix(in oklch, var(--brand-accent) 40%, transparent) 0%,
@@ -169,7 +163,6 @@
   animation: reward-metallic 5.8s ease-in-out infinite;
   color: var(--btn-fg);
 }
-
 
 /* ===== Mobile toggle – VIEWPORTHOZ TAPAD ===== */
 .mobileRow {
@@ -230,7 +223,6 @@
     max-height: 90vh; /* 🔹 gombok ne vágódjanak le */
     overflow-y: auto;
     overflow-x: hidden;
-    
 
     width: var(--ab-w-mobile);
     border-radius: var(--ab-radius-mobile);
@@ -244,12 +236,10 @@
 
   .open { right: 0; } /* 🔹 tapadjon a képre mobilon is */
 
-  .group {
-    gap: 6px;
-  }
+  .group { gap: 6px; }
 
   .btn {
-    height: 34px; /* 🔹 kisebb gomb */
+    height: 34px;
     font-size: 0.65rem;
   }
 }

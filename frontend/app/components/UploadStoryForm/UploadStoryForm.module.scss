@@ -1,26 +1,15 @@
-:root {
-  --usf-bg: #151515;
-  --usf-fg: #eaeaea;
-  --usf-border: #3a3a3a;
-  --usf-border-strong: #5a5a5a;
-  --usf-ok: #2ecc71;
-  --usf-err: #ff5c5c;
-}
-
 /* --- KONTAINER --- */
 .container {
   position: relative;
   isolation: isolate;
   contain: paint;
 
-  /* Középre igazított, nem teljes szélesség */
   width: 100%;
   max-width: 720px;
   margin: 16px auto 0;
 
-  /* Kompakt, rendezett rács */
   display: grid;
-  grid-template-columns: 1fr;            /* mobilon 1 oszlop */
+  grid-template-columns: 1fr;
   grid-auto-rows: auto;
   gap: 8px 10px;
   align-items: center;
@@ -31,17 +20,15 @@
   background: var(--usf-bg);
   color: var(--usf-fg);
 
-  /* Busy állapot – ne tűnjön el, csak “szürküljön” és legyen kurzor tiltás */
   &[data-busy="1"] {
     opacity: 0.85;
     pointer-events: none;
   }
 }
 
-/* Desktop kétoszlopos */
 @media (min-width: 640px) {
   .container {
-    grid-template-columns: auto 1fr;     /* bal: gombok, jobb: fileBadge/egyeb */
+    grid-template-columns: auto 1fr;
   }
 }
 
@@ -68,7 +55,9 @@
   }
 }
 
-.hiddenInput { display: none; }
+.hiddenInput {
+  display: none;
+}
 
 /* --- GOMBOK ÉS FILE BADGE --- */
 .actions {
@@ -78,7 +67,6 @@
   flex-wrap: wrap;
 }
 
-/* Mobilon az actions és a fileBadge egymás alatt, nagyobb kijelzőn egymás mellett */
 @media (min-width: 640px) {
   .actions { grid-column: 1 / 2; }
   .fileBadge { grid-column: 2 / 3; justify-self: start; }
@@ -102,18 +90,23 @@
   line-height: 1;
   cursor: pointer;
   user-select: none;
-  transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
+
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease,
+    box-shadow 120ms ease;
 
   &:hover { border-color: var(--usf-border-strong); }
   &:active { transform: translateY(1px) scale(0.99); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
+
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px #8ab4ff55;
   }
 }
 
-/* Választó és Upload megkülönböztetése */
 .btnChoose {
   display: inline-flex;
   align-items: center;
@@ -123,12 +116,20 @@
   border: 1px solid rgba(255,255,255,.2);
   background: rgba(255,255,255,.06);
   backdrop-filter: blur(6px);
-  transition: transform .08s ease, background .2s ease, border-color .2s ease;
 
-  &:hover   { transform: translateY(-1px); }
-  &:active  { transform: translateY(0); }
+  transition:
+    transform .08s ease,
+    background .2s ease,
+    border-color .2s ease;
+
+  &:hover { transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
+
   &:disabled,
-  &[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+  &[aria-disabled="true"] {
+    opacity: .5;
+    cursor: not-allowed;
+  }
 }
 
 .btnUpload {
@@ -150,7 +151,7 @@
   white-space: nowrap;
 }
 
-/* --- PREVIEW BLOKK --- */
+/* --- PREVIEW --- */
 .preview {
   grid-column: 1 / -1;
   display: grid;
@@ -172,22 +173,29 @@
   border: 1px solid #242424;
 }
 
-.meta { display: grid; gap: 2px; min-width: 0; }
+.meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
 .metaTitle { font-weight: 600; font-size: 14px; }
 .metaId { font-size: 12px; opacity: .75; }
 .metaDesc { font-size: 12px; opacity: .8; margin-top: 2px; }
 
 /* --- ÜZENETEK --- */
-.msgOk, .msgErr {
+.msgOk,
+.msgErr {
   grid-column: 1 / -1;
   margin-top: 4px;
   font-size: 13px;
   font-weight: 600;
 }
+
 .msgOk { color: var(--usf-ok); }
 .msgErr { color: var(--usf-err); }
 
-/* --- HIBALISTÁK / WARNOK --- */
+/* --- LISTÁK --- */
 .sectionTitle {
   grid-column: 1 / -1;
   margin: 10px 0 6px;
@@ -195,23 +203,26 @@
   font-weight: 600;
 }
 
-.errorList, .warnList {
+.errorList,
+.warnList {
   grid-column: 1 / -1;
   border: 1px solid var(--usf-border);
   border-radius: 10px;
-  background: #111111;
+  background: #111;
   max-height: 200px;
   overflow: auto;
   padding: 8px;
 }
 
-.errorList ul, .warnList ul {
+.errorList ul,
+.warnList ul {
   list-style: disc;
   padding-left: 18px;
   margin: 0;
 }
 
-.errorList li, .warnList li {
+.errorList li,
+.warnList li {
   font-size: 12px;
   line-height: 1.35;
   opacity: .9;
@@ -224,8 +235,9 @@
   opacity: 0.75;
 }
 
-/* --- VÉDELEM GLOBAL RESETEK ELLEN --- */
-.container, .container * {
+/* --- VÉDELEM GLOBAL RESET ELLEN --- */
+.container,
+.container * {
   text-decoration-color: currentColor;
   -webkit-text-fill-color: currentColor;
 }
@@ -235,9 +247,9 @@
   opacity: 1;
 }
 
-/* Kis mozgás csökkentése, ha kell */
 @media (prefers-reduced-motion: reduce) {
-  .btn, .btnChoose {
+  .btn,
+  .btnChoose {
     transition: none;
   }
 }
