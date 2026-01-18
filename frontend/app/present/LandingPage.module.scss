@@ -2,7 +2,7 @@
 /* ================================
    PresentLandingPage.module.scss
    ================================ */
-body[data-page="present-landing"] main {
+.page {
   position: relative;
   width: 100%;
   min-height: 100vh;
@@ -25,7 +25,7 @@ body[data-page="present-landing"] main {
   justify-content: stretch;
 }
 
-body[data-page="present-landing"] {
+.page {
   background: radial-gradient(
       circle at 30% 20%,
       rgba(58, 130, 255, 0.16),
