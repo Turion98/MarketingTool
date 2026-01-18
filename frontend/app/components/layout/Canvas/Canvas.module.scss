@@ -1,19 +1,7 @@
 /* ===== Canvas.module.scss (MEDIA ROW GROWS; NO CROP) ===== */
 
 /* Skin fallbackok */
-:root,
-html[data-skin="legacy-default"],
-body[data-skin="legacy-default"] {
-  --canvas-minw-desktop: 820px;
-  --canvas-maxw-desktop: 1280px;
 
-  --canvas-pad: clamp(12px, 2cqi, 20px);
-  --canvas-gap: clamp(8px, 1.6cqi, 16px);
-  --canvas-xs-pad: clamp(8px, 3cqi, 16px);
-  --canvas-xs-gap: clamp(6px, 2cqi, 12px);
-
-  --progress-sticky-top: 0px;
-}
 
 .canvasWrap {
   --_page-bg: var(--app-page-bg, var(--skin-bg, #0d0f13));

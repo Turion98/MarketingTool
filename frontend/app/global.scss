@@ -5,10 +5,7 @@ html {
   scrollbar-gutter: stable both-edges;
 }
 
-:root {
-  --cursor-default: url("data:image/png;base64, ...AElFTkSuQmCC") 0 0, auto;
-  --cursor-active: var(--cursor-default);
-}
+
 
 :root {
   --usf-bg: #151515;
@@ -18,7 +15,55 @@ html {
   --usf-ok: #2ecc71;
   --usf-err: #ff5c5c;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --canvas-minw-desktop: 820px;
+  --canvas-maxw-desktop: 1280px;
 
+  --canvas-pad: clamp(12px, 2cqi, 20px);
+  --canvas-gap: clamp(8px, 1.6cqi, 16px);
+  --canvas-xs-pad: clamp(8px, 3cqi, 16px);
+  --canvas-xs-gap: clamp(6px, 2cqi, 12px);
+
+  --progress-sticky-top: 0px;
+
+  --cursor-default: url("data:image/png;base64, ...AElFTkSuQmCC") 0 0, auto;
+  --cursor-active: var(--cursor-default);
+
+}
+
+
+html[data-skin="legacy-default"],
+body[data-skin="legacy-default"] {
+  --canvas-minw-desktop: 820px;
+  --canvas-maxw-desktop: 1280px;
+
+  --canvas-pad: clamp(12px, 2cqi, 20px);
+  --canvas-gap: clamp(8px, 1.6cqi, 16px);
+  --canvas-xs-pad: clamp(8px, 3cqi, 16px);
+  --canvas-xs-gap: clamp(6px, 2cqi, 12px);
+
+  --progress-sticky-top: 0px;
+}
+
+@media (max-width: 640px) {
+  html[data-skin="legacy-default"],
+  body[data-skin="legacy-default"] {
+    
+    /* Header (MOBILE TOKENS – nem a bázist írod át!) */
+    --header-gap-mobile: 10px;
+    --header-minh-mobile: 56px;   /* 10px helyett reális érték */
+    --header-pad-v-mobile: 6px;
+    --header-pad-h-mobile: 10px;
+
+    /* Title */
+    --header-title-size-mobile: 16px;
+    --header-title-spacing-mobile: 0.2px;
+    --header-title-margin-mobile: 0 16px 0 0;
+
+    /* Logo */
+    --logo-scale-mobile: .9;
+    --logo-max-w-mobile: 100%;
+    
+  }
 }
 
 
