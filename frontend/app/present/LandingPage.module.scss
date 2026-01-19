@@ -3917,8 +3917,7 @@ box-shadow:
 
 
 /* ✅ Mobil fehér “kihúzható” oldal és oldalirányú overflow ellen */
-:global(html),
-:global(body) {
+.page {
   margin: 0;
   padding: 0;
   background: #0a0f1a;        /* ne legyen fehér a “kifelé húzásnál” */
@@ -3929,4 +3928,12 @@ box-shadow:
 .page {
   overflow-x: hidden;  
   max-width: 100%;       /* védőháló: a page se engedjen oldalra kilógást */
+}
+
+@media (max-width: 640px) {
+  .audienceHeader,
+  .techHeader {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
