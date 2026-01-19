@@ -73,9 +73,12 @@ const PageTransitionManager: React.FC<Props> = ({
       )}
       {phase === "choice" && (
         <ChoiceButtons
-          choices={choices}
-          onChoiceSelected={(next) => (window.location.href = `/${next}`)}
-        />
+  show={true}
+  unlockedFragments={[]}
+  choices={choices}
+  onChoiceSelected={(next) => (window.location.href = `/${next}`)}
+/>
+
       )}
     </div>
   );
