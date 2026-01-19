@@ -18,9 +18,10 @@
 .meshBackgroundCanvas {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 10;
   pointer-events: none; /* ne blokkolja a klikkeket */
   justify-content: stretch;
+  opacity: 0.5;
 }
 
 .page {
@@ -58,6 +59,7 @@
   border: 1px solid rgba(255, 255, 255, 0.03);
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+
 }
 
 /* a konkrét inner-ek megkapják az alapot */
@@ -89,6 +91,7 @@
   border: 1px solid rgba(255, 255, 255, 0.03);
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.6);
   overflow: visible;
+  z-index: 20;
 }
 
 
