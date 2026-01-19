@@ -18,7 +18,7 @@
 .meshBackgroundCanvas {
   position: fixed;
   inset: 0;
-  z-index: 2.2;
+  z-index: 999;
   pointer-events: none; /* ne blokkolja a klikkeket */
   justify-content: stretch;
 }
