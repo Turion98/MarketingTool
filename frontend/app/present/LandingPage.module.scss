@@ -3920,7 +3920,7 @@ box-shadow:
 .page {
   margin: 0;
   padding: 0;
-  background: #0a0f1a;        /* ne legyen fehér a “kifelé húzásnál” */
+  background: transparent;        /* ne legyen fehér a “kifelé húzásnál” */
   overflow-x: hidden;         /* klasszikus fix */
   overscroll-behavior-x: none;/* ahol támogatott, csökkenti a rubber-bandet */
 }
