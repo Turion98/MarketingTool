@@ -7,14 +7,9 @@ const BACKEND =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "") ||
   "http://127.0.0.1:8000";
 
-type RouteContext = {
-  params: {
-    path: string[];
-  };
-};
-
-export async function GET(_req: NextRequest, context: RouteContext) {
-  const rel = context.params.path.join("/"); // default/ch1_...png
+export async function GET(_req: NextRequest, context: any) {
+  const path = (context?.params?.path ?? []) as string[];
+  const rel = path.join("/"); // default/ch1_...png
   const target = `${BACKEND}/generated/images/${rel}`;
   console.log("[image-proxy] GET", target);
 
