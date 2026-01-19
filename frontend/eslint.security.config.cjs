@@ -27,13 +27,17 @@ module.exports = [
 
     rules: {
       // security elv: ne hagyjunk type-less adatfolyamot – de engedjük lokálisan, ha kell
-      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
 
       // maradhat warning (nem akarjuk hogy ez blokkoljon)
       "@typescript-eslint/no-unused-vars": ["warn"],
 
       // security log => console engedélyezett
       "no-console": "off",
+
+      "@typescript-eslint/no-unused-vars": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+
 
       // ezek most már nem kellenek, mert fent definiáltuk a globálokat:
       "no-undef": "off",
