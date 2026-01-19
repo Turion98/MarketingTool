@@ -39,7 +39,7 @@
    ───────────────────────────── */
 
 .panelInnerBase {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   padding-inline: clamp(1.5rem, 4vw, 3rem);
   padding-block: clamp(2rem, 4vw, 2.8rem);
@@ -71,7 +71,7 @@
 .techInner,
 .finalCtaInner {
   /* panel base */
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   padding-inline: clamp(1.5rem, 4vw, 3rem);
   padding-block: clamp(2rem, 4vw, 2.8rem);
@@ -94,7 +94,7 @@
 /* a konkrét inner-ek megkapják az alapot */
 
 .audienceStatementSection {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 1.25rem auto;
   padding-inline: clamp(1.5rem, 4vw, 3rem);
   padding-block: clamp(2rem, 4vw, 2.8rem);
@@ -660,7 +660,7 @@
 }
 
 .audienceStatementInner {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 2rem auto;
   padding-inline: clamp(1.5rem, 4vw, 3rem);
 
@@ -3909,7 +3909,7 @@ box-shadow:
 
 
 .bgMash {
-  max-width: 1200px;  /* vagy clamp */
+  max-width: 1120px;  /* vagy clamp */
   margin: 0 auto;
   opacity: .7;
 }
