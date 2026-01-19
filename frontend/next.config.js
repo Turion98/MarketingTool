@@ -25,10 +25,12 @@ const prodCsp = [
   "frame-ancestors 'none'",
   imgSrc,
   "object-src 'none'",
-  "script-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  "connect-src 'self' https: wss:",
 ].join("; ");
+
+
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
