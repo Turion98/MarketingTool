@@ -18,7 +18,7 @@
 .meshBackgroundCanvas {
   position: fixed;
   inset: 0;
-  z-index: -10;
+  z-index: 0;
   pointer-events: none; /* ne blokkolja a klikkeket */
   justify-content: stretch;
 }
@@ -32,6 +32,7 @@
     linear-gradient(180deg, #0a0f1a 0%, #0f1828 60%, #162237 100%);
   background-attachment: fixed;
   color: #e9ecf3;
+  z-index: 1;
 }
 
 /* ─────────────────────────────
@@ -290,15 +291,15 @@
 
 
 
+/* HERO intent CTA-k: desktopon mindig 1 sor */
 .intentCtas {
   display: flex;
-  justify-content: space-between;
-  
-  gap: 4.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  
+  justify-content: center;     /* space-between helyett stabil */
+  align-items: center;
+  gap: 1rem;                   /* 4.75rem túl nagy, wrap-et okoz */
+  flex-wrap: nowrap;           /* 🔥 ne törjön oszlopba */
 }
+
 
 .intentHint {
   display: flex;
@@ -3549,7 +3550,7 @@ box-shadow:
 .techInner {
   margin-left: clamp(1.5rem, 6vw, 4rem);
   margin-right: auto;
-  text-align: justify;
+  text-align: center;
 }
 
 /* ✅ kattintható header – GRID (nem törik mobilon) */
