@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import s from "../LandingPage.module.scss";
 
 type MeshProps = {
   intensity?: number;   // 0.5–1.5 körül
   color?: string;       // pl. "255,255,255" vagy "120,190,255"
+  className?: string;   // ✅ kívülről kapott class (CSS module kompatibilis)
+  style?: React.CSSProperties;
 };
 
 type Point = {
@@ -18,6 +19,8 @@ type Point = {
 export const DynamicMeshBackground: React.FC<MeshProps> = ({
   intensity = 1,
   color = "255,255,255",
+  className,
+  style,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -28,13 +31,17 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationFrameId: number;
+    let animationFrameId = 0;
     const dpr = window.devicePixelRatio || 1;
 
     const points: Point[] = [];
     const POINT_COUNT = Math.round(36 * intensity);
     const MAX_DIST = 200;
     const SPEED = 0.1 * intensity;
+
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
     const resize = () => {
       const { innerWidth, innerHeight } = window;
@@ -58,10 +65,6 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         vy: (Math.random() - 0.5) * SPEED,
       });
     }
-
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
 
     const step = () => {
       const w = window.innerWidth;
@@ -109,7 +112,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       }
 
       if (!prefersReduced) {
-        animationFrameId = requestAnimationFrame(step);
+        animationFrameId = window.requestAnimationFrame(step);
       }
     };
 
@@ -117,9 +120,16 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
     return () => {
       window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [intensity, color]);
 
-  return <canvas ref={canvasRef} className={s.meshBackgroundCanvas} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={style}
+      aria-hidden="true"
+    />
+  );
 };

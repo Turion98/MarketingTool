@@ -734,7 +734,12 @@ const preview = (text: string, n = 30) =>
 
   return (
     <>
-      <DynamicMeshBackground intensity={4} color="255,255,255" />
+      <DynamicMeshBackground
+  intensity={meshIntensity}
+  color={meshColor}
+  className={s.meshBackgroundCanvas}
+/>
+
 
       <main className={s.page}>
        {/* ───────────── HERO SZEKCIÓ ───────────── */}

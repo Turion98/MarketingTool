@@ -1150,7 +1150,7 @@
   font: inherit;
   padding: 0;
 
-  width: 101%;
+  width: 100%;
   min-height: 88px;
 
   display: flex;
@@ -1159,7 +1159,7 @@
 
   position: relative;
   top: -55px;
-  left: -4px;
+  left: 0px;
 
   overflow: hidden;
   border-radius: 10px;
@@ -3334,7 +3334,7 @@ box-shadow:
    ========================= */
 
 .audienceInner {
-  margin-left: clamp(1.5rem, 6vw, 4rem);
+  margin-left: auto;
   margin-right: auto;
   text-align: left;
 }
@@ -3548,9 +3548,9 @@ box-shadow:
    ========================= */
 
 .techInner {
-  margin-left: clamp(1.5rem, 6vw, 4rem);
+  margin-left: auto;
   margin-right: auto;
-  text-align: center;
+  text-align: justify;
 }
 
 /* ✅ kattintható header – GRID (nem törik mobilon) */
@@ -3913,4 +3913,20 @@ box-shadow:
   max-width: 1120px;  /* vagy clamp */
   margin: 0 auto;
   opacity: .7;
+}
+
+
+/* ✅ Mobil fehér “kihúzható” oldal és oldalirányú overflow ellen */
+:global(html),
+:global(body) {
+  margin: 0;
+  padding: 0;
+  background: #0a0f1a;        /* ne legyen fehér a “kifelé húzásnál” */
+  overflow-x: hidden;         /* klasszikus fix */
+  overscroll-behavior-x: none;/* ahol támogatott, csökkenti a rubber-bandet */
+}
+
+.page {
+  overflow-x: hidden;  
+  max-width: 100%;       /* védőháló: a page se engedjen oldalra kilógást */
 }
