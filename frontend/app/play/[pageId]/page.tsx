@@ -2,17 +2,19 @@
 export const revalidate = 60;            // ✅ ISR
 export const dynamic = "force-static";   // ✅ cache-elhető legyen
 
-type Props = {
-  params: { pageId: string };
-  searchParams: Record<string, string | string[] | undefined>;
-};
-
 import StoryClient from "./StoryClient";
 
-export default function Page({ params, searchParams }: Props) {
-  const pageId = params.pageId;
-  const skin = (searchParams?.skin as string) || "contract_default";
-  const src  = (searchParams?.src  as string) || "global.json";
+type Props = {
+  params: Promise<{ pageId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function Page({ params, searchParams }: Props) {
+  const { pageId } = await params;
+  const sp = await searchParams;
+
+  const skin = (sp?.skin as string) || "contract_default";
+  const src = (sp?.src as string) || "global.json";
 
   return <StoryClient pageId={pageId} skin={skin} src={src} />;
 }
