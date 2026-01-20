@@ -17,7 +17,7 @@ type Point = {
 };
 
 export const DynamicMeshBackground: React.FC<MeshProps> = ({
-  intensity = 1,
+  intensity = 6,
   color = "255,255,255",
   className,
   style,
@@ -35,9 +35,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     const dpr = window.devicePixelRatio || 1;
 
     const points: Point[] = [];
-    const POINT_COUNT = Math.round(36 * intensity);
-    const MAX_DIST = 200;
-    const SPEED = 0.1 * intensity;
+    const POINT_COUNT = Math.round(206 * intensity);
+    const MAX_DIST = 250;
+    const SPEED = 0.2 * intensity;
 
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"

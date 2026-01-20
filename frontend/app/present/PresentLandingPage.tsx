@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useLayoutEffect, useState, useRef, useEffect } from "react";
@@ -7,7 +6,8 @@ import s from "./LandingPage.module.scss";
 import { ContactModal } from "./components/ContactModal";
 import { CollabDiagram } from "./components/CollabDiagram";
 import { DynamicMeshBackground } from "./components/DynamicMeshBackground";
-import { useRouter } from "next/navigation";
+import { ExamplesSection } from "./components/ExamplesSection";
+import { PlatformCutout } from "./components/PlatformCutout";
 
 type LandingPageProps = {
   logoSrc?: string;
@@ -16,10 +16,19 @@ type LandingPageProps = {
   onViewDemosClick?: () => void;
 };
 
-// 🔹 intent state: hero-ból vezérelt vizuális fókusz a "Mit tud a platform?" kártyákon
 type Intent = "convert" | "engage" | null;
 
 const DEFAULT_LOGO = "/assets/my_logo.png";
+
+/** ✅ TOP-LEVEL: ne jöjjön létre újra renderenként */
+const HERO_PROBLEMS = [
+  "Hetek mennek el, mieltt kiderül, működik-e.",
+  "A forgalom jön, de nem derül ki, merre lépj tovább.",
+  "Nem látod, kinek mi működik valójában.",
+  "Nem kapsz egyértelmű jelzést, mit kellene változtatni.",
+  "Nem derül ki, mi hozott valódi megtérülést.",
+  "A kampány megy, de a döntési felelősség végig rajtad marad.",
+] as const;
 
 const campaignTypes: Array<{
   id: string;
@@ -27,111 +36,77 @@ const campaignTypes: Array<{
   desc: string;
   ideal: string;
   note?: string;
-  intents?: Intent[]; // 🔹 melyik intentnél legyen hangsúlyos
+  intents?: Intent[];
 }> = [
- {
-  id: "product-launch",
-  label: "Termékbevezetés",
-  desc: "Nem teaser vagy banner, irányított élmény, amely érzelmi első benyomást épít, és természetesen vezeti a felhasználót a termék felé.",
-  ideal: "Ideális: új SKU, szezonális vagy limitált termék, relaunch.",
-  intents: ["convert"],
-},
-{
-  id: "customer-survey",
-  label: "Vásárlói felmérés",
-  desc: "Nem klasszikus kérdőív: a felhasználó döntéseiből személyre szabott kimenet születik, miközben a márka viselkedési insightot kap.",
-  ideal: "Ideális: insight-gyűjtés, célcsoport-feltérképezés.",
-  intents: ["engage", "convert"],
-},
-{
-  id: "seasonal-campaign",
-  label: "Szezonális kampány",
-  desc: "Nem egyszeri kreatív, hanem gyorsan indítható, vizuálisan erős élmény, amely rövid kampányablakban is magas bevonódást hoz.",
-  ideal: "Ideális: FMCG, retail, beauty, időszakos aktivációk.",
-  intents: ["engage"],
-},
-{
-  id: "decision-path",
-  label: "Termékajánló",
-  desc: "Nem egyetlen válasz dönt: a teljes döntési út számít, és ebből áll össze a valóban releváns ajánlás.",
-  ideal: "Ideális: összetett választás, széles portfólió, szakértői ajánlás.",
-  intents: ["convert"],
-},
-{
-  id: "educational",
-  label: "Edukációs kampány",
-  desc: "Nem PDF vagy hosszú magyarázat, hanem végigjátszható tanulási élmény, amely közben a termékhasználat és a márkaértékek is rögzülnek.",
-  ideal: "Ideális: PR-, CSR-kampányok, tutorial tartalmak, onboarding.",
-  intents: ["engage"],
-},
-{
-  id: "modular-minigames",
-  label: "Moduláris minijátékok",
-  desc: "Egymásra épülő rövid élmények azonos vizuális világgal, amelyek hosszabb távon is fenntartják az aktivitást.",
-  ideal: "Ideális: loyalty aktivációk, napi mini-élmények, gamified kampánysorozatok.",
-  note: "Fejlesztés alatt",
-}
-
-,
+  {
+    id: "product-launch",
+    label: "Termékbevezetés",
+    desc: "Nem teaser vagy banner, irányított élmény, amely érzelmi első benyomást épít, és természetesen vezeti a felhasználót a termék felé.",
+    ideal: "Ideális: új SKU, szezonális vagy limitált termék, relaunch.",
+    intents: ["convert"],
+  },
+  {
+    id: "customer-survey",
+    label: "Vásárlói felmérés",
+    desc: "Nem klasszikus kérdőív: a felhasználó döntéseiből személyre szabott kimenet születik, miközben a márka viselkedési insightot kap.",
+    ideal: "Ideális: insight-gyűjtés, célcsoport-feltérképezés.",
+    intents: ["engage", "convert"],
+  },
+  {
+    id: "seasonal-campaign",
+    label: "Szezonális kampány",
+    desc: "Nem egyszeri kreatív, hanem gyorsan indítható, vizuálisan erős élmény, amely rövid kampányablakban is magas bevonódást hoz.",
+    ideal: "Ideális: FMCG, retail, beauty, időszakos aktivációk.",
+    intents: ["engage"],
+  },
+  {
+    id: "decision-path",
+    label: "Termékajánló",
+    desc: "Nem egyetlen válasz dönt: a teljes döntési út számít, és ebből áll össze a valóban releváns ajánlás.",
+    ideal: "Ideális: összetett választás, széles portfólió, szakértői ajánlás.",
+    intents: ["convert"],
+  },
+  {
+    id: "educational",
+    label: "Edukációs kampány",
+    desc: "Nem PDF vagy hosszú magyarázat, hanem végigjátszható tanulási élmény, amely közben a termékhasználat és a márkaértékek is rögzülnek.",
+    ideal: "Ideális: PR-, CSR-kampányok, tutorial tartalmak, onboarding.",
+    intents: ["engage"],
+  },
+  {
+    id: "modular-minigames",
+    label: "Moduláris minijátékok",
+    desc: "Egymásra épülő rövid élmények azonos vizuális világgal, amelyek hosszabb távon is fenntartják az aktivitást.",
+    ideal: "Ideális: loyalty aktivációk, napi mini-élmények, gamified kampánysorozatok.",
+    note: "Fejlesztés alatt",
+  },
 ];
 
+const FEATURED_DEFAULT_IDS = ["product-launch", "customer-survey", "decision-path"] as const;
+
 const LandingPage: React.FC<LandingPageProps> = ({
-  
   logoSrc,
   logoAlt = "Questell logo",
   onRequestQuoteClick,
-  onViewDemosClick, // ⛔️hero-ból kivezetjük, de a komponens API-ja maradhat
 }) => {
   const [isContactOpen, setIsContactOpen] = useState(false);
-  
-  // 🔹 új intent state
   const [intent, setIntent] = useState<Intent>(null);
 
-  // 🔹 ide scrollozunk a hero intent gombok után (platform szekció)
   const platformRef = useRef<HTMLElement | null>(null);
-const handleRequestQuote = () => {
-  if (onRequestQuoteClick) {
-    onRequestQuoteClick(); // analytics / tracking
-  }
-  setIsContactOpen(true);
-};
 
-// 🔹 intent toggle — CSAK STATE, NINCS SCROLL
-const handleIntentSelect = (next: Exclude<Intent, null>) => {
-  setIntent((prev) => (prev === next ? null : next));
-};
-  const router = useRouter();
-  function startExample(item: ExampleItem) {
-  const src = `/stories/${item.jsonFile}`;
-  const start = item.startPageId || "ch1_pg1"; // backend default is gyakran ez
-  const skin = item.skinId || "contract_default";
+  const handleRequestQuote = () => {
+    onRequestQuoteClick?.();
+    setIsContactOpen(true);
+  };
 
-  const qs =
-    `src=${encodeURIComponent(src)}` +
-    `&start=${encodeURIComponent(start)}` +
-    `&title=${encodeURIComponent(item.title)}` +
-    `&skin=${encodeURIComponent(skin)}` +
-    `&c=${encodeURIComponent(item.id)}` +
-    (item.runes && item.runemode
-      ? `&runes=${encodeURIComponent(item.runes)}&runemode=${encodeURIComponent(item.runemode)}`
-      : "");
+  const handleIntentSelect = (next: Exclude<Intent, null>) => {
+    setIntent((prev) => (prev === next ? null : next));
+  };
 
-  router.push(`/embed/${encodeURIComponent(item.id)}?${qs}`);
-
-}
   const meshColor =
-  intent === "engage"
-    ? "90,180,220"     // cyan / engage
-    : intent === "convert"
-    ? "200,150,80"     // amber / convert
-    : "255,255,255";  // default
+    intent === "engage" ? "90,180,220" : intent === "convert" ? "200,150,80" : "255,255,255";
 
-const meshIntensity =
-  intent === "engage"
-    ? 1.15
-    : intent === "convert"
-    ? 0.85
-    : 1;
+  const meshIntensity = intent === "engage" ? 1.15 : intent === "convert" ? 0.85 : 1;
 
   const principlesRef = useRef<HTMLDivElement | null>(null);
   const [principlesInView, setPrinciplesInView] = useState(false);
@@ -144,700 +119,180 @@ const meshIntensity =
       ([entry]) => {
         if (entry.isIntersecting) {
           setPrinciplesInView(true);
-          observer.disconnect(); // csak egyszer fusson
+          observer.disconnect();
         }
       },
-      {
-        threshold: 0.15,
-        rootMargin: "0px 0px -10% 0px",
-      }
+      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-
-  // 🔹 featured logika: intent -> matching top 3, egyébként default top 3 id alapján
-const FEATURED_DEFAULT_IDS = ["product-launch", "customer-survey", "decision-path"];
-
-const isFeatured = (item: (typeof campaignTypes)[number]) => {
-  if (intent) return item.intents?.includes(intent) ?? false;
-  return FEATURED_DEFAULT_IDS.includes(item.id);
-};
-
-// intent esetén limitáljuk 3-ra, hogy tényleg “felső sor” maradjon
-const featuredAll = campaignTypes.filter(isFeatured);
-const featured =
-  intent !== null ? featuredAll.slice(0, 3) : featuredAll;
-
-// a “more” lista: minden, ami nincs a featured-ben
-const featuredIds = new Set(featured.map((x) => x.id));
-const moreItems = campaignTypes.filter((x) => !featuredIds.has(x.id));
-
-
-const [moreOpen, setMoreOpen] = useState(false);
-const moreButtonRef = useRef<HTMLButtonElement | null>(null);
-
-const wasMoreOpenRef = useRef(false);
-const closingWithAnchorRef = useRef(false);
-
-const closeWithAnchor = () => {
-  const el = moreButtonRef.current;
-  if (!el) return;
-
-  closingWithAnchorRef.current = true;
-
-  const before = el.getBoundingClientRect().top;
-  setMoreOpen(false);
-
-  // ✅ 2 raf: biztos layout után mérünk
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const after = el.getBoundingClientRect().top;
-      const delta = after - before;
-      window.scrollBy({ top: delta, left: 0, behavior: "auto" });
-    });
-  });
-};
-
-useLayoutEffect(() => {
-  if (moreOpen) {
-    wasMoreOpenRef.current = true;
-    return;
-  }
-
-  // ha még sosem volt nyitva, ne csináljunk semmit
-  if (!wasMoreOpenRef.current) return;
-
-  // ✅ ha anchor-close volt, NE legyen extra scroll
-  if (closingWithAnchorRef.current) {
-    closingWithAnchorRef.current = false;
-    return;
-  }
-
-  // (opcionális) ha mégis kell “vissza a gombra” smooth záráskor:
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      moreButtonRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-  });
-}, [moreOpen]);
-
-
-type FlipState = {
-  phase: "idle" | "measureLast" | "animating";
-  firstRect: DOMRect | null;
-  lastRect: DOMRect | null;
-  fixed: { left: number; top: number; width: number; height: number } | null;
-  invert: { dx: number; dy: number; sx: number; sy: number } | null;
-};
-
-const heroTitleRef = React.useRef<HTMLHeadingElement | null>(null);
-const contentTitleRef = React.useRef<HTMLHeadingElement | null>(null);
-
-const [flip, setFlip] = React.useState<FlipState>({
-  phase: "idle",
-  firstRect: null,
-  lastRect: null,
-  fixed: null,
-  invert: null,
-});
-
-const [showContentTitle, setShowContentTitle] = React.useState(true); 
-
-
-// ───────────── Example Campaigns – types + data + state ─────────────
-
-type ExampleDetailBlock =
-  | {
-      type: "intro";
-      text: string;
-    }
-  | {
-      type: "howItWorks" | "whyInCampaign" | "output";
-      title: string;
-      bullets: string[];
-    }
-  | {
-      type: "bridge";
-      text: string;
-    };
-
-type ExampleItem = {
-  id: string;
-  navLabel: string;
-  jsonFile: string;
-
-  title: string;
-  heroLine: string;
-
-  details: {
-    blocks: ExampleDetailBlock[];
+  // featured logika
+  const isFeatured = (item: (typeof campaignTypes)[number]) => {
+    if (intent) return item.intents?.includes(intent) ?? false;
+    return FEATURED_DEFAULT_IDS.includes(item.id as any);
   };
 
-  revealLabel: string;
-  startLabel: string;
-  startPageId?: string;
-  skinId?: string;
-  runes?: string; // pl. "ring,arc,dot"
-  runemode?: "single" | "triple";
-};
+  const featuredAll = campaignTypes.filter(isFeatured);
+  const featured = intent !== null ? featuredAll.slice(0, 3) : featuredAll;
 
-const EXAMPLES: ExampleItem[] = [
-  // ─────────────────────────────────────────────────────────────
-  // SKINCARE
-  // ─────────────────────────────────────────────────────────────
-  {
-    id: "skincare",
-    navLabel: "Skincare ajánló útvonal",
-    jsonFile: "SCv2_ABCD_EGA_merged_E_branch_full.json",
+  const featuredIds = new Set(featured.map((x) => x.id));
+  const moreItems = campaignTypes.filter((x) => !featuredIds.has(x.id));
 
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement | null>(null);
+  const wasMoreOpenRef = useRef(false);
+  const closingWithAnchorRef = useRef(false);
 
-    title: "Skincare ajánló útvonal",
-    heroLine:
-      "Döntések mentén vezetett élmény, ahol a végén egy koherens, végiggondolt bőrápolási rutin áll össze.",
+  const closeWithAnchor = () => {
+    const el = moreButtonRef.current;
+    if (!el) return;
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text: "Egy döntések mentén felépülő ajánlóélmény.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A felhasználó preferenciák és fókuszok mentén hoz döntéseket, nem helyes válaszokat keres.",
-            "A választások alapján eltérő oldal- és vizuális útvonalakon halad tovább.",
-            "A folyamat végén egy egymásra épülő, átgondolt rutin-struktúra áll össze.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A döntési út maga is érték: segít megérteni, miért ez az ajánlás a legrelevánsabb.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "Összetettebb bőrápolási termékrendszerek bemutatására, narratív logikával.",
-            "Edukációs és márkaépítő kampányokra, ahol a döntési folyamat önmagában is értéket képvisel.",
-            "Landingekre, ahol a bizalomépítés és az ajánlás kéz a kézben jár.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy személyre szabott bőrápolási rutin váza, lépésekre bontva.",
-            "Egy világos ajánlási irány, amely a felhasználói döntésekből következik.",
-          ],
-        },
-      ],
-    },
+    closingWithAnchorRef.current = true;
 
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Skincare ajánló indítása",
-    startPageId: "L1_routine_style",
-    skinId: "skin_care",
-  },
+    const before = el.getBoundingClientRect().top;
+    setMoreOpen(false);
 
-  // ─────────────────────────────────────────────────────────────
-  // COFFEE
-  // ─────────────────────────────────────────────────────────────
-  
-  {
-  id: "coffee",
-  navLabel: "Kávé hangulatprofil",
-  jsonFile: "coffee_quiz_demo_full.json",
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const after = el.getBoundingClientRect().top;
+        const delta = after - before;
+        window.scrollBy({ top: delta, left: 0, behavior: "auto" });
+      });
+    });
+  };
 
-  title: "Kávé hangulatprofil",
-  heroLine:
-    "Rövid döntési útvonal, ahol néhány hétköznapi választásból egy személyes, megosztható hangulatprofil áll össze.",
+  useLayoutEffect(() => {
+    if (moreOpen) {
+      wasMoreOpenRef.current = true;
+      return;
+    }
+    if (!wasMoreOpenRef.current) return;
+    if (closingWithAnchorRef.current) {
+      closingWithAnchorRef.current = false;
+      return;
+    }
 
-  startPageId: "Q1", // ✅ meta.startPageId
-  skinId: "contract_coffee_dark_roast", // ✅ fájlnév alapján
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        moreButtonRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  }, [moreOpen]);
 
-  details: {
-    blocks: [
-      {
-        type: "intro",
-        text:
-          "Döntések mentén felépülő élmény, amely egyéni kávéhangulatot teremt.",
-      },
-      {
-        type: "howItWorks",
-        title: "Hogyan működik?",
-        bullets: [
-          "A felhasználó három egyszerű, élethelyzethez kötődő döntést hoz.",
-          "A választások eltérő narratív és vizuális irányokba terelik az élményt.",
-          "A folyamat végén egy karakteres hangulatprofil áll össze.",
-        ],
-      },
-      {
-        type: "bridge",
-        text:
-          "A kevés, de tudatos döntés gyorsan értelmezhető képet ad a felhasználó preferenciáiról.",
-      },
-      {
-        type: "whyInCampaign",
-        title: "Mire jó kampányban?",
-        bullets: [
-          "Gyors engagement-indításra, alacsony belépési küszöbbel.",
-          "Megosztható, személyes profilkártyák generálására.",
-          "Social vagy landing környezetben futó rövid kampányokra.",
-        ],
-      },
-      {
-        type: "output",
-        title: "Mi lesz a kimenet?",
-        bullets: [
-          "Egy egyedi kávéhangulat-profil, döntésekből levezetve.",
-          "Egy vizuálisan egységes, megosztható profilkártya.",
-        ],
-      },
-    ],
-  },
+  const [rotatorPaused, setRotatorPaused] = useState(false);
+  const [heroProblemIndex, setHeroProblemIndex] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
-  revealLabel: "Továbbiak megtekintése",
-  startLabel: "Kávé profil indítása",
-}
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduceMotion(!!mq.matches);
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
+  }, []);
 
-,
+  useEffect(() => {
+    if (reduceMotion || rotatorPaused) return;
+    const t = window.setInterval(() => {
+      setHeroProblemIndex((i) => (i + 1) % HERO_PROBLEMS.length);
+    }, 3200);
+    return () => window.clearInterval(t);
+  }, [reduceMotion, rotatorPaused]);
 
-  // ─────────────────────────────────────────────────────────────
-  // HOLIDAY
-  // ─────────────────────────────────────────────────────────────
-  {
-  id: "holiday",
-  navLabel: "Holiday mode",
-  jsonFile: "karácsony.json",
+  const [isTechOpen, setIsTechOpen] = useState(false);
+  const [isAudienceOpen, setIsAudienceOpen] = useState(false);
 
-  title: "Holiday mode",
-  heroLine:
-    "Hangulati döntések mentén felépülő szezonális élmény, ahol a végén egy személyes ünnepi kimenet áll össze.",
-  startPageId: "Q1",   
-  skinId: "kari",
-  details: {
-    blocks: [
-      {
-        type: "intro",
-        text:
-          "Egy rövid, döntések mentén felépülő szezonális élmény, amely a felhasználó ünnepi hangulatát vizuális kimenetté fordítja.",
-      },
-      {
-        type: "howItWorks",
-        title: "Hogyan működik?",
-        bullets: [
-          "A felhasználó néhány hangulati döntést hoz az ünnepi preferenciáiról.",
-          "A választások eltérő vizuális irányokba terelik az élményt (színek, tónus, jelenet).",
-          "A végén egy koherens, egyedi holiday mode kimenet áll össze.",
-        ],
-      },
-      {
-        type: "bridge",
-        text:
-          "A döntési út segít megmutatni, milyen hangulatot keres a felhasználó – és miért pont ezt kapta kimenetként.",
-      },
-      {
-        type: "whyInCampaign",
-        title: "Mire jó kampányban?",
-        bullets: [
-          "Szezonális kampányok gyors indítására, alacsony belépési küszöbbel.",
-          "Könnyen újranyitható és frissíthető formátumként (évenkénti reskin / új kimenetek).",
-          "Social forgalom aktiválására és továbbvezetésére landingre vagy ajánlatra.",
-        ],
-      },
-      {
-        type: "output",
-        title: "Mi lesz a kimenet?",
-        bullets: [
-          "Egy személyes holiday mode vizuál, döntésekből levezetve.",
-          "Egy megosztható, ünnepi hangulatú kimenet (profilkártya / kép).",
-        ],
-      },
-    ],
-  },
-
-  revealLabel: "Továbbiak megtekintése",
-  startLabel: "Holiday mode indítása",
-}
-,
-
-  // ─────────────────────────────────────────────────────────────
-  // MARKETING SIM
-  // ─────────────────────────────────────────────────────────────
-  {
-  id: "marketing-sim",
-  navLabel: "Marketing döntési szimuláció",
-  jsonFile: "Mrk6_D_text_updated.json",
-
-  title: "Marketing döntési szimuláció",
-  heroLine:
-    "Valós marketinghelyzeteken végigvezető döntési élmény, ahol a végén egy érthető stratégiai irány és megoldáslogika áll össze.",
-
-  details: {
-    blocks: [
-      {
-        type: "intro",
-        text:
-          "Egy történetvezérelt döntési szimuláció, ahol a résztvevő marketinghelyzetekben hoz döntéseket.",
-      },
-      {
-        type: "howItWorks",
-        title: "Hogyan működik?",
-        bullets: [
-          "A résztvevő valószerű marketing szituációkban hoz döntéseket, nem „tesztkérdésekre” válaszol.",
-          "A választások eltérő narratív és tartalmi útvonalakat nyitnak, és lépésről lépésre építik a logikát.",
-          "A folyamat végén összeáll egy koherens megoldás- és stratégiai keret, ami visszavezethető a döntésekre.",
-        ],
-      },
-      {
-        type: "bridge",
-        text:
-          "A szimuláció ereje az, hogy nem funkciókat sorol, hanem megmutatja a döntési logikát és az ok-okozati összefüggéseket.",
-      },
-      {
-        type: "whyInCampaign",
-        title: "Mire jó kampányban?",
-        bullets: [
-          "B2B edukációs és sales storytelling célokra, ahol a megértés kulcsérték.",
-          "Komplex megoldások üzleti logikájának bemutatására, „kattintható” narratívával.",
-          "Olyan helyzetekre, ahol a döntési folyamat hitelesebben győz meg, mint egy funkciólista.",
-        ],
-      },
-      {
-        type: "output",
-        title: "Mi lesz a kimenet?",
-        bullets: [
-          "Egy felépített marketingmegoldás narratívája, döntések mentén levezetve.",
-          "Egy érthető stratégiai irány és ajánlási logika, ami később továbbvihető sales beszélgetésbe.",
-        ],
-      },
-    ],
-  },
-
-  revealLabel: "Továbbiak megtekintése",
-  startLabel: "Marketing szimuláció indítása",
-}
-,
-
-  // ─────────────────────────────────────────────────────────────
-  // SOFTDRINK
-  // ─────────────────────────────────────────────────────────────
-  {
-  id: "softdrink",
-  navLabel: "Üdítő ajánló",
-  jsonFile: "uditő.json",
-
-  title: "Üdítő ajánló",
-  heroLine:
-    "Gyors döntési útvonal, ahol néhány választásból egy világos, konkrét termékajánlás áll össze.",
-  startPageId: "Q1",
-  skinId: "contract_softdrink_fresh",
-
-  details: {
-    blocks: [
-      {
-        type: "intro",
-        text:
-          "Egy rövid, döntések mentén felépülő ajánlóélmény, amely közvetlen termékkimenetbe fut ki.",
-      },
-      {
-        type: "howItWorks",
-        title: "Hogyan működik?",
-        bullets: [
-          "A felhasználó két egyszerű döntést hoz ízlés- és helyzetalapon.",
-          "A választások azonnal szűkítik az ajánlási irányt a termékcsaládon belül.",
-          "A folyamat végén egy egyértelmű, könnyen értelmezhető termékkimenet jelenik meg.",
-        ],
-      },
-      {
-        type: "bridge",
-        text:
-          "A kevés, célzott döntés gyorsan érthetővé teszi, miért pont ez a termék a legrelevánsabb.",
-      },
-      {
-        type: "whyInCampaign",
-        title: "Mire jó kampányban?",
-        bullets: [
-          "Termékcsaládok gyors és érthető pozicionálására.",
-          "Retail és promóciós környezetben beléptető ajánlóélményként.",
-          "Rövid, de személyes termékajánló flow-khoz megosztható kimenettel.",
-        ],
-      },
-      {
-        type: "output",
-        title: "Mi lesz a kimenet?",
-        bullets: [
-          "Egy konkrét termékajánlás, döntésekből levezetve.",
-          "Egy vizuális profilkártya a kiválasztott üdítőhöz.",
-        ],
-      },
-    ],
-  },
-
-  revealLabel: "Továbbiak megtekintése",
-  startLabel: "Üdítő ajánló indítása",
-}
-,
-
-  // ─────────────────────────────────────────────────────────────
-  // CREATIVE
-  // ─────────────────────────────────────────────────────────────
-  {
-  id: "creative",
-  navLabel: "Kreatív problémamegoldó profil",
-  jsonFile: "uj.json",
-
-  title: "Kreatív problémamegoldó profil",
-  heroLine:
-    "Döntések mentén felépülő élmény, ahol néhány választásból egy jól körülírható kreatív archetípus áll össze.",
-  startPageId: "Q1",                         // ✅ uj.json meta.startPageId
-  skinId: "contract_creative_light_breeze",
-  details: {
-    blocks: [
-      {
-        type: "intro",
-        text:
-          "Egy rövid, döntések mentén felépülő élmény, amely a válaszok kombinációjából kreatív problémamegoldó archetípust határoz meg.",
-      },
-      {
-        type: "howItWorks",
-        title: "Hogyan működik?",
-        bullets: [
-          "A felhasználó három döntést hoz gondolkodásmódra és helyzetkezelésre vonatkozóan.",
-          "A választások különböző archetípus-irányokba terelik az élményt.",
-          "A folyamat végén egy koherens, könnyen értelmezhető kreatív profil áll össze.",
-        ],
-      },
-      {
-        type: "bridge",
-        text:
-          "A döntési út megmutatja, milyen típusú problémamegoldás áll közel a felhasználóhoz, és miért.",
-      },
-      {
-        type: "whyInCampaign",
-        title: "Mire jó kampányban?",
-        bullets: [
-          "Employer branding és HR kommunikációs kampányokra.",
-          "Személyes, megosztható profilkártyák létrehozására.",
-          "Olyan élményekhez, ahol a döntések ténylegesen formálják a kimenetet.",
-        ],
-      },
-      {
-        type: "output",
-        title: "Mi lesz a kimenet?",
-        bullets: [
-          "Egy kreatív problémamegoldó archetípus, döntésekből levezetve.",
-          "Egy vizuálisan egységes, megosztható profilkártya.",
-        ],
-      },
-    ],
-  },
-
-  revealLabel: "Továbbiak megtekintése",
-  startLabel: "Kreatív profil indítása",
-}
-,
-];
-
-// ⬇️ Component-en belül
-const [activeId, setActiveId] = React.useState<string | null>(null);
-const [isExpanded, setIsExpanded] = React.useState(false);
-const [isExiting, setIsExiting] = React.useState(false);
-const [isEntering, setIsEntering] = React.useState(false);
-
-const active = EXAMPLES.find((x) => x.id === activeId);
-
-const playedPreviewRef = useRef<Set<string>>(new Set());
-const [previewNonce, setPreviewNonce] = useState(0);
-
-const [rotatorPaused, setRotatorPaused] = useState(false);
-
-
-// ✅ HERO – rotáló "engine problem" mondatok
-const HERO_PROBLEMS = [
-  "Hetek mennek el, mieltt kiderül, működik-e.",
-
-  "A forgalom jön, de nem derül ki, merre lépj tovább.",
-
-  "Nem látod, kinek mi működik valójában.",
-
-  "Nem kapsz egyértelmű jelzést, mit kellene változtatni.",
-
-  "Nem derül ki, mi hozott valódi megtérülést.",
-
-  "A kampány megy, de a döntési felelősség végig rajtad marad.",
-] as const;
-
-const [heroProblemIndex, setHeroProblemIndex] = useState(0);
-
-// (opcionális, de erős) prefer-reduced-motion tisztelet
-const [reduceMotion, setReduceMotion] = useState(false);
-
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const apply = () => setReduceMotion(!!mq.matches);
-
-  apply();
-  mq.addEventListener?.("change", apply);
-
-  return () => mq.removeEventListener?.("change", apply);
-}, []);
-
-useEffect(() => {
-  if (reduceMotion || rotatorPaused) return;
-
-  const t = window.setInterval(() => {
-    setHeroProblemIndex((i) => (i + 1) % HERO_PROBLEMS.length);
-  }, 3200);
-
-  return () => window.clearInterval(t);
-}, [reduceMotion, rotatorPaused]);
-
-
-const [isTechOpen, setIsTechOpen] = useState(false);
-const [isAudienceOpen, setIsAudienceOpen] = useState(false);
-
-
-const TRACE_W = {
-  "trace-1": 1.6,  // outer
-  "trace-2": 1.6,  // outer
-  "trace-3": 2.1,  // mid
-  "trace-4": 2.6,  // mid (ez lehet a legerősebb mid)
-  "trace-5": 3.1,  // inner (fő)
-  "trace-6": 2.8,  // inner
-  "trace-7": 2.9,  // inner
-  "trace-8": 2.0,  // mid
-} as const;
-
-type TraceId = keyof typeof TRACE_W;
-
-const traceStyle = (id: keyof typeof TRACE_W) => ({ strokeWidth: TRACE_W[id] });
-
-const TRACE_GRAD = {
-  outer: "url(#traceGradOuter)",
-  mid: "url(#traceGradMid)",
-  inner: "url(#traceGradInner)",
-} as const;
-
-const preview = (text: string, n = 30) =>
-  text.length > n ? text.slice(0, n).trimEnd() + "…" : text;
+  const resolvedLogoSrc = logoSrc ?? DEFAULT_LOGO;
 
   return (
     <>
-      <DynamicMeshBackground
-  intensity={meshIntensity}
-  color={meshColor}
-  className={s.meshBackgroundCanvas}
-/>
-
+      <DynamicMeshBackground intensity={meshIntensity} color={meshColor} className={s.meshBackgroundCanvas} />
 
       <main className={s.page}>
-       {/* ───────────── HERO SZEKCIÓ ───────────── */}
-<section
-  id="hero"
-  className={s.heroSection}
-  aria-labelledby="hero-title"
-  data-intent={intent ?? "none"}
->
-  <div className={s.heroInner}>
-    <div className={s.heroLogoSlot}>
-      {logoSrc ? (
-        <img src={DEFAULT_LOGO} alt="Questell" className={s.heroLogo} />
-      ) : (
-        <div className={s.heroLogoPlaceholder} />
-      )}
-      {/* ✅ Secondary blokk */}
-      <div className={s.intentBlock} aria-label="Kampánycél kiválasztása">
-        <p className={s.intentLabel}>Válaszd ki a projekted célját</p>
+        {/* HERO */}
+        <section id="hero" className={s.heroSection} aria-labelledby="hero-title" data-intent={intent ?? "none"}>
+          <div className={s.heroInner}>
+          <div className={s.heroLogoSlot}>
+  {logoSrc ? (
+    <img src={DEFAULT_LOGO} alt="Questell" className={s.heroLogo} />
+  ) : (
+    <div className={s.heroLogoPlaceholder} />
+  )}
 
-        <div className={s.intentCtas}>
-          <button
-            type="button"
-            className={s.secondaryCta}
-            onClick={() => handleIntentSelect("engage")}
-            data-cta="intent-engage"
-            aria-pressed={intent === "engage"}
-          >
-            Bevonzás
-          </button>
+              <div className={s.intentBlock} aria-label="Kampánycél kiválasztása">
+                <p className={s.intentLabel}>Válaszd ki a projekted célját</p>
 
-          <button
-            type="button"
-            className={s.secondaryCta}
-            onClick={() => handleIntentSelect("convert")}
-            data-cta="intent-convert"
-            aria-pressed={intent === "convert"}
-          >
-            Konverzió
-          </button>
-        </div>
+                <div className={s.intentCtas}>
+                  <button
+                    type="button"
+                    className={s.secondaryCta}
+                    onClick={() => handleIntentSelect("engage")}
+                    data-cta="intent-engage"
+                    aria-pressed={intent === "engage"}
+                  >
+                    Bevonzás
+                  </button>
 
-        {/* 🔁 Élő visszajelzés a gombok alatt */}
-        <div
-          className={s.intentHint}
-          aria-live="polite"
-          data-visible={intent !== null}
-        >
-          {intent === "engage" && "Bevonzás → görgess tovább"}
-          {intent === "convert" && "Konverzió → görgess tovább"}
-        </div>
-      </div>
+                  <button
+                    type="button"
+                    className={s.secondaryCta}
+                    onClick={() => handleIntentSelect("convert")}
+                    data-cta="intent-convert"
+                    aria-pressed={intent === "convert"}
+                  >
+                    Konverzió
+                  </button>
+                </div>
 
-    </div>
+                <div className={s.intentHint} aria-live="polite" data-visible={intent !== null}>
+                  {intent === "engage" && "Bevonzás → görgess tovább"}
+                  {intent === "convert" && "Konverzió → görgess tovább"}
+                </div>
+              </div>
+            </div>
 
-    <div className={s.heroContent}>
-      <h1 id="hero-title" className={s.heroTitle}>
-        Döntésvezérelt, interaktív élmény
-      </h1>
+            <div className={s.heroContent}>
+              <h1 id="hero-title" className={s.heroTitle}>
+                Döntésvezérelt, interaktív élmény
+              </h1>
 
-      <p className={s.heroSubtitle}>
-        Egy élő rendszer, ahol a felhasználói döntések alakítják a folyamatot és a kimenetet.
-      </p>
+              <p className={s.heroSubtitle}>
+                Egy élő rendszer, ahol a felhasználói döntések alakítják a folyamatot és a kimenetet.
+              </p>
 
-      <p className={s.heroSubtitles}>
-        Ugyanaz a rendszer használható brand-élményre, insight-gyűjtésre vagy konverzióra — a cél
-        határozza meg a logikát és az eredményt.
-      </p>
+              <p className={s.heroSubtitles}>
+                Ugyanaz a rendszer használható brand-élményre, insight-gyűjtésre vagy konverzióra — a cél határozza meg a logikát
+                és az eredményt.
+              </p>
 
-      {/* 🔁 Rotáló "megoldható problémák" sor (hero panelen belül) */}
-<div
-  className={s.heroRotator}
-  role="status"
-  aria-live="polite"
-  aria-atomic="true"
-  onMouseEnter={() => setRotatorPaused(true)}
-  onMouseLeave={() => setRotatorPaused(false)}
-  onFocusCapture={() => setRotatorPaused(true)}
-  onBlurCapture={() => setRotatorPaused(false)}
->
-  <span className={s.heroRotatorLabel}>Tipikus probléma:</span>{" "}
-  <span key={heroProblemIndex} className={s.heroRotatorText}>{HERO_PROBLEMS[heroProblemIndex]}</span>
-</div>
+              <div
+                className={s.heroRotator}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                onMouseEnter={() => setRotatorPaused(true)}
+                onMouseLeave={() => setRotatorPaused(false)}
+                onFocusCapture={() => setRotatorPaused(true)}
+                onBlurCapture={() => setRotatorPaused(false)}
+              >
+                <span className={s.heroRotatorLabel}>Tipikus probléma:</span>{" "}
+                <span key={heroProblemIndex} className={s.heroRotatorText}>
+                  {HERO_PROBLEMS[heroProblemIndex]}
+                </span>
+              </div>
+
+              <button type="button" className={s.primaryCta} onClick={handleRequestQuote} data-cta="contact">
+                Kapcsolatfelvétel
+              </button>
+            </div>
+          </div>
+        </section>
 
 
-      
-      {/* ✅ Primary CTA */}
-      <button
-        type="button"
-        className={s.primaryCta}
-        onClick={handleRequestQuote}
-        data-cta="contact"
-      >
-        Kapcsolatfelvétel
-      </button>
-    </div>
-  </div>
-</section>
 
 
    {/* ───────────── KINEK SZÓL? – POZICIONÁLÓ ÁLLÍTÁS ───────────── */}
@@ -989,282 +444,12 @@ const preview = (text: string, n = 30) =>
             <rect x="0" y="0" width="1040" height="320" fill="rgba(255,255,255,0.06)" />
             <rect x="0" y="0" width="1040" height="320" fill="url(#cutGrad)" />
 
-            {/* ── TRACE RENDSZER ── */}
-            <g className={s.chipTraces}>
-              <path id="trace-1" data-rank="outer" className={s.trace} fill="none" stroke="url(#traceGradOuter)" style={traceStyle("trace-1")} d="M424 36 H1010 V292" />
-              <path data-rank="outer" className={s.traceGlow} fill="none" d="M424 36 H1010 V292" />
-
-              <path id="trace-2" data-rank="outer" className={s.trace} fill="none" stroke="url(#traceGradOuter)" style={traceStyle("trace-2")} d="M424 56 H992 V292" />
-              <path data-rank="outer" className={s.traceGlow} fill="none" d="M424 56 H992 V292" />
-
-              <path id="trace-3" data-rank="mid" className={s.trace} fill="none" stroke="url(#traceGradMid)" style={traceStyle("trace-3")} d="M424 78 H972 V290" />
-              <path data-rank="mid" className={s.traceGlow} fill="none" d="M424 78 H972 V290" />
-
-              <path id="trace-4" data-rank="mid" className={s.trace} fill="none" stroke="url(#traceGradMid)" style={traceStyle("trace-4")} d="M424 102 H948 V282" />
-              <path data-rank="mid" className={s.traceGlow} fill="none" d="M424 102 H948 V282" />
-
-              <path id="trace-5" data-rank="inner" className={s.trace} fill="none" stroke="url(#traceGradInner)" style={traceStyle("trace-5")} d="M424 102 H910 V146 H935 V290" />
-              <path data-rank="inner" className={s.traceGlow} fill="none" d="M424 102 H910 V146 H935 V290" />
-
-              <path id="trace-6" data-rank="inner" className={s.trace} fill="none" stroke="url(#traceGradInner)" style={traceStyle("trace-6")} d="M424 120 H760 V166 H880 V290" />
-              <path data-rank="inner" className={s.traceGlow} fill="none" d="M424 120 H760 V166 H880 V290" />
-
-              <path id="trace-7" data-rank="inner" className={s.trace} fill="none" stroke="url(#traceGradInner)" style={traceStyle("trace-7")} d="M424 135 H900 V166 H910 V290" />
-              <path data-rank="inner" className={s.traceGlow} fill="none" d="M424 135 H900 V166 H910 V290" />
-
-              <path id="trace-8" data-rank="mid" className={s.trace} fill="none" stroke="url(#traceGradMid)" style={traceStyle("trace-8")} d="M424 150 H705 V198 H820 V292" />
-              <path data-rank="mid" className={s.traceGlow} fill="none" d="M424 150 H705 V198 H820 V292" />
-            </g>
-
-            
-              
-            
-<g className={s.flowNodes}>
-        {/* trace-1 (1 pont, gyorsabb) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="18s"
-            begin="10.2s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="18s"
-            begin="10.2s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-1" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-2 (2 pont, gyorsabb) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="19.5s"
-            begin="0.8s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="19.5s"
-            begin="0.8s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-2" />
-          </animateMotion>
-        </circle>
-
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="19.5s"
-            begin="11.4s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="19.5s"
-            begin="11.4s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-2" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-3 (1 pont, közepes) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="23s"
-            begin="6.4s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="23s"
-            begin="6.4s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-3" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-4 (2 pont, közepes) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="24.5s"
-            begin="8.1s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="24.5s"
-            begin="8.1s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-4" />
-          </animateMotion>
-        </circle>
-
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="24.5s"
-            begin="15.3s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="24.5s"
-            begin="15.3s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-4" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-5 (1 pont, inner lassabb) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="28s"
-            begin="3.6s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="28s"
-            begin="3.6s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-5" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-6 (2 pont, inner lassabb) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="29.5s"
-            begin="1.4s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="29.5s"
-            begin="1.4s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-6" />
-          </animateMotion>
-        </circle>
-
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="29.5s"
-            begin="24.2s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="29.5s"
-            begin="24.2s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-6" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-7 (1 pont, inner lassabb) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="18.5s"
-            begin="0.9s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="18.5s"
-            begin="0.9s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-7" />
-          </animateMotion>
-        </circle>
-
-        {/* trace-8 (1 pont, közepes) */}
-        <circle className={s.node} r="4" opacity="0">
-          <animate
-            attributeName="opacity"
-            dur="24s"
-            begin="1.8s"
-            repeatCount="indefinite"
-            values="0;1;1;0"
-            keyTimes="0;0.08;0.88;1"
-          />
-          <animateMotion
-            dur="24s"
-            begin="1.8s"
-            repeatCount="indefinite"
-            keyTimes="0;1"
-            keySplines="0.2 0 0.2 1"
-            calcMode="spline"
-          >
-            <mpath href="#trace-8" />
-          </animateMotion>
-        </circle>
-      </g>
-    </g>
-            </g>
+            {/* ✅ KIVITT TRACE + NODE RÉSZ (flowMode / auto gating) */}
+            <PlatformCutout flowMode="auto" rootMargin="700px 0px" />
           </g>
         </g>
-      
-    
+      </g>
+    </g>
 
     {/* kontúr */}
     <path
@@ -1273,6 +458,7 @@ const preview = (text: string, n = 30) =>
     />
   </svg>
 </div>
+
 
 
     <header className={s.platformHeader}>
@@ -1380,239 +566,7 @@ const preview = (text: string, n = 30) =>
         
       
      {/* ───────────── PÉLDA KAMPÁNYOK – INTERAKTÍV VÁLASZTÓ ───────────── */}
-<section
-  id="example-campaigns"
-  className={s.examplesSection}
-  aria-labelledby="examples-title"
->
-  <div className={s.examplesInner}>
-    <header className={s.examplesHeader}>
-      <h2 id="examples-title" className={s.examplesTitle}>
-        Példa kampányok
-      </h2>
-    </header>
-
-    {/* Szekció nyitó mondatok */}
-    <div className={s.examplesIntrok}>
-      <p className={s.examplesIntroLead}>
-        Az alábbi kampányformátumok kipróbálható példák arra, hogyan épülnek fel a
-        Questell interaktív élményei.
-      </p>
-      <p className={s.examplesIntroLead}>
-        <strong>Minden elem igény szerint továbbalakítható, bővíthető vagy teljesen
-        újraértelmezhető</strong>
-      </p>
-    </div>
-
-    <div className={s.examplesChooser}>
-      
-      <div
-        className={s.examplesPanel}
-        role="region"
-        aria-label="Példa kampányok választó"
-      >
-        {/* Bal oszlop */}
-        <aside className={s.examplesNav} aria-label="Kampányok listája">
-          <ul className={s.examplesNavList}>
-            {EXAMPLES.map((item) => {
-              const isActive = item.id === activeId;
-              return (
-                <li key={item.id} className={s.examplesNavItem}>
-                  <button
-                    type="button"
-                    className={`${s.examplesNavButton} ${
-                      isActive ? s.isActive : ""
-                    }`}
-                    onClick={() => {
-                      setActiveId(item.id);
-
-                      // reset
-                      setIsExpanded(false);
-                      setIsExiting(false);
-                      setIsEntering(false);
-                      if (!playedPreviewRef.current.has(item.id)) {
-    playedPreviewRef.current.add(item.id);
-                      setPreviewNonce((n) => n + 1);}
-                    }}
-                    aria-current={isActive ? "true" : undefined}
-                  >
-                    <span className={s.examplesNavLabel}>{item.navLabel}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
-
-        {/* Jobb oszlop */}
-        <div
-          className={[s.examplesDetail, isEntering ? s.isEntering : ""]
-            .filter(Boolean)
-            .join(" ")}
-          aria-live="polite"
-          onAnimationEnd={(e) => {
-            // csak a WRAP enter anim végén kapcsold ki, különben a gyerek fade-ek is triggerelhetik
-            if ((e as any).animationName === "detailEnterWrap") {
-              setIsEntering(false);
-            }
-          }}
-        >
-          {/* EMPTY STATE */}
-          {!active && (
-            <div className={s.examplesEmptyPanel}>
-            <div className={s.examplesEmpty}>
-              <div className={s.examplesEmptyLogo}>
-                <img
-                  src={DEFAULT_LOGO}
-                  alt="Questell"
-                  className={s.examplesLogo}
-                />
-              </div>
-              
-            </div>
-            <p className={s.examplesEmptyText}>
-                Válassz egy példa kampányt a bal oldalon.
-              </p>
-            </div>
-          )}
-
-          {/* ACTIVE STATE */}
-          {active && (
-            <div
-              className={`${s.examplesDetailInner} 
-      ${isExpanded ? s.isExpanded : ""}
-      ${isExiting ? s.isExiting : ""}
-      `}
-            >
-              {/* HERO / PREVIEW */}
-              {/* HERO / PREVIEW (SCSS-hez igazítva) */}
-
-              <div className={s.examplesHero} key={`${activeId}-${previewNonce}`}>
-                <div className={s.examplesHeroTop}>
-                  <div className={s.examplesPreviewStack}>
-                    <h3 className={s.examplesHeroTitle}>{active.title}</h3>
-                    <p className={s.examplesHeroLine}>{active.heroLine}</p>
-
-                    {/* gombok: egymás alatt, demo felül, mindkettő a jobb félben indul */}
-                    <div className={s.examplesPreviewActions}>
-                      <button
-  type="button"
-  className={s.examplesPreviewStartButton}
-  onClick={() => active && startExample(active)}
->
-  {active.startLabel}
-</button>
-
-
-                      {!isExpanded && (
-                        <button
-                          type="button"
-                          className={s.examplesRevealButton}
-                          onClick={() => {
-                            setIsExiting(true);
-
-                            window.setTimeout(() => {
-                              setIsExpanded(true);
-                              setIsExiting(false);
-
-                              // ✅ biztos anim restart: előbb le, következő frame-ben fel
-                              setIsEntering(true);
-                              requestAnimationFrame(() => {
-                                setIsEntering(true);
-                              });
-                            }, 650);
-                          }}
-                        >
-                          {active.revealLabel}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* REVEAL */}
-              {isExpanded && (
-                <>
-                  {/* MEDIA */}
-                  <div className={s.examplesMedia}>
-                    <div
-                      className={s.examplesMediaPlaceholder}
-                      aria-hidden="true"
-                    />
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className={s.examplesContent}>
-                    {/* 🔴 EZ HIÁNYZOTT: TITLE A LENYITOTT ÁLLAPOTBAN */}
-                    <h3 className={s.examplesContentTitle}>{active.title}</h3>
-
-                    {active.details.blocks.map((block, idx) => {
-                      switch (block.type) {
-                        case "intro":
-                          return (
-                            <p key={idx} className={s.examplesIntro}>
-                              {block.text}
-                            </p>
-                          );
-
-                        case "bridge":
-                          return (
-                            <p key={idx} className={s.examplesBridge}>
-                              {block.text}
-                            </p>
-                          );
-
-                        case "howItWorks":
-                        case "whyInCampaign":
-                        case "output":
-                          return (
-                            <div key={idx} className={s.examplesBlock}>
-                              <h4 className={s.examplesBlockTitle}>
-                                {block.title}
-                              </h4>
-                              <ul className={s.examplesBullets}>
-                                {block.bullets.map((li, i) => (
-                                  <li key={i} className={s.examplesBullet}>
-                                    {li}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          );
-
-                        default:
-                          return null;
-                      }
-                    })}
-
-                    {/* START */}
-                    <div className={s.examplesActions}>
-                      <button
-  type="button"
-  className={s.examplesStartButton}
-  onClick={() => active && startExample(active)}
->
-  {active.startLabel}
-</button>
-
-                    </div>
-                  </div>
-                </>
-              )}
-              
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-    <div className={s.examplesClosing}>
-  A Questell pilot <strong>rövid ciklusban készül</strong>: gyorsan kipróbálható,
-  és <strong>azonnal</strong> éles helyzetben <strong>működik</strong>.
-</div>
-  </div>
-</section>
-
+<ExamplesSection defaultLogoSrc={DEFAULT_LOGO} lazyMount={true} />
 
 
 {/* ───────────── ALAPELVEK ───────────── */}
