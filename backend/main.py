@@ -533,20 +533,23 @@ def get_story(src: str | None = Query(default=None)):
     return _load_story(story_path)
 
 
-# --- CORS: engedjük a WL root alatt a wildcardot is ---
-WL_ROOT = os.getenv("WL_ROOT_DOMAIN", "wl.localhost").replace(".", r"\.")  # pl. "wl.yoursaas.com" -> "wl\.yoursaas\.com"
-DEV_HOST = os.getenv("DEV_HOST", "azenc.local").replace(".", r"\.")
-
 app.add_middleware(
     CORSMiddleware,
-   allow_origin_regex=rf"^https?://([a-z0-9\-]+\.)?({WL_ROOT}|{DEV_HOST}|localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
 
+        "https://thequestell.com",
+        "https://www.thequestell.com",
+
+        # ha van közvetlen Vercel domain:
+        # "https://thequestell.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
 )
+
 
 
 # Biztosítsunk OPTIONS választ bármely végpontra
