@@ -545,17 +545,13 @@ app.add_middleware(
         # ha van közvetlen Vercel domain:
         # "https://thequestell.vercel.app",
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
 
-# Biztosítsunk OPTIONS választ bármely végpontra
-@app.options("/{rest_of_path:path}")
-def any_options(rest_of_path: str):
-    return Response(status_code=204)
 
 # --- Routerek bekötése ---
 app.include_router(feedback_router, prefix="/api")
