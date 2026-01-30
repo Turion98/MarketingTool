@@ -217,11 +217,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <section id="hero" className={s.heroSection} aria-labelledby="hero-title" data-intent={intent ?? "none"}>
           <div className={s.heroInner}>
           <div className={s.heroLogoSlot}>
-  {logoSrc ? (
-    <img src={DEFAULT_LOGO} alt="Questell" className={s.heroLogo} />
-  ) : (
-    <div className={s.heroLogoPlaceholder} />
-  )}
+  <img
+    src={resolvedLogoSrc}
+    alt={logoAlt ?? "Questell logo"}
+    className={s.heroLogo}
+  />
+
 
               <div className={s.intentBlock} aria-label="Kampánycél kiválasztása">
                 <p className={s.intentLabel}>Válaszd ki a projekted célját</p>
