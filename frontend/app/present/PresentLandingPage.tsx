@@ -112,6 +112,17 @@ const meshColor =
 
   const meshIntensity = intent === "engage" ? 1.15 : intent === "convert" ? 0.85 : 1;
 
+  const meshFocus =
+  intent === "convert"
+    ? { x: 0.72, y: 0.42 } // ide lőjük a CTA környékére (tweakeld)
+    : intent === "engage"
+    ? { x: 0.35, y: 0.22 } // inkább bal-felső, “explore” hangulat
+    : { x: 0.5, y: 0.5 };
+
+  const meshFocusStrength =
+  intent === "convert" ? 0.85 : intent === "engage" ? 0.35 : 0.2;
+
+
   const principlesRef = useRef<HTMLDivElement | null>(null);
   const [principlesInView, setPrinciplesInView] = useState(false);
 
@@ -214,7 +225,13 @@ const meshColor =
 
   return (
     <>
-      <DynamicMeshBackground intensity={meshIntensity} color={meshColor} className={s.meshBackgroundCanvas} />
+      <DynamicMeshBackground
+  intensity={meshIntensity}
+  color={meshColor}
+  focus={meshFocus}
+  focusStrength={meshFocusStrength}
+  className={s.meshBackgroundCanvas}
+/>
 
       <main className={s.page}>
         {/* HERO */}
