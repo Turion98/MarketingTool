@@ -103,8 +103,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
     setIntent((prev) => (prev === next ? null : next));
   };
 
-  const meshColor =
-    intent === "engage" ? "90,180,220" : intent === "convert" ? "200,150,80" : "255,255,255";
+const meshColor =
+  intent === "engage"
+    ? "80,190,240"   // hűvös, tiszta, kicsit több energia
+    : intent === "convert"
+    ? "175,135,95"   // melegebb bronz, kevésbé telített
+    : "255,255,255";
 
   const meshIntensity = intent === "engage" ? 1.15 : intent === "convert" ? 0.85 : 1;
 
