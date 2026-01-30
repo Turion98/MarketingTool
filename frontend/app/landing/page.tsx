@@ -1,11 +1,11 @@
-// app/page.tsx
+// app/landing/page.tsx
 import { Suspense } from "react";
-import PresentLandingPage from "./present/PresentLandingPage";
+import RootPageClient from "../RootPageClient";
 
-export default function Page() {
+export default function LandingPage() {
   return (
     <Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
-      <PresentLandingPage />
+      <RootPageClient />
     </Suspense>
   );
 }
