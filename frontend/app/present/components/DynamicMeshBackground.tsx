@@ -190,12 +190,12 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
           const pull = c.focusStrength; // 0..1
           const ax = fx - p.x;
           const ay = fy - p.y;
-          p.vx += ax * 0.000015 * pull;
-          p.vy += ay * 0.000015 * pull;
+          p.vx += ax * 0.000008 * pull;
+          p.vy += ay * 0.000008 * pull;
 
           // perem visszapöccintés
-          if (p.x < -60 || p.x > w + 60) p.vx *= -1;
-          if (p.y < -60 || p.y > h + 60) p.vy *= -1;
+          if (p.x < -60 || p.x > w + 60) p.vx *= 0.985;
+          if (p.y < -60 || p.y > h + 60) p.vy *= 0.985;
         }
 
         // node
@@ -226,9 +226,8 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         }
       }
 
-      if (!prefersReduced) {
-        rafRef.current = window.requestAnimationFrame(step);
-      }
+      rafRef.current = window.requestAnimationFrame(step);
+
     };
 
     step();
