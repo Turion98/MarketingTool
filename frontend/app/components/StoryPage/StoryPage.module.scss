@@ -1,4 +1,5 @@
 $gold: #f2b85b;
+
 .StoryPage,
 .storyPage {
   position: relative;
@@ -7,28 +8,20 @@ $gold: #f2b85b;
   align-items: center;
 
   width: 100%;
-  height: 100dvh;                 /* ✅ fontos: valódi scroll container */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box; /* ✅ */
+  max-width: 100%;
+  margin-inline: auto;
+
+
 
   padding: 2rem;
-  padding-bottom: calc(
-    2rem + 150px + env(safe-area-inset-bottom, 0px)
-  );
-
   color: #fff;
   overflow-x: hidden;
   font-family: var(--font-cormorant), serif;
 }
 
-@media (max-width: 640px) {
-  .StoryPage,
-  .storyPage {
-    padding-bottom: calc(
-      2rem + 150px + env(safe-area-inset-bottom, 0px)
-    );
-  }
-}
+
+
 
 
 /* ──────────────────────────────
@@ -92,14 +85,7 @@ $gold: #f2b85b;
   }
 }
 
-/* ──────────────────────────────
-   BODY SCROLL
-   ────────────────────────────── */
-.storyPage {
-  overflow-x: hidden;
-  overflow-y: auto;
-  margin: 0;
-}
+
 
 /* ──────────────────────────────
    PROGRESS HUD (felső)

@@ -24,14 +24,17 @@
   justify-content: center;
   align-items: flex-start;
 
-  width: 100vw;
+  width: 100%;
   height: 100dvh;
   min-height: 100vh;
 
   overflow-y: auto;
   overflow-x: hidden;
 }
-
+.canvasWrap {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
 /* FIGYELEM:
    kivesszük a .canvasInner réteget nálad ténylegesen nincs is használva a JSX-ben
    (Canvas.tsx nem renderel canvasInner-t), ezért törölhető lenne.
@@ -51,6 +54,8 @@
 /* ===== GRID (alap: MOBIL FIRST) ===== */
 .playfield {
   display: grid;
+  box-sizing: border-box;
+  padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
 
   /* Mobil baseline: töltse ki a viewport szélességét. */
   inline-size: 100%;
