@@ -494,14 +494,14 @@ def _story_analytics_dir(story_id: str) -> str:
     return d
 
 class AnalyticsEventModel(BaseModel):
-    id: str
+    id: Optional[str] = None
     t: str
-    ts: int
-    storyId: str
+    ts: Optional[int] = None
+    storyId: Optional[str] = None
     sessionId: str
     pageId: Optional[str] = None
     refPageId: Optional[str] = None
-    props: Optional[Dict[str, Any]] = None
+    props: Optional[Dict[str, Any]] = None 
 
 class AnalyticsBatch(BaseModel):
     storyId: str
@@ -875,9 +875,33 @@ def clear_cache():
 
 @app.post("/api/analytics/batch")
 def post_analytics_batch(batch: AnalyticsBatch):
+
     try:
+        # ✅ Normalize / fill missing fields (business-grade ingest)
+        now_ms = int(datetime.utcnow().timestamp() * 1000)
+
+        norm_events = []
+        for e in batch.events:
+            d = e.dict()
+
+            # storyId fallback: event -> batch
+            if not d.get("storyId"):
+                d["storyId"] = batch.storyId
+
+            # ts fallback: event -> now
+            if not d.get("ts"):
+                d["ts"] = now_ms
+
+            # id fallback: deterministic id
+            if not d.get("id"):
+                d["id"] = f"{d['sessionId']}:{d.get('t','evt')}:{d['ts']}"
+
+            norm_events.append(d)
+
         story_dir = _story_analytics_dir(batch.storyId)
-        ts_ms = batch.events[0].ts if batch.events else int(datetime.utcnow().timestamp() * 1000)
+
+        # ✅ use normalized ts for day (so missing ts doesn't crash)
+        ts_ms = norm_events[0]["ts"] if norm_events else now_ms
         day = datetime.utcfromtimestamp(ts_ms / 1000.0).strftime("%Y-%m-%d")
         out_path = os.path.join(story_dir, f"{day}.jsonl")
 
@@ -888,16 +912,18 @@ def post_analytics_batch(batch: AnalyticsBatch):
                 "storyId": batch.storyId,
                 "userId": batch.userId,
                 "device": batch.device or {},
-                "count": len(batch.events),
+                "count": len(norm_events),
             }
             f.write(json.dumps(header, ensure_ascii=False) + "\n")
-            for e in batch.events:
-                f.write(json.dumps(e.dict(), ensure_ascii=False) + "\n")
+            for obj in norm_events:
+                f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
-        return {"ok": True, "written": len(batch.events), "file": f"{batch.storyId}/{day}.jsonl"}
+        return {"ok": True, "written": len(norm_events), "file": f"{batch.storyId}/{day}.jsonl"}
+
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/analytics/days")
 def list_analytics_days(storyId: str):
