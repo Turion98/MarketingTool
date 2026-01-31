@@ -7,12 +7,30 @@ $gold: #f2b85b;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   color: #fff;
   width: 100%;
   min-height: 100dvh;  /* 🔹 vh helyett dvh a mobil keyboard bug elkerülésére */
   overflow-x: hidden;
   overflow-y: auto;    /* 🔹 engedjük a görgetést */
   font-family: var(--font-cormorant), serif;
+}
+
+@media (max-width: 640px) {
+  .StoryPage,
+  .storyPage {
+    padding-bottom: calc(2rem + 96px + env(safe-area-inset-bottom, 0px));
+    /* 96px = kényelmes extra scroll space, állítható */
+  }
+}
+
+@media (max-width: 640px) {
+  .StoryPage::after,
+  .storyPage::after {
+    content: "";
+    display: block;
+    height: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ──────────────────────────────
