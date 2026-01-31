@@ -824,29 +824,13 @@ const AudioPlayer: React.FC<Props> = ({
   }, [volume, bgmVolume, isMuted]);
 
   return (
-    <>
-      {/* BGM singleton placeholder – a valódi elem a body alá kerül */}
-      <audio ref={bgAudioRef} preload="auto" loop playsInline={true} style={{ display: "none" }} />
-      <audio ref={voiceAudioRef} preload="auto" />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 10,
-          right: 10,
-          background: "rgba(0,0,0,0.6)",
-          color: "#fff",
-          padding: "4px 8px",
-          fontSize: "11px",
-          borderRadius: "4px",
-          fontFamily: "monospace",
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
-      >
-        Narration src: {narrationSource}{autoplayFailed ? " (autoplay blocked)" : ""}
-      </div>
-    </>
-  );
+  <>
+    {/* BGM singleton placeholder – a valódi elem a body alá kerül */}
+    <audio ref={bgAudioRef} preload="auto" loop playsInline={true} style={{ display: "none" }} />
+    <audio ref={voiceAudioRef} preload="auto" />
+  </>
+);
+
 };
 
 export default AudioPlayer;

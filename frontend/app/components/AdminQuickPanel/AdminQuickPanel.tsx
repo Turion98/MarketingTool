@@ -180,29 +180,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
   // --- rövid admin jelző gomb (fix bal-alsó)
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setVisible(true)}
-        aria-label={adminOk ? "Admin: aktív" : "Admin: belépés"}
-        title={adminOk ? "Admin mód aktív (Alt+A)" : "Admin login (Alt+A)"}
-        style={{
-          position: "fixed",
-          left: 14,
-          bottom: 14,
-          zIndex: 5000,
-          padding: "8px 12px",
-          borderRadius: 8,
-          border: "1px solid rgba(242,184,91,.55)",
-          background: "rgba(31,58,62,.65)",
-          color: "#f2b85b",
-          fontFamily: "var(--font-cormorant), serif",
-          cursor: "pointer",
-          backdropFilter: "blur(6px)",
-        }}
-        className={className}
-      >
-        {adminOk ? "Admin ✓" : "Admin"}
-      </button>
+      
 
       {visible && (
         <div
