@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 type MeshProps = {
-  intensity?: number;          // "energia" skála (nem pontszám)
-  color?: string;              // "r,g,b"
+  intensity?: number; // "energia" skála (nem pontszám)
+  color?: string; // "r,g,b"
   className?: string;
   style?: React.CSSProperties;
 
-  // ✅ opcionális: a háló "fókusz" pontja (0..1). Konverziónál ezt átállítod a CTA környékére.
-  focus?: { x: number; y: number }; // normált koordináta (0..1)
-  focusStrength?: number;           // 0..1 (mennyire húzzon)
+  // opcionális: fókusz pont (0..1)
+  focus?: { x: number; y: number };
+  focusStrength?: number; // 0..1
 };
 
 type Point = {
@@ -37,7 +37,7 @@ function parseRGB(input: string) {
 }
 
 export const DynamicMeshBackground: React.FC<MeshProps> = ({
-  intensity = 1, // ⚠️ innentől "skála", nem 6
+  intensity = 1,
   color = "255,255,255",
   className,
   style,
@@ -45,12 +45,10 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
   focusStrength = 0.6,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // ✅ pontok egyszer jönnek létre
   const pointsRef = useRef<Point[]>([]);
   const rafRef = useRef<number>(0);
 
-  // ✅ current/target paraméterek: ezeket lerp-eljük
+  // current/target paraméterek: lerp-eljük
   const currentRef = useRef({
     r: 255,
     g: 255,
@@ -71,7 +69,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     focusStrength: 0.6,
   });
 
-  // cél szín/intenzitás/fókusz frissítése propból (NEM indít új loopot)
+  // props -> target
   useEffect(() => {
     const { r, g, b } = parseRGB(color);
     targetRef.current.r = r;
@@ -99,6 +97,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
     const dpr = window.devicePixelRatio || 1;
 
+    // reduce motion: mozogjon, csak lassabban
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -115,13 +114,13 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     resize();
     window.addEventListener("resize", resize);
 
-    const w = window.innerWidth;
-    // ✅ egyszeri pont init (fix mennyiség a stabilitásért)
     const initPoints = () => {
       const { innerWidth: w, innerHeight: h } = window;
-      const BASE_COUNT = w < 720 ? 110 : 180;
-      const points: Point[] = [];
 
+      // mobilon ritkább háló
+      const BASE_COUNT = w < 720 ? 110 : 180;
+
+      const points: Point[] = [];
       for (let i = 0; i < BASE_COUNT; i++) {
         points.push({
           x: Math.random() * w,
@@ -130,10 +129,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
           vy: (Math.random() - 0.5) * 0.35,
         });
       }
-
       pointsRef.current = points;
 
-      // init current értékek a targetről (első frame ne villanjon)
+      // első frame ne villanjon
       const t = targetRef.current;
       currentRef.current = {
         r: t.r,
@@ -152,11 +150,11 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      // ✅ smooth átmenet (szín + energia + fókusz)
+      // smooth átmenet
       const c = currentRef.current;
       const t = targetRef.current;
 
-      const SMOOTH = 0.06; // nagyobb = gyorsabb átmenet
+      const SMOOTH = 0.06;
       c.r = lerp(c.r, t.r, SMOOTH);
       c.g = lerp(c.g, t.g, SMOOTH);
       c.b = lerp(c.b, t.b, SMOOTH);
@@ -168,42 +166,45 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const colorStr = `${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(0)}`;
 
       const isMobile = w < 720;
-      // ✅ ezekből épül a "hangerő"
+
       const NODE_ALPHA = (isMobile ? 0.22 : 0.30) * c.intensity;
       const LINE_ALPHA_MAX = (isMobile ? 0.26 : 0.45) * c.intensity;
       const SPEED = (isMobile ? 0.18 : 0.22) * c.intensity;
+
+      // ritkítás
       const MAX_DIST = isMobile ? 140 : 240;
-      const MAX_DIST2 = MAX_DIST * MAX_DIST;                      // finomhangolható
+      const MAX_DIST2 = MAX_DIST * MAX_DIST;
+
+      // reduce motion = lassabb, de nem 0
+      const motion = prefersReduced ? 0.22 : 1;
 
       ctx.clearRect(0, 0, w, h);
       ctx.lineWidth = isMobile ? 0.55 : 0.7;
 
       const points = pointsRef.current;
 
-      // ✅ fókusz pont pixelben
       const fx = c.fx * w;
       const fy = c.fy * h;
 
+      // pontok + mozgás
       for (const p of points) {
-        if (!prefersReduced) {
-          // alap mozgás (intenzitással skálázva)
-          p.x += p.vx * SPEED;
-          p.y += p.vy * SPEED;
+        p.x += p.vx * SPEED * motion;
+        p.y += p.vy * SPEED * motion;
 
-          // ✅ "reposition": finom vonzás a fókusz felé (nem teleport)
-          const pull = c.focusStrength; // 0..1
-          const ax = fx - p.x;
-          const ay = fy - p.y;
-          p.vx += ax * 0.000008 * pull;
-          p.vy += ay * 0.000008 * pull;
+        // vonzás
+        const pull = c.focusStrength * motion;
+        const ax = fx - p.x;
+        const ay = fy - p.y;
+        p.vx += ax * 0.000008 * pull;
+        p.vy += ay * 0.000008 * pull;
 
-          p.vx *= 0.985;
-          p.vy *= 0.985;
+        // csillapítás
+        p.vx *= 0.985;
+        p.vy *= 0.985;
 
-          // perem visszapöccintés
-          if (p.x < -60 || p.x > w + 60) p.vx *= -1;
-          if (p.y < -60 || p.y > h + 60) p.vy *= -1;
-        }
+        // perem
+        if (p.x < -60 || p.x > w + 60) p.vx *= -1;
+        if (p.y < -60 || p.y > h + 60) p.vy *= -1;
 
         // node
         ctx.beginPath();
@@ -217,27 +218,25 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         for (let j = i + 1; j < points.length; j++) {
           const p1 = points[i];
           const p2 = points[j];
+
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
           const dist2 = dx * dx + dy * dy;
 
-            if (dist2 < MAX_DIST2) {
-              const dist = Math.sqrt(dist2);
-              const alpha = ((MAX_DIST - dist) / MAX_DIST) * LINE_ALPHA_MAX;
+          if (dist2 < MAX_DIST2) {
+            const dist = Math.sqrt(dist2);
+            const alpha = ((MAX_DIST - dist) / MAX_DIST) * LINE_ALPHA_MAX;
 
-              ctx.beginPath();
-              ctx.moveTo(p1.x, p1.y);
-              ctx.lineTo(p2.x, p2.y);
-              ctx.strokeStyle = `rgba(${colorStr},${alpha})`;
-              // ctx.lineWidth = 0.7;   // ❌ ezt vedd ki!
-              ctx.stroke();
-            }
-
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(${colorStr},${alpha})`;
+            ctx.stroke();
+          }
         }
       }
 
       rafRef.current = window.requestAnimationFrame(step);
-
     };
 
     step();
@@ -246,7 +245,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       window.removeEventListener("resize", resize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []); // ✅ nincs dependency: nem resetelődik intent váltáskor
+  }, []);
 
   return (
     <canvas
