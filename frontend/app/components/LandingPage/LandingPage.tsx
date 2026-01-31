@@ -237,6 +237,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <>
+    
       <ErrorOverlay />
       <div className={styles.landingContainer}>
         <ParallaxBackground layers={layers} />

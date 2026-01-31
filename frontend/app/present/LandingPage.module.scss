@@ -743,6 +743,11 @@
 
     color: rgba(255, 255, 255, 0.98);
   }
+
+  .audienceStatementInner {
+    padding-inline: 1rem;   /* vagy 0.75rem ha még levegősebb kell */
+    margin: 1.25rem auto;   /* kicsit feljebb húzza vertikálisan is */
+  }
 }
 
 /* extra kicsi telefonok */
@@ -1420,10 +1425,6 @@
 @media (max-width: 700px) {
   
 
-  .platformLead,
-  .platformLeader {
-    max-width: 100%;
-  }
 
    .campaignGridFeatured,
   .campaignGridMore {
@@ -1505,6 +1506,96 @@
     border-radius: 12px;
   }
 }
+
+@media (max-width: 700px) {
+  .platformLead,
+  .platformLeadek {
+    max-width: 100%;
+    padding-inline: 0.9rem;      /* <-- ez a kulcs mobilon */
+    margin-inline: auto;
+
+    font-size: 0.98rem;
+    line-height: 1.65;
+    letter-spacing: 0.008em;
+    opacity: 0.9;
+
+    text-wrap: balance;
+  }
+
+  .platformLead + .platformLead {
+    margin-top: 0.35rem;
+  }
+}
+@media (max-width: 700px) {
+  .campaignGridFeatured,
+  .campaignGridMore {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .campaignCard {
+    min-height: auto;
+    padding: 0.95rem 0.9rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  /* cím ne legyen abszolút, ne tűnjön el */
+  .campaignTitle {
+    position: static;
+    transform: none;
+    opacity: 1;
+
+    font-size: 1.08rem;
+    font-weight: 650;
+    text-align: left;
+    margin: 0;
+  }
+
+  /* leírások legyenek alapból láthatóak mobilon */
+  .campaignDesc,
+  .campaignNote,
+  .campaignIdeal {
+    opacity: 0.92;
+    transform: none;
+    width: 100%;
+    margin: 0.45rem 0 0;
+    padding: 0;
+
+    text-align: left;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .campaignIdeal {
+    margin-top: 0.55rem;
+    font-weight: 750;
+  }
+
+  /* hover logika mobilon ne szóljon bele */
+  .campaignCard:hover .campaignTitle {
+    opacity: 1;
+    transform: none;
+  }
+  .campaignCard:hover .campaignDesc,
+  .campaignCard:hover .campaignNote,
+  .campaignCard:hover .campaignIdeal {
+    opacity: 0.92;
+    transform: none;
+  }
+}
+@media (max-width: 700px) {
+  .campaignMoreSummary {
+    min-height: 64px;
+    top: -38px;
+    border-radius: 12px;
+  }
+
+  .campaignMoreLabel {
+    font-size: 0.98rem;
+  }
+}
+
 
 
 /* ===========================
