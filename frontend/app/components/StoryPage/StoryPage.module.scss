@@ -19,19 +19,11 @@ $gold: #f2b85b;
 @media (max-width: 640px) {
   .StoryPage,
   .storyPage {
-    padding-bottom: calc(2rem + 96px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(2rem + 150px + env(safe-area-inset-bottom, 0px));
     /* 96px = kényelmes extra scroll space, állítható */
   }
 }
 
-@media (max-width: 640px) {
-  .StoryPage::after,
-  .storyPage::after {
-    content: "";
-    display: block;
-    height: calc(96px + env(safe-area-inset-bottom, 0px));
-  }
-}
 
 /* ──────────────────────────────
    PAGE INDICATOR
