@@ -8,12 +8,14 @@ type Props = {
   intervalMs?: number; // alap: 30s
 };
 
-// Hova küldünk:
-// - állítható: NEXT_PUBLIC_ANALYTICS_ENDPOINT
-// - fallback: FastAPI lokál endpoint
-const ENDPOINT =
-  process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT ??
-  "http://127.0.0.1:8000/api/analytics/batch";
+// ✅ egyetlen igazság: NEXT_PUBLIC_API_BASE
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  (process.env.NODE_ENV === "development"
+    ? "http://127.0.0.1:8000"
+    : "https://api.thequestell.com");
+
+const ENDPOINT = `${API_BASE.replace(/\/$/, "")}/api/analytics/batch`;
 
 export default function AnalyticsSync({
   storyId,
@@ -22,7 +24,7 @@ export default function AnalyticsSync({
 }: Props) {
   useEffect(() => {
     const willMount = !!storyId;
-    console.log("[AnalyticsSync mount check]", { storyId, sessionId, willMount });
+    console.log("[AnalyticsSync mount check]", { storyId, sessionId, willMount, ENDPOINT });
     if (!storyId) return;
 
     let timer: number | null = null;
@@ -36,10 +38,8 @@ export default function AnalyticsSync({
       timer = window.setTimeout(tick, intervalMs) as unknown as number;
     };
 
-    // induló flush + ciklus
     tick();
 
-    // tab visszatéréskor is próbálunk küldeni
     const onVis = () => {
       if (document.visibilityState === "visible") {
         uploadBatch(storyId, ENDPOINT).catch(() => {});
@@ -47,9 +47,9 @@ export default function AnalyticsSync({
     };
     document.addEventListener("visibilitychange", onVis);
 
-    // kilépés előtt: best-effort (pagehide + beforeunload)
     const onPageHide = () => {
       try {
+        // best-effort; keepalive-t az uploadBatch már használ
         uploadBatch(storyId, ENDPOINT);
       } catch {}
     };

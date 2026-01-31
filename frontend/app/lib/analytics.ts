@@ -560,23 +560,26 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
   if (!payload.events.length) return { ok: true, written: 0 };
 
   // --- Endpoint feloldás (prioritási sorrendben) ---
-  const envFromWindow =
-    (typeof window !== "undefined" &&
-      (window as unknown as Record<string, unknown>)["NEXT_PUBLIC_ANALYTICS_ENDPOINT"]) as
-      | string
-      | undefined;
-  const envFromProcess =
-    (typeof process !== "undefined" &&
-      (process as unknown as { env?: Record<string, unknown> }).env?.[
-        "NEXT_PUBLIC_ANALYTICS_ENDPOINT"
-      ]) as string | undefined;
+  const apiBase =
+  (typeof process !== "undefined" &&
+    (process as unknown as { env?: Record<string, unknown> }).env?.[
+      "NEXT_PUBLIC_API_BASE"
+    ]) as string | undefined;
 
-  const defaultNextApi = "/api/analytics/batch";
-  const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
+const envBatch =
+  (apiBase ? `${apiBase.replace(/\/$/, "")}/api/analytics/batch` : undefined);
 
-  const endpoints = [endpoint, envFromWindow, envFromProcess, defaultNextApi, devFastApi].filter(
-    Boolean
-  ) as string[];
+
+const prodApi = "https://api.thequestell.com/api/analytics/batch";
+const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
+
+const endpoints = [
+  endpoint,
+  envBatch,          // NEXT_PUBLIC_API_BASE alapján
+  prodApi,           // biztos fallback prodra
+  ...(process.env.NODE_ENV === "development" ? [devFastApi] : []),
+].filter(Boolean) as string[];
+
 
   let lastError: unknown = null;
 
