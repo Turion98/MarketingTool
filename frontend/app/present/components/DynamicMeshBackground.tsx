@@ -169,7 +169,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
       const NODE_ALPHA = (isMobile ? 0.22 : 0.30) * c.intensity;
       const LINE_ALPHA_MAX = (isMobile ? 0.26 : 0.45) * c.intensity;
-      const SPEED = (isMobile ? 0.18 : 0.22) * c.intensity;
+      const SPEED = (isMobile ? 0.38 : 0.42) * c.intensity;
 
       // ritkítás
       const MAX_DIST = isMobile ? 140 : 240;
@@ -199,8 +199,8 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         p.vy += ay * 0.000008 * pull;
 
         // csillapítás
-        p.vx *= 0.985;
-        p.vy *= 0.985;
+        p.vx *= 0.99;
+        p.vy *= 0.99;
 
         // perem
         if (p.x < -60 || p.x > w + 60) p.vx *= -1;
