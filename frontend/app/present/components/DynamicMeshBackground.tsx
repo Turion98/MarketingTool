@@ -115,10 +115,11 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     resize();
     window.addEventListener("resize", resize);
 
+    const w = window.innerWidth;
     // ✅ egyszeri pont init (fix mennyiség a stabilitásért)
     const initPoints = () => {
       const { innerWidth: w, innerHeight: h } = window;
-      const BASE_COUNT = 180; // stabil, nem ugrál intent váltáskor
+      const BASE_COUNT = w < 720 ? 110 : 180;
       const points: Point[] = [];
 
       for (let i = 0; i < BASE_COUNT; i++) {
@@ -166,13 +167,16 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
       const colorStr = `${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(0)}`;
 
+      const isMobile = w < 720;
       // ✅ ezekből épül a "hangerő"
-      const NODE_ALPHA = 0.30 * c.intensity;     // finomhangolható
-      const LINE_ALPHA_MAX = 0.45 * c.intensity; // finomhangolható
-      const SPEED = 0.22 * c.intensity;          // finomhangolható
-      const MAX_DIST = 240;                      // finomhangolható
+      const NODE_ALPHA = (isMobile ? 0.22 : 0.30) * c.intensity;
+      const LINE_ALPHA_MAX = (isMobile ? 0.26 : 0.45) * c.intensity;
+      const SPEED = (isMobile ? 0.18 : 0.22) * c.intensity;
+      const MAX_DIST = isMobile ? 140 : 240;
+      const MAX_DIST2 = MAX_DIST * MAX_DIST;                      // finomhangolható
 
       ctx.clearRect(0, 0, w, h);
+      ctx.lineWidth = isMobile ? 0.55 : 0.7;
 
       const points = pointsRef.current;
 
@@ -215,17 +219,20 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
           const p2 = points[j];
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const dist2 = dx * dx + dy * dy;
 
-          if (dist < MAX_DIST) {
-            const alpha = ((MAX_DIST - dist) / MAX_DIST) * LINE_ALPHA_MAX;
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(${colorStr},${alpha})`;
-            ctx.lineWidth = 0.7;
-            ctx.stroke();
-          }
+            if (dist2 < MAX_DIST2) {
+              const dist = Math.sqrt(dist2);
+              const alpha = ((MAX_DIST - dist) / MAX_DIST) * LINE_ALPHA_MAX;
+
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.strokeStyle = `rgba(${colorStr},${alpha})`;
+              // ctx.lineWidth = 0.7;   // ❌ ezt vedd ki!
+              ctx.stroke();
+            }
+
         }
       }
 
