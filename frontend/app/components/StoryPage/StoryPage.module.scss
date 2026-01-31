@@ -1,26 +1,32 @@
 $gold: #f2b85b;
-
 .StoryPage,
 .storyPage {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
-  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
-  color: #fff;
+
   width: 100%;
-  min-height: 100dvh;  /* 🔹 vh helyett dvh a mobil keyboard bug elkerülésére */
+  height: 100dvh;                 /* ✅ fontos: valódi scroll container */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 2rem;
+  padding-bottom: calc(
+    2rem + 150px + env(safe-area-inset-bottom, 0px)
+  );
+
+  color: #fff;
   overflow-x: hidden;
-  overflow-y: auto;    /* 🔹 engedjük a görgetést */
   font-family: var(--font-cormorant), serif;
 }
 
 @media (max-width: 640px) {
   .StoryPage,
   .storyPage {
-    padding-bottom: calc(2rem + 150px + env(safe-area-inset-bottom, 0px));
-    /* 96px = kényelmes extra scroll space, állítható */
+    padding-bottom: calc(
+      2rem + 150px + env(safe-area-inset-bottom, 0px)
+    );
   }
 }
 
