@@ -881,7 +881,7 @@ const skin = useMemo(() => {
   useEffect(() => {
     if (!derivedStoryId || !derivedSessionId) return;
     const pageId = currentPageId || pageData?.id;
-    if (!pageId || pageId === "landing") return;
+    if (!pageId)return;
 
     if (lastPageRef.current && enterTsRef.current != null) {
       const dwell = Date.now() - enterTsRef.current;
@@ -2155,17 +2155,13 @@ const mediaNode = useMemo(() => {
               enterTsRef.current
             : undefined;
 
-        if (
-          derivedStoryId &&
-          derivedSessionId &&
-          pageId &&
-          choiceObj?.id
-        ) {
+        const choiceId = String(choiceObj?.id ?? next ?? label ?? "unknown_choice");
+         if (derivedStoryId && derivedSessionId && pageId) {
           trackChoice(
             derivedStoryId,
             derivedSessionId,
             pageId,
-            String(choiceObj.id),
+            choiceId,
             String(label)
           );
 
