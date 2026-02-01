@@ -23,23 +23,63 @@ type RangeRollup = {
     runes: number;
     mediaStarts: number;
     mediaStops: number;
+    // opcionális: ha később hozzáadod
+    ctaShown?: number;
+    ctaClicks?: number;
   };
   kpis: {
     completionRate: number;
     avgSessionDurationMs: number;
     puzzleSuccessRate: number;
+    // opcionális: ha később hozzáadod
+    ctaCtr?: number;
   };
-  dau: Array<{ day: string; users: number; sessions: number }>;
-  pages: Array<{
+
+  // ❗ DAU/pages/choices maradhat a backend válaszban, de UI-ból kivesszük
+  dau?: Array<{ day: string; users: number; sessions: number }>;
+  pages?: Array<{
     pageId: string;
     views: number;
     uniqueSessions: number;
     exitsAfterPage: number;
   }>;
-  choices: Array<{
+  choices?: Array<{
     pageId: string;
     choices: Array<{ choiceId: string; count: number }>;
   }>;
+
+  // ✅ ÚJ: Questell riport mezők (opcionálisak, később jönnek a backendből)
+  outcomes?: Array<{
+    outcomeId: string; // end page id / outcome key
+    sessions: number;
+    users?: number;
+    ctaShown?: number;
+    ctaClicks?: number;
+  }>;
+
+  endPages?: Array<{
+    pageId: string; // végoldal id
+    sessions: number;
+    users?: number;
+    ctaShown?: number;
+    ctaClicks?: number;
+  }>;
+
+  paths?: Array<{
+    pathId: string; // pl. "Q1:A > Q2:B > ROT:gold/dark"
+    sessions: number;
+    users?: number;
+    topOutcomeId?: string;
+    ctaShown?: number;
+    ctaClicks?: number;
+  }>;
+
+  steps?: Array<{
+    stepId: string; // pl. "Q1", "taste_profile", "rotate_style"
+    stepType: "choice" | "rotate" | "puzzle" | "logic";
+    options: Array<{ value: string; sessions: number }>;
+  }>;
+
   notes?: Record<string, string>;
 };
 
@@ -81,23 +121,17 @@ export default function AnalyticsReport({
   storyId,
   defaultRange = "last7d",
 }: AnalyticsReportProps) {
-  // napi lokális rollup
-  const daily = useMemo(
-    () => (storyId ? rollupDaily(storyId) : []),
-    [storyId]
-  );
+  const daily = useMemo(() => (storyId ? rollupDaily(storyId) : []), [storyId]);
 
-  // időszak lekérdezés állapot
   const initialFrom =
     defaultRange === "last30d" ? daysAgoStr(30) : daysAgoStr(7);
   const [from, setFrom] = useState(initialFrom);
   const [to, setTo] = useState(todayStr());
-  const [terminal, setTerminal] = useState<string>(""); // "__END__,ch3_pg4_end"
+  const [terminal, setTerminal] = useState<string>(""); // maradhat (backendnek hasznos)
   const [loadingRange, setLoadingRange] = useState(false);
   const [rangeData, setRangeData] = useState<RangeRollup | null>(null);
   const [rangeError, setRangeError] = useState<string | null>(null);
 
-  // automata fetch amint a panel megjelent
   useEffect(() => {
     if (!storyId) return;
     const ac = new AbortController();
@@ -106,11 +140,7 @@ export default function AnalyticsReport({
       setLoadingRange(true);
       setRangeError(null);
       try {
-        const params = new URLSearchParams({
-          storyId,
-          from,
-          to,
-        });
+        const params = new URLSearchParams({ storyId, from, to });
         if (terminal.trim()) params.set("terminal", terminal.trim());
 
         const base =
@@ -120,9 +150,7 @@ export default function AnalyticsReport({
         const res = await fetch(url, { signal: ac.signal });
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(
-            `HTTP ${res.status} – ${text || "rollup-range hiba"}`
-          );
+          throw new Error(`HTTP ${res.status} – ${text || "rollup-range hiba"}`);
         }
         const json = (await res.json()) as RangeRollup;
         setRangeData(json);
@@ -159,20 +187,21 @@ export default function AnalyticsReport({
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   };
 
+  const ctaCtr =
+    rangeData?.kpis?.ctaCtr ??
+    (rangeData?.totals?.ctaShown && rangeData?.totals?.ctaClicks != null
+      ? rangeData.totals.ctaClicks / Math.max(1, rangeData.totals.ctaShown)
+      : null);
+
   return (
     <div className={styles.card}>
       <h3>Riport – {storyId}</h3>
 
-      {/* Export / törlés */}
       <div className={styles.actions}>
-        <button
-          onClick={() => download(exportStoryCSV(storyId), `${storyId}.csv`)}
-        >
+        <button onClick={() => download(exportStoryCSV(storyId), `${storyId}.csv`)}>
           Export CSV
         </button>
-        <button
-          onClick={() => download(exportStoryJSON(storyId), `${storyId}.json`)}
-        >
+        <button onClick={() => download(exportStoryJSON(storyId), `${storyId}.json`)}>
           Export JSON
         </button>
         <button
@@ -185,24 +214,15 @@ export default function AnalyticsReport({
         </button>
       </div>
 
-      {/* Időszak vezérlők */}
       <div className={styles.rangeControls}>
         <div className={styles.row}>
           <label>
             From:&nbsp;
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-            />
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </label>
           <label>
             To:&nbsp;
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-            />
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </label>
           <label className={styles.terminalField}>
             Terminal pages (opcionális, vesszővel):&nbsp;
@@ -216,11 +236,9 @@ export default function AnalyticsReport({
         </div>
       </div>
 
-      {/* KPI blokk */}
+      {/* KPI blokk (megtartjuk) */}
       <div className={styles.kpis}>
-        {loadingRange && (
-          <div className={styles.info}>Időszakos riport töltése…</div>
-        )}
+        {loadingRange && <div className={styles.info}>Időszakos riport töltése…</div>}
         {rangeError && <div className={styles.error}>{rangeError}</div>}
 
         {rangeData && (
@@ -258,64 +276,135 @@ export default function AnalyticsReport({
                   {(rangeData.kpis.puzzleSuccessRate * 100).toFixed(1)}%
                 </div>
               </div>
+
+              {/* ✅ ÚJ: CTA CTR (ha van adat) */}
+              <div className={styles.kpi}>
+                <div className={styles.kpiLabel}>CTA CTR</div>
+                <div className={styles.kpiValue}>
+                  {ctaCtr == null ? "—" : `${(ctaCtr * 100).toFixed(1)}%`}
+                </div>
+              </div>
             </div>
 
-            <h4>DAU trend</h4>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Nap</th>
-                  <th>Users</th>
-                  <th>Sessions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rangeData.dau.map((d) => (
-                  <tr key={d.day}>
-                    <td>{d.day}</td>
-                    <td>{d.users}</td>
-                    <td>{d.sessions}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <h4>Oldal metrikák</h4>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Page</th>
-                  <th>Views</th>
-                  <th>Unique sessions</th>
-                  <th>Exits after page</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rangeData.pages.map((p) => (
-                  <tr key={p.pageId}>
-                    <td>{p.pageId}</td>
-                    <td>{p.views}</td>
-                    <td>{p.uniqueSessions}</td>
-                    <td>{p.exitsAfterPage}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <h4>Választás megoszlás</h4>
-            {rangeData.choices.length === 0 ? (
+            {/* ✅ ÚJ: Outcome / End Pages */}
+            <h4>Végoldalak és outcome-ok</h4>
+            {(!rangeData.endPages || rangeData.endPages.length === 0) &&
+            (!rangeData.outcomes || rangeData.outcomes.length === 0) ? (
               <div className={styles.info}>
-                Nincs choice adat ebben az időszakban.
+                (Még nincs outcome/endPages adat a range riportban.)
+              </div>
+            ) : (
+              <>
+                {rangeData.endPages && rangeData.endPages.length > 0 && (
+                  <>
+                    <div className={styles.info}>Top végoldalak (end pages)</div>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>End page</th>
+                          <th>Sessions</th>
+                          <th>Users</th>
+                          <th>CTA shown</th>
+                          <th>CTA clicks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rangeData.endPages.map((x) => (
+                          <tr key={x.pageId}>
+                            <td>{x.pageId}</td>
+                            <td>{x.sessions}</td>
+                            <td>{x.users ?? "—"}</td>
+                            <td>{x.ctaShown ?? "—"}</td>
+                            <td>{x.ctaClicks ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
+
+                {rangeData.outcomes && rangeData.outcomes.length > 0 && (
+                  <>
+                    <div className={styles.info}>Outcome megoszlás</div>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>Outcome</th>
+                          <th>Sessions</th>
+                          <th>Users</th>
+                          <th>CTA shown</th>
+                          <th>CTA clicks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rangeData.outcomes.map((x) => (
+                          <tr key={x.outcomeId}>
+                            <td>{x.outcomeId}</td>
+                            <td>{x.sessions}</td>
+                            <td>{x.users ?? "—"}</td>
+                            <td>{x.ctaShown ?? "—"}</td>
+                            <td>{x.ctaClicks ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ✅ ÚJ: Pathok */}
+            <h4>Top pathok</h4>
+            {!rangeData.paths || rangeData.paths.length === 0 ? (
+              <div className={styles.info}>
+                (Még nincs path adat a range riportban.)
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th>Sessions</th>
+                    <th>Users</th>
+                    <th>Top outcome</th>
+                    <th>CTA shown</th>
+                    <th>CTA clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rangeData.paths.map((p) => (
+                    <tr key={p.pathId}>
+                      <td style={{ maxWidth: 520, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {p.pathId}
+                      </td>
+                      <td>{p.sessions}</td>
+                      <td>{p.users ?? "—"}</td>
+                      <td>{p.topOutcomeId ?? "—"}</td>
+                      <td>{p.ctaShown ?? "—"}</td>
+                      <td>{p.ctaClicks ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* ✅ ÚJ: Decision step teljesítmény */}
+            <h4>Decision step megoszlás</h4>
+            {!rangeData.steps || rangeData.steps.length === 0 ? (
+              <div className={styles.info}>
+                (Még nincs steps adat a range riportban.)
               </div>
             ) : (
               <div className={styles.choiceList}>
-                {rangeData.choices.map((group) => (
-                  <div className={styles.choiceGroup} key={group.pageId}>
-                    <div className={styles.choiceTitle}>{group.pageId}</div>
+                {rangeData.steps.map((st) => (
+                  <div className={styles.choiceGroup} key={st.stepId}>
+                    <div className={styles.choiceTitle}>
+                      {st.stepId} <span style={{ opacity: 0.7 }}>({st.stepType})</span>
+                    </div>
                     <ul>
-                      {group.choices.map((c) => (
-                        <li key={c.choiceId}>
-                          {c.choiceId}: <b>{c.count}</b>
+                      {st.options.map((o) => (
+                        <li key={o.value}>
+                          {o.value}: <b>{o.sessions}</b>
                         </li>
                       ))}
                     </ul>
@@ -327,6 +416,7 @@ export default function AnalyticsReport({
         )}
       </div>
 
+      {/* Lokális rollup maradhat debugnak */}
       <h4>Napi összesítés (lokális rollup)</h4>
       <table className={styles.table}>
         <thead>
@@ -357,14 +447,7 @@ export default function AnalyticsReport({
         </tbody>
       </table>
 
-      <h4>Top oldalak (utolsó napból)</h4>
-      <ul>
-        {(daily[0]?.topPages || []).map((p: any) => (
-          <li key={p.pageId}>
-            {p.pageId} – {p.views}
-          </li>
-        ))}
-      </ul>
+      {/* ❌ Top oldalak – kiszedve */}
     </div>
   );
 }

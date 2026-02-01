@@ -8,7 +8,9 @@ export type AnalyticsEventType =
   | "rune_unlock"
   | "ui_click"
   | "media_start" | "media_stop"
-  | "game:complete"; 
+  | "game:complete"
+  | "cta_shown"
+  | "cta_click";  
 
 export type GenericProps = Record<string, string | number | boolean | null | undefined>;
 

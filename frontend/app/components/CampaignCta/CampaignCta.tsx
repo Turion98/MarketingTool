@@ -1,9 +1,11 @@
 "use client";
+
 import React from "react";
 import s from "./CampaignCta.module.scss";
 import { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { dispatchCta } from "../../core/cta/ctaDispatcher";
 import { useUiClickSound } from "./../../lib/useUiClickSound";
+import { trackCtaShown, trackCtaClick } from "../../lib/analytics";
 
 type Props = { cta: CtaConfig; context: CtaContext; onShown?: () => void };
 
@@ -33,14 +35,45 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
   // 🔊 CTA megjelenési hang (mountkor)
   const playCtaAppear = useUiClickSound("/sounds/cta.wav");
 
+  // ⛳ analytics context (kampányfüggő pageId oké — csak legyen meg)
+  const storyId = (context as any)?.storyId as string | undefined;
+  const sessionId = (context as any)?.sessionId as string | undefined;
+  const pageId = (context as any)?.pageId as string | undefined;
+
+  // StrictMode / rerender dedup
+  const shownOnce = React.useRef(false);
+
   React.useEffect(() => {
     // CTA láthatóvá vált → jelzés + SFX
     onShown?.();
     playCtaAppear();
-  }, [onShown, playCtaAppear]);
+
+    // ✅ CTA impression (csak 1x)
+    if (shownOnce.current) return;
+    shownOnce.current = true;
+
+    if (storyId && sessionId && pageId) {
+      try {
+        trackCtaShown(storyId, sessionId, pageId, {
+          kind: cta.kind,
+          label: cta.label ?? "Continue",
+        });
+      } catch {}
+    }
+  }, [onShown, playCtaAppear, storyId, sessionId, pageId, cta.kind, cta.label]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    // ✅ CTA click (még a navigáció előtt)
+    if (storyId && sessionId && pageId) {
+      try {
+        trackCtaClick(storyId, sessionId, pageId, {
+          kind: cta.kind,
+          label: cta.label ?? "Continue",
+        });
+      } catch {}
+    }
 
     // ❗ ITT NINCS SFX – csak logika
 

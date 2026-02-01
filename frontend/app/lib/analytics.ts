@@ -29,6 +29,8 @@ type DailyCounters = {
   mediaStarts: number;
   mediaStops: number;
   completions: number;
+  ctaShown: number;   
+  ctaClicks: number;
 };
 
 function now() {
@@ -218,6 +220,32 @@ export function trackGameComplete(
   pushEvent(
     baseEvent(storyId, sessionId, "game:complete", pageId, undefined, {
       reason: "terminal_page",
+      ...(extra || {}),
+    })
+  );
+}
+
+export function trackCtaShown(
+  storyId: string,
+  sessionId: string,
+  pageId: string,
+  extra?: GenericProps
+) {
+  pushEvent(
+    baseEvent(storyId, sessionId, "cta_shown", pageId, undefined, {
+      ...(extra || {}),
+    })
+  );
+}
+
+export function trackCtaClick(
+  storyId: string,
+  sessionId: string,
+  pageId: string,
+  extra?: GenericProps
+) {
+  pushEvent(
+    baseEvent(storyId, sessionId, "cta_click", pageId, undefined, {
       ...(extra || {}),
     })
   );
@@ -471,6 +499,9 @@ export function rollupDaily(storyId: string) {
           mediaStarts: 0,
           mediaStops: 0,
           completions: 0,
+          ctaShown: 0,
+          ctaClicks: 0,
+
         },
         pageViews: new Map<string, number>(),
       });
@@ -514,6 +545,13 @@ export function rollupDaily(storyId: string) {
       case "game:complete":
         d.counters.completions++;
         break;
+      case "cta_shown":
+        d.counters.ctaShown++;
+        break;
+      case "cta_click":
+        d.counters.ctaClicks++;
+        break;
+
     }
   }
 
@@ -569,8 +607,8 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
 const envBatch =
   (apiBase ? `${apiBase.replace(/\/$/, "")}/api/analytics/batch` : undefined);
 
-
-const prodApi = "https://api.thequestell.com/api/analytics/batch";
+const prodApi =
+  (process as any)?.env?.NEXT_PUBLIC_ANALYTICS_FALLBACK as string | undefined;
 const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
 
 const endpoints = [
