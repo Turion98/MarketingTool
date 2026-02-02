@@ -13,6 +13,9 @@ const USER_KEY = "qz_user_id";
 const MAX_EVENTS_PER_STORY = 5000;
 const BATCH_DEBOUNCE_MS = 400;
 const MERGE_WINDOW_MS = 300;
+const TERMINAL_PAGE_ID = "__END__";
+const END_ALIAS_KEY = "endAlias";
+
 
 let mem: StorageShape | null = null;
 let saveTimer: number | null = null;
@@ -214,15 +217,13 @@ export function trackPageEnter(
 export function trackGameComplete(
   storyId: string,
   sessionId: string,
-  pageId?: string,
+  endAlias?: string,
   extra?: GenericProps
 ) {
-  pushEvent(
-    baseEvent(storyId, sessionId, "game:complete", pageId, undefined, {
-      reason: "terminal_page",
-      ...(extra || {}),
-    })
-  );
+  const props: GenericProps = { reason: "terminal_page", ...(extra || {}) };
+  if (endAlias) (props as Record<string, unknown>)[END_ALIAS_KEY] = endAlias;
+
+  pushEvent(baseEvent(storyId, sessionId, "game:complete", TERMINAL_PAGE_ID, undefined, props));
 }
 
 export function trackCtaShown(
@@ -480,7 +481,7 @@ export function rollupDaily(storyId: string) {
       sessions: Set<string>;
       users: Set<string>;
       pages: Set<string>;
-      counters: DailyCounters;
+      counters: DailyCounters & { endings: Record<string, number> };
       pageViews: Map<string, number>;
     }
   >();
@@ -501,7 +502,7 @@ export function rollupDaily(storyId: string) {
           completions: 0,
           ctaShown: 0,
           ctaClicks: 0,
-
+          endings: {}, 
         },
         pageViews: new Map<string, number>(),
       });
@@ -522,36 +523,51 @@ export function rollupDaily(storyId: string) {
         d.counters.pageViews++;
         if (e.pageId) d.pageViews.set(e.pageId, (d.pageViews.get(e.pageId) || 0) + 1);
         break;
+
       case "choice_select":
         d.counters.choices++;
         break;
+
       case "puzzle_try":
         d.counters.puzzles.tries++;
         break;
+
       case "puzzle_result": {
         const isCorrect = getProp<boolean>(e.props, "isCorrect", "boolean") ?? false;
         if (isCorrect) d.counters.puzzles.solved++;
         break;
       }
+
       case "rune_unlock":
         d.counters.runes++;
         break;
+
       case "media_start":
         d.counters.mediaStarts++;
         break;
+
       case "media_stop":
         d.counters.mediaStops++;
         break;
-      case "game:complete":
+
+      case "game:complete": {
         d.counters.completions++;
+
+        // ✅ ha van endAlias, akkor azt tekintjük outcome-nak
+        const alias = getProp<string>(e.props, END_ALIAS_KEY, "string");
+        if (alias) {
+          d.counters.endings[alias] = (d.counters.endings[alias] || 0) + 1;
+        }
         break;
+      }
+
       case "cta_shown":
         d.counters.ctaShown++;
         break;
+
       case "cta_click":
         d.counters.ctaClicks++;
         break;
-
     }
   }
 
@@ -568,6 +584,7 @@ export function rollupDaily(storyId: string) {
       .map(([pageId, views]) => ({ pageId, views })),
   }));
 }
+
 
 // --- AUTO UPLOAD HELPEREK ---
 export function prepareBatch(storyId: string) {

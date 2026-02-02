@@ -62,6 +62,8 @@ import {
   trackUiClick,
 } from "../../lib/analytics";
 
+import { trackGameComplete } from "../../lib/analytics";
+
 import { fetchPageJsonCached } from "@/app/lib/story/fetchPageJson";
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
 
@@ -72,6 +74,9 @@ import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 
 import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
 import ProfileCardFrame from "../layout/ProfileCardFrame/ProfileCardFrame";
+
+
+
 
 const DEBUG_RUNES = true;
 const DELAY_MS = 3000;
@@ -462,7 +467,8 @@ const StoryPage: React.FC = () => {
   const [measure, setMeasure] = useState<Measure | null>(null);
   const [lockedMeasure, setLockedMeasure] = useState<Measure | null>(null);
   const [localPageId, setLocalPageId] = useState<string | undefined>(undefined);
-
+  
+  const endTrackedRef = useRef(false);
   /** --- refs (layout + analitika) --- */
   const pageRootRef = useRef<HTMLDivElement>(null);
 
@@ -585,6 +591,8 @@ const StoryPage: React.FC = () => {
  
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
+
+
 
 const skin = useMemo(() => {
   return (globals as any)?.skin || params.get("skin") || "legacy-default";
@@ -823,6 +831,35 @@ const skin = useMemo(() => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+useEffect(() => {
+  if (!derivedStoryId || !derivedSessionId) return;
+  if (!pageData) return;
+
+  const isEndNode = pageData?.type === "end";
+  if (!isEndNode) {
+    endTrackedRef.current = false;
+    return;
+  }
+
+  if (endTrackedRef.current) return;
+  endTrackedRef.current = true;
+
+  const rawAlias =
+    (pageData as any)?.endAlias ??
+    (pageData as any)?.endMeta?.alias ??
+    (pageData as any)?.meta?.alias ??
+    (pageData as any)?.id ??
+    undefined;
+
+  const endAlias =
+    typeof rawAlias === "string" ? rawAlias.trim() : undefined;
+
+  try {
+    trackGameComplete(derivedStoryId, derivedSessionId, endAlias);
+  } catch {}
+}, [derivedStoryId, derivedSessionId, pageData]);
+
 
   // page change reset
   useLayoutEffect(() => {
@@ -2155,8 +2192,8 @@ const mediaNode = useMemo(() => {
               enterTsRef.current
             : undefined;
 
-        const choiceId = String(choiceObj?.id ?? next ?? label ?? "unknown_choice");
-         if (derivedStoryId && derivedSessionId && pageId) {
+            const choiceId = String(choiceObj?.id ?? (next ? `to:${next}` : "unknown_choice"));
+                 if (derivedStoryId && derivedSessionId && pageId) {
           trackChoice(
             derivedStoryId,
             derivedSessionId,
@@ -2173,7 +2210,7 @@ const mediaNode = useMemo(() => {
               derivedStoryId,
               derivedSessionId,
               pageId,
-              `choice:${String(choiceObj.id)}`,
+              `choice:${choiceId}`,
               {
                 label: String(label),
                 latencyMs,
