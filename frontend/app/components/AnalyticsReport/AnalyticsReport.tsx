@@ -143,9 +143,13 @@ export default function AnalyticsReport({
         const params = new URLSearchParams({ storyId, from, to });
         if (terminal.trim()) params.set("terminal", terminal.trim());
 
-        const base =
-          process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
-        const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
+       const base = (
+  process.env.NEXT_PUBLIC_API_BASE ||
+  process.env.NEXT_PUBLIC_ANALYTICS_FALLBACK ||
+  "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
+
+const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 
         const res = await fetch(url, { signal: ac.signal });
         if (!res.ok) {
