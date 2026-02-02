@@ -872,10 +872,8 @@ def clear_cache():
 # =========================
 #   ANALYTICS ENDPOINTOK
 # =========================
-
 @app.post("/api/analytics/batch")
 def post_analytics_batch(batch: AnalyticsBatch):
-
     try:
         # ✅ Normalize / fill missing fields (business-grade ingest)
         now_ms = int(datetime.utcnow().timestamp() * 1000)
@@ -900,29 +898,40 @@ def post_analytics_batch(batch: AnalyticsBatch):
 
         story_dir = _story_analytics_dir(batch.storyId)
 
-        # ✅ use normalized ts for day (so missing ts doesn't crash)
-        ts_ms = norm_events[0]["ts"] if norm_events else now_ms
-        day = datetime.utcfromtimestamp(ts_ms / 1000.0).strftime("%Y-%m-%d")
-        out_path = os.path.join(story_dir, f"{day}.jsonl")
+        # ✅ FIX: write events into the correct day file (group by event ts day)
+        by_day: Dict[str, List[Dict[str, Any]]] = {}
+        for obj in norm_events:
+            day = datetime.utcfromtimestamp(obj["ts"] / 1000.0).strftime("%Y-%m-%d")
+            by_day.setdefault(day, []).append(obj)
 
-        with open(out_path, "a", encoding="utf-8") as f:
-            header = {
-                "_type": "batch_header",
-                "ts": datetime.utcnow().isoformat() + "Z",
-                "storyId": batch.storyId,
-                "userId": batch.userId,
-                "device": batch.device or {},
-                "count": len(norm_events),
-            }
-            f.write(json.dumps(header, ensure_ascii=False) + "\n")
-            for obj in norm_events:
-                f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+        written_total = 0
+        written_files: List[str] = []
 
-        return {"ok": True, "written": len(norm_events), "file": f"{batch.storyId}/{day}.jsonl"}
+        for day, events in by_day.items():
+            out_path = os.path.join(story_dir, f"{day}.jsonl")
+
+            with open(out_path, "a", encoding="utf-8") as f:
+                header = {
+                    "_type": "batch_header",
+                    "ts": datetime.utcnow().isoformat() + "Z",
+                    "storyId": batch.storyId,
+                    "userId": batch.userId,
+                    "device": batch.device or {},
+                    "count": len(events),
+                }
+                f.write(json.dumps(header, ensure_ascii=False) + "\n")
+                for obj in events:
+                    f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+            written_total += len(events)
+            written_files.append(f"{batch.storyId}/{day}.jsonl")
+
+        return {"ok": True, "written": written_total, "files": written_files}
 
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/api/analytics/days")
