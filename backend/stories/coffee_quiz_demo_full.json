@@ -184,531 +184,101 @@
       ]
     },
     {
-      "id": "logic",
-      "type": "logic",
-      "title": "Elemzés...",
-      "text": [
-        {
-          "text": "A választásaid alapján megmutatjuk, hogy most éppen milyen kávé-hangulat áll hozzád a legközelebb."
-        }
-      ],
-      "logic": [
-        {
-          "if": [
-            "Q1_A",
-            "Q2_A",
-            "Q3_1"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_A",
-            "Q3_2"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_A",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_A",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_B",
-            "Q3_1"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_B",
-            "Q3_2"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_B",
-            "Q3_3"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_B",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_C",
-            "Q3_1"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_C",
-            "Q3_2"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_C",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_C",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_D",
-            "Q3_1"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_D",
-            "Q3_2"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_D",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q2_D",
-            "Q3_4"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_A",
-            "Q3_1"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_A",
-            "Q3_2"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_A",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_A",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_B",
-            "Q3_1"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_B",
-            "Q3_2"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_B",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_B",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_C",
-            "Q3_1"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_C",
-            "Q3_2"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_C",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_C",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_D",
-            "Q3_1"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_D",
-            "Q3_2"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_D",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q2_D",
-            "Q3_4"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_A",
-            "Q3_1"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_A",
-            "Q3_2"
-          ],
-          "goto": "end_espresso"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_A",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_A",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_B",
-            "Q3_1"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_B",
-            "Q3_2"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_B",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_B",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_C",
-            "Q3_1"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_C",
-            "Q3_2"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_C",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_C",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_D",
-            "Q3_1"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_D",
-            "Q3_2"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_D",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q2_D",
-            "Q3_4"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_A",
-            "Q3_1"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_A",
-            "Q3_2"
-          ],
-          "goto": "end_latte"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_A",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_A",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_B",
-            "Q3_1"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_B",
-            "Q3_2"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_B",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_B",
-            "Q3_4"
-          ],
-          "goto": "end_filter"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_C",
-            "Q3_1"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_C",
-            "Q3_2"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_C",
-            "Q3_3"
-          ],
-          "goto": "end_cappuccino"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_C",
-            "Q3_4"
-          ],
-          "goto": "end_coldbrew"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_D",
-            "Q3_1"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_D",
-            "Q3_2"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_D",
-            "Q3_3"
-          ],
-          "goto": "end_decaf"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q2_D",
-            "Q3_4"
-          ],
-          "goto": "end_decaf"
-        }
-      ]
-    },
+  "id": "logic",
+  "type": "logic",
+  "title": "Elemzés...",
+  "text": [
     {
-  "id": "end_espresso",
+      "text": "A választásaid alapján megmutatjuk, hogy most éppen milyen kávé-hangulat áll hozzád a legközelebb."
+    }
+  ],
+  "logic": [
+    { "if": ["Q1_A","Q2_A","Q3_1"], "goto": "END_001" },
+    { "if": ["Q1_A","Q2_A","Q3_2"], "goto": "END_001" },
+    { "if": ["Q1_A","Q2_A","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_A","Q2_A","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_A","Q2_B","Q3_1"], "goto": "END_001" },
+    { "if": ["Q1_A","Q2_B","Q3_2"], "goto": "END_002" },
+    { "if": ["Q1_A","Q2_B","Q3_3"], "goto": "END_005" },
+    { "if": ["Q1_A","Q2_B","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_A","Q2_C","Q3_1"], "goto": "END_003" },
+    { "if": ["Q1_A","Q2_C","Q3_2"], "goto": "END_005" },
+    { "if": ["Q1_A","Q2_C","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_A","Q2_C","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_A","Q2_D","Q3_1"], "goto": "END_001" },
+    { "if": ["Q1_A","Q2_D","Q3_2"], "goto": "END_004" },
+    { "if": ["Q1_A","Q2_D","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_A","Q2_D","Q3_4"], "goto": "END_006" },
+
+    { "if": ["Q1_B","Q2_A","Q3_1"], "goto": "END_001" },
+    { "if": ["Q1_B","Q2_A","Q3_2"], "goto": "END_002" },
+    { "if": ["Q1_B","Q2_A","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_B","Q2_A","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_B","Q2_B","Q3_1"], "goto": "END_002" },
+    { "if": ["Q1_B","Q2_B","Q3_2"], "goto": "END_002" },
+    { "if": ["Q1_B","Q2_B","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_B","Q2_B","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_B","Q2_C","Q3_1"], "goto": "END_005" },
+    { "if": ["Q1_B","Q2_C","Q3_2"], "goto": "END_002" },
+    { "if": ["Q1_B","Q2_C","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_B","Q2_C","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_B","Q2_D","Q3_1"], "goto": "END_004" },
+    { "if": ["Q1_B","Q2_D","Q3_2"], "goto": "END_004" },
+    { "if": ["Q1_B","Q2_D","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_B","Q2_D","Q3_4"], "goto": "END_006" },
+
+    { "if": ["Q1_C","Q2_A","Q3_1"], "goto": "END_001" },
+    { "if": ["Q1_C","Q2_A","Q3_2"], "goto": "END_001" },
+    { "if": ["Q1_C","Q2_A","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_C","Q2_A","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_C","Q2_B","Q3_1"], "goto": "END_002" },
+    { "if": ["Q1_C","Q2_B","Q3_2"], "goto": "END_004" },
+    { "if": ["Q1_C","Q2_B","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_C","Q2_B","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_C","Q2_C","Q3_1"], "goto": "END_005" },
+    { "if": ["Q1_C","Q2_C","Q3_2"], "goto": "END_005" },
+    { "if": ["Q1_C","Q2_C","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_C","Q2_C","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_C","Q2_D","Q3_1"], "goto": "END_004" },
+    { "if": ["Q1_C","Q2_D","Q3_2"], "goto": "END_004" },
+    { "if": ["Q1_C","Q2_D","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_C","Q2_D","Q3_4"], "goto": "END_006" },
+
+    { "if": ["Q1_D","Q2_A","Q3_1"], "goto": "END_004" },
+    { "if": ["Q1_D","Q2_A","Q3_2"], "goto": "END_002" },
+    { "if": ["Q1_D","Q2_A","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_D","Q2_A","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_D","Q2_B","Q3_1"], "goto": "END_004" },
+    { "if": ["Q1_D","Q2_B","Q3_2"], "goto": "END_004" },
+    { "if": ["Q1_D","Q2_B","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_D","Q2_B","Q3_4"], "goto": "END_004" },
+
+    { "if": ["Q1_D","Q2_C","Q3_1"], "goto": "END_005" },
+    { "if": ["Q1_D","Q2_C","Q3_2"], "goto": "END_005" },
+    { "if": ["Q1_D","Q2_C","Q3_3"], "goto": "END_003" },
+    { "if": ["Q1_D","Q2_C","Q3_4"], "goto": "END_005" },
+
+    { "if": ["Q1_D","Q2_D","Q3_1"], "goto": "END_006" },
+    { "if": ["Q1_D","Q2_D","Q3_2"], "goto": "END_006" },
+    { "if": ["Q1_D","Q2_D","Q3_3"], "goto": "END_006" },
+    { "if": ["Q1_D","Q2_D","Q3_4"], "goto": "END_006" }
+  ]
+}
+,
+    {
+  "id": "END_001",
+  "type": "end",
+  "endAlias": "espresso",
   "title": "TE EGY ESPRESSO VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -769,15 +339,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "espresso as an archetypal state: concentrated, decisive, compressed energy, strong inner density, minimal but intentional presence, visual tension created through contrast and focus, a sense of immediacy and clarity, nothing excessive, everything purposeful, the feeling of something small yet powerful asserting itself without explanation",
-
     "page": "the environment defines where and how the archetypal state appears: a minimal interior, abstract spatial setting, or quiet surface-based composition, guided by soft directional light and restrained details, allowing the mood to manifest naturally; the setting supports the chapter energy without overt storytelling or literal interpretation",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "focused-minimal",
       "camera": "neutral",
@@ -789,10 +354,20 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
-},
-    {
-  "id": "end_latte",
+  "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
+}
+
+}
+,
+   {
+  "id": "END_002",
+  "type": "end",
+  "endAlias": "latte",
   "title": "TE EGY LATTE VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -853,15 +428,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "latte as an archetypal state: balanced and steady energy, soft cohesion rather than force, a sense of comfort and continuity, visual calm created through gentle transitions instead of sharp contrast, supportive presence that stabilizes the surrounding elements, nothing rushed, nothing abrupt, an atmosphere where things naturally settle into place, conveying reassurance, smoothness, and quiet reliability",
-
     "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "calm-balanced",
       "camera": "neutral",
@@ -873,11 +443,21 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
+  "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
 }
+
+}
+
 ,
-    {
-  "id": "end_cappuccino",
+   {
+  "id": "END_003",
+  "type": "end",
+  "endAlias": "cappuccino",
   "title": "TE EGY CAPPUCCINO VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -938,15 +518,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "cappuccino as an archetypal state: playful yet structured energy, lightness layered over a stable base, a sense of creative lift and variation, visual rhythm created through soft contrasts and subtle layering, moments of surprise balanced by coherence, an atmosphere where ideas can bounce and recombine, expressive without being chaotic, suggesting curiosity, spontaneity, and inventive flow",
-
     "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "playful-balanced",
       "camera": "neutral",
@@ -958,11 +533,21 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
+  "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
 }
+
+}
+
 ,
-    {
-  "id": "end_filter",
+   {
+  "id": "END_004",
+  "type": "end",
+  "endAlias": "filter",
   "title": "TE EGY FILTER KÁVÉ VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -1023,15 +608,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "filter coffee as an archetypal state: slow and deliberate clarity, patience expressed through continuity and flow, a sense of quiet depth rather than intensity, visual calm built from openness and breathing space, gentle progression without urgency, focus on balance and proportion, an atmosphere where understanding unfolds gradually, suggesting thoughtfulness, reliability, and steady presence",
-
     "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "calm-reflective",
       "camera": "neutral",
@@ -1043,11 +623,21 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
+  "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
 }
+
+}
+
 ,
     {
-  "id": "end_coldbrew",
+  "id": "END_005",
+  "type": "end",
+  "endAlias": "coldbrew",
   "title": "TE EGY COLD BREW VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -1108,15 +698,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "cold brew as an archetypal state: fresh and unconventional clarity, relaxed yet alert energy, a sense of distance from urgency, smooth confidence without pressure, visual coolness expressed through openness and restraint rather than coldness, subtle contrast that feels modern and slightly unexpected, an atmosphere of quiet originality, independence, and ease, suggesting a different rhythm that still moves forward",
-
     "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "fresh-relaxed",
       "camera": "neutral",
@@ -1128,11 +713,21 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
+ "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
 }
+
+}
+
 ,
     {
-  "id": "end_decaf",
+  "id": "END_006",
+  "type": "end",
+  "endAlias": "decaf",
   "title": "TE EGY DECAF VAGY",
   "layout": {
     "mediaMode": "profile-card"
@@ -1193,15 +788,10 @@
   ],
   "imagePrompt": {
     "global": "cinematic visual language with softly stylized realism, calm and premium tone, restrained composition, balanced light–shadow relationship, subtle depth, tactile surfaces, modern editorial photography sensibility, introspective mood, visually quiet but emotionally dense, high resolution, refined contrast, cohesive and brand-safe aesthetic",
-
     "chapter": "decaf as an archetypal state: calm and humane presence, gentle attentiveness without urgency, emotional softness paired with inner stability, a sense of quiet support rather than direction, visual warmth expressed through subtle balance and restraint, nothing pushing forward yet nothing stagnant, an atmosphere of listening, care, and grounded calm, suggesting empathy, patience, and a reassuring steadiness",
-
     "page": "a situational environment frame; {fragment:FRAG_PAGE_SITUATION_1}; {fragment:FRAG_PAGE_SITUATION_2}; {fragment:FRAG_PAGE_SITUATION_3}; {fragment:FRAG_PAGE_SITUATION_4}",
-
     "combinedPrompt": "{global}, {chapter}, {page}",
-
     "negativePrompt": "text, logos, branding, watermark, UI elements, typography, coffee shop clichés, literal product shots, latte art close-ups, people as main subjects, cluttered scenes, harsh lighting, oversaturation, low resolution, distorted forms",
-
     "styleProfile": {
       "mood": "gentle-warm",
       "camera": "neutral",
@@ -1213,8 +803,16 @@
     "trigger": "onPageLoad",
     "delayMs": 300
   },
-  "cta": "default"
+  "endMeta": {
+  "cta": {
+    "kind": "link",
+    "label": "Köszönjük a játékot",
+    "urlTemplate": "https://www.google.com"
+  }
 }
+
+}
+
   ],
   "fragments": {
   "FRAG_Q2_VARIANT_1": {

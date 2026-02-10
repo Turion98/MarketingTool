@@ -1559,6 +1559,8 @@ const dockChoicesForThisPage = useMemo(() => {
       campaignId: derivedStoryId || "unknown_campaign",
       nodeId: pageData?.id || currentPageId || "unknown_node",
       sessionId: derivedSessionId || undefined,
+      endId: pageData?.id,
+      endAlias: (pageData as any)?.endAlias,
       lang: (globals as any)?.lang ?? undefined,
       abVariant: (globals as any)?.abVariant ?? null,
       path:

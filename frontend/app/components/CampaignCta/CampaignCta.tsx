@@ -36,9 +36,21 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
   const playCtaAppear = useUiClickSound("/sounds/cta.wav");
 
   // ⛳ analytics context (kampányfüggő pageId oké — csak legyen meg)
-  const storyId = (context as any)?.storyId as string | undefined;
+  const storyId =
+    ((context as any)?.storyId ?? (context as any)?.campaignId) as
+      | string
+      | undefined;
+
   const sessionId = (context as any)?.sessionId as string | undefined;
-  const pageId = (context as any)?.pageId as string | undefined;
+
+  const pageId =
+    ((context as any)?.pageId ?? (context as any)?.nodeId) as
+      | string
+      | undefined;
+
+  // end kötés (ha van)
+  const endId = (context as any)?.endId as string | undefined;
+  const endAlias = (context as any)?.endAlias as string | undefined;
 
   // StrictMode / rerender dedup
   const shownOnce = React.useRef(false);
@@ -57,10 +69,22 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
         trackCtaShown(storyId, sessionId, pageId, {
           kind: cta.kind,
           label: cta.label ?? "Continue",
+          endId,
+          endAlias,
         });
       } catch {}
     }
-  }, [onShown, playCtaAppear, storyId, sessionId, pageId, cta.kind, cta.label]);
+  }, [
+    onShown,
+    playCtaAppear,
+    storyId,
+    sessionId,
+    pageId,
+    endId,
+    endAlias,
+    cta.kind,
+    cta.label,
+  ]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -71,6 +95,8 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
         trackCtaClick(storyId, sessionId, pageId, {
           kind: cta.kind,
           label: cta.label ?? "Continue",
+          endId,
+          endAlias,
         });
       } catch {}
     }
