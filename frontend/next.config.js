@@ -56,17 +56,24 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
-    if (isDev) {
-      return [
-        {
-          source: "/api/:path*",
-          destination: "http://127.0.0.1:8000/api/:path*",
-        },
-      ];
-    }
-    return [];
-  },
+ async rewrites() {
+  if (isDev) {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://127.0.0.1:8000/api/:path*",
+      },
+    ];
+  }
+
+  // PROD: analytics menjen az api subdomainre
+  return [
+    {
+      source: "/api/analytics/:path*",
+      destination: "https://api.thequestell.com/api/analytics/:path*",
+    },
+  ];
+},
 };
 
 module.exports = nextConfig;
