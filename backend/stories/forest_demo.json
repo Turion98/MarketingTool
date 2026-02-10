@@ -55,7 +55,7 @@
         },
         {
           "text": "Befejezed a túrát",
-          "next": "end"
+          "next": "END__forest_demo__google_reward"
         }
       ]
     },
@@ -69,8 +69,8 @@
         }
       ]
     },
-    "end": {
-      "id": "end",
+    "END__forest_demo__google_reward": {
+      "id": "END__forest_demo__google_reward",
       "type": "end",
       "title": "Köszönjük!",
       "text": "Végigjátszottad az erdei demót.",
