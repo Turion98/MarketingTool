@@ -910,11 +910,16 @@ const skin = useMemo(() => {
 
     try {
       trackPageEnter(
-        derivedStoryId,
-        derivedSessionId,
-        pageId,
-        lastPageRef.current ?? undefined
-      );
+  derivedStoryId,
+  derivedSessionId,
+  pageId,
+  lastPageRef.current ?? undefined,
+  {
+    rawPageId: pageData?.id,      // a valódi JSON node id
+    pageType: pageData?.type,     // pl. "end"
+  }
+);
+
     } catch {}
     enterTsRef.current = Date.now();
     lastPageRef.current = pageId;

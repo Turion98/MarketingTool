@@ -218,20 +218,52 @@ export function trackPageEnter(
   storyId: string,
   sessionId: string,
   pageId: string,
-  refPageId?: string
+  refPageId?: string,
+  extra?: GenericProps
 ) {
-  pushEvent(baseEvent(storyId, sessionId, "page_enter", pageId, refPageId));
+  // 1️⃣ page_enter event
+  pushEvent(
+    baseEvent(storyId, sessionId, "page_enter", pageId, refPageId, extra)
+  );
 
-  // auto-complete if terminal page
+  // 2️⃣ terminal pages lookup
   const terminals = terminalPagesByStory.get(storyId);
-  if (terminals?.has(pageId)) {
+
+  // 3️⃣ valódi node id (ha StoryPage átadja)
+  const rawPageId =
+    extra && typeof (extra as any).rawPageId === "string"
+      ? (extra as any).rawPageId
+      : undefined;
+
+  const pageType =
+    extra && typeof (extra as any).pageType === "string"
+      ? (extra as any).pageType
+      : undefined;
+
+  // 4️⃣ univerzális terminal felismerés
+  const isTerminal =
+    (rawPageId && terminals?.has(rawPageId)) ||
+    terminals?.has(pageId) ||
+    pageType === "end";
+
+  // 5️⃣ completion trigger (duplázás védelemmel)
+  if (isTerminal) {
     const key = `${storyId}::${sessionId}`;
+
     if (!completedSessions.has(key)) {
       completedSessions.add(key);
-      trackGameComplete(storyId, sessionId, pageId); // endAlias = pageId
+
+      // mindig a valódi end node id menjen be
+      const endAlias = rawPageId || pageId;
+
+      trackGameComplete(storyId, sessionId, endAlias, {
+        reason: "terminal_page",
+      });
     }
   }
 }
+
+
 
 
 export function trackGameComplete(
@@ -737,15 +769,16 @@ export function inferTerminalPagesFromStory(story: any): string[] {
     const type = String(p?.type || "");
     const hasLogic = Array.isArray(p?.logic) && p.logic.length > 0;
 
-    // exclude logic pages
+    // logikai/redirect page ne legyen terminal
     if (type === "logic" || hasLogic) continue;
 
-    // mark explicit end pages OR common terminal id patterns
-    if (type === "end" || /^(END_|END__|end_)/.test(id)) out.push(id);
+    // univerzális: explicit end type, vagy END_* minták
+    if (type === "end" || /^END__/.test(id) || /^END_/.test(id)) out.push(id);
   }
 
   return out;
 }
+
 
 
 // --- Dev helpers on window ---------------------------------------
