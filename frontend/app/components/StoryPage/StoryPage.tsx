@@ -60,9 +60,10 @@ import {
   trackChoice,
   trackRuneUnlock,
   trackUiClick,
+  setTerminalPages,
+  inferTerminalPagesFromStory,
 } from "../../lib/analytics";
 
-import { trackGameComplete } from "../../lib/analytics";
 
 import { fetchPageJsonCached } from "@/app/lib/story/fetchPageJson";
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
@@ -594,6 +595,7 @@ const StoryPage: React.FC = () => {
 
 
 
+
 const skin = useMemo(() => {
   return (globals as any)?.skin || params.get("skin") || "legacy-default";
 }, [(globals as any)?.skin, params]);
@@ -832,33 +834,7 @@ const skin = useMemo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-useEffect(() => {
-  if (!derivedStoryId || !derivedSessionId) return;
-  if (!pageData) return;
 
-  const isEndNode = pageData?.type === "end";
-  if (!isEndNode) {
-    endTrackedRef.current = false;
-    return;
-  }
-
-  if (endTrackedRef.current) return;
-  endTrackedRef.current = true;
-
-  const rawAlias =
-    (pageData as any)?.endAlias ??
-    (pageData as any)?.endMeta?.alias ??
-    (pageData as any)?.meta?.alias ??
-    (pageData as any)?.id ??
-    undefined;
-
-  const endAlias =
-    typeof rawAlias === "string" ? rawAlias.trim() : undefined;
-
-  try {
-    trackGameComplete(derivedStoryId, derivedSessionId, endAlias);
-  } catch {}
-}, [derivedStoryId, derivedSessionId, pageData]);
 
 
   // page change reset
@@ -1176,7 +1152,25 @@ useEffect(() => {
     unlockedFragments,
   ]);
 
-  
+  useEffect(() => {
+  if (!derivedStoryId) return;
+
+  // próbáljuk megtalálni a betöltött sztori JSON-t a globals-ban
+  const storyJson =
+    (globals as any)?.loadedStory ??
+    (globals as any)?.storyJson ??
+    (globals as any)?.storyData ??
+    (globals as any)?.story;
+
+  if (!storyJson) return;
+
+  const terminals = inferTerminalPagesFromStory(storyJson);
+  if (terminals.length) {
+    setTerminalPages(derivedStoryId, terminals);
+  }
+}, [derivedStoryId, globals]);
+
+
   // sidePreload voice/sfx/narration
   useEffect(() => {
     if (!globals?.storySrc) return;

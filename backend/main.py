@@ -1115,9 +1115,24 @@ def rollup_range(
 
                 t = obj.get("t")
                 ts = obj.get("ts")
-                sid = obj.get("sessionId")
-                pid = obj.get("pageId")
                 props = obj.get("props") or {}
+
+                sid = (
+                    obj.get("sessionId")
+                    or props.get("sessionId")
+                    or obj.get("sid")
+                    or props.get("sid")
+                )
+
+                pid = (
+                    obj.get("pageId")
+                    or props.get("pageId")
+                    or obj.get("page")
+                    or props.get("page")
+                    or obj.get("pg")
+                    or props.get("pg")
+                )
+
 
                 # ✅ session/users bookkeeping
                 if sid:
@@ -1174,6 +1189,16 @@ def rollup_range(
                 if sid:
                     per_session_events.setdefault(sid, []).append({
                         "t": t, "ts": ts, "pageId": pid, "props": props, "day": day
+                    })
+                if t == "choice_select" and pid and props.get("choiceId"):
+                    per_session_events[sid].append({
+                        "t": "choice_edge",
+                        "ts": ts,
+                        "pageId": pid,
+                        "props": {
+                            "nextPageId": props.get("choiceId")
+                        },
+                        "day": day
                     })
 
     completed_sessions = 0

@@ -16,6 +16,16 @@ const MERGE_WINDOW_MS = 300;
 const TERMINAL_PAGE_ID = "__END__";
 const END_ALIAS_KEY = "endAlias";
 
+// --- Terminal pages registry (per story) ---
+const terminalPagesByStory = new Map<string, Set<string>>();
+
+// prevent double complete per session
+const completedSessions = new Set<string>();
+
+export function setTerminalPages(storyId: string, terminalPageIds: string[]) {
+  terminalPagesByStory.set(storyId, new Set((terminalPageIds || []).filter(Boolean)));
+}
+
 
 let mem: StorageShape | null = null;
 let saveTimer: number | null = null;
@@ -204,7 +214,6 @@ function baseEvent(
   };
 }
 
-// ---------- PUBLIC TRACK API ----------
 export function trackPageEnter(
   storyId: string,
   sessionId: string,
@@ -212,7 +221,18 @@ export function trackPageEnter(
   refPageId?: string
 ) {
   pushEvent(baseEvent(storyId, sessionId, "page_enter", pageId, refPageId));
+
+  // auto-complete if terminal page
+  const terminals = terminalPagesByStory.get(storyId);
+  if (terminals?.has(pageId)) {
+    const key = `${storyId}::${sessionId}`;
+    if (!completedSessions.has(key)) {
+      completedSessions.add(key);
+      trackGameComplete(storyId, sessionId, pageId); // endAlias = pageId
+    }
+  }
 }
+
 
 export function trackGameComplete(
   storyId: string,
@@ -700,6 +720,33 @@ const endpoints = [
     error: String(lastError || "upload failed"),
   };
 }
+
+export function inferTerminalPagesFromStory(story: any): string[] {
+  const pagesArr = Array.isArray(story?.pages)
+    ? story.pages
+    : story?.pages && typeof story.pages === "object"
+      ? Object.values(story.pages)
+      : [];
+
+  const out: string[] = [];
+
+  for (const p of pagesArr as any[]) {
+    const id = String(p?.id || "");
+    if (!id) continue;
+
+    const type = String(p?.type || "");
+    const hasLogic = Array.isArray(p?.logic) && p.logic.length > 0;
+
+    // exclude logic pages
+    if (type === "logic" || hasLogic) continue;
+
+    // mark explicit end pages OR common terminal id patterns
+    if (type === "end" || /^(END_|END__|end_)/.test(id)) out.push(id);
+  }
+
+  return out;
+}
+
 
 // --- Dev helpers on window ---------------------------------------
 declare global {
