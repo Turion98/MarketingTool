@@ -254,11 +254,11 @@ export function trackPageEnter(
       completedSessions.add(key);
 
       // mindig a valódi end node id menjen be
-      const endAlias = rawPageId || pageId;
+      const endAlias =
+  (extra as any)?.endAlias || (extra as any)?.rawPageId || pageId;
 
-      trackGameComplete(storyId, sessionId, endAlias, {
-        reason: "terminal_page",
-      });
+trackGameComplete(storyId, sessionId, endAlias, { reason: "terminal_page" });
+
     }
   }
 }

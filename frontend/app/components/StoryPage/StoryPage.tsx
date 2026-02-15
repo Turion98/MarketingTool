@@ -917,6 +917,7 @@ const skin = useMemo(() => {
   {
     rawPageId: pageData?.id,      // a valódi JSON node id
     pageType: pageData?.type,     // pl. "end"
+    endAlias: (pageData as any)?.endAlias,
   }
 );
 
