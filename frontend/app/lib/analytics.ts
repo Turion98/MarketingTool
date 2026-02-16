@@ -663,10 +663,12 @@ export function prepareBatch(storyId: string) {
 
   // 🔥 BACKEND-KOMPATIBILIS TRANSZFORMÁCIÓ
   const transformedEvents = newEvents.map((e) => ({
-    t: Number(e.ts),              // timestamp (number)
-    sessionId: e.sessionId,       // kötelező
-    ev: JSON.stringify(e),        // teljes event stringként
-  }));
+  t: String(e.t),          // ✅ event type (pl "page_enter")
+  ts: String(e.ts),        // ✅ timestamp (biztosan string)
+  sessionId: e.sessionId,  // ✅
+  ev: JSON.stringify(e),   // ✅ (maradhat)
+}));
+
 
   return {
     storyId,
@@ -728,7 +730,8 @@ const endpoints = [
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 
       // siker → lastUploadTs frissítése
-      const maxTs = Math.max(...payload.events.map((e) => Number(e.t)));
+      const maxTs = Math.max(...payload.events.map((e) => Number(e.ts))); // ✅
+
 
       const s = load();
       const b = storyBucket(storyId);
