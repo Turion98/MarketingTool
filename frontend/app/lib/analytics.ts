@@ -664,7 +664,7 @@ export function prepareBatch(storyId: string) {
   // 🔥 BACKEND-KOMPATIBILIS TRANSZFORMÁCIÓ
   const transformedEvents = newEvents.map((e) => ({
   t: String(e.t),          // ✅ event type (pl "page_enter")
-  ts: String(e.ts),        // ✅ timestamp (biztosan string)
+  ts: e.ts,        // ✅ timestamp (biztosan string)
   sessionId: e.sessionId,  // ✅
   ev: JSON.stringify(e),   // ✅ (maradhat)
 }));
@@ -708,60 +708,60 @@ const endpoints = [
 
   let lastError: unknown = null;
 
-  for (const url of endpoints) {
-    try {
-      // rövid timeout, hogy ne lógjon be
-      const ac = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timer =
-        ac && typeof window !== "undefined"
-          ? (window.setTimeout(() => ac.abort(), 4000) as unknown as number)
-          : null;
+ for (const url of endpoints) {
+  try {
+    const ac = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer =
+      ac && typeof window !== "undefined"
+        ? (window.setTimeout(() => ac.abort(), 44000) as unknown as number)
+        : null;
+
+    const CHUNK = 50;
+
+    for (let i = 0; i < payload.events.length; i += CHUNK) {
+      const chunkPayload = {
+        ...payload,
+        events: payload.events.slice(i, i + CHUNK),
+      };
 
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(chunkPayload),
         keepalive: true,
         signal: ac?.signal,
       });
 
-      if (timer != null && typeof window !== "undefined") window.clearTimeout(timer);
-
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-
-      // siker → lastUploadTs frissítése
-      const maxTs = Math.max(...payload.events.map((e) => Number(e.ts))); // ✅
-
-
-      const s = load();
-      const b = storyBucket(storyId);
-      (b.meta as Record<string, unknown>) = { ...(b.meta || {}), lastUploadTs: maxTs };
-      saveSoon();
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("[analytics] uploaded", {
-          storyId,
-          url,
-          count: payload.events.length,
-          lastUploadTs: maxTs,
-        });
-      }
-
-      // ha a szerver nem ad JSON-t, akkor is legyen ok válasz
-      try {
-        const json = (await res.json()) as unknown;
-        return json;
-      } catch {
-        return { ok: true, written: payload.events.length };
-      }
-    } catch (err) {
-      lastError = err;
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[analytics] upload failed, trying next endpoint", { url, err });
-      }
-      continue;
     }
+
+    if (timer != null && typeof window !== "undefined") window.clearTimeout(timer);
+
+    // ✅ siker → lastUploadTs frissítése (az egész payload alapján)
+    const maxTs = Math.max(...payload.events.map((e) => Number(e.ts)));
+
+    const b = storyBucket(storyId);
+    (b.meta as Record<string, unknown>) = { ...(b.meta || {}), lastUploadTs: maxTs };
+    saveSoon();
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[analytics] uploaded", {
+        storyId,
+        url,
+        count: payload.events.length,
+        lastUploadTs: maxTs,
+      });
+    }
+
+    return { ok: true, written: payload.events.length };
+  } catch (err) {
+    lastError = err;
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[analytics] upload failed, trying next endpoint", { url, err });
+    }
+    continue;
   }
+}
 
   // minden kísérlet megbukott → ne dobjunk hibát, adjunk vissza státuszt
   return {
