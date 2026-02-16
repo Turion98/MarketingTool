@@ -890,61 +890,76 @@ const skin = useMemo(() => {
       isRiddle(pageData) || isRunes(pageData) ? Date.now() : null;
   }, [pageData?.id]);
 
-  // analytics: page enter/exit
-  useEffect(() => {
-    if (!derivedStoryId || !derivedSessionId) return;
-    const pageId = currentPageId || pageData?.id;
-    if (!pageId)return;
+// analytics: page enter/exit
+useEffect(() => {
+  if (!derivedStoryId || !derivedSessionId) return;
 
-    if (lastPageRef.current && enterTsRef.current != null) {
-      const dwell = Date.now() - enterTsRef.current;
-      try {
-        trackPageExit(
-          derivedStoryId,
-          derivedSessionId,
-          lastPageRef.current,
-          Math.max(0, dwell)
-        );
-      } catch {}
-    }
+  const pageId = currentPageId || pageData?.id;
+  if (!pageId) return;
 
+  // --- END fallback: ha nincs pageData.type / endAlias, de az id "end_*"
+  const fallbackEndAlias =
+    typeof pageData?.id === "string" && pageData.id.startsWith("end_")
+      ? pageData.id.slice(4) // "end_espresso" -> "espresso"
+      : undefined;
+
+  const normalizedPageType =
+    pageData?.type || (fallbackEndAlias ? "end" : undefined);
+
+  const normalizedEndAlias =
+    (pageData as any)?.endAlias || fallbackEndAlias;
+
+  if (lastPageRef.current && enterTsRef.current != null) {
+    const dwell = Date.now() - enterTsRef.current;
     try {
-      trackPageEnter(
+      trackPageExit(
+        derivedStoryId,
+        derivedSessionId,
+        lastPageRef.current,
+        Math.max(0, dwell)
+      );
+    } catch {}
+  }
+
+  try {
+    trackPageEnter(
+      derivedStoryId,
+      derivedSessionId,
+      pageId,
+      lastPageRef.current ?? undefined,
+      {
+        rawPageId: pageData?.id,          // a tényleges node id (ami nálad most "end_espresso" is lehet)
+        pageType: normalizedPageType,     // <- "end" lesz, ha end_* oldal
+        endAlias: normalizedEndAlias,     // <- "espresso" lesz, ha end_* oldal
+      }
+    );
+  } catch {}
+
+  enterTsRef.current = Date.now();
+  lastPageRef.current = pageId;
+
+  return () => {
+    if (!lastPageRef.current || enterTsRef.current == null) return;
+    const dwell = Date.now() - enterTsRef.current;
+    try {
+      trackPageExit(
+        derivedStoryId,
+        derivedSessionId,
+        lastPageRef.current,
+        Math.max(0, dwell)
+      );
+    } catch {}
+    enterTsRef.current = null;
+    lastPageRef.current = null;
+  };
+}, [
   derivedStoryId,
   derivedSessionId,
-  pageId,
-  lastPageRef.current ?? undefined,
-  {
-    rawPageId: pageData?.id,      // a valódi JSON node id
-    pageType: pageData?.type,     // pl. "end"
-    endAlias: (pageData as any)?.endAlias,
-  }
-);
+  currentPageId,
+  pageData?.id,
+  pageData?.type,
+]);
 
-    } catch {}
-    enterTsRef.current = Date.now();
-    lastPageRef.current = pageId;
-
-    return () => {
-      if (!lastPageRef.current || enterTsRef.current == null) return;
-      const dwell = Date.now() - enterTsRef.current;
-      try {
-        trackPageExit(
-          derivedStoryId,
-          derivedSessionId,
-          lastPageRef.current,
-          Math.max(0, dwell)
-        );
-      } catch {}
-      enterTsRef.current = null;
-      lastPageRef.current = null;
-    };
-  }, [
-    derivedStoryId,
-    derivedSessionId,
-    currentPageId,
-    pageData?.id,
-  ]);
 
   // analytics: tab hide
   useEffect(() => {
@@ -1442,7 +1457,9 @@ const skin = useMemo(() => {
     ? pageData.choices.length > 0
     : false;
 
-  const isEndNode = pageData?.type === "end";
+  const isEndNode =
+  pageData?.type === "end" ||
+  (typeof pageData?.id === "string" && pageData.id.startsWith("end_"));
 
   const resolvedNext = useMemo(() => {
     return (
@@ -1552,6 +1569,24 @@ const dockChoicesForThisPage = useMemo(() => {
   pageData ? pageData.id : undefined,
   unlockedFragments, // 🔹 ÚJ dependency
 ]);
+
+useEffect(() => {
+  if (!derivedStoryId || !derivedSessionId) return;
+
+  const isEnd =
+    pageData?.type === "end" ||
+    (typeof pageData?.id === "string" && pageData.id.startsWith("end_"));
+
+  if (!isEnd) {
+    endTrackedRef.current = false;
+    return;
+  }
+
+  if (endTrackedRef.current) return;
+  endTrackedRef.current = true;
+
+  // itt NEM kell külön trackGameComplete, ha a trackPageEnter már pageType:"end"-et kap
+}, [derivedStoryId, derivedSessionId, pageData?.id, pageData?.type]);
 
   // CTA
   const endCtaContext: CtaContext = useMemo(
