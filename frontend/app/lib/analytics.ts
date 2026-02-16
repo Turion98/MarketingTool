@@ -640,15 +640,17 @@ export function rollupDaily(storyId: string) {
 
 // --- AUTO UPLOAD HELPEREK ---
 export function prepareBatch(storyId: string) {
-  const s = load();
   const b = storyBucket(storyId);
 
   // utolsó feltöltés időbélyege
-  const lastTs = Number((b.meta as Record<string, unknown>)?.["lastUploadTs"] ?? 0);
-  const events = b.events.filter((e) => Number(e.ts) > lastTs);
+  const lastTs = Number(
+    (b.meta as Record<string, unknown>)?.["lastUploadTs"] ?? 0
+  );
+
+  const newEvents = b.events.filter((e) => Number(e.ts) > lastTs);
 
   const userId =
-    (b.meta as Record<string, unknown>)?.["userId"] as string | undefined ??
+    ((b.meta as Record<string, unknown>)?.["userId"] as string | undefined) ??
     (typeof window !== "undefined" ? getOrCreateUserId() : undefined);
 
   const device = {
@@ -659,7 +661,19 @@ export function prepareBatch(storyId: string) {
     lang: (b.meta as Record<string, unknown>)?.["lang"] as string | undefined,
   };
 
-  return { storyId, userId, device, events };
+  // 🔥 BACKEND-KOMPATIBILIS TRANSZFORMÁCIÓ
+  const transformedEvents = newEvents.map((e) => ({
+    t: Number(e.ts),              // timestamp (number)
+    sessionId: e.sessionId,       // kötelező
+    ev: JSON.stringify(e),        // teljes event stringként
+  }));
+
+  return {
+    storyId,
+    userId,
+    device,
+    events: transformedEvents,
+  };
 }
 
 export async function uploadBatch(storyId: string, endpoint?: string) {
@@ -673,8 +687,10 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
       "NEXT_PUBLIC_API_BASE"
     ]) as string | undefined;
 
-const envBatch =
-  (apiBase ? `${apiBase.replace(/\/$/, "")}/api/analytics/batch` : undefined);
+const cleanBase = apiBase?.trim().replace(/\/$/, "");
+const envBatch = cleanBase
+  ? `${cleanBase}/api/analytics/batch`
+  : undefined;
 
 const prodApi =
   (process as any)?.env?.NEXT_PUBLIC_ANALYTICS_FALLBACK as string | undefined;
@@ -712,7 +728,7 @@ const endpoints = [
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 
       // siker → lastUploadTs frissítése
-      const maxTs = Math.max(...payload.events.map((e) => Number(e.ts)));
+      const maxTs = Math.max(...payload.events.map((e) => Number(e.t)));
 
       const s = load();
       const b = storyBucket(storyId);
