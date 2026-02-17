@@ -664,7 +664,7 @@ export function prepareBatch(storyId: string) {
   // 🔥 BACKEND-KOMPATIBILIS TRANSZFORMÁCIÓ
   const transformedEvents = newEvents.map((e) => ({
   t: String(e.t),          // ✅ event type (pl "page_enter")
-  ts: e.ts,        // ✅ timestamp (biztosan string)
+  ts: String(e.ts),        // ✅ timestamp (biztosan string)
   sessionId: e.sessionId,  // ✅
   ev: JSON.stringify(e),   // ✅ (maradhat)
 }));
@@ -738,7 +738,8 @@ const endpoints = [
     if (timer != null && typeof window !== "undefined") window.clearTimeout(timer);
 
     // ✅ siker → lastUploadTs frissítése (az egész payload alapján)
-    const maxTs = Math.max(...payload.events.map((e) => Number(e.ts)));
+   const maxTs = Math.max(...payload.events.map((e) => parseInt(String(e.ts), 10) || 0));
+
 
     const b = storyBucket(storyId);
     (b.meta as Record<string, unknown>) = { ...(b.meta || {}), lastUploadTs: maxTs };
