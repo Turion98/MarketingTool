@@ -662,15 +662,14 @@ export function prepareBatch(storyId: string) {
   };
 
 const transformedEvents = newEvents.map((e) => ({
-  id: e.id,                       // opcionális, backend úgyis pótolja ha nincs
-  storyId: e.storyId,             // opcionális (batch.storyId fallback van)
-  t: String(e.t),                 // ✅ event type string
-  ts: Number(e.ts),               // ✅ timestamp number
-  sessionId: String(e.sessionId), // ✅ kötelező
-  pageId: e.pageId ? String(e.pageId) : undefined,
-  refPageId: e.refPageId ? String(e.refPageId) : undefined,
-  props: e.props ?? undefined,    // ✅ nagyon fontos (choiceId, userId, stb.)
-  // ev: JSON.stringify(e),       // opcionális: hagyhatod debugra, de a backend nem használja
+  id: e.id,
+  t: e.t,                       // pl "page_enter"
+  ts: Number(e.ts),             // ✅ int ms
+  storyId: e.storyId,           // optional, de ok
+  sessionId: e.sessionId,       // ✅
+  pageId: e.pageId,             // ✅ nagyon fontos
+  refPageId: e.refPageId,
+  props: e.props,               // ✅ choiceId stb itt van
 }));
 
 
@@ -742,7 +741,8 @@ const endpoints = [
     if (timer != null && typeof window !== "undefined") window.clearTimeout(timer);
 
     // ✅ siker → lastUploadTs frissítése (az egész payload alapján)
-   const maxTs = Math.max(...payload.events.map((e) => parseInt(String(e.ts), 10) || 0));
+   const maxTs = Math.max(...payload.events.map((e) => Number(e.ts) || 0));
+
 
 
     const b = storyBucket(storyId);
