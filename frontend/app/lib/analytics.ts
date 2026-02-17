@@ -661,12 +661,16 @@ export function prepareBatch(storyId: string) {
     lang: (b.meta as Record<string, unknown>)?.["lang"] as string | undefined,
   };
 
-  // 🔥 BACKEND-KOMPATIBILIS TRANSZFORMÁCIÓ
-  const transformedEvents = newEvents.map((e) => ({
-  t: String(e.t),          // ✅ event type (pl "page_enter")
-  ts: String(e.ts),        // ✅ timestamp (biztosan string)
-  sessionId: e.sessionId,  // ✅
-  ev: JSON.stringify(e),   // ✅ (maradhat)
+const transformedEvents = newEvents.map((e) => ({
+  id: e.id,                       // opcionális, backend úgyis pótolja ha nincs
+  storyId: e.storyId,             // opcionális (batch.storyId fallback van)
+  t: String(e.t),                 // ✅ event type string
+  ts: Number(e.ts),               // ✅ timestamp number
+  sessionId: String(e.sessionId), // ✅ kötelező
+  pageId: e.pageId ? String(e.pageId) : undefined,
+  refPageId: e.refPageId ? String(e.refPageId) : undefined,
+  props: e.props ?? undefined,    // ✅ nagyon fontos (choiceId, userId, stb.)
+  // ev: JSON.stringify(e),       // opcionális: hagyhatod debugra, de a backend nem használja
 }));
 
 
