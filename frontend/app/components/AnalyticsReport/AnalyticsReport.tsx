@@ -173,7 +173,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
           setRangeError(
             e?.message || "Ismeretlen hiba a rollup-range lekérdezésekor."
           );
-          setRangeData(null);
+          
         }
       } finally {
         setLoadingRange(false);
