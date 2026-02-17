@@ -143,11 +143,13 @@ export default function AnalyticsReport({
         const params = new URLSearchParams({ storyId, from, to });
         if (terminal.trim()) params.set("terminal", terminal.trim());
 
-       const base = (
-  process.env.NEXT_PUBLIC_API_BASE ||
-  process.env.NEXT_PUBLIC_ANALYTICS_FALLBACK ||
-  "http://127.0.0.1:8000"
-).replace(/\/+$/, "");
+       const base =
+  (typeof window !== "undefined" &&
+  (window.location.hostname === "www.thequestell.com" ||
+    window.location.hostname.endsWith(".thequestell.com")))
+    ? "https://api.thequestell.com"
+    : "http://127.0.0.1:8000";
+
 
 const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 
@@ -157,6 +159,14 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
           throw new Error(`HTTP ${res.status} – ${text || "rollup-range hiba"}`);
         }
         const json = (await res.json()) as RangeRollup;
+        console.log("[report] rollup ok", {
+  storyId: json.storyId,
+  users: json.users,
+  sessions: json.sessions,
+  pv: json.totals?.pageViews,
+  choices: json.totals?.choices,
+});
+
         setRangeData(json);
       } catch (e: any) {
         if (e?.name !== "AbortError") {
