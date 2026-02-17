@@ -804,7 +804,6 @@ export function inferTerminalPagesFromStory(story: any): string[] {
 }
 
 
-
 // --- Dev helpers on window ---------------------------------------
 declare global {
   interface Window {
@@ -814,36 +813,39 @@ declare global {
       prepare: (storyId: string) => ReturnType<typeof prepareBatch>;
       upload: (storyId: string, endpoint?: string) => Promise<unknown>;
       clear: (storyId: string) => void;
+      reload: () => unknown;      // ✅ NEW: mem újratöltés LS-ből
+      flush: () => void;          // ✅ NEW: azonnali mentés LS-be
     };
   }
 }
 
+function flushNow() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(mem));
+  } catch {}
+}
+
+function reloadFromStorage() {
+  // ✅ mem reset, újra beolvasás
+  mem = null;
+  saveTimer = null;
+  return load();
+}
+
 if (typeof window !== "undefined") {
   window.__an = {
-    dump: () => {
-      try {
-        return JSON.parse(localStorage.getItem(LS_KEY) || "null");
-      } catch {
-        return null;
-      }
-    },
-    events: (storyId: string) => {
-      try {
-        const s = JSON.parse(localStorage.getItem(LS_KEY) || '{"stories":{}}') as StorageShape;
-        return (s.stories?.[storyId]?.events as unknown[]) || [];
-      } catch {
-        return [];
-      }
-    },
+    dump: () => load(), // ✅ NE localStorage.parse
+    events: (storyId: string) => (storyBucket(storyId).events as unknown[]) || [],
     prepare: (storyId: string) => prepareBatch(storyId),
     upload: (storyId: string, endpoint?: string) => uploadBatch(storyId, endpoint),
     clear: (storyId: string) => {
-      try {
-        const s = JSON.parse(localStorage.getItem(LS_KEY) || '{"stories":{}}') as StorageShape;
-        if (s.stories && s.stories[storyId]) delete s.stories[storyId];
-        localStorage.setItem(LS_KEY, JSON.stringify(s));
-      } catch {}
+      const s = load();
+      if (s.stories && s.stories[storyId]) delete s.stories[storyId];
+      saveSoon();
     },
+    reload: () => reloadFromStorage(),
+    flush: () => flushNow(),
   };
   console.log("[analytics] __an helper ready");
 }
+
