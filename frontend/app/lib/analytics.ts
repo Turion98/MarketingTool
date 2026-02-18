@@ -15,6 +15,7 @@ const BATCH_DEBOUNCE_MS = 400;
 const MERGE_WINDOW_MS = 300;
 const TERMINAL_PAGE_ID = "__END__";
 const END_ALIAS_KEY = "endAlias";
+const SESSION_TTL_MS = 30 * 60 * 1000;
 
 // --- Terminal pages registry (per story) ---
 const terminalPagesByStory = new Map<string, Set<string>>();
@@ -131,21 +132,48 @@ export function setStoryMeta(
 
 export function getOrCreateSessionId(storyId: string) {
   const key = `qz_session_${storyId}`;
+  const lastKey = `qz_session_last_${storyId}`;
+
   let v: string | null = null;
   try {
     v = localStorage.getItem(key);
   } catch {}
+
+  // TTL check: ha a session túl régi, dobjuk és indítsunk újat
+  try {
+    const lastRaw = localStorage.getItem(lastKey);
+    const last = lastRaw ? Number(lastRaw) : 0;
+    const age = last > 0 ? now() - last : 0;
+    if (v && last > 0 && age > SESSION_TTL_MS) {
+      v = null;
+    }
+  } catch {}
+
   if (!v) {
     v = "sess_" + uid();
     try {
       localStorage.setItem(key, v);
     } catch {}
   }
+
+  // frissítsük a last seen-t (már session létrehozáskor is)
+  try {
+    localStorage.setItem(lastKey, String(now()));
+  } catch {}
+
   const b = storyBucket(storyId);
   b.sessions[v] = true;
   saveSoon();
   return v;
 }
+
+function touchSession(storyId: string) {
+  const lastKey = `qz_session_last_${storyId}`;
+  try {
+    localStorage.setItem(lastKey, String(now()));
+  } catch {}
+}
+
 
 // ---------- Helpers a props olvasásához (any nélkül) ----------
 function getProp<T extends string | number | boolean>(
@@ -199,20 +227,24 @@ function baseEvent(
   props?: GenericProps
 ): AnalyticsEvent {
   const userId = getOrCreateUserId();
-  const withUser: GenericProps | undefined =
-    props || userId ? { ...(props || {}), userId } : undefined;
+
+  const withUser: GenericProps = {
+    ...(props ?? {}),
+    userId,
+  };
 
   return {
-    id: "e_" + uid(),
-    t,
-    ts: now(),
+    id: `e_${Math.random().toString(36).slice(2)}`,
     storyId,
     sessionId,
+    t,
+    ts: Date.now(),
     pageId,
     refPageId,
-    props: withUser && Object.keys(withUser).length ? withUser : undefined,
+    props: withUser,
   };
 }
+
 
 export function trackPageEnter(
   storyId: string,
