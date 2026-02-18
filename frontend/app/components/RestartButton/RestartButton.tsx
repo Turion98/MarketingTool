@@ -18,6 +18,11 @@ type RestartButtonProps = {
   label?: string;
 };
 
+// Új session indítása restartnál (a StoryPage a localStorage "sessionId_v2" kulcsot olvassa)
+const generateNewSessionId = () =>
+  `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+
+
 const RestartButton: React.FC<RestartButtonProps> = ({
   seedCount = 20,
   startPageId = "landing",
@@ -134,6 +139,17 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       await callAdminRestart();
     }
 
+    // ✅ Restart = új session
+// - a StoryPage a "sessionId_v2"-t használja
+// - a régi (per-story) kulcsot is frissítjük, ha valahol még azt olvassa a kliens
+try {
+  const newSid = generateNewSessionId();
+  localStorage.setItem("sessionId_v2", newSid);
+  if (storyId) {
+    localStorage.setItem(`qz_session_${String(storyId)}`, newSid);
+  }
+} catch {}
+
     // helyi reset
     try {
       hardResetAudio();
@@ -148,14 +164,17 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       console.error("Restart error:", err);
     }
 
-    // redirect – ha admin volt, vigyük tovább az admin=1-et
-    const baseTarget = `/play/${encodeURIComponent(startPageId)}`;
-    if (admin) {
-      router.push(`${baseTarget}?admin=1`);
-    } else {
-      // ha a landingot tényleg zárod, ezt később ki lehet venni
-      router.push(baseTarget);
-    }
+          // redirect – ha admin volt, vigyük tovább az admin=1-et
+      const baseTarget = `/play/${encodeURIComponent(startPageId)}`;
+      // biztosítsuk, hogy ugyanarra a route-ra navigálva is újra mountoljon
+      const rs = Date.now();
+
+      if (admin) {
+        router.push(`${baseTarget}?admin=1&rs=${rs}`);
+      } else {
+        router.push(`${baseTarget}?rs=${rs}`);
+      }
+
   };
 
   return (
