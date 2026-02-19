@@ -143,11 +143,9 @@ const RestartButton: React.FC<RestartButtonProps> = ({
 // - a StoryPage a "sessionId_v2"-t használja
 // - a régi (per-story) kulcsot is frissítjük, ha valahol még azt olvassa a kliens
 try {
-  const newSid = generateNewSessionId();
-  localStorage.setItem("sessionId_v2", newSid);
-  if (storyId) {
-    localStorage.setItem(`qz_session_${String(storyId)}`, newSid);
-  }
+  localStorage.removeItem("sessionId_v2");
+localStorage.removeItem(`qz_session_${storyId}`);
+
 } catch {}
 
     // helyi reset
