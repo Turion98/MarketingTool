@@ -7,7 +7,7 @@ import style from "./RestartButton.module.scss";
 import { createSessionSeeds } from "../../lib/sessionSeeds";
 import { clearAllCache } from "../../lib/clearAllCache";
 import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick } from "../../lib/analytics";
+import { trackUiClick, startNewRunSession } from "../../lib/analytics";
 
 type RestartButtonProps = {
   seedCount?: number;
@@ -163,6 +163,12 @@ try {
     } catch (err) {
       console.error("Restart error:", err);
     }
+
+    // ✅ Restart = új run session
+try {
+  if (storyId) startNewRunSession(String(storyId));
+  else startNewRunSession();
+} catch {}
 
           // redirect – ha admin volt, vigyük tovább az admin=1-et
       const baseTarget = `/play/${encodeURIComponent(startPageId)}`;

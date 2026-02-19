@@ -62,6 +62,7 @@ import {
   trackUiClick,
   setTerminalPages,
   inferTerminalPagesFromStory,
+  startNewRunSession ,
 } from "../../lib/analytics";
 
 
@@ -625,19 +626,22 @@ const skin = useMemo(() => {
     return "default_story";
   }, [storyId, globals?.storySrc, globals?.storyTitle, params]);
 
-  const derivedSessionId = useMemo(() => {
-    if (sessionId) return sessionId;
-    try {
-      let s = localStorage.getItem("sessionId_v2");
-      if (!s) {
-        s = `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
-        localStorage.setItem("sessionId_v2", s);
-      }
-      return s;
-    } catch {
-      return undefined;
-    }
-  }, [sessionId]);
+const runSessionRef = useRef<string | undefined>(undefined);
+
+const derivedSessionId = useMemo(() => {
+  // ha a context ad sessiont, az nyer
+  if (sessionId) return sessionId;
+
+  // ugyanazon "run"-on belül maradjon stabil
+  if (runSessionRef.current) return runSessionRef.current;
+
+  // ✅ új lejátszás = új session
+  // (StoryPage mount / start belépés)
+  const sid = startNewRunSession(derivedStoryId);
+  runSessionRef.current = sid;
+  return sid;
+}, [sessionId, derivedStoryId]);
+
 
   const analyticsSync =
     derivedStoryId && derivedSessionId ? (

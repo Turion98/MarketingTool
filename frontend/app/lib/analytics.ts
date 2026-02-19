@@ -161,10 +161,39 @@ export function getOrCreateSessionId(storyId: string) {
     localStorage.setItem(lastKey, String(now()));
   } catch {}
 
+  
   const b = storyBucket(storyId);
   b.sessions[v] = true;
   saveSoon();
   return v;
+}
+
+export function startNewRunSession(storyId?: string) {
+  const sid = "sess_" + uid();
+
+  try {
+    // StoryPage ezt olvassa
+    localStorage.setItem("sessionId_v2", sid);
+  } catch {}
+
+  if (storyId) {
+    try {
+      // ha bárhol még ezt használod
+      localStorage.setItem(`qz_session_${storyId}`, sid);
+      localStorage.setItem(`qz_session_last_${storyId}`, String(now()));
+    } catch {}
+  }
+
+  // in-memory bucket is lássa
+  try {
+    if (storyId) {
+      const b = storyBucket(storyId);
+      b.sessions[sid] = true;
+      saveSoon();
+    }
+  } catch {}
+
+  return sid;
 }
 
 function touchSession(storyId: string) {
