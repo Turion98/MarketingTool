@@ -626,21 +626,13 @@ const skin = useMemo(() => {
     return "default_story";
   }, [storyId, globals?.storySrc, globals?.storyTitle, params]);
 
-const runSessionRef = useRef<string | undefined>(undefined);
-
 const derivedSessionId = useMemo(() => {
-  // ha a context ad sessiont, az nyer
   if (sessionId) return sessionId;
 
-  // ugyanazon "run"-on belül maradjon stabil
-  if (runSessionRef.current) return runSessionRef.current;
-
-  // ✅ új lejátszás = új session
-  // (StoryPage mount / start belépés)
-  const sid = startNewRunSession(derivedStoryId);
-  runSessionRef.current = sid;
-  return sid;
+  // mindig az analytics engine aktuális sessionje
+  return startNewRunSession(derivedStoryId);
 }, [sessionId, derivedStoryId]);
+
 
 
   const analyticsSync =
