@@ -1062,7 +1062,7 @@ def rollup_range(
     if terminal:
         terminal_pages = {p.strip() for p in terminal.split(",") if p.strip()}
 
-    users_all: set[str] = set()
+    
     sessions_all: set[str] = set()
     dau: Dict[str, Dict[str, set]] = {}
     users_all: set[str] = set()
@@ -1155,6 +1155,9 @@ def rollup_range(
                     if sid and sid not in session_user:
                         session_user[sid] = str(uid2)
 
+                if rid:
+                    runs_all.add(str(rid))
+
                 # ✅ totals + per-page aggregálás
                 if t == "page_enter":
                     totals["pageViews"] += 1
@@ -1162,8 +1165,6 @@ def rollup_range(
                         page_views[pid] = page_views.get(pid, 0) + 1
                         page_sessions.setdefault(pid, set()).add(sid or f"__nosession_{ts}")
 
-                if rid:
-                    runs_all.add(str(rid))
 
                 elif t == "choice_select":
                     totals["choices"] += 1
@@ -1345,6 +1346,7 @@ def rollup_range(
     user_count = len(users_all)
     run_count = len(runs_all)
 
+    avg_runs_per_user = (run_count / user_count) if user_count else 0.0
     avg_session_ms = int(round(total_session_duration / session_count)) if session_count else 0
     completion_rate = (completed_sessions / session_count) if session_count else 0.0
     puzzle_success_rate = (
@@ -1448,6 +1450,7 @@ def rollup_range(
             "avgSessionDurationMs": avg_session_ms,
             "puzzleSuccessRate": round(puzzle_success_rate, 4),
             "ctaCtr": round(cta_ctr, 4),
+            "avgRunsPerUser": round(avg_runs_per_user, 4),
         },
         "dau": dau_series,
         "pages": pages_out,
