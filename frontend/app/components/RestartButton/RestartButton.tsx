@@ -164,8 +164,7 @@ localStorage.removeItem(`qz_session_${storyId}`);
 
     // ✅ Restart = új run session
 try {
-  if (storyId) startNewRunSession(String(storyId));
-  else startNewRunSession();
+  startNewRunSession(String(storyId || "unknown"));
 } catch {}
 
           // redirect – ha admin volt, vigyük tovább az admin=1-et
