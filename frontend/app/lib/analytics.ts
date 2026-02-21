@@ -149,6 +149,13 @@ export function getOrCreateSessionId(storyId: string, scopeKey?: string) {
     existing = localStorage.getItem(idKey);
   } catch {}
 
+    // scopeKey elmentése story meta-ba (később baseEvent-nek kell a runId kulcshoz)
+  try {
+    const b = storyBucket(storyId);
+    (b.meta as Record<string, unknown>) = { ...(b.meta || {}), scopeKey: String(scopeKey || "default").trim() || "default" };
+    saveSoon();
+  } catch {}
+
   // TTL check
   try {
     const tsRaw = localStorage.getItem(tsKey);
@@ -177,6 +184,26 @@ export function getOrCreateSessionId(storyId: string, scopeKey?: string) {
   } catch {}
 
   return existing;
+}
+
+function getScopeKeyForStory(storyId: string): string {
+  try {
+    const b = storyBucket(storyId);
+    const sk = (b.meta as Record<string, unknown>)?.["scopeKey"];
+    if (typeof sk === "string" && sk.trim()) return sk.trim();
+  } catch {}
+  return "default";
+}
+
+function getRunIdFromSessionStorage(storyId: string): string | undefined {
+  const scopeKey = getScopeKeyForStory(storyId);
+  const bucket = sessionBucketKey(storyId, scopeKey);
+  const runKey = `${bucket}:runId_v1`;
+  try {
+    return sessionStorage.getItem(runKey) || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function startNewRunSession(storyId: string, scopeKey?: string) {
@@ -264,9 +291,17 @@ function baseEvent(
 ): AnalyticsEvent {
   const userId = getOrCreateUserId();
 
-  const withUser: GenericProps = {
+  // ha a caller már adott runId-t, azt tiszteletben tartjuk,
+  // különben próbáljuk sessionStorage-ból felvenni
+  const runIdFromProps =
+    props && typeof (props as any).runId === "string" ? (props as any).runId : undefined;
+
+  const runId = runIdFromProps || getRunIdFromSessionStorage(storyId);
+
+  const withCore: GenericProps = {
     ...(props ?? {}),
     userId,
+    ...(runId ? { runId } : {}),
   };
 
   return {
@@ -277,7 +312,7 @@ function baseEvent(
     ts: Date.now(),
     pageId,
     refPageId,
-    props: withUser,
+    props: withCore,
   };
 }
 
