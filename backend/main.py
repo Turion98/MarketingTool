@@ -1065,6 +1065,8 @@ def rollup_range(
     users_all: set[str] = set()
     sessions_all: set[str] = set()
     dau: Dict[str, Dict[str, set]] = {}
+    users_all: set[str] = set()
+    runs_all: set[str] = set()  # <-- Add this line to define runs_all
 
     totals = {
         "pageViews": 0,
@@ -1133,6 +1135,13 @@ def rollup_range(
                     or props.get("pg")
                 )
 
+                rid = (
+                    obj.get("runId")
+                    or props.get("runId")
+                    or obj.get("rid")
+                    or props.get("rid")
+                )
+                
 
                 # ✅ session/users bookkeeping
                 if sid:
@@ -1152,6 +1161,9 @@ def rollup_range(
                     if pid:
                         page_views[pid] = page_views.get(pid, 0) + 1
                         page_sessions.setdefault(pid, set()).add(sid or f"__nosession_{ts}")
+
+                if rid:
+                    runs_all.add(str(rid))
 
                 elif t == "choice_select":
                     totals["choices"] += 1
@@ -1331,6 +1343,7 @@ def rollup_range(
 
     session_count = len(sessions_all)
     user_count = len(users_all)
+    run_count = len(runs_all)
 
     avg_session_ms = int(round(total_session_duration / session_count)) if session_count else 0
     completion_rate = (completed_sessions / session_count) if session_count else 0.0
@@ -1428,6 +1441,7 @@ def rollup_range(
         "to": _to,
         "sessions": session_count,
         "users": user_count,
+        "runs": run_count,
         "totals": totals,
         "kpis": {
             "completionRate": round(completion_rate, 4),
@@ -1581,6 +1595,8 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
     <div class="kpi"><div class="lbl">Completion rate</div><div class="val">{_format_pct(k.get('completionRate',0))}</div></div>
     <div class="kpi"><div class="lbl">Avg session</div><div class="val">{_ms_to_hms(k.get('avgSessionDurationMs',0))}</div></div>
     <div class="kpi"><div class="lbl">Puzzle success</div><div class="val">{_format_pct(k.get('puzzleSuccessRate',0))}</div></div>
+    <div class="kpi"><div class="lbl">Runs</div><div class="val">{roll.get('runs',0)}</div></div>
+    <div class="kpi"><div class="lbl">Runs (period)</div><div class="val">{roll.get('runs',0)}</div></div>
   </div>
 
   <div class="sect card">

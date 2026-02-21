@@ -16,6 +16,7 @@ type RangeRollup = {
   to: string;
   sessions: number;
   users: number;
+  runs?: number;
   totals: {
     pageViews: number;
     choices: number;
@@ -271,6 +272,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>Sessionök</div>
                 <div className={styles.kpiValue}>{rangeData.sessions}</div>
+              </div>
+              <div className={styles.kpi}>
+                <div className={styles.kpiLabel}>Játék indítások (run)</div>
+                <div className={styles.kpiValue}>{rangeData.runs ?? "—"}</div>
               </div>
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>Completion rate</div>
