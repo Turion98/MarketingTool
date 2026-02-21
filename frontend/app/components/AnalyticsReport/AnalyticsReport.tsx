@@ -32,6 +32,7 @@ type RangeRollup = {
     completionRate: number;
     avgSessionDurationMs: number;
     puzzleSuccessRate: number;
+    
     ctaCtr?: number;
     avgRunsPerUser?: number;
   };
@@ -289,12 +290,12 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                   {msToHMS(rangeData.kpis.avgSessionDurationMs)}
                 </div>
               </div>
-              <div className={styles.kpiLabel}>Átlag run / user</div>
+              <div className={styles.kpi}>
+                <div className={styles.kpiLabel}>Puzzle success</div>
                 <div className={styles.kpiValue}>
-                  {rangeData.kpis.avgRunsPerUser == null
-                    ? (rangeData.users ? (Number(rangeData.runs ?? 0) / Math.max(1, rangeData.users)).toFixed(2) : "—")
-                    : rangeData.kpis.avgRunsPerUser.toFixed(2)}
+                  {(rangeData.kpis.puzzleSuccessRate * 100).toFixed(1)}%
                 </div>
+              </div>
 
               {/* ✅ ÚJ: CTA CTR (ha van adat) */}
               <div className={styles.kpi}>
