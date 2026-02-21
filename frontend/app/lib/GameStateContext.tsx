@@ -14,6 +14,7 @@ import React, {
 import {
   initAnalyticsForStory,
   getOrCreateSessionId,
+  startNewRunSession,
   setStoryMeta,
   getOrCreateUserId,
 } from "./analytics";
@@ -180,6 +181,7 @@ type GameStateContextType = {
   /** 🔹 Analytics azonosítók */
   storyId?: string;
   sessionId?: string;
+  runId?: string;
 
   globalError: string | null;
   setGlobalError: (msg: string | null) => void;
@@ -288,6 +290,9 @@ export function normalizeImagePrompt(
   };
 }
 
+
+
+
 /** —————————————————————————————————————
  * resolveNext segédfüggvény
  * ————————————————————————————————————— */
@@ -322,6 +327,7 @@ function deriveStoryId(globals: Record<string, any>): string | undefined {
   return undefined;
 }
 
+
 /** —————————————————————————————————————
  * RUNE PACK normalizálás/validáció
  * ————————————————————————————————————— */
@@ -340,6 +346,7 @@ function normalizeRuneChoice(input?: Partial<RuneChoice> | null): RuneChoice {
   const icons = raw.slice(0, 3);
   return { mode, icons: icons.length ? icons : DEFAULT_RUNE_TRIPLE };
 }
+
 
 function parseRuneChoiceFromQuery(): RuneChoice | null {
   if (typeof window === "undefined") return null;
@@ -404,8 +411,49 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const timeouts = useRef<number[]>([]);
   const audioEls = useRef<HTMLAudioElement[]>([]);
 
+  const scopeKey =
+  (globals as any)?.accountId ||
+  (globals as any)?.tenantId ||
+  (globals as any)?.embedKey ||
+  (typeof window !== "undefined" ? window.location.host : "default");
+
+  
+  const prevPageIdRef = useRef<string | null>(null);
+
   const [storyId, setStoryId] = useState<string | undefined>(undefined);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [runId, setRunId] = useState<string | undefined>(undefined);
+  
+  function runStorageKey(storyId: string, scopeKey?: string) {
+  const scope = String(scopeKey || "default").trim() || "default";
+  return `q_an:${storyId}:${scope}:runId_v1`;
+}
+
+function newRunId() {
+  return "run_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function getOrCreateRunId(storyId: string, scopeKey?: string) {
+  const key = runStorageKey(storyId, scopeKey);
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+  } catch {}
+  const rid = newRunId();
+  try {
+    sessionStorage.setItem(key, rid);
+  } catch {}
+  return rid;
+}
+
+function startNewRunId(storyId: string, scopeKey?: string) {
+  const key = runStorageKey(storyId, scopeKey);
+  const rid = newRunId();
+  try {
+    sessionStorage.setItem(key, rid);
+  } catch {}
+  return rid;
+}
 
   /** 🔹 PROGRESS state */
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
@@ -415,6 +463,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     milestones: [],
   });
 
+  
   /** HYDRATION utáni visszatöltés */
   useEffect(() => {
     if (!hydrated) return;
@@ -496,90 +545,108 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  /** 🔹 Analytics: storyId + sessionId előkészítés */
-  useEffect(() => {
-    if (!hydrated) return;
+  
+ /** 🔹 Analytics: storyId + sessionId előkészítés */
+useEffect(() => {
+  if (!hydrated) return;
 
-    // storyId feloldása a jelenlegi globals alapján
-    const sid = deriveStoryId(globals);
-    setStoryId(sid);
+  const sid = deriveStoryId(globals);
+  setStoryId(sid);
 
-    if (!sid) {
-      setSessionId(undefined);
-      return;
-    }
+  if (!sid) {
+    setSessionId(undefined);
+    setRunId(undefined);
+    return;
+  }
 
-    // init + sessionId beszerzés
-    try {
-      initAnalyticsForStory(sid);
-      const sess = getOrCreateSessionId(sid);
-      setSessionId(sess);
+  try {
+    initAnalyticsForStory(sid);
 
-      // opcionális meta feljegyzés
-      const uid = getOrCreateUserId();
-      setStoryMeta(sid, {
-        title: globals?.storyTitle || undefined,
-        src: globals?.storySrc || undefined,
-        userId: uid,
-      });
-    } catch (e) {
-      console.warn("[analytics] init/session error", e);
-    }
-  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId]);
+    const scopeKey =
+  (globals as any)?.accountId ||
+  (globals as any)?.tenantId ||
+  (globals as any)?.embedKey ||
+  (typeof window !== "undefined" ? window.location.host : "default");
 
-  /** 🔹 Runes: query → globals.runePack (elsőbbség) */
-  useEffect(() => {
-    if (!hydrated) return;
-    // ha már van runePack a globals-ban, nem írjuk felül
-    if ((globals as any)?.runePack) return;
+    const rk = (globals as any)?.runKey;
+    const sess = rk
+      ? startNewRunSession(sid, scopeKey)
+      : getOrCreateSessionId(sid, scopeKey);
 
-    const fromQuery = parseRuneChoiceFromQuery();
-    if (fromQuery) {
-      setGlobal("runePack", normalizeRuneChoice(fromQuery));
-      return;
-    }
+    setSessionId(sess);
 
-    // ha nincs query, jöhet LS per-kampány
-    const sid = deriveStoryId(globals);
-    if (!sid) {
-      // nincs story azonosító → default single
-      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-      return;
-    }
-    try {
-      const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
-      const saved = map?.[sid];
-      if (saved) {
-        setGlobal("runePack", normalizeRuneChoice(saved));
-      } else {
-        setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-      }
-    } catch {
-      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-    }
-  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId, setGlobal, globals]);
+        const rid = rk
+      ? startNewRunId(sid, scopeKey)
+      : getOrCreateRunId(sid, scopeKey);
 
-  /** Helpers */
-  const registerAbort = useCallback((ac: AbortController) => {
-    abortControllers.current.push(ac);
-  }, []);
+    setRunId(rid);
 
-  const registerTimeout = useCallback((id: number) => {
-    timeouts.current.push(id);
-  }, []);
+    
+    // opcionális: hogy a "startPageId-re visszajöttünk" logika ne duplázzon
+    if (rk) prevPageIdRef.current = null;
 
-  const clearAllTimeouts = useCallback(() => {
-    timeouts.current.forEach((id) => {
-      try {
-        clearTimeout(id);
-      } catch {}
+    const uid = getOrCreateUserId();
+    setStoryMeta(sid, {
+      title: globals?.storyTitle || undefined,
+      src: globals?.storySrc || undefined,
+      userId: uid,
     });
-    timeouts.current = [];
-  }, []);
+  } catch (e) {
+    console.warn("[analytics] init/session error", e);
+  }
+},  [
+  hydrated,
+  globals?.storySrc,
+  globals?.storyTitle,
+  globals?.storyId,
+  (globals as any)?.runKey,
+  (globals as any)?.accountId,
+  (globals as any)?.tenantId,
+  (globals as any)?.embedKey,
+]);
 
-  const registerAudio = useCallback((el: HTMLAudioElement) => {
-    if (!audioEls.current.includes(el)) audioEls.current.push(el);
-  }, []);
+
+ /** 🔹 Analytics: új session, ha nem-start oldalról visszajöttünk start-ra */
+useEffect(() => {
+  if (!hydrated) return;
+  if (!storyId) return;
+
+   // ha runKey-s restart van, akkor ezt hagyjuk ki
+  if ((globals as any)?.runKey) {
+    prevPageIdRef.current = currentPageId || null;
+    return;
+  }
+
+  const startId = (globals as any)?.startPageId;
+  if (!startId) return;
+
+  const prev = prevPageIdRef.current;
+  const curr = currentPageId || null;
+
+  if (prev && curr && curr === startId && prev !== startId) {
+    const scopeKey =
+  (globals as any)?.accountId ||
+  (globals as any)?.tenantId ||
+  (globals as any)?.embedKey ||
+  (typeof window !== "undefined" ? window.location.host : "default");
+
+const newSess = startNewRunSession(storyId, scopeKey);
+setSessionId(newSess);
+
+const newRun = startNewRunId(storyId, scopeKey);
+setRunId(newRun);
+  }
+
+  prevPageIdRef.current = curr;
+}, [
+  hydrated,
+  storyId,
+  currentPageId,
+  (globals as any)?.startPageId,
+  (globals as any)?.accountId,
+  (globals as any)?.tenantId,
+  (globals as any)?.embedKey,
+]);
 
   const addFragment = useCallback((id: string, data: FragmentData) => {
     if (!id) return;
@@ -738,8 +805,24 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       if (newStoryId) {
         try {
           initAnalyticsForStory(newStoryId);
-          const sess = getOrCreateSessionId(newStoryId);
-          setSessionId(sess);
+          const scopeKey =
+          (globals as any)?.accountId ||
+          (globals as any)?.tenantId ||
+          (globals as any)?.embedKey ||
+          (typeof window !== "undefined" ? window.location.host : "default");
+
+        const rk = (globals as any)?.runKey;
+        const sess = rk
+          ? startNewRunSession(newStoryId, scopeKey)
+          : getOrCreateSessionId(newStoryId, scopeKey);
+
+        setSessionId(sess);
+
+        const rid = rk
+        ? startNewRunId(newStoryId, scopeKey)
+        : getOrCreateRunId(newStoryId, scopeKey);
+
+      setRunId(rid);
 
           setStoryMeta(newStoryId, {
             title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
@@ -778,6 +861,60 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     },
     [setGlobal, globals]
   );
+
+   /** 🔹 Runes: query → globals.runePack (elsőbbség) */
+  useEffect(() => {
+    if (!hydrated) return;
+    // ha már van runePack a globals-ban, nem írjuk felül
+    if ((globals as any)?.runePack) return;
+
+    const fromQuery = parseRuneChoiceFromQuery();
+    if (fromQuery) {
+      setGlobal("runePack", normalizeRuneChoice(fromQuery));
+      return;
+    }
+
+    // ha nincs query, jöhet LS per-kampány
+    const sid = deriveStoryId(globals);
+    if (!sid) {
+      // nincs story azonosító → default single
+      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+      return;
+    }
+    try {
+      const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
+      const saved = map?.[sid];
+      if (saved) {
+        setGlobal("runePack", normalizeRuneChoice(saved));
+      } else {
+        setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+      }
+    } catch {
+      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
+    }
+  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId, setGlobal, globals]);
+
+  /** Helpers */
+  const registerAbort = useCallback((ac: AbortController) => {
+    abortControllers.current.push(ac);
+  }, []);
+
+  const registerTimeout = useCallback((id: number) => {
+    timeouts.current.push(id);
+  }, []);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeouts.current.forEach((id) => {
+      try {
+        clearTimeout(id);
+      } catch {}
+    });
+    timeouts.current = [];
+  }, []);
+
+  const registerAudio = useCallback((el: HTMLAudioElement) => {
+    if (!audioEls.current.includes(el)) audioEls.current.push(el);
+  }, []);
 
   /** 🔹 Rúna képek API */
   const setRuneImage = useCallback((flagId: string, url: string) => {
@@ -1061,6 +1198,7 @@ const flatFragments: Record<string, any> =
       : srcBank
     : {};
 
+
 const normalized: PageData = {
   ...raw,
   audio: {
@@ -1285,6 +1423,8 @@ setCurrentPageData(normalized);
 
         storyId,
         sessionId,
+        runId,
+        
 
         rewardImageReady,
         setRewardImageReady,

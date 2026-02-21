@@ -17,6 +17,9 @@ const TERMINAL_PAGE_ID = "__END__";
 const END_ALIAS_KEY = "endAlias";
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
+
+
+
 // --- Terminal pages registry (per story) ---
 const terminalPagesByStory = new Map<string, Set<string>>();
 
@@ -130,76 +133,80 @@ export function setStoryMeta(
   saveSoon();
 }
 
-export function getOrCreateSessionId(storyId: string) {
-  const key = `qz_session_${storyId}`;
-  const lastKey = `qz_session_last_${storyId}`;
+function sessionBucketKey(storyId: string, scopeKey?: string) {
+  const scope = String(scopeKey || "default").trim() || "default";
+  return `q_an:${storyId}:${scope}`;
+}
 
-  let v: string | null = null;
+export function getOrCreateSessionId(storyId: string, scopeKey?: string) {
+  const bucket = sessionBucketKey(storyId, scopeKey);
+
+  const idKey = `${bucket}:sessionId_v2`;
+  const tsKey = `${bucket}:sessionTs_v2`;
+
+  let existing: string | null = null;
   try {
-    v = localStorage.getItem(key);
+    existing = localStorage.getItem(idKey);
   } catch {}
 
-  // TTL check: ha a session túl régi, dobjuk és indítsunk újat
+  // TTL check
   try {
-    const lastRaw = localStorage.getItem(lastKey);
-    const last = lastRaw ? Number(lastRaw) : 0;
-    const age = last > 0 ? now() - last : 0;
-    if (v && last > 0 && age > SESSION_TTL_MS) {
-      v = null;
+    const tsRaw = localStorage.getItem(tsKey);
+    const ts = tsRaw ? Number(tsRaw) : 0;
+    const age = ts > 0 ? Date.now() - ts : 0;
+
+    if (existing && ts > 0 && age > SESSION_TTL_MS) {
+      existing = null;
     }
   } catch {}
 
-  if (!v) {
-    v = "sess_" + uid();
-    try {
-      localStorage.setItem(key, v);
-    } catch {}
+  if (!existing) {
+    return startNewRunSession(storyId, scopeKey);
   }
 
-  // frissítsük a last seen-t (már session létrehozáskor is)
+  // frissítsük a last seen-t (használatkor is)
   try {
-    localStorage.setItem(lastKey, String(now()));
+    localStorage.setItem(tsKey, String(Date.now()));
   } catch {}
-
-  
-  const b = storyBucket(storyId);
-  b.sessions[v] = true;
-  saveSoon();
-  return v;
-}
-
-export function startNewRunSession(storyId?: string) {
-  const sid = "sess_" + uid();
-
-  try {
-    // StoryPage ezt olvassa
-    localStorage.setItem("sessionId_v2", sid);
-  } catch {}
-
-  if (storyId) {
-    try {
-      // ha bárhol még ezt használod
-      localStorage.setItem(`qz_session_${storyId}`, sid);
-      localStorage.setItem(`qz_session_last_${storyId}`, String(now()));
-    } catch {}
-  }
 
   // in-memory bucket is lássa
   try {
-    if (storyId) {
-      const b = storyBucket(storyId);
-      b.sessions[sid] = true;
-      saveSoon();
-    }
+    const b = storyBucket(storyId);
+    b.sessions[existing] = true;
+    saveSoon();
+  } catch {}
+
+  return existing;
+}
+
+export function startNewRunSession(storyId: string, scopeKey?: string) {
+  const bucket = sessionBucketKey(storyId, scopeKey);
+
+  const idKey = `${bucket}:sessionId_v2`;
+  const tsKey = `${bucket}:sessionTs_v2`;
+
+  const sid = "sess_" + uid();
+
+  try {
+    localStorage.setItem(idKey, sid);
+    localStorage.setItem(tsKey, String(Date.now()));
+  } catch {}
+
+  
+  try {
+    const b = storyBucket(storyId);
+    b.sessions[sid] = true;
+    saveSoon();
   } catch {}
 
   return sid;
 }
 
-function touchSession(storyId: string) {
-  const lastKey = `qz_session_last_${storyId}`;
+function touchSession(storyId: string, scopeKey?: string) {
+  const bucket = sessionBucketKey(storyId, scopeKey);
+  const tsKey = `${bucket}:sessionTs_v2`;
   try {
-    localStorage.setItem(lastKey, String(now()));
+    localStorage.setItem(tsKey, String(Date.now()));
   } catch {}
 }
 

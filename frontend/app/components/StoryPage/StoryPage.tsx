@@ -560,6 +560,7 @@ const StoryPage: React.FC = () => {
     progressDisplay,
     storyId,
     sessionId,
+    runId,
   } = useGameState() as any as {
     currentPageData: any;
     unlockedFragments: string[];
@@ -583,6 +584,7 @@ const StoryPage: React.FC = () => {
     progressDisplay: { value?: number };
     storyId?: string;
     sessionId?: string;
+    runId?: string;
   };
 
   /** --- URL params / analytics --- */
@@ -626,23 +628,14 @@ const skin = useMemo(() => {
     return "default_story";
   }, [storyId, globals?.storySrc, globals?.storyTitle, params]);
 
-const derivedSessionId = useMemo(() => {
-  if (sessionId) return sessionId;
-
-  // mindig az analytics engine aktuális sessionje
-  return startNewRunSession(derivedStoryId);
-}, [sessionId, derivedStoryId]);
+const derivedSessionId = sessionId; // ennyi
+const derivedRunId = runId;
 
 
-
-  const analyticsSync =
-    derivedStoryId && derivedSessionId ? (
-      <AnalyticsSync
-        storyId={derivedStoryId}
-        sessionId={derivedSessionId}
-        intervalMs={30000}
-      />
-    ) : null;
+ const analyticsSync =
+  derivedStoryId && derivedSessionId ? (
+    <AnalyticsSync storyId={derivedStoryId} sessionId={derivedSessionId} intervalMs={30000} />
+  ) : null;
 
     const runePackForDisplay = useMemo(() => {
     const rp: any = globals?.runePack;
@@ -803,32 +796,51 @@ const derivedSessionId = useMemo(() => {
     } catch {}
   }, [imagesByFlag]);
 
-  // storySrc, start, title param
-  useEffect(() => {
-    const src = params.get("src");
-    const start = params.get("start");
-    const title = params.get("title");
+// storySrc, start, title param
+useEffect(() => {
+  const src = params.get("src");
+  const start = params.get("start");
+  const title = params.get("title");
+  const rs = params.get("rs") || ""; // Restart / new-run marker
 
-    if (src) {
-      setGlobal?.("storySrc", src);
-      try {
-        localStorage.setItem("storySrc", src);
-      } catch {}
-    }
-    if (title) {
-      setGlobal?.("storyTitle", title);
-      try {
-        localStorage.setItem("storyTitle", title);
-      } catch {}
-    }
-    if (start && start !== currentPageId) {
-      try {
-        localStorage.setItem("currentPageId", start);
-      } catch {}
-      goToNextPage(start);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (src) {
+    setGlobal?.("storySrc", src);
+    try {
+      localStorage.setItem("storySrc", src);
+    } catch {}
+  }
+
+  if (title) {
+    setGlobal?.("storyTitle", title);
+    try {
+      localStorage.setItem("storyTitle", title);
+    } catch {}
+  }
+
+  // ✅ fontos: startPageId + runKey átadás a contextnek
+  if (start) {
+    setGlobal?.("startPageId", start);
+    try {
+      localStorage.setItem("startPageId", start);
+    } catch {}
+  }
+
+  if (rs) {
+    setGlobal?.("runKey", rs);
+    try {
+      localStorage.setItem("runKey", rs);
+    } catch {}
+  }
+
+  if (start && start !== currentPageId) {
+    try {
+      localStorage.setItem("currentPageId", start);
+    } catch {}
+    goToNextPage(start);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
 
 
@@ -924,6 +936,7 @@ useEffect(() => {
       pageId,
       lastPageRef.current ?? undefined,
       {
+        runId: derivedRunId || undefined,
         rawPageId: pageData?.id,          // a tényleges node id (ami nálad most "end_espresso" is lehet)
         pageType: normalizedPageType,     // <- "end" lesz, ha end_* oldal
         endAlias: normalizedEndAlias,     // <- "espresso" lesz, ha end_* oldal
@@ -2232,7 +2245,12 @@ const mediaNode = useMemo(() => {
             derivedSessionId,
             pageId,
             choiceId,
-            String(label)
+            String(label),
+            typeof latencyMs === "number" ? latencyMs : undefined,
+            {
+              runId: derivedRunId || undefined,
+              nextPageId: next || undefined,
+            }
           );
 
           if (
@@ -2245,10 +2263,10 @@ const mediaNode = useMemo(() => {
               pageId,
               `choice:${choiceId}`,
               {
+                runId: derivedRunId || undefined,
                 label: String(label),
                 latencyMs,
-                nextPageId:
-                  next || undefined,
+                nextPageId: next || undefined,
               }
             );
           }
