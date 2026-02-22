@@ -50,22 +50,41 @@ type RangeRollup = {
     choices: Array<{ choiceId: string; count: number }>;
   }>;
 
-  // ✅ ÚJ: Questell riport mezők (opcionálisak, később jönnek a backendből)
-  outcomes?: Array<{
-    outcomeId: string; // end page id / outcome key
-    sessions: number;
-    users?: number;
-    ctaShown?: number;
-    ctaClicks?: number;
-  }>;
 
-  endPages?: Array<{
-    pageId: string; // végoldal id
-    sessions: number;
-    users?: number;
-    ctaShown?: number;
-    ctaClicks?: number;
-  }>;
+outcomes?: Array<{
+  outcomeKey?: string;          // ✅ új (üzleti)
+  outcomeLabel?: string;        // ✅ új (emberi címke)
+  // kompatibilitás:
+  outcomeId?: string;           // régi (end page id / legacy)
+  runs?: number;                // ✅ új
+  sessions?: number;            // régi
+  users?: number;
+  ctaShown?: number;
+  ctaClicks?: number;
+
+  // extra üzleti insight:
+  endPagesCount?: number;       // ✅ hány end page tartozik ide
+  topEndPageId?: string;        // ✅ opcionális: leggyakoribb end page
+}>;
+
+// End pages: run-alap + share + ctr (UI számolja)
+endPages?: Array<{
+  pageId: string;
+  runs?: number;                // ✅ új
+  sessions?: number;            // régi
+  users?: number;
+  ctaShown?: number;
+  ctaClicks?: number;
+}>;
+
+// Drop-offs: ideális backend mező (ha van)
+dropOffs?: Array<{
+  pageId: string;               // nem end page
+  dropOffRuns: number;          // ✅ run-alap
+  users?: number;
+  dropOffPct?: number;          // opcionális (UI is számolja)
+}>;
+
 
   paths?: Array<{
     pathId: string; // pl. "Q1:A > Q2:B > ROT:gold/dark"
@@ -117,6 +136,23 @@ function daysAgoStr(n: number) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+function pct(n: number, d: number) {
+  return d <= 0 ? 0 : (n / d) * 100;
+}
+function safeDiv(n: number, d: number) {
+  return d <= 0 ? 0 : n / d;
+}
+function fmtPct(x: number) {
+  return `${x.toFixed(1)}%`;
+}
+function asCount(x: number | undefined | null) {
+  return x == null ? 0 : x;
+}
+function isEndLike(id: string) {
+  const s = (id || "").toUpperCase();
+  return s.includes("END__") || s.includes("__END__") || s.startsWith("END_");
 }
 
 export default function AnalyticsReport({
@@ -316,73 +352,198 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
               </div>
             </div>
 
-            {/* ✅ ÚJ: Outcome / End Pages */}
-            <h4>Végoldalak és outcome-ok</h4>
-            {(!rangeData.endPages || rangeData.endPages.length === 0) &&
-            (!rangeData.outcomes || rangeData.outcomes.length === 0) ? (
-              <div className={styles.info}>
-                (Még nincs outcome/endPages adat a range riportban.)
-              </div>
-            ) : (
-              <>
-                {rangeData.endPages && rangeData.endPages.length > 0 && (
-                  <>
-                    <div className={styles.info}>Top végoldalak (end pages)</div>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>End page</th>
-                          <th>Sessions</th>
-                          <th>Users</th>
-                          <th>CTA shown</th>
-                          <th>CTA clicks</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rangeData.endPages.map((x) => (
-                          <tr key={x.pageId}>
-                            <td>{x.pageId}</td>
-                            <td>{x.sessions}</td>
-                            <td>{x.users ?? "—"}</td>
-                            <td>{x.ctaShown ?? "—"}</td>
-                            <td>{x.ctaClicks ?? "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </>
-                )}
+<h4>Végoldalak és outcome-ok</h4>
+{(() => {
+  const totalRuns =
+    rangeData?.runs ??
+    // fallback: ha nincs runs, próbáljuk összerakni outcomes/endPages alapján (nem tökéletes, de jobb mint a semmi)
+    rangeData?.outcomes?.reduce((acc, o) => acc + (o.runs ?? o.sessions ?? 0), 0) ??
+    rangeData?.endPages?.reduce((acc, e) => acc + (e.runs ?? e.sessions ?? 0), 0) ??
+    0;
 
-                {rangeData.outcomes && rangeData.outcomes.length > 0 && (
-                  <>
-                    <div className={styles.info}>Outcome megoszlás</div>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>Outcome</th>
-                          <th>Sessions</th>
-                          <th>Users</th>
-                          <th>CTA shown</th>
-                          <th>CTA clicks</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rangeData.outcomes.map((x) => (
-                          <tr key={x.outcomeId}>
-                            <td>{x.outcomeId}</td>
-                            <td>{x.sessions}</td>
-                            <td>{x.users ?? "—"}</td>
-                            <td>{x.ctaShown ?? "—"}</td>
-                            <td>{x.ctaClicks ?? "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </>
-                )}
-              </>
-            )}
+  // ----- OUTCOMES: üzleti nézet -----
+  const outcomes = (rangeData?.outcomes ?? []).map((o) => {
+    const runs = o.runs ?? o.sessions ?? 0;
+    const shown = asCount(o.ctaShown);
+    const clicks = asCount(o.ctaClicks);
+    const ctr = safeDiv(clicks, Math.max(1, shown));
+    const share = pct(runs, Math.max(1, totalRuns));
 
+    const key = o.outcomeKey ?? o.outcomeId ?? "—";
+    const label = o.outcomeLabel ?? key;
+
+    return {
+      key,
+      label,
+      runs,
+      users: o.users ?? null,
+      share,
+      shown: o.ctaShown ?? null,
+      clicks: o.ctaClicks ?? null,
+      ctr,
+      endPagesCount: o.endPagesCount ?? null,
+      topEndPageId: o.topEndPageId ?? null,
+    };
+  });
+
+  // ----- END PAGES: technikai, de üzleti hangvétellel (share + ctr) -----
+  const endPages = (rangeData?.endPages ?? []).map((e) => {
+    const runs = e.runs ?? e.sessions ?? 0;
+    const shown = asCount(e.ctaShown);
+    const clicks = asCount(e.ctaClicks);
+    const ctr = safeDiv(clicks, Math.max(1, shown));
+    const share = pct(runs, Math.max(1, totalRuns));
+
+    return {
+      pageId: e.pageId,
+      runs,
+      users: e.users ?? null,
+      shown: e.ctaShown ?? null,
+      clicks: e.ctaClicks ?? null,
+      ctr,
+      share,
+    };
+  });
+
+  // ----- DROP-OFFS: nem végoldalak, ahol elhagyták -----
+  // 1) preferált: backend dropOffs
+  let dropOffRows: Array<{ pageId: string; dropOffRuns: number; dropOffPct: number }> = [];
+  if (rangeData?.dropOffs && rangeData.dropOffs.length > 0) {
+    dropOffRows = rangeData.dropOffs
+      .map((d) => ({
+        pageId: d.pageId,
+        dropOffRuns: d.dropOffRuns,
+        dropOffPct: d.dropOffPct ?? pct(d.dropOffRuns, Math.max(1, totalRuns)),
+      }))
+      .sort((a, b) => b.dropOffRuns - a.dropOffRuns);
+  } else if (rangeData?.pages && rangeData.pages.length > 0) {
+    // 2) fallback: pages[].exitsAfterPage (nem tökéletes run-alap, de addig hasznos)
+    dropOffRows = rangeData.pages
+      .filter((p) => !isEndLike(p.pageId)) // csak nem-end oldalak
+      .map((p) => ({
+        pageId: p.pageId,
+        dropOffRuns: p.exitsAfterPage ?? 0,
+        dropOffPct: pct(p.exitsAfterPage ?? 0, Math.max(1, totalRuns || rangeData.sessions || 1)),
+      }))
+      .filter((x) => x.dropOffRuns > 0)
+      .sort((a, b) => b.dropOffRuns - a.dropOffRuns)
+      .slice(0, 10);
+  }
+
+  const hasAnything =
+    outcomes.length > 0 || endPages.length > 0 || dropOffRows.length > 0;
+
+  if (!hasAnything) {
+    return (
+      <div className={styles.info}>
+        (Még nincs outcome / endPages / drop-off adat a range riportban.)
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* ✅ 1) OUTCOME MEGOSZLÁS – üzleti */}
+      {outcomes.length > 0 && (
+        <>
+          <div className={styles.info}>Outcome megoszlás (üzleti)</div>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Outcome</th>
+                <th>Runs</th>
+                <th>Users</th>
+                <th>Share</th>
+                <th>CTA shown</th>
+                <th>CTA clicks</th>
+                <th>CTA CTR</th>
+                <th>End pages</th>
+              </tr>
+            </thead>
+            <tbody>
+              {outcomes.map((x) => (
+                <tr key={x.key}>
+                  <td title={x.key}>{x.label}</td>
+                  <td>{x.runs}</td>
+                  <td>{x.users ?? "—"}</td>
+                  <td>{fmtPct(x.share)}</td>
+                  <td>{x.shown ?? "—"}</td>
+                  <td>{x.clicks ?? "—"}</td>
+                  <td>{x.shown == null || x.clicks == null ? "—" : fmtPct(x.ctr * 100)}</td>
+                  <td>
+                    {x.endPagesCount != null
+                      ? x.endPagesCount
+                      : x.topEndPageId
+                        ? 1
+                        : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* ✅ 2) TOP END PAGES – bővítve (üzletileg érthető: share + ctr) */}
+      {endPages.length > 0 && (
+        <>
+          <div className={styles.info}>Top végoldalak (end pages)</div>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>End page</th>
+                <th>Runs</th>
+                <th>Users</th>
+                <th>Share</th>
+                <th>CTA shown</th>
+                <th>CTA clicks</th>
+                <th>CTA CTR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {endPages.map((x) => (
+                <tr key={x.pageId}>
+                  <td>{x.pageId}</td>
+                  <td>{x.runs}</td>
+                  <td>{x.users ?? "—"}</td>
+                  <td>{fmtPct(x.share)}</td>
+                  <td>{x.shown ?? "—"}</td>
+                  <td>{x.clicks ?? "—"}</td>
+                  <td>{x.shown == null || x.clicks == null ? "—" : fmtPct(x.ctr * 100)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* ✅ 3) DROP-OFF – nem végoldalak, ahol elhagyták */}
+      {dropOffRows.length > 0 && (
+        <>
+          <div className={styles.info}>Lemorzsolódási pontok (nem-végoldalak)</div>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Drop-offs</th>
+                <th>Drop-off %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dropOffRows.map((d) => (
+                <tr key={d.pageId}>
+                  <td>{d.pageId}</td>
+                  <td>{d.dropOffRuns}</td>
+                  <td>{fmtPct(d.dropOffPct)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </>
+  );
+})()}
             {/* ✅ ÚJ: Pathok */}
             <h4>Top pathok</h4>
             {!rangeData.paths || rangeData.paths.length === 0 ? (

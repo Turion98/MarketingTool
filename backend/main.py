@@ -1,6 +1,6 @@
 
 from __future__ import annotations
-
+from fastapi import Request
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -508,6 +508,7 @@ class AnalyticsBatch(BaseModel):
     userId: Optional[str] = None
     device: Optional[Dict[str, Any]] = None  # opcionális kliens meta
     events: List[AnalyticsEventModel]
+    domain: Optional[str] = None
 
 # --- App és CORS ---
 app = FastAPI()
@@ -587,7 +588,8 @@ def health():
         "sfxCount": len(os.listdir(sfx_dir)) if os.path.isdir(sfx_dir) else 0
     }
 
-from fastapi import Request
+
+
 
 @app.post("/api/generate-image")
 async def api_generate_image(req: Request):
@@ -869,14 +871,19 @@ def clear_cache():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # =========================
 #   ANALYTICS ENDPOINTOK
 # =========================
 @app.post("/api/analytics/batch")
-def post_analytics_batch(batch: AnalyticsBatch):
+def post_analytics_batch(batch: AnalyticsBatch, request: Request):
     try:
         # ✅ Normalize / fill missing fields (business-grade ingest)
         now_ms = int(datetime.utcnow().timestamp() * 1000)
+
+        host = request.headers.get("host") or ""
+        host_domain = host.split(":")[0] if host else None
+        batch_domain = batch.domain or host_domain or "unknown"
 
         norm_events = []
         for e in batch.events:
@@ -894,6 +901,15 @@ def post_analytics_batch(batch: AnalyticsBatch):
             if not d.get("id"):
                 d["id"] = f"{d['sessionId']}:{d.get('t','evt')}:{d['ts']}"
 
+            props = d.get("props") or {}
+
+            if not isinstance(props, dict):
+                props = {}
+
+            if not props.get("domain"):
+                props["domain"] = batch_domain
+            d["props"] = props
+            
             norm_events.append(d)
 
         story_dir = _story_analytics_dir(batch.storyId)
@@ -907,6 +923,7 @@ def post_analytics_batch(batch: AnalyticsBatch):
         written_total = 0
         written_files: List[str] = []
 
+
         for day, events in by_day.items():
             out_path = os.path.join(story_dir, f"{day}.jsonl")
 
@@ -917,6 +934,7 @@ def post_analytics_batch(batch: AnalyticsBatch):
                     "storyId": batch.storyId,
                     "userId": batch.userId,
                     "device": batch.device or {},
+                    "domain": batch_domain,
                     "count": len(events),
                 }
                 f.write(json.dumps(header, ensure_ascii=False) + "\n")
@@ -957,9 +975,10 @@ def rollup_day(storyId: str, day: str):
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Not found")
 
-    sessions = set()
-    users = set()
-    pages = set()
+    sessions: set[str] = set()
+    users: set[str] = set()
+    pages: set[str] = set()
+
     counters = {
         "pageViews": 0,
         "choices": 0,
@@ -971,53 +990,134 @@ def rollup_day(storyId: str, day: str):
     }
     pageViews: Dict[str, int] = {}
 
+    # Domain aggregátor (ha kell riporthoz / szegmenthez)
+    domains: Dict[str, Dict[str, Any]] = {}
+
+    def ensure_domain(dom: str) -> Dict[str, Any]:
+        existing = domains.get(dom)
+        if existing:
+            return existing
+        agg = {
+            "domain": dom,
+            "sessionsSet": set(),
+            "usersSet": set(),
+            "runsSet": set(),
+            "totals": {
+                "pageViews": 0,
+                "choices": 0,
+                "puzzles": {"tries": 0, "solved": 0},
+                "runes": 0,
+                "mediaStarts": 0,
+                "mediaStops": 0,
+                "completions": 0,
+            },
+        }
+        domains[dom] = agg
+        return agg
+
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
+            line = (line or "").strip()
             if not line:
                 continue
+
             obj = json.loads(line)
+
+            # batch header: itt is lehet userId (külön mezőben), ezért felvesszük
             if obj.get("_type") == "batch_header":
-                uid = obj.get("userId")
-                if uid:
-                    users.add(str(uid))
+                uid_hdr = obj.get("userId")
+                if uid_hdr:
+                    users.add(str(uid_hdr))
                 continue
 
             t = obj.get("t")
             sessionId = obj.get("sessionId")
             pageId = obj.get("pageId")
             props = obj.get("props") or {}
+            if not isinstance(props, dict):
+                props = {}
 
-            if sessionId:
-                sessions.add(sessionId)
-            if pageId:
-                pages.add(pageId)
+            # domain
+            dom = props.get("domain") or obj.get("domain") or "unknown"
+            domAgg = ensure_domain(str(dom))
 
-            if t == "page_enter":
-                counters["pageViews"] += 1
-                if pageId:
-                    pageViews[pageId] = pageViews.get(pageId, 0) + 1
-            elif t == "choice_select":
-                counters["choices"] += 1
-            elif t == "puzzle_try":
-                counters["puzzles"]["tries"] += 1
-            elif t == "puzzle_result":
-                if props.get("isCorrect"):
-                    counters["puzzles"]["solved"] += 1
-            elif t == "rune_unlock":
-                counters["runes"] += 1
-            elif t == "media_start":
-                counters["mediaStarts"] += 1
-            elif t == "media_stop":
-                counters["mediaStops"] += 1
-            elif t in ("game_complete", "game:complete"):
-                counters["completions"] += 1
+            # runId (ha a kliens küldi)
+            rid = (
+                obj.get("runId")
+                or props.get("runId")
+                or obj.get("rid")
+                or props.get("rid")
+            )
 
+            # userId (ha a kliens props-ba rakja)
             uid = props.get("userId")
             if uid:
                 users.add(str(uid))
 
+            # sets
+            if sessionId:
+                sessions.add(str(sessionId))
+                domAgg["sessionsSet"].add(str(sessionId))
+            if pageId:
+                pages.add(str(pageId))
+            if uid:
+                domAgg["usersSet"].add(str(uid))
+            if rid:
+                domAgg["runsSet"].add(str(rid))
+
+            # totals (global + domain)
+            if t == "page_enter":
+                counters["pageViews"] += 1
+                domAgg["totals"]["pageViews"] += 1
+                if pageId:
+                    pid = str(pageId)
+                    pageViews[pid] = pageViews.get(pid, 0) + 1
+
+            elif t == "choice_select":
+                counters["choices"] += 1
+                domAgg["totals"]["choices"] += 1
+
+            elif t == "puzzle_try":
+                counters["puzzles"]["tries"] += 1
+                domAgg["totals"]["puzzles"]["tries"] += 1
+
+            elif t == "puzzle_result":
+                if props.get("isCorrect"):
+                    counters["puzzles"]["solved"] += 1
+                    domAgg["totals"]["puzzles"]["solved"] += 1
+
+            elif t == "rune_unlock":
+                counters["runes"] += 1
+                domAgg["totals"]["runes"] += 1
+
+            elif t == "media_start":
+                counters["mediaStarts"] += 1
+                domAgg["totals"]["mediaStarts"] += 1
+
+            elif t == "media_stop":
+                counters["mediaStops"] += 1
+                domAgg["totals"]["mediaStops"] += 1
+
+            elif t in ("game_complete", "game:complete"):
+                counters["completions"] += 1
+                domAgg["totals"]["completions"] += 1
+
     topPages = sorted(pageViews.items(), key=lambda kv: kv[1], reverse=True)[:10]
+
+    # opcionális: domain kimenet (ha nem kell, simán vedd ki a return-ből)
+    domains_out = []
+    for dom, agg in domains.items():
+        domains_out.append(
+            {
+                "domain": dom,
+                "sessions": len(agg["sessionsSet"]),
+                "users": len(agg["usersSet"]),
+                "runs": len(agg["runsSet"]),
+                "totals": agg["totals"],
+            }
+        )
+    domains_out.sort(key=lambda x: x["sessions"], reverse=True)
+
     return {
         "storyId": storyId,
         "day": day,
@@ -1026,6 +1126,7 @@ def rollup_day(storyId: str, day: str):
         "pages": len(pages),
         "totals": counters,
         "topPages": [{"pageId": k, "views": v} for k, v in topPages],
+        "domains": domains_out,
     }
 
 def _daterange(start_date: datetime, end_date: datetime):
@@ -1094,6 +1195,32 @@ def rollup_range(
     paths: Dict[str, Dict[str, Any]] = {}
     step_transitions: Dict[str, Dict[str, set]] = {}
 
+        # ✅ domain aggregátor
+    domains: Dict[str, Dict[str, Any]] = {}
+    def ensure_domain(dom: str) -> Dict[str, Any]:
+        d = domains.get(dom)
+        if d:
+            return d
+        d = {
+            "domain": dom,
+            "sessionsSet": set(),
+            "usersSet": set(),
+            "runsSet": set(),
+            "totals": {
+                "pageViews": 0,
+                "choices": 0,
+                "puzzles": {"tries": 0, "solved": 0},
+                "runes": 0,
+                "mediaStarts": 0,
+                "mediaStops": 0,
+                "ctaShown": 0,
+                "ctaClicks": 0,
+                "completions": 0,
+            },
+        }
+        domains[dom] = d
+        return d
+    
     for day_dt in _daterange(start, end):
         day = day_dt.strftime("%Y-%m-%d")
         path = os.path.join(d, f"{day}.jsonl")
@@ -1118,6 +1245,14 @@ def rollup_range(
                 t = obj.get("t")
                 ts = obj.get("ts")
                 props = obj.get("props") or {}
+
+                                
+                dom = (
+                    props.get("domain")
+                    or obj.get("domain")
+                    or "unknown"
+                )
+                domAgg = ensure_domain(str(dom))
 
                 sid = (
                     obj.get("sessionId")
@@ -1155,6 +1290,13 @@ def rollup_range(
                     if sid and sid not in session_user:
                         session_user[sid] = str(uid2)
 
+                if sid:
+                    domAgg["sessionsSet"].add(str(sid))
+                if uid2:
+                    domAgg["usersSet"].add(str(uid2))
+                if rid:
+                    domAgg["runsSet"].add(str(rid))
+
                 if rid:
                     runs_all.add(str(rid))
 
@@ -1164,7 +1306,7 @@ def rollup_range(
                     if pid:
                         page_views[pid] = page_views.get(pid, 0) + 1
                         page_sessions.setdefault(pid, set()).add(sid or f"__nosession_{ts}")
-
+                
 
                 elif t == "choice_select":
                     totals["choices"] += 1
@@ -1436,6 +1578,20 @@ def rollup_range(
         })
     steps_out.sort(key=lambda x: sum(o["sessions"] for o in x["options"]), reverse=True)
     steps_out = steps_out[:30]
+
+    # ✅ domains: set-ek + totals visszaadása
+    domains_out = []
+    for dom, v in domains.items():
+        domains_out.append({
+            "domain": dom,
+            "sessions": len(v["sessionsSet"]),
+            "users": len(v["usersSet"]),
+            "runs": len(v["runsSet"]),
+            "totals": v["totals"],
+        })
+    domains_out.sort(key=lambda x: x["sessions"], reverse=True)
+
+    
 
     return {
         "storyId": storyId,

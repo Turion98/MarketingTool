@@ -590,6 +590,7 @@ useEffect(() => {
       title: globals?.storyTitle || undefined,
       src: globals?.storySrc || undefined,
       userId: uid,
+      domain: typeof window !== "undefined" ? window.location.hostname : undefined
     });
   } catch (e) {
     console.warn("[analytics] init/session error", e);

@@ -57,6 +57,14 @@ function uid() {
   return Math.random().toString(36).slice(2) + now().toString(36);
 }
 
+function getDomain(): string {
+  try {
+    return window.location.hostname || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 // ---------- USER ID (játékos) ----------
 export function getOrCreateUserId(): string {
   if (memUserId) return memUserId;
@@ -115,7 +123,15 @@ export function initAnalyticsForStory(storyId: string) {
 
 export function setStoryMeta(
   storyId: string,
-  meta: Partial<DeviceMeta & { title?: string; src?: string; campaign?: string; userId?: string }>
+  meta: Partial<
+    DeviceMeta & {
+      title?: string;
+      src?: string;
+      campaign?: string;
+      userId?: string;
+      domain?: string;   // ✅ ADD
+    }
+  >
 ) {
   const b = storyBucket(storyId);
   b.meta = { ...(b.meta || {}), ...meta };
@@ -299,10 +315,11 @@ function baseEvent(
   const runId = runIdFromProps || getRunIdFromSessionStorage(storyId);
 
   const withCore: GenericProps = {
-    ...(props ?? {}),
-    userId,
-    ...(runId ? { runId } : {}),
-  };
+  ...(props ?? {}),
+  userId,
+  domain: getDomain(),          // ✅ NEW: domain minden eventben
+  ...(runId ? { runId } : {}),
+};
 
   return {
     id: `e_${Math.random().toString(36).slice(2)}`,
@@ -777,11 +794,12 @@ const transformedEvents = newEvents.map((e) => ({
 
 
   return {
-    storyId,
-    userId,
-    device,
-    events: transformedEvents,
-  };
+  storyId,
+  userId,
+  device,
+  domain: typeof window !== "undefined" ? window.location.hostname : "server", // ✅ NEW
+  events: transformedEvents,
+};
 }
 
 export async function uploadBatch(storyId: string, endpoint?: string) {
