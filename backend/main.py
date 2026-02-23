@@ -499,6 +499,7 @@ class AnalyticsEventModel(BaseModel):
     ts: Optional[int] = None
     storyId: Optional[str] = None
     sessionId: str
+    runId: Optional[str] = None
     pageId: Optional[str] = None
     refPageId: Optional[str] = None
     props: Optional[Dict[str, Any]] = None 
@@ -903,6 +904,11 @@ def post_analytics_batch(batch: AnalyticsBatch, request: Request):
 
             props = d.get("props") or {}
 
+            # ✅ runId biztosítása props-ba is (hogy régi rollup is lássa)
+            if d.get("runId") and not props.get("runId"):
+                props["runId"] = d["runId"]
+            d["props"] = props
+
             if not isinstance(props, dict):
                 props = {}
 
@@ -1153,7 +1159,7 @@ def rollup_range(
     d = _story_analytics_dir(storyId)
     try:
         start = datetime.strptime(_from, "%Y-%m-%d")
-        end   = datetime.strptime(_to, "%Y-%m-%d")
+        end = datetime.strptime(_to, "%Y-%m-%d")
         if end < start:
             raise HTTPException(status_code=400, detail="'to' korábbi mint 'from'")
     except ValueError:
@@ -1163,11 +1169,28 @@ def rollup_range(
     if terminal:
         terminal_pages = {p.strip() for p in terminal.split(",") if p.strip()}
 
-    
+    # -------------------------
+    # Aggregátorok / tárolók
+    # -------------------------
+    per_session_events: Dict[str, List[Dict[str, Any]]] = {}
+    per_run_events: Dict[str, List[Dict[str, Any]]] = {}
+
+    session_user: Dict[str, str] = {}     # session -> user
+    run_user: Dict[str, str] = {}         # run -> user
+    run_session: Dict[str, str] = {}      # run -> session
+
     sessions_all: set[str] = set()
-    dau: Dict[str, Dict[str, set]] = {}
     users_all: set[str] = set()
-    runs_all: set[str] = set()  # <-- Add this line to define runs_all
+    runs_all: set[str] = set()
+
+    dau: Dict[str, Dict[str, set]] = {}   # day -> {users:Set, sessions:Set}
+
+    page_views: Dict[str, int] = {}
+    page_sessions: Dict[str, set] = {}
+    choice_counts: Dict[str, Dict[str, int]] = {}
+
+    exits_after_page: Dict[str, int] = {}  # session alapú exit szám
+    drop_offs: Dict[str, Dict[str, Any]] = {}  # run alapú drop-off
 
     totals = {
         "pageViews": 0,
@@ -1181,27 +1204,24 @@ def rollup_range(
         "completions": 0,
     }
 
-    per_session_events: Dict[str, List[Dict[str, Any]]] = {}
-    page_views: Dict[str, int] = {}
-    page_sessions: Dict[str, set] = {}
-    choice_counts: Dict[str, Dict[str, int]] = {}
+    # ✅ Riport blokkok (RUN-alapú, konzisztens mezőkkel)
+    end_pages: Dict[str, Dict[str, Any]] = {}         # key=end_page
+    outcomes: Dict[str, Dict[str, Any]] = {}          # key=outcomeId (nálad = end_page)
+    paths: Dict[str, Dict[str, Any]] = {}             # key=path_id
+    step_transitions: Dict[str, Dict[str, set[str]]] = {}  # step -> next -> set(runId)
 
-    # ✅ session -> user mapping
-    session_user: Dict[str, str] = {}
+    completed_sessions = 0
+    total_session_duration = 0
+    completed_runs = 0
 
-    # ✅ extra aggregátorok a riporthoz
-    end_pages: Dict[str, Dict[str, Any]] = {}
-    outcomes: Dict[str, Dict[str, Any]] = {}
-    paths: Dict[str, Dict[str, Any]] = {}
-    step_transitions: Dict[str, Dict[str, set]] = {}
-
-        # ✅ domain aggregátor
+    # ✅ domain aggregátor
     domains: Dict[str, Dict[str, Any]] = {}
+
     def ensure_domain(dom: str) -> Dict[str, Any]:
-        d = domains.get(dom)
-        if d:
-            return d
-        d = {
+        existing = domains.get(dom)
+        if existing:
+            return existing
+        agg = {
             "domain": dom,
             "sessionsSet": set(),
             "usersSet": set(),
@@ -1218,9 +1238,12 @@ def rollup_range(
                 "completions": 0,
             },
         }
-        domains[dom] = d
-        return d
-    
+        domains[dom] = agg
+        return agg
+
+    # -------------------------
+    # Beolvasás: nap fájlok
+    # -------------------------
     for day_dt in _daterange(start, end):
         day = day_dt.strftime("%Y-%m-%d")
         path = os.path.join(d, f"{day}.jsonl")
@@ -1235,23 +1258,21 @@ def rollup_range(
                 if not obj:
                     continue
 
+                # batch header
                 if obj.get("_type") == "batch_header":
-                    uid = obj.get("userId")
-                    if uid:
-                        users_all.add(str(uid))
-                        dau[day]["users"].add(str(uid))
+                    uid_hdr = obj.get("userId")
+                    if uid_hdr:
+                        users_all.add(str(uid_hdr))
+                        dau[day]["users"].add(str(uid_hdr))
                     continue
 
                 t = obj.get("t")
                 ts = obj.get("ts")
                 props = obj.get("props") or {}
+                if not isinstance(props, dict):
+                    props = {}
 
-                                
-                dom = (
-                    props.get("domain")
-                    or obj.get("domain")
-                    or "unknown"
-                )
+                dom = props.get("domain") or obj.get("domain") or "unknown"
                 domAgg = ensure_domain(str(dom))
 
                 sid = (
@@ -1276,91 +1297,96 @@ def rollup_range(
                     or obj.get("rid")
                     or props.get("rid")
                 )
-                
-
-                # ✅ session/users bookkeeping
-                if sid:
-                    sessions_all.add(sid)
-                    dau[day]["sessions"].add(sid)
 
                 uid2 = props.get("userId")
+
+                # --- sets / DAU ---
+                if sid:
+                    sessions_all.add(str(sid))
+                    dau[day]["sessions"].add(str(sid))
+                    domAgg["sessionsSet"].add(str(sid))
+
                 if uid2:
                     users_all.add(str(uid2))
                     dau[day]["users"].add(str(uid2))
-                    if sid and sid not in session_user:
-                        session_user[sid] = str(uid2)
-
-                if sid:
-                    domAgg["sessionsSet"].add(str(sid))
-                if uid2:
                     domAgg["usersSet"].add(str(uid2))
-                if rid:
-                    domAgg["runsSet"].add(str(rid))
+                    if sid and str(sid) not in session_user:
+                        session_user[str(sid)] = str(uid2)
 
                 if rid:
                     runs_all.add(str(rid))
+                    domAgg["runsSet"].add(str(rid))
+                    # run -> user/session mapping (best-effort)
+                    if uid2 and str(rid) not in run_user:
+                        run_user[str(rid)] = str(uid2)
+                    if sid and str(rid) not in run_session:
+                        run_session[str(rid)] = str(sid)
 
-                # ✅ totals + per-page aggregálás
+                # --- totals (global + domain) ---
                 if t == "page_enter":
                     totals["pageViews"] += 1
+                    domAgg["totals"]["pageViews"] += 1
                     if pid:
-                        page_views[pid] = page_views.get(pid, 0) + 1
-                        page_sessions.setdefault(pid, set()).add(sid or f"__nosession_{ts}")
-                
+                        pid_s = str(pid)
+                        page_views[pid_s] = page_views.get(pid_s, 0) + 1
+                        page_sessions.setdefault(pid_s, set()).add(str(sid) if sid else f"__nosession_{ts}")
 
                 elif t == "choice_select":
                     totals["choices"] += 1
+                    domAgg["totals"]["choices"] += 1
                     cid = str(props.get("choiceId") or props.get("id") or "")
                     if pid and cid:
-                        choice_counts.setdefault(pid, {})
-                        choice_counts[pid][cid] = choice_counts[pid].get(cid, 0) + 1
+                        pid_s = str(pid)
+                        choice_counts.setdefault(pid_s, {})
+                        choice_counts[pid_s][cid] = choice_counts[pid_s].get(cid, 0) + 1
 
                 elif t == "puzzle_try":
                     totals["puzzles"]["tries"] += 1
+                    domAgg["totals"]["puzzles"]["tries"] += 1
 
                 elif t == "puzzle_result":
                     if props.get("isCorrect"):
                         totals["puzzles"]["solved"] += 1
+                        domAgg["totals"]["puzzles"]["solved"] += 1
 
                 elif t == "rune_unlock":
                     totals["runes"] += 1
+                    domAgg["totals"]["runes"] += 1
 
                 elif t == "media_start":
                     totals["mediaStarts"] += 1
+                    domAgg["totals"]["mediaStarts"] += 1
 
                 elif t == "media_stop":
                     totals["mediaStops"] += 1
+                    domAgg["totals"]["mediaStops"] += 1
 
                 elif t in ("game_complete", "game:complete"):
                     totals["completions"] += 1
+                    domAgg["totals"]["completions"] += 1
 
                 elif t == "cta_shown":
                     totals["ctaShown"] += 1
+                    domAgg["totals"]["ctaShown"] += 1
 
                 elif t == "cta_click":
                     totals["ctaClicks"] += 1
+                    domAgg["totals"]["ctaClicks"] += 1
 
-                # ✅ session timeline tárolás
+                # --- timelines ---
                 if sid:
-                    per_session_events.setdefault(sid, []).append({
-                        "t": t, "ts": ts, "pageId": pid, "props": props, "day": day
-                    })
-                if t == "choice_select" and pid and props.get("choiceId"):
-                    per_session_events[sid].append({
-                        "t": "choice_edge",
-                        "ts": ts,
-                        "pageId": pid,
-                        "props": {
-                            "nextPageId": props.get("choiceId")
-                        },
-                        "day": day
-                    })
+                    per_session_events.setdefault(str(sid), []).append(
+                        {"t": t, "ts": ts, "pageId": pid, "props": props, "day": day, "rid": rid}
+                    )
 
-    completed_sessions = 0
-    total_session_duration = 0
-    exits_after_page: Dict[str, int] = {}
+                if rid:
+                    per_run_events.setdefault(str(rid), []).append(
+                        {"t": t, "ts": ts, "pageId": pid, "props": props, "day": day, "sid": sid}
+                    )
 
-    # ✅ session loop: duration, completion, exits, + paths/steps/endPages/outcomes
+    # -------------------------
+    # Session loop: duration, completion, exits (csak session alapú!)
+    # -------------------------
     for sid, evs in per_session_events.items():
         if not evs:
             continue
@@ -1368,16 +1394,17 @@ def rollup_range(
         evs.sort(key=lambda e: (e.get("ts") or 0, e.get("t") or ""))
 
         first_ts = evs[0].get("ts") or 0
-        last_ts  = evs[-1].get("ts") or first_ts
+        last_ts = evs[-1].get("ts") or first_ts
+
         if isinstance(first_ts, str):
             try:
                 first_ts = int(first_ts)
-            except:
+            except Exception:
                 first_ts = 0
         if isinstance(last_ts, str):
             try:
                 last_ts = int(last_ts)
-            except:
+            except Exception:
                 last_ts = first_ts
 
         total_session_duration += max(0, last_ts - first_ts)
@@ -1401,202 +1428,274 @@ def rollup_range(
                 last_page_enter = e.get("pageId")
                 break
         if last_page_enter:
-            exits_after_page[last_page_enter] = exits_after_page.get(last_page_enter, 0) + 1
+            exits_after_page[str(last_page_enter)] = exits_after_page.get(str(last_page_enter), 0) + 1
 
-        # ✅ PATH építés page_enter sorozatból
+    # -------------------------
+    # Run loop: endPages/outcomes/paths/steps/dropoffs (run alapú, konzisztens!)
+    # -------------------------
+    for rid, evs in per_run_events.items():
+        if not evs:
+            continue
+
+        evs.sort(key=lambda e: (e.get("ts") or 0, e.get("t") or ""))
+
+        uid_run = run_user.get(rid)
+        sid_run = run_session.get(rid)
+
+        # page_enter seq runon belül
         seq: List[str] = []
         for e in evs:
-            if e.get("t") == "page_enter":
-                pid2 = e.get("pageId")
-                if pid2:
-                    if (not seq) or (seq[-1] != pid2):
-                        seq.append(pid2)
+            if e.get("t") == "page_enter" and e.get("pageId"):
+                pid2 = str(e["pageId"])
+                if not seq or seq[-1] != pid2:
+                    seq.append(pid2)
 
-        end_page = seq[-1] if seq else None
-        uid_sess = session_user.get(sid)
-
-        # ✅ CTA per session (ha később lesz event)
-        cta_shown_sess = 0
-        cta_click_sess = 0
+        # completion + endAlias
+        completed = False
+        end_alias = None
         for e in evs:
-            if e.get("t") == "cta_shown":
-                cta_shown_sess += 1
-            elif e.get("t") == "cta_click":
-                cta_click_sess += 1
+            if e.get("t") in ("game_complete", "game:complete"):
+                completed = True
+                pa = e.get("props") or {}
+                if isinstance(pa, dict) and pa.get("endAlias"):
+                    end_alias = str(pa["endAlias"])
+                break
 
-        # ✅ endPages + outcomes
+        if completed:
+            completed_runs += 1
+
+        end_page = end_alias or (seq[-1] if seq else None)
+
+        # CTA runon belül
+        cta_shown_run = sum(1 for e in evs if e.get("t") == "cta_shown")
+        cta_click_run = sum(1 for e in evs if e.get("t") == "cta_click")
+
+        # END PAGES (run alapon)
         if end_page:
-            ep = end_pages.setdefault(end_page, {
-                "pageId": end_page,
-                "sessionsSet": set(),
-                "usersSet": set(),
-                "ctaShown": 0,
-                "ctaClicks": 0,
-            })
-            ep["sessionsSet"].add(sid)
-            if uid_sess:
-                ep["usersSet"].add(uid_sess)
-            ep["ctaShown"] += cta_shown_sess
-            ep["ctaClicks"] += cta_click_sess
+            ep = end_pages.setdefault(
+                str(end_page),
+                {
+                    "pageId": str(end_page),
+                    "runsSet": set(),
+                    "usersSet": set(),
+                    "sessionsSet": set(),  # opcionális, ha kell
+                    "ctaShown": 0,
+                    "ctaClicks": 0,
+                },
+            )
+            ep["runsSet"].add(str(rid))
+            if uid_run:
+                ep["usersSet"].add(str(uid_run))
+            if sid_run:
+                ep["sessionsSet"].add(str(sid_run))
+            ep["ctaShown"] += int(cta_shown_run)
+            ep["ctaClicks"] += int(cta_click_run)
 
-            oc = outcomes.setdefault(end_page, {
-                "outcomeId": end_page,
-                "sessionsSet": set(),
-                "usersSet": set(),
-                "ctaShown": 0,
-                "ctaClicks": 0,
-            })
-            oc["sessionsSet"].add(sid)
-            if uid_sess:
-                oc["usersSet"].add(uid_sess)
-            oc["ctaShown"] += cta_shown_sess
-            oc["ctaClicks"] += cta_click_sess
+            # OUTCOMES (nálad = endPages, de külön listát is tudunk)
+            oc = outcomes.setdefault(
+                str(end_page),
+                {
+                    "outcomeId": str(end_page),
+                    "runsSet": set(),
+                    "usersSet": set(),
+                    "ctaShown": 0,
+                    "ctaClicks": 0,
+                },
+            )
+            oc["runsSet"].add(str(rid))
+            if uid_run:
+                oc["usersSet"].add(str(uid_run))
+            oc["ctaShown"] += int(cta_shown_run)
+            oc["ctaClicks"] += int(cta_click_run)
 
-        # ✅ steps: transition (page -> nextPage)
+        # STEPS (run alapon)
         for i in range(len(seq) - 1):
             step_id = seq[i]
             nxt = seq[i + 1]
-            step_transitions.setdefault(step_id, {}).setdefault(nxt, set()).add(sid)
+            step_transitions.setdefault(step_id, {}).setdefault(nxt, set()).add(str(rid))
 
-        # ✅ paths: teljes útvonal kulcs
+        # PATHS (run alapon)
         if seq:
-            # cap, hogy ne legyen túl hosszú a kulcs
-            if len(seq) > 25:
-                seq_key = seq[:20] + ["…"] + seq[-4:]
-            else:
-                seq_key = seq
-
+            seq_key = (seq[:20] + ["…"] + seq[-4:]) if len(seq) > 25 else seq
             path_id = " > ".join(seq_key)
-            p = paths.setdefault(path_id, {
-                "pathId": path_id,
-                "sessions": 0,
-                "usersSet": set(),
-                "topOutcomeCounts": {},
-                "ctaShown": 0,
-                "ctaClicks": 0,
-            })
-            p["sessions"] += 1
-            if uid_sess:
-                p["usersSet"].add(uid_sess)
+            p = paths.setdefault(
+                path_id,
+                {
+                    "pathId": path_id,
+                    "runs": 0,
+                    "usersSet": set(),
+                    "topOutcomeCounts": {},
+                    "ctaShown": 0,
+                    "ctaClicks": 0,
+                },
+            )
+            p["runs"] += 1
+            if uid_run:
+                p["usersSet"].add(str(uid_run))
             if end_page:
                 toc = p["topOutcomeCounts"]
-                toc[end_page] = toc.get(end_page, 0) + 1
-            p["ctaShown"] += cta_shown_sess
-            p["ctaClicks"] += cta_click_sess
+                endp = str(end_page)
+                toc[endp] = toc.get(endp, 0) + 1
+            p["ctaShown"] += int(cta_shown_run)
+            p["ctaClicks"] += int(cta_click_run)
 
+        # DROP-OFF (run alapon)
+        last_enter = None
+        for e in reversed(evs):
+            if e.get("t") == "page_enter" and e.get("pageId"):
+                last_enter = str(e["pageId"])
+                break
+
+        is_terminal = (last_enter in terminal_pages) if (last_enter and terminal_pages) else False
+        # ha completed vagy terminal, az nem dropoff
+        if last_enter and (not completed) and (not is_terminal):
+            dd = drop_offs.setdefault(last_enter, {"pageId": last_enter, "runsSet": set()})
+            dd["runsSet"].add(str(rid))
+
+    # -------------------------
+    # KPI-k
+    # -------------------------
     session_count = len(sessions_all)
     user_count = len(users_all)
     run_count = len(runs_all)
 
     avg_runs_per_user = (run_count / user_count) if user_count else 0.0
     avg_session_ms = int(round(total_session_duration / session_count)) if session_count else 0
-    completion_rate = (completed_sessions / session_count) if session_count else 0.0
+
+    # ✅ completionRate: run alapú (stabilabb, ha sok run van 1 sessionben)
+    completion_rate = (completed_runs / run_count) if run_count else 0.0
+
     puzzle_success_rate = (
         (totals["puzzles"]["solved"] / totals["puzzles"]["tries"])
-        if totals["puzzles"]["tries"] > 0 else 0.0
+        if totals["puzzles"]["tries"] > 0
+        else 0.0
     )
     cta_ctr = (totals["ctaClicks"] / totals["ctaShown"]) if totals["ctaShown"] else 0.0
 
     dau_series = []
     for day in sorted(dau.keys()):
-        dau_series.append({
-            "day": day,
-            "users": len(dau[day]["users"]),
-            "sessions": len(dau[day]["sessions"]),
-        })
+        dau_series.append(
+            {
+                "day": day,
+                "users": len(dau[day]["users"]),
+                "sessions": len(dau[day]["sessions"]),
+            }
+        )
 
     pages_out = []
     for pid, views in sorted(page_views.items(), key=lambda kv: kv[1], reverse=True):
         uniq = len(page_sessions.get(pid, set()))
         exits = exits_after_page.get(pid, 0)
         exitRate = (exits / uniq) if uniq else 0.0
-        pages_out.append({
-            "pageId": pid,
-            "views": views,
-            "uniqueSessions": uniq,
-            "exitsAfterPage": exits,
-            "exitRate": round(exitRate, 4),
-        })
+        pages_out.append(
+            {
+                "pageId": pid,
+                "views": views,
+                "uniqueSessions": uniq,
+                "exitsAfterPage": exits,
+                "exitRate": round(exitRate, 4),
+            }
+        )
 
     choices_out = []
     for pid, counters in choice_counts.items():
-        choices_out.append({
-            "pageId": pid,
-            "choices": [
-                {"choiceId": cid, "count": n}
-                for cid, n in sorted(counters.items(), key=lambda kv: kv[1], reverse=True)
-            ]
-        })
+        choices_out.append(
+            {
+                "pageId": pid,
+                "choices": [
+                    {"choiceId": cid, "count": n}
+                    for cid, n in sorted(counters.items(), key=lambda kv: kv[1], reverse=True)
+                ],
+            }
+        )
 
-    # ✅ finalize endPages/outcomes/paths/steps
     end_pages_out = []
     for pid, v in end_pages.items():
-        end_pages_out.append({
-            "pageId": pid,
-            "sessions": len(v["sessionsSet"]),
-            "users": len(v["usersSet"]),
-            "ctaShown": v["ctaShown"],
-            "ctaClicks": v["ctaClicks"],
-        })
-    end_pages_out.sort(key=lambda x: x["sessions"], reverse=True)
+        end_pages_out.append(
+            {
+                "pageId": pid,
+                "runs": len(v["runsSet"]),
+                "users": len(v["usersSet"]),
+                "ctaShown": v["ctaShown"],
+                "ctaClicks": v["ctaClicks"],
+            }
+        )
+    end_pages_out.sort(key=lambda x: x["runs"], reverse=True)
 
     outcomes_out = []
     for oid, v in outcomes.items():
-        outcomes_out.append({
-            "outcomeId": oid,
-            "sessions": len(v["sessionsSet"]),
-            "users": len(v["usersSet"]),
-            "ctaShown": v["ctaShown"],
-            "ctaClicks": v["ctaClicks"],
-        })
-    outcomes_out.sort(key=lambda x: x["sessions"], reverse=True)
+        outcomes_out.append(
+            {
+                "outcomeId": oid,
+                "runs": len(v["runsSet"]),
+                "users": len(v["usersSet"]),
+                "ctaShown": v["ctaShown"],
+                "ctaClicks": v["ctaClicks"],
+            }
+        )
+    outcomes_out.sort(key=lambda x: x["runs"], reverse=True)
 
     paths_out = []
-    for pid, v in paths.items():
+    for path_id, v in paths.items():
         top_outcome = None
-        if v["topOutcomeCounts"]:
+        if v.get("topOutcomeCounts"):
             top_outcome = max(v["topOutcomeCounts"].items(), key=lambda kv: kv[1])[0]
-        paths_out.append({
-            "pathId": pid,
-            "sessions": v["sessions"],
-            "users": len(v["usersSet"]),
-            "topOutcomeId": top_outcome,
-            "ctaShown": v["ctaShown"],
-            "ctaClicks": v["ctaClicks"],
-        })
-    paths_out.sort(key=lambda x: x["sessions"], reverse=True)
+        paths_out.append(
+            {
+                "pathId": path_id,
+                "runs": v["runs"],
+                "users": len(v["usersSet"]),
+                "topOutcomeId": top_outcome,
+                "ctaShown": v["ctaShown"],
+                "ctaClicks": v["ctaClicks"],
+            }
+        )
+    paths_out.sort(key=lambda x: x["runs"], reverse=True)
     paths_out = paths_out[:20]
 
     steps_out = []
     for step_id, next_map in step_transitions.items():
-        opts = [{"value": nxt, "sessions": len(sids)} for nxt, sids in next_map.items()]
-        opts.sort(key=lambda x: x["sessions"], reverse=True)
-        steps_out.append({
-            "stepId": step_id,
-            "stepType": "logic",
-            "options": opts[:12],
-        })
-    steps_out.sort(key=lambda x: sum(o["sessions"] for o in x["options"]), reverse=True)
+        opts = [{"value": nxt, "runs": len(rids)} for nxt, rids in next_map.items()]
+        opts.sort(key=lambda x: x["runs"], reverse=True)
+        steps_out.append(
+            {
+                "stepId": step_id,
+                "stepType": "logic",
+                "options": opts[:12],
+            }
+        )
+    steps_out.sort(key=lambda x: sum(o["runs"] for o in x["options"]), reverse=True)
     steps_out = steps_out[:30]
 
-    # ✅ domains: set-ek + totals visszaadása
     domains_out = []
     for dom, v in domains.items():
-        domains_out.append({
-            "domain": dom,
-            "sessions": len(v["sessionsSet"]),
-            "users": len(v["usersSet"]),
-            "runs": len(v["runsSet"]),
-            "totals": v["totals"],
-        })
+        domains_out.append(
+            {
+                "domain": dom,
+                "sessions": len(v["sessionsSet"]),
+                "users": len(v["usersSet"]),
+                "runs": len(v["runsSet"]),
+                "totals": v["totals"],
+            }
+        )
     domains_out.sort(key=lambda x: x["sessions"], reverse=True)
 
-    
+    drop_offs_out = []
+    for pageId, v in drop_offs.items():
+        drop_offs_out.append(
+            {
+                "pageId": pageId,
+                "dropOffRuns": len(v["runsSet"]),
+            }
+        )
+    drop_offs_out.sort(key=lambda x: x["dropOffRuns"], reverse=True)
+    drop_offs_out = drop_offs_out[:20]
 
     return {
         "storyId": storyId,
         "from": _from,
         "to": _to,
+        "dropOffs": drop_offs_out,
         "sessions": session_count,
         "users": user_count,
         "runs": run_count,
@@ -1611,19 +1710,17 @@ def rollup_range(
         "dau": dau_series,
         "pages": pages_out,
         "choices": choices_out,
-
-        # ✅ új riport mezők
         "paths": paths_out,
         "steps": steps_out,
         "endPages": end_pages_out,
         "outcomes": outcomes_out,
-
+        "domains": domains_out,
         "notes": {
-            "completion": "Ha nincs game_complete event, a 'terminal' query param listát használjuk.",
-            "exitAfterPage": "Az adott időszakban sessionönként az utolsó page_enter oldalt számoljuk exitként.",
-            "paths": "Paths/steps/endPages/outcomes page_enter sorrendből épülnek, akkor is működik, ha nincs choice_select.",
-        }
-    }
+            "completion": "completionRate run-alapú (game_complete / game:complete alapján). Terminal listát a dropoff/exit értelmezéshez használjuk.",
+            "exitAfterPage": "Az adott időszakban session-önként az utolsó page_enter oldalt számoljuk exitként.",
+            "paths": "Paths/steps/endPages/outcomes run-on belüli page_enter sorrendből épülnek.",
+        },
+    }    
 # =========================
 #   TOKEN + EXPORT (HTML/JSON/PDF)
 # =========================
@@ -1784,11 +1881,11 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
           <tr><td>Puzzle solved</td><td>{(totals.get('puzzles') or {}).get('solved', 0)}</td></tr>
           <tr><td>Runes</td><td>{totals.get('runes',0)}</td></tr>
           <tr><td>Media starts</td><td>{totals.get('mediaStarts',0)}</td></tr>
-          <tr><td>Media stops</td><td>${totals.get('mediaStops',0)}</td></tr>
-          <tr><td>Completions</td><td>${totals.get('completions',0)}</td></tr>
-          <tr><td>CTA shown</td><td>${totals.get('ctaShown',0)}</td></tr>
-          <tr><td>CTA clicks</td><td>${totals.get('ctaClicks',0)}</td></tr>
-          <tr><td>CTA CTR</td><td>${_format_pct(k.get('ctaCtr',0))}</td></tr>
+          <tr><td>Media stops</td><td>{totals.get('mediaStops',0)}</td></tr>
+          <tr><td>Completions</td><td>{totals.get('completions',0)}</td></tr>
+          <tr><td>CTA shown</td><td>{totals.get('ctaShown',0)}</td></tr>
+          <tr><td>CTA clicks</td><td>{totals.get('ctaClicks',0)}</td></tr>
+          <tr><td>CTA CTR</td><td>{_format_pct(k.get('ctaCtr',0))}</td></tr>
         </tbody>
       </table>
     </div>
@@ -1796,7 +1893,9 @@ def _build_html_report(roll: dict, logo_url: str | None = None) -> str:
 </div>
 
 <script>
-const lbls = {json.dumps([d for d in []])};
+const lbls = {json.dumps(dau_labels)};
+const users = {json.dumps(dau_users)};
+const sessions = {json.dumps(dau_sessions)};
 const ctx = document.getElementById('dau').getContext('2d');
 </script>
 </body>
