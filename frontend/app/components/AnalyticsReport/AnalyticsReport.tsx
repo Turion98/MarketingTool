@@ -5,7 +5,7 @@ import {
   exportStoryCSV,
   exportStoryJSON,
   clearStoryAnalytics,
-} from "../../lib/analytics";
+} from "@/app/lib/analytics";
 import styles from "./AnalyticsReport.module.scss";
 
 type Range = "last7d" | "last30d";
