@@ -905,6 +905,12 @@ def post_analytics_batch(batch: AnalyticsBatch, request: Request):
 
             props = d.get("props") or {}
 
+            # ✅ PROMOTE runId from props to top-level too
+            rid = d.get("runId") or d.get("rid") or props.get("runId") or props.get("rid")
+            if rid:
+                d["runId"] = rid
+                props["runId"] = rid
+
             # ✅ runId biztosítása props-ba is (hogy régi rollup is lássa)
             if d.get("runId") and not props.get("runId"):
                 props["runId"] = d["runId"]
@@ -1471,8 +1477,12 @@ def rollup_range(
         cta_shown_run = sum(1 for e in evs if e.get("t") == "cta_shown")
         cta_click_run = sum(1 for e in evs if e.get("t") == "cta_click")
 
-        # END PAGES (run alapon)
-        if end_page:
+        # ✅ Outcome csak akkor, ha completed VAGY terminal végoldal
+        is_terminal_end = bool(end_page and terminal_pages and str(end_page) in terminal_pages)
+        is_outcome = bool(end_page and (completed or is_terminal_end))
+
+        # END PAGES + OUTCOMES csak "valódi" outcome-okra
+        if is_outcome:
             ep = end_pages.setdefault(
                 str(end_page),
                 {
@@ -1492,7 +1502,6 @@ def rollup_range(
             ep["ctaShown"] += int(cta_shown_run)
             ep["ctaClicks"] += int(cta_click_run)
 
-            # OUTCOMES (nálad = endPages, de külön listát is tudunk)
             oc = outcomes.setdefault(
                 str(end_page),
                 {
@@ -1533,10 +1542,9 @@ def rollup_range(
             p["runs"] += 1
             if uid_run:
                 p["usersSet"].add(str(uid_run))
-            if end_page:
-                toc = p["topOutcomeCounts"]
+            if is_outcome and end_page:
                 endp = str(end_page)
-                toc[endp] = toc.get(endp, 0) + 1
+                p["topOutcomeCounts"][endp] = p["topOutcomeCounts"].get(endp, 0) + 1
             p["ctaShown"] += int(cta_shown_run)
             p["ctaClicks"] += int(cta_click_run)
 

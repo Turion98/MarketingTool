@@ -457,7 +457,6 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 <th>CTA shown</th>
                 <th>CTA clicks</th>
                 <th>CTA CTR</th>
-                <th>End pages</th>
               </tr>
             </thead>
             <tbody>
@@ -470,13 +469,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                   <td>{x.shown ?? "—"}</td>
                   <td>{x.clicks ?? "—"}</td>
                   <td>{x.shown == null || x.clicks == null ? "—" : fmtPct(x.ctr * 100)}</td>
-                  <td>
-                    {x.endPagesCount != null
-                      ? x.endPagesCount
-                      : x.topEndPageId
-                        ? 1
-                        : "—"}
-                  </td>
+                  
                 </tr>
               ))}
             </tbody>
