@@ -484,8 +484,9 @@ def _assemble_image_prompt_from_fragments(story: Dict[str, Any], page: Dict[str,
 #   ANALYTICS TÁR (JSONL)
 # =========================
 
-ANALYTICS_DIR = os.path.abspath(os.getenv("ANALYTICS_DIR", os.path.join(BASE_DIR, "analytics")))
-os.makedirs(ANALYTICS_DIR, exist_ok=True)
+ANALYTICS_DIR = os.path.abspath(
+    os.getenv("ANALYTICS_DIR", os.path.join(BASE_DIR, "data", "analytics"))
+)
 
 def _story_analytics_dir(story_id: str) -> str:
     safe = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", story_id).strip("_") or "unknown"
