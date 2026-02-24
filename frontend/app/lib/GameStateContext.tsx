@@ -146,6 +146,8 @@ type GameStateContextType = {
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
 
+  ensureRunOnStart?: () => string | undefined;
+
   unlockedFragments: string[];
   setUnlockedFragments: (tags: string[]) => void;
   unlockFragment: (idOrIds: string | string[]) => void;
@@ -374,6 +376,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
+  
   // SAFE DEFAULT state
   const [voiceApiKey, setVoiceApiKeyState] = useState<string | undefined>(undefined);
   const [imageApiKey, setImageApiKeyState] = useState<string | undefined>(undefined);
@@ -423,7 +426,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [storyId, setStoryId] = useState<string | undefined>(undefined);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [runId, setRunId] = useState<string | undefined>(undefined);
-  
+  const lastStartRunAtRef = useRef<number>(0);
   function runStorageKey(storyId: string, scopeKey?: string) {
   const scope = String(scopeKey || "default").trim() || "default";
   return `q_an:${storyId}:${scope}:runId_v1`;
@@ -454,6 +457,7 @@ function startNewRunId(storyId: string, scopeKey?: string) {
   } catch {}
   return rid;
 }
+
 
   /** 🔹 PROGRESS state */
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
@@ -545,6 +549,31 @@ function startNewRunId(storyId: string, scopeKey?: string) {
     }
   }, []);
 
+
+  const ensureRunOnStart = useCallback(() => {
+  if (!storyId) return undefined;
+
+  const startId = (globals as any)?.startPageId;
+  if (!startId) return runId;
+
+  // csak akkor csinál újat, ha épp a start oldalon vagyunk
+  if ((currentPageId || null) !== startId) return runId;
+
+  // StrictMode / gyors dupla hívás védelem
+  const now = Date.now();
+  if (now - (lastStartRunAtRef.current || 0) < 250) return runId;
+  lastStartRunAtRef.current = now;
+
+  const scopeKey =
+    (globals as any)?.accountId ||
+    (globals as any)?.tenantId ||
+    (globals as any)?.embedKey ||
+    (typeof window !== "undefined" ? window.location.host : "default");
+
+  const rid = startNewRunId(storyId, scopeKey);
+  setRunId(rid);
+  return rid;
+}, [storyId, globals, currentPageId, runId]);
   
  /** 🔹 Analytics: storyId + sessionId előkészítés */
 useEffect(() => {
@@ -606,36 +635,44 @@ useEffect(() => {
   (globals as any)?.embedKey,
 ]);
 
-
- /** 🔹 Analytics: új session, ha nem-start oldalról visszajöttünk start-ra */
+/** 🔹 Analytics: ha start oldalra érkezünk → új RUN (mindig) */
 useEffect(() => {
   if (!hydrated) return;
   if (!storyId) return;
 
-   // ha runKey-s restart van, akkor ezt hagyjuk ki
+  // runKey-s restart külön logika esetén skip (ha akarod)
   if ((globals as any)?.runKey) {
     prevPageIdRef.current = currentPageId || null;
     return;
   }
 
   const startId = (globals as any)?.startPageId;
-  if (!startId) return;
+  if (!startId) {
+    prevPageIdRef.current = currentPageId || null;
+    return;
+  }
 
-  const prev = prevPageIdRef.current;
+  const prev = prevPageIdRef.current; // lehet null
   const curr = currentPageId || null;
 
-  if (prev && curr && curr === startId && prev !== startId) {
-    const scopeKey =
-  (globals as any)?.accountId ||
-  (globals as any)?.tenantId ||
-  (globals as any)?.embedKey ||
-  (typeof window !== "undefined" ? window.location.host : "default");
+  const firstMountAtStart = curr === startId && prev == null;
+  const arrivedToStart = curr === startId && prev !== startId;
 
-const newSess = startNewRunSession(storyId, scopeKey);
-setSessionId(newSess);
+  if (firstMountAtStart || arrivedToStart) {
+    const now = Date.now();
+    if (now - (lastStartRunAtRef.current || 0) > 250) {
+      lastStartRunAtRef.current = now;
 
-const newRun = startNewRunId(storyId, scopeKey);
-setRunId(newRun);
+      const scopeKey =
+        (globals as any)?.accountId ||
+        (globals as any)?.tenantId ||
+        (globals as any)?.embedKey ||
+        (typeof window !== "undefined" ? window.location.host : "default");
+
+      // ✅ csak RUN-t váltunk (session maradhat)
+      const newRun = startNewRunId(storyId, scopeKey);
+      setRunId(newRun);
+    }
   }
 
   prevPageIdRef.current = curr;
@@ -647,6 +684,7 @@ setRunId(newRun);
   (globals as any)?.accountId,
   (globals as any)?.tenantId,
   (globals as any)?.embedKey,
+  (globals as any)?.runKey,
 ]);
 
   const addFragment = useCallback((id: string, data: FragmentData) => {
@@ -1369,6 +1407,8 @@ setCurrentPageData(normalized);
         setImageApiKey,
         isLoading,
         setIsLoading,
+
+        ensureRunOnStart,
 
         unlockedFragments,
         setUnlockedFragments,

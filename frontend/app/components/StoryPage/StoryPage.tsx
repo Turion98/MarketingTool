@@ -965,6 +965,7 @@ useEffect(() => {
   derivedStoryId,
   derivedSessionId,
   currentPageId,
+  derivedRunId,
   pageData?.id,
   pageData?.type,
 ]);
