@@ -211,6 +211,7 @@ function getScopeKeyForStory(storyId: string): string {
   return "default";
 }
 
+
 function getRunIdFromSessionStorage(storyId: string): string | undefined {
   const scopeKey = getScopeKeyForStory(storyId);
   const bucket = sessionBucketKey(storyId, scopeKey);
@@ -220,6 +221,24 @@ function getRunIdFromSessionStorage(storyId: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+function runBucketKey(storyId: string, scopeKey?: string) {
+  const bucket = sessionBucketKey(storyId, scopeKey);
+  return `${bucket}:runId_v1`;
+}
+
+function newRunId() {
+  return "run_" + uid();
+}
+
+export function startNewRunId(storyId: string, scopeKey?: string) {
+  const key = runBucketKey(storyId, scopeKey);
+  const rid = newRunId();
+  try {
+    sessionStorage.setItem(key, rid);
+  } catch {}
+  return rid;
 }
 
 export function startNewRunSession(storyId: string, scopeKey?: string) {
@@ -235,7 +254,9 @@ export function startNewRunSession(storyId: string, scopeKey?: string) {
     localStorage.setItem(tsKey, String(Date.now()));
   } catch {}
 
-  
+  // ✅ ÚJ: runId is induljon
+  startNewRunId(storyId, scopeKey);
+
   try {
     const b = storyBucket(storyId);
     b.sessions[sid] = true;

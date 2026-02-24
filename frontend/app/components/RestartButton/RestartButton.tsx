@@ -7,7 +7,7 @@ import style from "./RestartButton.module.scss";
 import { createSessionSeeds } from "../../lib/sessionSeeds";
 import { clearAllCache } from "../../lib/clearAllCache";
 import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick, startNewRunSession } from "../../lib/analytics";
+import { trackUiClick, startNewRunSession, startNewRunId } from "../../lib/analytics";
 
 type RestartButtonProps = {
   seedCount?: number;
@@ -87,6 +87,20 @@ const RestartButton: React.FC<RestartButtonProps> = ({
     }
   };
 
+  const scopeKey =
+  (typeof window !== "undefined" ? window.location.host : "default");
+
+// ✅ ne töröld a globális sessionId_v2-t, az nem a te keyed
+// inkább indíts új sessiont a helyes scope-pal, ha tényleg új session kell
+try {
+  if (storyId) startNewRunSession(String(storyId), scopeKey);
+} catch {}
+
+// ✅ és MINDENKÉPPEN indíts új run-t is (ha sessiont nem akarsz váltani, akkor csak ez kell)
+try {
+  if (storyId) startNewRunId(String(storyId), scopeKey);
+} catch {}
+
   // --- backend admin restart hívás
   const callAdminRestart = async () => {
     if (typeof window === "undefined") return;
@@ -139,14 +153,8 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       await callAdminRestart();
     }
 
-    // ✅ Restart = új session
-// - a StoryPage a "sessionId_v2"-t használja
-// - a régi (per-story) kulcsot is frissítjük, ha valahol még azt olvassa a kliens
-try {
-  localStorage.removeItem("sessionId_v2");
-localStorage.removeItem(`qz_session_${storyId}`);
 
-} catch {}
+
 
     // helyi reset
     try {
