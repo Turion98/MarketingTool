@@ -656,29 +656,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             )}
 
             {/* ✅ ÚJ: Decision step teljesítmény */}
-            <h4>Decision step megoszlás</h4>
-            {!rangeData.steps || rangeData.steps.length === 0 ? (
-              <div className={styles.info}>
-                (Még nincs steps adat a range riportban.)
-              </div>
-            ) : (
-              <div className={styles.choiceList}>
-                {rangeData.steps.map((st) => (
-                  <div className={styles.choiceGroup} key={st.stepId}>
-                    <div className={styles.choiceTitle}>
-                      {st.stepId} <span style={{ opacity: 0.7 }}>({st.stepType})</span>
-                    </div>
-                    <ul>
-                      {st.options.map((o) => (
-                        <li key={o.value}>
-                          {o.value}: <b>{o.sessions}</b>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
+            
+              
+              
+            
           </>
         )}
       </div>

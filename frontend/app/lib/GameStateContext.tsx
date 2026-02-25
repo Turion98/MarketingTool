@@ -571,6 +571,7 @@ function startNewRunId(storyId: string, scopeKey?: string) {
     (typeof window !== "undefined" ? window.location.host : "default");
 
   const rid = startNewRunId(storyId, scopeKey);
+  console.log("[GameState] ensureRunOnStart → new runId", { storyId, scopeKey, rid });
   setRunId(rid);
   return rid;
 }, [storyId, globals, currentPageId, runId]);
@@ -604,10 +605,21 @@ useEffect(() => {
 
     setSessionId(sess);
 
-        const rid = rk
-      ? startNewRunId(sid, scopeKey)
-      : getOrCreateRunId(sid, scopeKey);
-
+    // runId: csak storage-ból olvassuk ki, ne generáljunk feleslegesen újat
+    let rid: string | undefined;
+    try {
+      const key = runStorageKey(sid, scopeKey);
+      const existing = sessionStorage.getItem(key);
+      rid = existing || undefined;
+    } catch {
+      rid = undefined;
+    }
+    console.log("[GameState] initAnalyticsForStory/useEffect runId", {
+      storyId: sid,
+      scopeKey,
+      hasRunKey: !!rk,
+      runId: rid,
+    });
     setRunId(rid);
 
     
@@ -658,7 +670,7 @@ useEffect(() => {
   const firstMountAtStart = curr === startId && prev == null;
   const arrivedToStart = curr === startId && prev !== startId;
 
-  if (firstMountAtStart || arrivedToStart) {
+  if (arrivedToStart) {
     const now = Date.now();
     if (now - (lastStartRunAtRef.current || 0) > 250) {
       lastStartRunAtRef.current = now;
