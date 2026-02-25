@@ -1176,6 +1176,24 @@ def rollup_range(
     if terminal:
         terminal_pages = {p.strip() for p in terminal.split(",") if p.strip()}
 
+    def _is_end_page_id(pid: str, end_flags_for_run: Dict[str, bool]) -> bool:
+        """
+        END page detektálás:
+        - explicit isEnd flag az adott run eseményeiben
+        - pageId prefix: END_ / END__
+        - opcionálisan: terminal_pages paraméter
+        """
+        if not pid:
+            return False
+        s = str(pid)
+        if end_flags_for_run.get(s):
+            return True
+        if s.startswith("END_") or s.startswith("END__") or s == "__END__":
+            return True
+        if terminal_pages and s in terminal_pages:
+            return True
+        return False
+
     # -------------------------
     # Aggregátorok / tárolók
     # -------------------------
@@ -1437,6 +1455,21 @@ def rollup_range(
         if last_page_enter:
             exits_after_page[str(last_page_enter)] = exits_after_page.get(str(last_page_enter), 0) + 1
 
+    # Restart + end-type aggregátorok (run szintű statokhoz)
+    session_run_counts: Dict[str, int] = {}
+    for rid_key, sid_val in run_session.items():
+        if sid_val:
+            sk = str(sid_val)
+            session_run_counts[sk] = session_run_counts.get(sk, 0) + 1
+
+    restart_total_runs = 0
+    restart_runs_with = 0
+    restart_completed_with = 0
+    restart_completed_without = 0
+
+    path_conv: Dict[str, Dict[str, Any]] = {}     # pathId -> {pathId, runs, endRuns}
+    end_type_dist: Dict[str, Dict[str, Any]] = {} # endType/pageId -> {id, count}
+
     # -------------------------
     # Run loop: endPages/outcomes/paths/steps/dropoffs (run alapú, konzisztens!)
     # -------------------------
@@ -1449,29 +1482,66 @@ def rollup_range(
         uid_run = run_user.get(rid)
         sid_run = run_session.get(rid)
 
-        # page_enter seq runon belül
+        restart_total_runs += 1
+
+        # page_enter seq runon belül + per-page END flag
         seq: List[str] = []
+        end_flags_for_run: Dict[str, bool] = {}
+        has_restart_event = False
         for e in evs:
-            if e.get("t") == "page_enter" and e.get("pageId"):
+            t_e = e.get("t")
+            if t_e == "page_enter" and e.get("pageId"):
                 pid2 = str(e["pageId"])
                 if not seq or seq[-1] != pid2:
                     seq.append(pid2)
+                props_e = e.get("props") or {}
+                if isinstance(props_e, dict) and props_e.get("isEnd"):
+                    end_flags_for_run[pid2] = True
+            # restart viselkedés: ui_click, amelynek control mezője tartalmazza a "restart" szót
+            if t_e == "ui_click":
+                props_e = e.get("props") or {}
+                if isinstance(props_e, dict):
+                    ctrl = str(props_e.get("control") or "").lower()
+                    if "restart" in ctrl:
+                        has_restart_event = True
 
         # completion + endAlias
         completed = False
         end_alias = None
+        end_props: Optional[Dict[str, Any]] = None
         for e in evs:
             if e.get("t") in ("game_complete", "game:complete"):
                 completed = True
                 pa = e.get("props") or {}
                 if isinstance(pa, dict) and pa.get("endAlias"):
                     end_alias = str(pa["endAlias"])
+                if isinstance(pa, dict):
+                    end_props = pa
                 break
 
         if completed:
             completed_runs += 1
 
         end_page = end_alias or (seq[-1] if seq else None)
+
+        # végoldal END-e? (a run utolsó page_enter alapján)
+        final_is_end = bool(seq and _is_end_page_id(str(seq[-1]), end_flags_for_run))
+
+        # restart viselkedés: több run ugyanabban a sessionben
+        session_has_multi_runs = False
+        if sid_run:
+            sc = session_run_counts.get(str(sid_run), 0)
+            if sc > 1:
+                session_has_multi_runs = True
+
+        run_has_restart = bool(has_restart_event or session_has_multi_runs)
+        if run_has_restart:
+            restart_runs_with += 1
+            if completed:
+                restart_completed_with += 1
+        else:
+            if completed:
+                restart_completed_without += 1
 
         # CTA runon belül
         cta_shown_run = sum(1 for e in evs if e.get("t") == "cta_shown")
@@ -1518,14 +1588,53 @@ def rollup_range(
             oc["ctaShown"] += int(cta_shown_run)
             oc["ctaClicks"] += int(cta_click_run)
 
+            # END-TYPE DISTRIBUTION – csak akkor, ha a végső oldal tényleges END
+            if final_is_end and seq:
+                end_type_val: Optional[str] = None
+                if end_props and isinstance(end_props, dict):
+                    et = end_props.get("endType")
+                    if isinstance(et, str) and et.strip():
+                        end_type_val = et.strip()
+                # ha nincs endType, használjuk a végső pageId-t
+                if not end_type_val:
+                    end_type_val = str(seq[-1])
+                if end_type_val:
+                    etd = end_type_dist.setdefault(
+                        end_type_val,
+                        {"id": end_type_val, "count": 0},
+                    )
+                    etd["count"] += 1
+
         # STEPS (run alapon)
         for i in range(len(seq) - 1):
             step_id = seq[i]
             nxt = seq[i + 1]
             step_transitions.setdefault(step_id, {}).setdefault(nxt, set()).add(str(rid))
 
-        # PATHS (run alapon)
+        # PATHS (run alapon) – csak lezárt, END-del végződő utak
         if seq:
+            # Csak akkor tekintjük path-nek, ha van outcome/end_page
+            if not is_outcome or not end_page:
+                continue
+
+            # Követelmény: az END oldal legyen a szekvencia utolsó eleme
+            if str(seq[-1]) != str(end_page):
+                continue
+
+            # Ha van explicit terminal_pages filter, az END-nek abban benne kell lennie
+            if terminal_pages and str(end_page) not in terminal_pages:
+                continue
+
+            # PATH CONVERSION – csak a TELJES run path szintjén
+            full_path_id = " > ".join(seq)
+            pc = path_conv.setdefault(
+                full_path_id,
+                {"pathId": full_path_id, "runs": 0, "endRuns": 0},
+            )
+            pc["runs"] += 1
+            if final_is_end:
+                pc["endRuns"] += 1
+
             seq_key = (seq[:20] + ["…"] + seq[-4:]) if len(seq) > 25 else seq
             path_id = " > ".join(seq_key)
             p = paths.setdefault(
@@ -1542,9 +1651,9 @@ def rollup_range(
             p["runs"] += 1
             if uid_run:
                 p["usersSet"].add(str(uid_run))
-            if is_outcome and end_page:
-                endp = str(end_page)
-                p["topOutcomeCounts"][endp] = p["topOutcomeCounts"].get(endp, 0) + 1
+
+            endp = str(end_page)
+            p["topOutcomeCounts"][endp] = p["topOutcomeCounts"].get(endp, 0) + 1
             p["ctaShown"] += int(cta_shown_run)
             p["ctaClicks"] += int(cta_click_run)
 
@@ -1700,6 +1809,52 @@ def rollup_range(
     drop_offs_out.sort(key=lambda x: x["dropOffRuns"], reverse=True)
     drop_offs_out = drop_offs_out[:20]
 
+    # PATH CONVERSION OUTPUT
+    path_conversion_out = []
+    for v in path_conv.values():
+        total_r = int(v.get("runs") or 0)
+        end_r = int(v.get("endRuns") or 0)
+        rate = (end_r / total_r) if total_r else 0.0
+        path_conversion_out.append(
+            {
+                "pathId": v["pathId"],
+                "runs": total_r,
+                "endRuns": end_r,
+                "conversionRate": round(rate, 4),
+            }
+        )
+    path_conversion_out.sort(key=lambda x: x["runs"], reverse=True)
+
+    # RESTART STATS OUTPUT
+    no_restart_runs = restart_total_runs - restart_runs_with
+    completion_with_restart = (
+        restart_completed_with / restart_runs_with if restart_runs_with else 0.0
+    )
+    completion_without_restart = (
+        restart_completed_without / no_restart_runs if no_restart_runs else 0.0
+    )
+    restart_stats = {
+        "totalRuns": restart_total_runs,
+        "runsWithRestart": restart_runs_with,
+        "completionRateWithRestart": round(completion_with_restart, 4),
+        "completionRateWithoutRestart": round(completion_without_restart, 4),
+    }
+
+    # END-TYPE DISTRIBUTION OUTPUT
+    end_dist_out = []
+    total_end = sum(int(v.get("count") or 0) for v in end_type_dist.values())
+    for et_id, v in end_type_dist.items():
+        cnt = int(v.get("count") or 0)
+        share = (cnt / total_end) if total_end else 0.0
+        end_dist_out.append(
+            {
+                "id": et_id,
+                "count": cnt,
+                "share": round(share, 4),
+            }
+        )
+    end_dist_out.sort(key=lambda x: x["count"], reverse=True)
+
     return {
         "storyId": storyId,
         "from": _from,
@@ -1724,6 +1879,9 @@ def rollup_range(
         "endPages": end_pages_out,
         "outcomes": outcomes_out,
         "domains": domains_out,
+        "pathConversion": path_conversion_out,
+        "restartStats": restart_stats,
+        "endDistribution": end_dist_out,
         "notes": {
             "completion": "completionRate run-alapú (game_complete / game:complete alapján). Terminal listát a dropoff/exit értelmezéshez használjuk.",
             "exitAfterPage": "Az adott időszakban session-önként az utolsó page_enter oldalt számoljuk exitként.",

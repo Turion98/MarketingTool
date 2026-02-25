@@ -95,6 +95,29 @@ dropOffs?: Array<{
     ctaClicks?: number;
   }>;
 
+  // ÚJ: Path conversion (run-alap, backend számolja)
+  pathConversion?: Array<{
+    pathId: string;
+    runs: number;
+    endRuns: number;
+    conversionRate: number; // 0..1
+  }>;
+
+  // ÚJ: Restart statisztikák (run-alap)
+  restartStats?: {
+    totalRuns: number;
+    runsWithRestart: number;
+    completionRateWithRestart: number;      // 0..1
+    completionRateWithoutRestart: number;   // 0..1
+  };
+
+  // ÚJ: End-type distribution
+  endDistribution?: Array<{
+    id: string;        // endType vagy pageId
+    count: number;
+    share: number;     // 0..1
+  }>;
+
   steps?: Array<{
     stepId: string; // pl. "Q1", "taste_profile", "rotate_style"
     stepType: "choice" | "rotate" | "puzzle" | "logic";
@@ -537,6 +560,95 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                       <td>{p.topOutcomeId ?? "—"}</td>
                       <td>{p.ctaShown ?? "—"}</td>
                       <td>{p.ctaClicks ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* ÚJ: Path Conversion Efficiency */}
+            <h4>Path Conversion Efficiency</h4>
+            {!rangeData.pathConversion || rangeData.pathConversion.length === 0 ? (
+              <div className={styles.info}>
+                (Még nincs path conversion adat a range riportban.)
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th>Runs</th>
+                    <th>Reached END</th>
+                    <th>Conversion rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rangeData.pathConversion.map((row) => (
+                    <tr key={row.pathId}>
+                      <td style={{ maxWidth: 520, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {row.pathId}
+                      </td>
+                      <td>{row.runs}</td>
+                      <td>{row.endRuns}</td>
+                      <td>{fmtPct((row.conversionRate ?? 0) * 100)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* ÚJ: Restart Behavior Rate */}
+            <h4>Restart Behavior Rate</h4>
+            {!rangeData.restartStats ? (
+              <div className={styles.info}>
+                (Még nincs restart statisztika a range riportban.)
+              </div>
+            ) : (
+              <div className={styles.kpiGrid}>
+                <div className={styles.kpi}>
+                  <div className={styles.kpiLabel}>Total runs</div>
+                  <div className={styles.kpiValue}>{rangeData.restartStats.totalRuns}</div>
+                </div>
+                <div className={styles.kpi}>
+                  <div className={styles.kpiLabel}>Runs with restart</div>
+                  <div className={styles.kpiValue}>{rangeData.restartStats.runsWithRestart}</div>
+                </div>
+                <div className={styles.kpi}>
+                  <div className={styles.kpiLabel}>Completion (without restart)</div>
+                  <div className={styles.kpiValue}>
+                    {fmtPct((rangeData.restartStats.completionRateWithoutRestart ?? 0) * 100)}
+                  </div>
+                </div>
+                <div className={styles.kpi}>
+                  <div className={styles.kpiLabel}>Completion (with restart)</div>
+                  <div className={styles.kpiValue}>
+                    {fmtPct((rangeData.restartStats.completionRateWithRestart ?? 0) * 100)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ÚJ: End-Type Distribution */}
+            <h4>End-Type Distribution</h4>
+            {!rangeData.endDistribution || rangeData.endDistribution.length === 0 ? (
+              <div className={styles.info}>
+                (Még nincs end-type distribution adat a range riportban.)
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>End type</th>
+                    <th>Count</th>
+                    <th>Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rangeData.endDistribution.map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.id}</td>
+                      <td>{row.count}</td>
+                      <td>{fmtPct((row.share ?? 0) * 100)}</td>
                     </tr>
                   ))}
                 </tbody>
