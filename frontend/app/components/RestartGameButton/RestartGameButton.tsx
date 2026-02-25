@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useGameState } from "@/app/lib/GameStateContext";
 import { clearAllCache } from "@/app/lib/clearAllCache";
 import { createSessionSeeds } from "@/app/lib/sessionSeeds";
-
+import { startNewRunId } from "@/app/lib/analytics";
 type Props = {
   className?: string;
 };
@@ -40,7 +40,8 @@ const RestartGameButton: React.FC<Props> = ({ className }) => {
     globals,
     setCurrentPageId,
     resetGame,
-    setStorySrc,       // 🔹 kell, hogy reset után vissza tudjuk állítani a storySrc-t
+    setStorySrc,
+    storyId,
   } = useGameState() as any;
 
   const handleRestart = () => {
@@ -69,6 +70,20 @@ const RestartGameButton: React.FC<Props> = ({ className }) => {
       // leszarjuk, ha nincs storage
     }
 
+
+    try {
+      if (storyId) {
+        const scopeKey =
+          (globals as any)?.accountId ||
+          (globals as any)?.tenantId ||
+          (globals as any)?.embedKey ||
+          (typeof window !== "undefined" ? window.location.host : "default");
+
+        startNewRunId(String(storyId), scopeKey);
+      }
+    } catch (err) {
+      console.warn("[RestartGameButton] startNewRunId error", err);
+    }
     // 🔹 Cache ürítés – async, ne blokkolja a navigációt
     clearAllCache().catch((err) => {
       console.warn("[RestartGameButton] clearAllCache error", err);
