@@ -124,9 +124,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     // ✅ 3D doboz dimenziók (globális jelleggel számoljuk frame-ben is)
     const getBox = (w: number, h: number) => {
       // érdemes a képernyőnél nagyobbra venni, hogy forgásnál is “teli” legyen
-      const spreadX = w * 1.6;
-      const spreadY = h * 1.6;
-      const spreadZ = Math.min(w, h) * 2.2;
+      const spreadX = w * 1.25;
+      const spreadY = h * 1.25;
+      const spreadZ = Math.min(w, h) * 1.42;
       return { spreadX, spreadY, spreadZ };
     };
 
@@ -134,7 +134,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const { innerWidth: w, innerHeight: h } = window;
 
       const isMobile = w < 720;
-      const BASE_COUNT = isMobile ? 110 : 180;
+      const BASE_COUNT = isMobile ? 150 : 230;
 
       const { spreadX, spreadY, spreadZ } = getBox(w, h);
 
