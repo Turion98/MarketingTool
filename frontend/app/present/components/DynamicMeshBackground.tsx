@@ -50,8 +50,11 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
   const pointsRef = useRef<Point[]>([]);
   const rafRef = useRef<number>(0);
 
-  // 3D forgás szögek
+  // bounded (nem felkúszó) 3D szögek
   const angRef = useRef({ ax: 0, ay: 0, az: 0 });
+
+  // dt tracking
+  const lastTRef = useRef<number>(0);
 
   // current/target paraméterek: lerp-eljük
   const currentRef = useRef({
@@ -102,7 +105,6 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
     const dpr = window.devicePixelRatio || 1;
 
-    // reduce motion: mozogjon, csak lassabban
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -119,25 +121,38 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     resize();
     window.addEventListener("resize", resize);
 
+    // ✅ 3D doboz dimenziók (globális jelleggel számoljuk frame-ben is)
+    const getBox = (w: number, h: number) => {
+      // érdemes a képernyőnél nagyobbra venni, hogy forgásnál is “teli” legyen
+      const spreadX = w * 1.6;
+      const spreadY = h * 1.6;
+      const spreadZ = Math.min(w, h) * 2.2;
+      return { spreadX, spreadY, spreadZ };
+    };
+
     const initPoints = () => {
       const { innerWidth: w, innerHeight: h } = window;
 
-      // mobilon ritkább háló
-      const BASE_COUNT = w < 720 ? 110 : 180;
+      const isMobile = w < 720;
+      const BASE_COUNT = isMobile ? 110 : 180;
 
-      const depth = Math.min(w, h) * 0.7; // ✅ scene depth
+      const { spreadX, spreadY, spreadZ } = getBox(w, h);
 
       const points: Point[] = [];
       for (let i = 0; i < BASE_COUNT; i++) {
         points.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          z: (Math.random() - 0.5) * depth,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          vz: (Math.random() - 0.5) * 0.18,
+          // ✅ középpont körüli 3D doboz
+          x: (Math.random() - 0.5) * spreadX + w * 0.5,
+          y: (Math.random() - 0.5) * spreadY + h * 0.5,
+          z: (Math.random() - 0.5) * spreadZ,
+
+          // ✅ alap mozgás (később dt-vel skálázva)
+          vx: (Math.random() - 0.5) * (isMobile ? 0.18 : 0.22),
+          vy: (Math.random() - 0.5) * (isMobile ? 0.18 : 0.22),
+          vz: (Math.random() - 0.5) * (isMobile ? 0.10 : 0.12),
         });
       }
+
       pointsRef.current = points;
 
       // első frame ne villanjon
@@ -151,6 +166,8 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         fy: t.fy,
         focusStrength: t.focusStrength,
       };
+
+      lastTRef.current = performance.now();
     };
 
     initPoints();
@@ -159,7 +176,12 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      // smooth átmenet
+      const now = performance.now();
+      const last = lastTRef.current || now;
+      let dt = (now - last) / 16.6667; // 60fps = 1.0
+      dt = Math.max(0.25, Math.min(2.0, dt));
+      lastTRef.current = now;
+
       const c = currentRef.current;
       const t = targetRef.current;
 
@@ -172,33 +194,34 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       c.fy = lerp(c.fy, t.fy, SMOOTH);
       c.focusStrength = lerp(c.focusStrength, t.focusStrength, SMOOTH);
 
-      const colorStr = `${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(
-        0
-      )}`;
+      const colorStr = `${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(0)}`;
 
       const isMobile = w < 720;
-
-      // reduce motion = lassabb, de nem 0
       const motion = prefersReduced ? 0.22 : 1;
 
-      // ✅ 3D camera/projection
-      const depth = Math.min(w, h) * 0.7;
-      const cameraZ = depth * 1.2; // nagyobb => laposabb, kisebb => erősebb 3D
+      // ✅ 3D doboz + kamera (Z-hez igazítva)
+      const { spreadX, spreadY, spreadZ } = getBox(w, h);
+      const cameraZ = spreadZ * 1.8; // nagyobb = laposabb perspektíva
 
       const cx = w * 0.5;
       const cy = h * 0.5;
 
-      // ✅ 3D forgás tempó (több tengely)
-      angRef.current.ax += 0.0009 * c.intensity * motion;
-      angRef.current.ay += 0.0011 * c.intensity * motion;
-      angRef.current.az += 0.0007 * c.intensity * motion;
+      // ✅ bounded rotation: sose “mászik fel” 90° közelébe tartósan
+      const rotMotion = motion * (prefersReduced ? 0.35 : 1);
+      const rotAmp = (isMobile ? 0.20 : 0.26) * c.intensity * rotMotion; // max dőlés (rad)
+      const rotSpeed = (isMobile ? 0.000055 : 0.00004) * rotMotion;
+      const tt = now * rotSpeed;
 
-      // ✅ enyhe "focus" alapú tilt (nem szívja össze a hálót)
-      const tilt = c.focusStrength * 0.75; // 0..0.75 körül
-      const fxn = (c.fx - 0.5) * 2; // -1..1
-      const fyn = (c.fy - 0.5) * 2; // -1..1
-      const tiltY = fxn * 0.0022 * tilt * motion; // yaw
-      const tiltX = -fyn * 0.0022 * tilt * motion; // pitch
+      angRef.current.ax = Math.sin(tt * 1.05) * rotAmp;
+      angRef.current.ay = Math.cos(tt * 0.92) * rotAmp;
+      angRef.current.az = Math.sin(tt * 0.70) * (rotAmp * 0.65);
+
+      // ✅ focus tilt (kicsi)
+      const tilt = c.focusStrength * 0.55;
+      const fxn = (c.fx - 0.5) * 2;
+      const fyn = (c.fy - 0.5) * 2;
+      const tiltY = fxn * 0.0016 * tilt * motion;
+      const tiltX = -fyn * 0.0016 * tilt * motion;
 
       const ax = angRef.current.ax + tiltX;
       const ay = angRef.current.ay + tiltY;
@@ -213,7 +236,6 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
       const points = pointsRef.current;
 
-      // ✅ projected cache (screen coords + scale)
       const projected = new Array(points.length) as Array<{
         sx: number;
         sy: number;
@@ -223,48 +245,55 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       ctx.clearRect(0, 0, w, h);
       ctx.lineWidth = isMobile ? 0.55 : 0.7;
 
-      // alpha beállítások
       const NODE_ALPHA_BASE = (isMobile ? 0.22 : 0.30) * c.intensity;
       const LINE_ALPHA_MAX = (isMobile ? 0.22 : 0.42) * c.intensity;
 
-      // ritkítás (screen space)
       const MAX_DIST = isMobile ? 150 : 260;
       const MAX_DIST2 = MAX_DIST * MAX_DIST;
 
-      // pontok + 3D drift + forgás + projekció + node draw
+      // ✅ doboz wrap határok
+      const minX = cx - spreadX * 0.5;
+      const maxX = cx + spreadX * 0.5;
+      const minY = cy - spreadY * 0.5;
+      const maxY = cy + spreadY * 0.5;
+      const halfZ = spreadZ * 0.5;
+
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
 
-        // ✅ drift (nincs attractor -> nem zsugorodik)
-        const SPEED = (isMobile ? 0.30 : 0.34) * c.intensity;
+        // ✅ drift: lassabb + dt-vel
+        const SPEED = (isMobile ? 0.16 : 0.18) * c.intensity;
+        p.x += p.vx * SPEED * motion * dt;
+        p.y += p.vy * SPEED * motion * dt;
+        p.z += p.vz * SPEED * motion * dt;
 
-        p.x += p.vx * SPEED * motion;
-        p.y += p.vy * SPEED * motion;
-        p.z += p.vz * SPEED * motion;
-
-        // ✅ nagyon enyhe csillapítás
-        p.vx *= 0.995;
-        p.vy *= 0.995;
-        p.vz *= 0.995;
+        // ✅ dt-kompatibilis csillapítás
+        const damp = Math.pow(0.995, dt);
+        p.vx *= damp;
+        p.vy *= damp;
+        p.vz *= damp;
 
         // ✅ minimum élet
         const sp = Math.hypot(p.vx, p.vy, p.vz);
-        const minSp = 0.05 * motion;
+        const minSp = 0.045 * motion;
         if (sp < minSp) {
-          p.vx += (Math.random() - 0.5) * 0.08;
-          p.vy += (Math.random() - 0.5) * 0.08;
-          p.vz += (Math.random() - 0.5) * 0.05;
+          const kick = dt * 0.55;
+          p.vx += (Math.random() - 0.5) * 0.08 * kick;
+          p.vy += (Math.random() - 0.5) * 0.08 * kick;
+          p.vz += (Math.random() - 0.5) * 0.05 * kick;
         }
 
-        // ✅ wrap (folyamatosan tele a tér)
-        if (p.x < -80) p.x = w + 80;
-        if (p.x > w + 80) p.x = -80;
-        if (p.y < -80) p.y = h + 80;
-        if (p.y > h + 80) p.y = -80;
-        if (p.z < -depth * 0.5) p.z = depth * 0.5;
-        if (p.z > depth * 0.5) p.z = -depth * 0.5;
+        // ✅ wrap a 3D dobozra
+        if (p.x < minX) p.x = maxX;
+        else if (p.x > maxX) p.x = minX;
 
-        // center-relative coords
+        if (p.y < minY) p.y = maxY;
+        else if (p.y > maxY) p.y = minY;
+
+        if (p.z < -halfZ) p.z = halfZ;
+        else if (p.z > halfZ) p.z = -halfZ;
+
+        // center-relative
         let x = p.x - cx;
         let y = p.y - cy;
         let z = p.z;
@@ -287,17 +316,16 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         x = x3;
         y = y3;
 
-        // perspective projection
+        // perspective
         const scale = cameraZ / (cameraZ + z);
         const sx = cx + x * scale;
         const sy = cy + y * scale;
 
         projected[i] = { sx, sy, s: scale };
 
-        // node: közelebb => erősebb, nagyobb
-        const depthT = clamp01((scale - 0.6) / 0.7);
+        const depthT = clamp01((scale - 0.65) / 0.75);
         const a = NODE_ALPHA_BASE * (0.55 + depthT * 0.75);
-        const r = 0.75 + depthT * 0.9;
+        const r = 0.72 + depthT * 0.95;
 
         ctx.beginPath();
         ctx.arc(sx, sy, r, 0, Math.PI * 2);
@@ -305,7 +333,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         ctx.fill();
       }
 
-      // vonalak (screen space dist + z/scale alapján erősítés)
+      // vonalak
       for (let i = 0; i < projected.length; i++) {
         for (let j = i + 1; j < projected.length; j++) {
           const a = projected[i];
@@ -319,8 +347,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
             const dist = Math.sqrt(dist2);
             const base = ((MAX_DIST - dist) / MAX_DIST) * LINE_ALPHA_MAX;
 
-            // mindkettő közel van => erősebb (scale nagyobb)
-            const zMix = clamp01(((a.s + b.s) * 0.5 - 0.7) / 0.8);
+            const zMix = clamp01(((a.s + b.s) * 0.5 - 0.72) / 0.85);
             const alpha = base * (0.55 + zMix * 0.8);
 
             ctx.beginPath();
