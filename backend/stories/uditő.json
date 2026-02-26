@@ -79,7 +79,11 @@
   "optionFlagsBase": "L2_opt_",
 
   "title": "Mi a két legfontosabb szempont?",
-  "prompt": "Nézd végig a szempontokat, és válaszd ki azt a KÉT elemet, ami most a legjobban számít neked egy üdítőnél.",
+  "text": [
+  {
+  "text": "Nézd végig a szempontokat, és válaszd ki azt a KÉT elemet, ami most a legjobban számít neked egy üdítőnél."
+  }
+  ],
   "options": [
     "Könnyű érzés, nem túl édes",
     "Frissítő, szomjoltó",
@@ -135,200 +139,120 @@
 }
 ,
     {
-      "id": "insight_classic_cola",
-      "title": "Ajánlat: NovaFizz Classic Cola",
-      "text": [
-        {
-          "text": "A választásaid alapján most egy ismerős, kiegyensúlyozott ízvilág áll hozzád közel. Szereted, ha az üdítő klasszikus, megbízható és jól működik szinte bármilyen helyzetben – étel mellé, társaságban vagy egy gyors felfrissüléshez.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Classic Cola** passzol a legjobban: egy stabil, „biztos kéz” jellegű kóla, amely pont annyira édes és karakteres, amennyire kell, túlzás nélkül."
-        },
-        {
-          "ifUnlocked": "Q1_A_note",
-          "text": "{fragment:Q1_A_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_B_note",
-          "text": "{fragment:Q1_B_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_C_note",
-          "text": "{fragment:Q1_C_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_D_note",
-          "text": "{fragment:Q1_D_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        }
-      ],
-      "choices": [
-        {
-          "text": "Mutasd a termékkártyát",
-          "next": "end_classic_cola"
-        }
-      ]
+  "id": "insight_classic_cola",
+  "title": "Ajánlat: NovaFizz Classic Cola",
+  "text": [
+    {
+      "ifUnlocked": "Q1_A_note",
+      "text": "{fragment:Q1_A_note}",
+      "mode": "prepend_before",
+      "separator": "\n\n"
     },
     {
-      "id": "insight_cola_zero",
-      "title": "Ajánlat: NovaFizz Cola Zero",
-      "text": [
-        {
-          "text": "A kombinációid azt mutatják, hogy fontos számodra a klasszikus ízélmény, de nem szeretnél túl sok cukrot. Szereted, ha az ital könnyű érzetet hagy maga után, mégis hozza a megszokott kóla-élményt.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Cola Zero** illik a legjobban: cukormentes, de ízben a klasszikus vonalat követi, így jó választás, ha kompromisszum nélkül figyelnél a bevitelre."
-        },
-        {
-          "ifUnlocked": "Q1_A_note",
-          "text": "{fragment:Q1_A_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_B_note",
-          "text": "{fragment:Q1_B_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_C_note",
-          "text": "{fragment:Q1_C_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_D_note",
-          "text": "{fragment:Q1_D_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        }
-      ],
-      "choices": [
-        {
-          "text": "Mutasd a termékkártyát",
-          "next": "end_cola_zero"
-        }
-      ]
+      "ifUnlocked": "Q1_B_note",
+      "text": "{fragment:Q1_B_note}",
+      "mode": "prepend_before",
+      "separator": "\n\n"
     },
     {
-      "id": "insight_citrus_light",
-      "title": "Ajánlat: NovaFizz Citrus Light",
-      "text": [
-        {
-          "text": "A választásaid alapján most egy frissítő, szomjoltó, könnyebb ital passzol hozzád leginkább. Olyasmit keresel, ami nem ül meg, nem túl szirupos, inkább felfrissít és tovább lendít.\n\nEbben az irányban a NovaFizz kínálatából a **NovaFizz Citrus Light** a legjobb jelölt: citrusos, élénk, csökkentett cukortartalommal – ideális napközbeni kortyolgatáshoz, akár munka, akár rohanós nap közben."
-        },
-        {
-          "ifUnlocked": "Q1_A_note",
-          "text": "{fragment:Q1_A_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_B_note",
-          "text": "{fragment:Q1_B_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_C_note",
-          "text": "{fragment:Q1_C_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_D_note",
-          "text": "{fragment:Q1_D_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        }
-      ],
-      "choices": [
-        {
-          "text": "Mutasd a termékkártyát",
-          "next": "end_citrus_light"
-        }
-      ]
+      "ifUnlocked": "Q1_C_note",
+      "text": "{fragment:Q1_C_note}",
+      "mode": "prepend_before",
+      "separator": "\n\n"
     },
     {
-      "id": "insight_berry_breeze",
-      "title": "Ajánlat: NovaFizz Berry Breeze – No Added Sugar",
-      "text": [
-        {
-          "text": "A párosításaid arra utalnak, hogy szívesen választasz gyümölcsös, játékos ízvilágot, de közben nem szeretnél túl sok hozzáadott cukrot. Fontos neked, hogy az ital élmény legyen, mégis könnyebb érzetet hagyjon.\n\nEhhez a preferenciához a NovaFizz portfóliójából a **NovaFizz Berry Breeze – No Added Sugar** illik: bogyós, gyümölcsös hangulat, hozzáadott cukor nélkül, amivel kapsz egy kis „desszert-élményt” komolyabb bűntudat nélkül."
-        },
-        {
-          "ifUnlocked": "Q1_A_note",
-          "text": "{fragment:Q1_A_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_B_note",
-          "text": "{fragment:Q1_B_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_C_note",
-          "text": "{fragment:Q1_C_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_D_note",
-          "text": "{fragment:Q1_D_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        }
-      ],
-      "choices": [
-        {
-          "text": "Mutasd a termékkártyát",
-          "next": "end_berry_breeze"
-        }
-      ]
+      "ifUnlocked": "Q1_D_note",
+      "text": "{fragment:Q1_D_note}",
+      "mode": "prepend_before",
+      "separator": "\n\n"
     },
     {
-      "id": "insight_ginger_lime",
-      "title": "Ajánlat: NovaFizz Ginger Lime Craft",
-      "text": [
-        {
-          "text": "A választásaid egy kicsit karakteresebb, szokatlanabb irányt rajzolnak ki. Nyitott vagy olyan ízekre, amelyekben van egy fűszeresebb vagy különlegesebb tónus, és nem baj, ha az ital egy kicsit „felnőttesebb” hangulatú.\n\nEhhez a mintához a NovaFizz kínálatából a **NovaFizz Ginger Lime Craft** passzol a legjobban: gyömbéres-lime-os, határozott karakterrel, ami kilóg a sorból – jó választás, ha nem a megszokottat keresed."
-        },
-        {
-          "ifUnlocked": "Q1_A_note",
-          "text": "{fragment:Q1_A_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_B_note",
-          "text": "{fragment:Q1_B_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_C_note",
-          "text": "{fragment:Q1_C_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        },
-        {
-          "ifUnlocked": "Q1_D_note",
-          "text": "{fragment:Q1_D_note}",
-          "mode": "append_after",
-          "separator": "\n\n"
-        }
-      ],
-      "choices": [
-        {
-          "text": "Mutasd a termékkártyát",
-          "next": "end_ginger_lime"
-        }
-      ]
-    },
+      "text": "A választásaid alapján most egy ismerős, kiegyensúlyozott ízvilág áll hozzád közel. Szereted, ha az üdítő klasszikus, megbízható és jól működik szinte bármilyen helyzetben – étel mellé, társaságban vagy egy gyors felfrissüléshez.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Classic Cola** passzol a legjobban: egy stabil, „biztos kéz” jellegű kóla, amely pont annyira édes és karakteres, amennyire kell, túlzás nélkül."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Mutasd a termékkártyát",
+      "next": "end_classic_cola"
+    }
+  ]
+},
+{
+  "id": "insight_cola_zero",
+  "title": "Ajánlat: NovaFizz Cola Zero",
+  "text": [
+    { "ifUnlocked": "Q1_A_note", "text": "{fragment:Q1_A_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_B_note", "text": "{fragment:Q1_B_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_C_note", "text": "{fragment:Q1_C_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_D_note", "text": "{fragment:Q1_D_note}", "mode": "prepend_before", "separator": "\n\n" },
+    {
+      "text": "A kombinációid azt mutatják, hogy fontos számodra a klasszikus ízélmény, de nem szeretnél túl sok cukrot. Szereted, ha az ital könnyű érzetet hagy maga után, mégis hozza a megszokott kóla-élményt.\n\nEhhez a mintához a NovaFizz portfóliójából a **NovaFizz Cola Zero** illik a legjobban: cukormentes, de ízben a klasszikus vonalat követi, így jó választás, ha kompromisszum nélkül figyelnél a bevitelre."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Mutasd a termékkártyát",
+      "next": "end_cola_zero"
+    }
+  ]
+},
+{
+  "id": "insight_citrus_light",
+  "title": "Ajánlat: NovaFizz Citrus Light",
+  "text": [
+    { "ifUnlocked": "Q1_A_note", "text": "{fragment:Q1_A_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_B_note", "text": "{fragment:Q1_B_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_C_note", "text": "{fragment:Q1_C_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_D_note", "text": "{fragment:Q1_D_note}", "mode": "prepend_before", "separator": "\n\n" },
+    {
+      "text": "A választásaid alapján most egy frissítő, szomjoltó, könnyebb ital passzol hozzád leginkább. Olyasmit keresel, ami nem ül meg, nem túl szirupos, inkább felfrissít és tovább lendít.\n\nEbben az irányban a NovaFizz kínálatából a **NovaFizz Citrus Light** a legjobb jelölt: citrusos, élénk, csökkentett cukortartalommal – ideális napközbeni kortyolgatáshoz, akár munka, akár rohanós nap közben."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Mutasd a termékkártyát",
+      "next": "end_citrus_light"
+    }
+  ]
+},
+{
+  "id": "insight_berry_breeze",
+  "title": "Ajánlat: NovaFizz Berry Breeze – No Added Sugar",
+  "text": [
+    { "ifUnlocked": "Q1_A_note", "text": "{fragment:Q1_A_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_B_note", "text": "{fragment:Q1_B_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_C_note", "text": "{fragment:Q1_C_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_D_note", "text": "{fragment:Q1_D_note}", "mode": "prepend_before", "separator": "\n\n" },
+    {
+      "text": "A párosításaid arra utalnak, hogy szívesen választasz gyümölcsös, játékos ízvilágot, de közben nem szeretnél túl sok hozzáadott cukrot. Fontos neked, hogy az ital élmény legyen, mégis könnyebb érzetet hagyjon.\n\nEhhez a preferenciához a NovaFizz portfóliójából a **NovaFizz Berry Breeze – No Added Sugar** illik: bogyós, gyümölcsös hangulat, hozzáadott cukor nélkül, amivel kapsz egy kis „desszert-élményt” komolyabb bűntudat nélkül."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Mutasd a termékkártyát",
+      "next": "end_berry_breeze"
+    }
+  ]
+},
+{
+  "id": "insight_ginger_lime",
+  "title": "Ajánlat: NovaFizz Ginger Lime Craft",
+  "text": [
+    { "ifUnlocked": "Q1_A_note", "text": "{fragment:Q1_A_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_B_note", "text": "{fragment:Q1_B_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_C_note", "text": "{fragment:Q1_C_note}", "mode": "prepend_before", "separator": "\n\n" },
+    { "ifUnlocked": "Q1_D_note", "text": "{fragment:Q1_D_note}", "mode": "prepend_before", "separator": "\n\n" },
+    {
+      "text": "A választásaid egy kicsit karakteresebb, szokatlanabb irányt rajzolnak ki. Nyitott vagy olyan ízekre, amelyekben van egy fűszeresebb vagy különlegesebb tónus, és nem baj, ha az ital egy kicsit „felnőttesebb” hangulatú.\n\nEhhez a mintához a NovaFizz kínálatából a **NovaFizz Ginger Lime Craft** passzol a legjobban: gyömbéres-lime-os, határozott karakterrel, ami kilóg a sorból – jó választás, ha nem a megszokottat keresed."
+    }
+  ],
+  "choices": [
+    {
+      "text": "Mutasd a termékkártyát",
+      "next": "end_ginger_lime"
+    }
+  ]
+},
 
     {
   "id": "end_classic_cola",

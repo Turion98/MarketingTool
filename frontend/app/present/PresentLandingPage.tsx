@@ -424,7 +424,7 @@ const cCopy = collabCopy[lang];
       subtitle:
         "Egy élő rendszer, ahol a felhasználói döntések alakítják a folyamatot és a kimenetet.",
       subtitles:
-        "Ugyanaz a rendszer használható brand-élményre, insight-gyűjtésre vagy konverzióra — a cél határozza meg a logikát és az eredményt.",
+       "Használható onboardingra, termékajánlásra, edukációra vagy kampányélményre — a cél határozza meg a logikát és az eredményt.",
       rotatorLabel: "Tipikus probléma:",
       cta: "Kapcsolatfelvétel",
     },
@@ -552,7 +552,7 @@ const cCopy = collabCopy[lang];
       subtitle:
         "A living system where user choices shape both the journey and the outcome.",
       subtitles:
-        "The same system can power brand experiences, insight collection, or conversion flows — the goal defines the logic and the result.",
+       "Use it for onboarding, product recommendation, education, or campaign experiences — the goal defines the logic and measurable result.",
       rotatorLabel: "Common friction:",
       cta: "Get in touch",
     },
