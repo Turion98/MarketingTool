@@ -134,7 +134,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const { innerWidth: w, innerHeight: h } = window;
 
       const isMobile = w < 720;
-      const BASE_COUNT = isMobile ? 150 : 230;
+      const BASE_COUNT = isMobile ? 190 : 280;
 
       const { spreadX, spreadY, spreadZ } = getBox(w, h);
 
@@ -201,7 +201,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
       // ✅ 3D doboz + kamera (Z-hez igazítva)
       const { spreadX, spreadY, spreadZ } = getBox(w, h);
-      const cameraZ = spreadZ * 1.8; // nagyobb = laposabb perspektíva
+      const cameraZ = spreadZ * 1.55; // nagyobb = laposabb perspektíva
 
       const cx = w * 0.5;
       const cy = h * 0.5;
