@@ -819,13 +819,18 @@
   z-index: 5;
 }
 
+.platformInner {
+  position: relative; /* hogy a cutout ehhez igazodjon */
+}
+
 /* a cutout: pozíció + méret */
 .platformCutout {
   position: absolute;
   top: -1.5%;
   right: -1%;
 
-  width: clamp(720px, 95vw, 1660px);
+  width: 100%;
+  max-width: 1120px;
   height: clamp(160px, 20vw, 560px);
 
   pointer-events: none;
