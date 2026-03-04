@@ -34,296 +34,296 @@ const EXAMPLES: ExampleItem[] = [
   // SKINCARE
   // ─────────────────────────────────────────────────────────────
   {
-    id: "skincare",
-    navLabel: "Skincare ajánló útvonal",
-    jsonFile: "SCv2_ABCD_EGA_merged_E_branch_full.json",
+  id: "skincare",
+  navLabel: "Ajánló / döntési modell",
+  jsonFile: "SCv2_ABCD_EGA_merged_E_branch_full.json",
 
-    title: "Skincare ajánló útvonal",
-    heroLine:
-      "Döntések mentén vezetett élmény, ahol a végén egy koherens, végiggondolt bőrápolási rutin áll össze.",
+  title: "Strukturált ajánlómodell – példa",
+  heroLine:
+    "Elágazó döntési modell, amely a teljes bejárási út alapján állít össze koherens, indokolható ajánlást.",
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text: "Egy döntések mentén felépülő ajánlóélmény.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A felhasználó preferenciák és fókuszok mentén hoz döntéseket, nem helyes válaszokat keres.",
-            "A választások alapján eltérő oldal- és vizuális útvonalakon halad tovább.",
-            "A folyamat végén egy egymásra épülő, átgondolt rutin-struktúra áll össze.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A döntési út maga is érték: segít megérteni, miért ez az ajánlás a legrelevánsabb.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "Összetettebb bőrápolási termékrendszerek bemutatására, narratív logikával.",
-            "Edukációs és márkaépítő kampányokra, ahol a döntési folyamat önmagában is értéket képvisel.",
-            "Landingekre, ahol a bizalomépítés és az ajánlás kéz a kézben jár.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy személyre szabott bőrápolási rutin váza, lépésekre bontva.",
-            "Egy világos ajánlási irány, amely a felhasználói döntésekből következik.",
-          ],
-        },
-      ],
-    },
-
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Skincare ajánló indítása",
-    startPageId: "L1_routine_style",
-    skinId: "skin_care",
+  details: {
+    blocks: [
+      {
+        type: "intro",
+        text: "Egy strukturált, elágazó döntési rendszer példája, ahol a kimenet nem egyetlen válaszból, hanem a teljes útvonalból épül fel.",
+      },
+      {
+        type: "howItWorks",
+        title: "Hogyan működik?",
+        bullets: [
+          "A felhasználó preferenciák és fókuszok mentén hoz döntéseket — nem helyes válaszokat keres.",
+          "Minden döntés állapotváltást eredményez, amely meghatározza a következő lépést.",
+          "Az elágazások mentén eltérő útvonalak és mintázatok rajzolódnak ki.",
+        ],
+      },
+      {
+        type: "bridge",
+        text:
+          "Az ajánlás nem előre rögzített sablonból érkezik, hanem a teljes döntési folyamat strukturált eredménye.",
+      },
+      {
+        type: "whyInCampaign",
+        title: "Mire használható?",
+        bullets: [
+          "Összetett termék- vagy szolgáltatásrendszerek modellezésére.",
+          "Olyan helyzetekben, ahol az ajánlásnak a teljes döntési mintázatból kell következnie.",
+          "Konfigurálható ajánlatok vagy többváltozós választási helyzetek strukturálására.",
+        ],
+      },
+      {
+        type: "output",
+        title: "Mi a kimenet?",
+        bullets: [
+          "Egy strukturált, indokolható ajánlási eredmény.",
+          "Visszakövethető döntési út, amely alapján az ajánlás értelmezhető.",
+        ],
+      },
+    ],
   },
+
+  revealLabel: "Részletek megtekintése",
+  startLabel: "Ajánló modell indítása",
+  startPageId: "L1_routine_style",
+  skinId: "skin_care",
+},
 
   // ─────────────────────────────────────────────────────────────
   // COFFEE
   // ─────────────────────────────────────────────────────────────
   {
-    id: "coffee",
-    navLabel: "Kávé hangulatprofil",
-    jsonFile: "coffee_quiz_demo_full.json",
+  id: "coffee",
+  navLabel: "Gyors mintázat-feltáró modell",
+  jsonFile: "coffee_quiz_demo_full.json",
 
-    title: "Kávé hangulatprofil",
-    heroLine:
-      "Rövid döntési útvonal, ahol néhány hétköznapi választásból egy személyes, megosztható hangulatprofil áll össze.",
+  title: "Rövid döntési profil – példa",
+  heroLine:
+    "Alacsony lépésszámú döntési modell, amely néhány választásból strukturált, értelmezhető preferenciamintát rajzol ki.",
 
-    startPageId: "Q1",
-    skinId: "contract_coffee_dark_roast",
+  startPageId: "Q1",
+  skinId: "contract_coffee_dark_roast",
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text:
-            "Döntések mentén felépülő élmény, amely egyéni kávéhangulatot teremt.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A felhasználó három egyszerű, élethelyzethez kötődő döntést hoz.",
-            "A választások eltérő narratív és vizuális irányokba terelik az élményt.",
-            "A folyamat végén egy karakteres hangulatprofil áll össze.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A kevés, de tudatos döntés gyorsan értelmezhető képet ad a felhasználó preferenciáiról.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "Gyors engagement-indításra, alacsony belépési küszöbbel.",
-            "Megosztható, személyes profilkártyák generálására.",
-            "Social vagy landing környezetben futó rövid kampányokra.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy egyedi kávéhangulat-profil, döntésekből levezetve.",
-            "Egy vizuálisan egységes, megosztható profilkártya.",
-          ],
-        },
-      ],
-    },
-
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Kávé profil indítása",
+  details: {
+    blocks: [
+      {
+        type: "intro",
+        text:
+          "Egy rövid, strukturált döntési folyamat példája, ahol kevés lépésből is értelmezhető minta áll össze.",
+      },
+      {
+        type: "howItWorks",
+        title: "Hogyan működik?",
+        bullets: [
+          "A felhasználó néhány, hétköznapi kontextushoz kötött döntést hoz.",
+          "Minden választás eltérő állapotba vezeti a modellt.",
+          "Az elágazások mentén kirajzolódik egy karakteres preferenciaminta.",
+        ],
+      },
+      {
+        type: "bridge",
+        text:
+          "A kevés, de jól definiált döntési pont gyorsan látható mintázatot eredményez.",
+      },
+      {
+        type: "whyInCampaign",
+        title: "Mire használható?",
+        bullets: [
+          "Gyors kvalifikációra vagy előszűrésre.",
+          "Preferenciák feltérképezésére alacsony súrlódással.",
+          "Belépő szintű döntési adatgyűjtésre.",
+        ],
+      },
+      {
+        type: "output",
+        title: "Mi a kimenet?",
+        bullets: [
+          "Egy strukturált, kategorizált preferenciaprofil.",
+          "Visszakövethető döntési út, amely alapján a minta értelmezhető.",
+        ],
+      },
+    ],
   },
+
+  revealLabel: "Részletek megtekintése",
+  startLabel: "Profilmodell indítása",
+},
 
   // ─────────────────────────────────────────────────────────────
   // HOLIDAY
   // ─────────────────────────────────────────────────────────────
-  {
-    id: "holiday",
-    navLabel: "Holiday mode",
-    jsonFile: "karácsony.json",
+ {
+  id: "holiday",
+  navLabel: "Időszakos aktiváció",
+  jsonFile: "karácsony.json",
 
-    title: "Holiday mode",
-    heroLine:
-      "Hangulati döntések mentén felépülő szezonális élmény, ahol a végén egy személyes ünnepi kimenet áll össze.",
+  title: "Szezonális döntési minta – példa",
+  heroLine:
+    "Rövid, hangulati döntésekre épülő modell, amely néhány választásból egy koherens, személyre szabott ünnepi kimenetet állít össze.",
 
-    startPageId: "Q1",
-    skinId: "kari",
+  startPageId: "Q1",
+  skinId: "kari",
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text:
-            "Egy rövid, döntések mentén felépülő szezonális élmény, amely a felhasználó ünnepi hangulatát vizuális kimenetté fordítja.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A felhasználó néhány hangulati döntést hoz az ünnepi preferenciáiról.",
-            "A választások eltérő vizuális irányokba terelik az élményt (színek, tónus, jelenet).",
-            "A végén egy koherens, egyedi holiday mode kimenet áll össze.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A döntési út segít megmutatni, milyen hangulatot keres a felhasználó – és miért pont ezt kapta kimenetként.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "Szezonális kampányok gyors indítására, alacsony belépési küszöbbel.",
-            "Könnyen újranyitható és frissíthető formátumként (évenkénti reskin / új kimenetek).",
-            "Social forgalom aktiválására és továbbvezetésére landingre vagy ajánlatra.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy személyes holiday mode vizuál, döntésekből levezetve.",
-            "Egy megosztható, ünnepi hangulatú kimenet (profilkártya / kép).",
-          ],
-        },
-      ],
-    },
-
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Holiday mode indítása",
+  details: {
+    blocks: [
+      {
+        type: "intro",
+        text:
+          "Egy rövid, szezonális döntési folyamat példája, ahol a választások egy vizuális és tartalmi kimenetben állnak össze.",
+      },
+      {
+        type: "howItWorks",
+        title: "Hogyan működik?",
+        bullets: [
+          "A felhasználó néhány hangulati döntést hoz az ünnepi preferenciáiról.",
+          "A döntések eltérő útvonalakra terelik a modellt (tónus, stílus, jelenet).",
+          "A végén egy konzisztens, személyre szabott holiday mode kimenet áll össze.",
+        ],
+      },
+      {
+        type: "bridge",
+        text:
+          "A rövid döntési út nem csak kimenetet ad: visszakövethetővé teszi, milyen preferenciák vezettek az eredményhez.",
+      },
+      {
+        type: "whyInCampaign",
+        title: "Mire használható?",
+        bullets: [
+          "Időszakos aktivációkra, ahol fontos a gyors indítás és az alacsony belépési küszöb.",
+          "Olyan formátumként, ami könnyen újranyitható: reskinelhető és évről évre frissíthető új kimenetekkel.",
+          "Megosztható kimenetekkel dolgozó belépő modellekre (social / landing belépő pont).",
+        ],
+      },
+      {
+        type: "output",
+        title: "Mi a kimenet?",
+        bullets: [
+          "Egy személyre szabott holiday mode kimenet, döntésekből levezetve.",
+          "Egy egységes, megosztható ünnepi vizuál / profilkártya jellegű eredmény.",
+        ],
+      },
+    ],
   },
+
+  revealLabel: "Részletek megtekintése",
+  startLabel: "Holiday mode indítása",
+},
 
   // ─────────────────────────────────────────────────────────────
   // MARKETING SIM
   // ─────────────────────────────────────────────────────────────
   {
-    id: "marketing-sim",
-    navLabel: "Marketing döntési szimuláció",
-    jsonFile: "Mrk6_D_text_updated.json",
+  id: "marketing-sim",
+  navLabel: "Onboarding / edukációs flow",
+  jsonFile: "Mrk6_D_text_updated.json",
 
-    title: "Marketing döntési szimuláció",
-    heroLine:
-      "Valós marketinghelyzeteken végigvezető döntési élmény, ahol a végén egy érthető stratégiai irány és megoldáslogika áll össze.",
+  title: "Edukációs döntési modell – példa",
+  heroLine:
+    "Szituáció-alapú döntési folyamat, ahol a választások mentén épül fel egy érthető, strukturált megoldáslogika.",
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text:
-            "Egy történetvezérelt döntési szimuláció, ahol a résztvevő marketinghelyzetekben hoz döntéseket.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A résztvevő valószerű marketing szituációkban hoz döntéseket, nem „tesztkérdésekre” válaszol.",
-            "A választások eltérő narratív és tartalmi útvonalakat nyitnak, és lépésről lépésre építik a logikát.",
-            "A folyamat végén összeáll egy koherens megoldás- és stratégiai keret, ami visszavezethető a döntésekre.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A szimuláció ereje az, hogy nem funkciókat sorol, hanem megmutatja a döntési logikát és az ok-okozati összefüggéseket.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "B2B edukációs és sales storytelling célokra, ahol a megértés kulcsérték.",
-            "Komplex megoldások üzleti logikájának bemutatására, „kattintható” narratívával.",
-            "Olyan helyzetekre, ahol a döntési folyamat hitelesebben győz meg, mint egy funkciólista.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy felépített marketingmegoldás narratívája, döntések mentén levezetve.",
-            "Egy érthető stratégiai irány és ajánlási logika, ami később továbbvihető sales beszélgetésbe.",
-          ],
-        },
-      ],
-    },
-
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Marketing szimuláció indítása",
+  details: {
+    blocks: [
+      {
+        type: "intro",
+        text:
+          "Egy történetvezérelt edukációs példa, ahol a résztvevő döntési helyzeteken keresztül érti meg egy komplex probléma logikáját.",
+      },
+      {
+        type: "howItWorks",
+        title: "Hogyan működik?",
+        bullets: [
+          "A résztvevő valószerű szituációkban hoz döntéseket — nem tesztkérdésekre válaszol.",
+          "Minden választás eltérő útvonalat és logikai következményt eredményez.",
+          "A végén egy koherens megoldási keret áll össze, amely visszakövethető a döntési folyamatból.",
+        ],
+      },
+      {
+        type: "bridge",
+        text:
+          "A hangsúly nem információátadáson, hanem a döntési logika és az ok-okozati összefüggések megértésén van.",
+      },
+      {
+        type: "whyInCampaign",
+        title: "Mire használható?",
+        bullets: [
+          "Onboarding vagy belső tréning helyzetekben, ahol a megértés döntési szituációkon keresztül épül fel.",
+          "Komplex rendszerek vagy megoldások logikájának strukturált bemutatására.",
+          "Olyan edukációs környezetben, ahol fontos a döntések következményeinek láthatóvá tétele.",
+        ],
+      },
+      {
+        type: "output",
+        title: "Mi a kimenet?",
+        bullets: [
+          "Egy strukturált megoldási logika, döntések mentén felépítve.",
+          "Egy visszakövethető döntési út, amely alapján a résztvevő megérti az összefüggéseket.",
+        ],
+      },
+    ],
   },
+
+  revealLabel: "Részletek megtekintése",
+  startLabel: "Flow indítása",
+},
 
   // ─────────────────────────────────────────────────────────────
   // SOFTDRINK
   // ─────────────────────────────────────────────────────────────
   {
-    id: "softdrink",
-    navLabel: "Üdítő ajánló",
-    jsonFile: "uditő.json",
+  id: "softdrink",
+  navLabel: "Ajánló / döntési út",
+  jsonFile: "uditő.json",
 
-    title: "Üdítő ajánló",
-    heroLine:
-      "Gyors döntési útvonal, ahol néhány választásból egy világos, konkrét termékajánlás áll össze.",
+  title: "Gyors termékajánló modell – példa",
+  heroLine:
+    "Rövid döntési modell, ahol néhány választás strukturált módon szűkíti az ajánlási irányt egy konkrét termékre.",
 
-    startPageId: "Q1",
-    skinId: "contract_softdrink_fresh",
+  startPageId: "Q1",
+  skinId: "contract_softdrink_fresh",
 
-    details: {
-      blocks: [
-        {
-          type: "intro",
-          text:
-            "Egy rövid, döntések mentén felépülő ajánlóélmény, amely közvetlen termékkimenetbe fut ki.",
-        },
-        {
-          type: "howItWorks",
-          title: "Hogyan működik?",
-          bullets: [
-            "A felhasználó két egyszerű döntést hoz ízlés- és helyzetalapon.",
-            "A választások azonnal szűkítik az ajánlási irányt a termékcsaládon belül.",
-            "A folyamat végén egy egyértelmű, könnyen értelmezhető termékkimenet jelenik meg.",
-          ],
-        },
-        {
-          type: "bridge",
-          text:
-            "A kevés, célzott döntés gyorsan érthetővé teszi, miért pont ez a termék a legrelevánsabb.",
-        },
-        {
-          type: "whyInCampaign",
-          title: "Mire jó kampányban?",
-          bullets: [
-            "Termékcsaládok gyors és érthető pozicionálására.",
-            "Retail és promóciós környezetben beléptető ajánlóélményként.",
-            "Rövid, de személyes termékajánló flow-khoz megosztható kimenettel.",
-          ],
-        },
-        {
-          type: "output",
-          title: "Mi lesz a kimenet?",
-          bullets: [
-            "Egy konkrét termékajánlás, döntésekből levezetve.",
-            "Egy vizuális profilkártya a kiválasztott üdítőhöz.",
-          ],
-        },
-      ],
-    },
-
-    revealLabel: "Továbbiak megtekintése",
-    startLabel: "Üdítő ajánló indítása",
+  details: {
+    blocks: [
+      {
+        type: "intro",
+        text:
+          "Egy alacsony lépésszámú ajánlómodell példája, amely közvetlen termékkimenetbe fut ki.",
+      },
+      {
+        type: "howItWorks",
+        title: "Hogyan működik?",
+        bullets: [
+          "A felhasználó néhány egyszerű, ízlés- vagy helyzetalapú döntést hoz.",
+          "Minden választás szűkíti a lehetséges termékkimenetek körét.",
+          "A folyamat végén egy egyértelmű, strukturált ajánlás jelenik meg.",
+        ],
+      },
+      {
+        type: "bridge",
+        text:
+          "A döntési út rövid, de visszakövethető: látható, milyen preferenciák vezettek a konkrét ajánláshoz.",
+      },
+      {
+        type: "whyInCampaign",
+        title: "Mire használható?",
+        bullets: [
+          "Termékcsaládok gyors strukturált bemutatására.",
+          "Beléptető ajánlómodellként retail vagy promóciós környezetben.",
+          "Olyan helyzetekben, ahol a gyors döntéstámogatás fontosabb, mint a mély konfiguráció.",
+        ],
+      },
+      {
+        type: "output",
+        title: "Mi a kimenet?",
+        bullets: [
+          "Egy konkrét termékajánlás, a döntésekből levezetve.",
+          "Egy vizuálisan konzisztens kimenet, amely a választásokhoz kötődik.",
+        ],
+      },
+    ],
   },
+
+  revealLabel: "Részletek megtekintése",
+  startLabel: "Ajánló indítása",
+},
 
   // ─────────────────────────────────────────────────────────────
   // CREATIVE
@@ -461,17 +461,16 @@ function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount 
       <div className={s.examplesInner}>
         <header className={s.examplesHeader}>
           <h2 id="examples-title" className={s.examplesTitle}>
-            Példa kampányok
+            Döntési modellek működés közben
           </h2>
         </header>
 
         <div className={s.examplesIntrok}>
           <p className={s.examplesIntroLead}>
-            Az alábbi kampányformátumok kipróbálható példák arra, hogyan épülnek fel a Questell
-            interaktív élményei.
+            Az alábbi példák bemutatják, hogyan modellezhetők különböző döntési helyzetek a Questell rendszerében.
           </p>
           <p className={s.examplesIntroLead}>
-            <strong>Minden elem igény szerint továbbalakítható, bővíthető vagy teljesen újraértelmezhető</strong>
+            <strong>Minden struktúra szabadon alakítható, bővíthető vagy új célra konfigurálható.</strong>
           </p>
         </div>
 

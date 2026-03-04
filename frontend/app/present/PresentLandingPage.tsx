@@ -56,43 +56,43 @@ const CAMPAIGN_TYPES_BY_LANG: Record<Lang, CampaignType[]> = {
     {
       id: "product-launch",
       label: "Termékbevezetés",
-      desc: "Nem teaser vagy banner, irányított élmény, amely érzelmi első benyomást épít, és természetesen vezeti a felhasználót a termék felé.",
-      ideal: "Ideális: új SKU, szezonális vagy limitált termék, relaunch.",
+      desc: "Nem teaser vagy banner: irányított döntési út, ami kontextust ad, felépíti az első benyomást, és természetesen vezeti tovább a felhasználót.",
+      ideal: "Ideális: új termék/szolgáltatás, relaunch, szezonális bevezetés.",
       intents: ["convert"],
     },
     {
       id: "customer-survey",
-      label: "Vásárlói felmérés",
-      desc: "Nem klasszikus kérdőív: a felhasználó döntéseiből személyre szabott kimenet születik, miközben a márka viselkedési insightot kap.",
-      ideal: "Ideális: insight-gyűjtés, célcsoport-feltérképezés.",
+      label: "Insight gyűjtés",
+      desc: "Nem klasszikus kérdőív: a döntésekből személyre szabott kimenet készül, miközben a bejárási út és a mintázatok is értelmezhetők.",
+      ideal: "Ideális: insight-gyűjtés, szegmentáció, igényfeltárás, kvalifikáció.",
       intents: ["engage", "convert"],
     },
     {
       id: "seasonal-campaign",
-      label: "Szezonális kampány",
-      desc: "Nem egyszeri kreatív, hanem gyorsan indítható, vizuálisan erős élmény, amely rövid kampányablakban is magas bevonódást hoz.",
-      ideal: "Ideális: FMCG, retail, beauty, időszakos aktivációk.",
+      label: "Időszakos aktiváció",
+      desc: "Gyorsan indítható, rövid időszakban is jól működő interaktív útvonal — nem egyszeri kreatív, hanem bejárható élmény.",
+      ideal: "Ideális: időszakos aktivációk, retail/FMCG, event vagy kiemelt ajánlatok.",
       intents: ["engage"],
     },
     {
       id: "decision-path",
-      label: "Termékajánló",
-      desc: "Nem egyetlen válasz dönt: a teljes döntési út számít, és ebből áll össze a valóban releváns ajánlás.",
-      ideal: "Ideális: összetett választás, széles portfólió, szakértői ajánlás.",
+      label: "Ajánló / döntési út",
+      desc: "Nem egyetlen válasz dönt: a teljes döntési út alapján áll össze a releváns ajánlás, következő lépés vagy csomag.",
+      ideal: "Ideális: összetett választás, széles portfólió, konfigurálható ajánlatok.",
       intents: ["convert"],
     },
     {
       id: "educational",
-      label: "Edukációs kampány",
-      desc: "Nem PDF vagy hosszú magyarázat, hanem végigjátszható tanulási élmény, amely közben a termékhasználat és a márkaértékek is rögzülnek.",
-      ideal: "Ideális: PR-, CSR-kampányok, tutorial tartalmak, onboarding.",
+      label: "Onboarding / edukációs flow",
+      desc: "Nem PDF vagy hosszú magyarázat: bejárható tanulási út, ahol a döntési pontok mentén rögzül a lényeg és látszik, hol bizonytalan a felhasználó.",
+      ideal: "Ideális: onboarding, tutorial, awareness, belső tréning, PR/CSR edukáció.",
       intents: ["engage"],
     },
     {
       id: "modular-minigames",
-      label: "Moduláris minijátékok",
-      desc: "Egymásra épülő rövid élmények azonos vizuális világgal, amelyek hosszabb távon is fenntartják az aktivitást.",
-      ideal: "Ideális: loyalty aktivációk, napi mini-élmények, gamified kampánysorozatok.",
+      label: "Moduláris mini-élmények",
+      desc: "Egymásra épülő rövid, strukturált élmények azonos világgal — sorozatként futtatható, több epizóddal és visszatérő ritmussal.",
+      ideal: "Ideális: loyalty, visszatérő aktivációk, gamified sorozatok, retention.",
       note: "Fejlesztés alatt",
     },
   ],
@@ -100,43 +100,43 @@ const CAMPAIGN_TYPES_BY_LANG: Record<Lang, CampaignType[]> = {
     {
       id: "product-launch",
       label: "Product launch",
-      desc: "Not a teaser or a banner — a guided experience that creates an emotional first impression and naturally leads the user to the product.",
-      ideal: "Ideal for: new SKU, seasonal/limited releases, relaunch.",
+      desc: "Not a teaser or a banner — a guided decision path that sets context, builds first impression, and naturally moves the user forward.",
+      ideal: "Ideal for: new product/service, relaunch, seasonal launch.",
       intents: ["convert"],
     },
     {
       id: "customer-survey",
-      label: "Customer survey",
-      desc: "Not a classic questionnaire: the user’s choices generate a personalized outcome while the brand gains behavioral insight.",
-      ideal: "Ideal for: insight collection, audience mapping, segmentation.",
+      label: "Insight collection",
+      desc: "Not a classic questionnaire: choices generate a personalized outcome while the journey and patterns stay interpretable.",
+      ideal: "Ideal for: insight collection, segmentation, need discovery, qualification.",
       intents: ["engage", "convert"],
     },
     {
       id: "seasonal-campaign",
-      label: "Seasonal campaign",
-      desc: "Not a one-off creative — a fast-to-launch, visually strong experience that can drive high engagement even in short campaign windows.",
-      ideal: "Ideal for: FMCG, retail, beauty, seasonal activations.",
+      label: "Seasonal activation",
+      desc: "Fast to launch and effective in short windows — not a one-off creative, but a walkable interactive journey.",
+      ideal: "Ideal for: seasonal activations, retail/FMCG, events or highlighted offers.",
       intents: ["engage"],
     },
     {
       id: "decision-path",
-      label: "Product recommender",
-      desc: "Not a single answer decides it — the entire decision path matters, resulting in a truly relevant recommendation.",
-      ideal: "Ideal for: complex choices, wide portfolios, expert guidance.",
+      label: "Recommender / decision path",
+      desc: "Not a single answer decides it — the full decision path builds the relevant recommendation, next step, or package.",
+      ideal: "Ideal for: complex choices, wide portfolios, configurable offerings.",
       intents: ["convert"],
     },
     {
       id: "educational",
-      label: "Educational campaign",
-      desc: "Not a PDF or long explanation — a playable learning experience where product usage and brand values stick naturally.",
-      ideal: "Ideal for: PR/CSR campaigns, tutorials, onboarding.",
+      label: "Onboarding / learning flow",
+      desc: "Not a PDF or long explanation — a walkable learning path where decision points make understanding visible.",
+      ideal: "Ideal for: onboarding, tutorials, awareness, internal training, PR/CSR education.",
       intents: ["engage"],
     },
     {
       id: "modular-minigames",
-      label: "Modular mini-games",
-      desc: "Short experiences that build on each other with one visual world — designed to sustain activity over time.",
-      ideal: "Ideal for: loyalty activations, daily mini-experiences, gamified campaign series.",
+      label: "Modular mini-experiences",
+      desc: "Short structured experiences that build on each other — designed to run as a series with recurring rhythm.",
+      ideal: "Ideal for: loyalty, recurring activations, gamified series, retention.",
       note: "In development",
     },
   ],
@@ -307,80 +307,77 @@ const LandingPage: React.FC<LandingPageProps> = ({
   // ⬇️ a toggleLang / setLangPersist / lang változó készen van
   // A gombot a JSX-ben (header/hero) fogjuk elhelyezni a következő szekcióban.
 
-  /** ───────────── PLATFORM / CAMPAIGNS COPY ───────────── */
+ /** ───────────── PLATFORM / CAMPAIGNS COPY ───────────── */
 const platformCopy = {
   hu: {
     headerTitle: "MIT AD A QUESTELL?",
     leadStrong: "Nem egy quizet vagy sablonos minijátékot kapsz.",
     lead:
-      "Egy végigjátszható kampányélményt, amely figyelmet tart, döntések mentén vezeti a felhasználót, és közben értelmezhető adatot kapsz.",
-    moreFormats: (count: number) => `További kampányformátumok (${count})`,
-    moreAria: "További kampányformátumok",
+      "Egy bejárható döntési rendszert, amely végigvezeti a felhasználót a folyamaton, és közben értelmezhető, mérhető adatot ad.",
+    moreFormats: (count: number) => `További formátumok (${count})`,
+    moreAria: "További formátumok",
     closing:
-      "Ez nem egy egyszer lefutó kampány.",
+      "Ez nem egy egyszer lefutó élmény.",
     closingAfter:
-      "Egy adaptálható formátum, amely új célokra, időszakokra és célcsoportokra is továbbépíthető",
+      "Egy újrahasználható, adaptálható döntési struktúra, amely különböző célokra és helyzetekre is alkalmazható.",
   },
   en: {
     headerTitle: "WHAT DOES QUESTELL DELIVER?",
     leadStrong: "Not a quiz. Not a template-based mini game.",
     lead:
-      "A playable campaign experience that holds attention, guides users through decisions, and generates meaningful data.",
-    moreFormats: (count: number) => `More campaign formats (${count})`,
-    moreAria: "More campaign formats",
+      "A walkable decision system that guides users through a structured process while generating meaningful, measurable data.",
+    moreFormats: (count: number) => `More formats (${count})`,
+    moreAria: "More formats",
     closing:
-      "This is not a one-off campaign.",
+      "This is not a one-off experience.",
     closingAfter:
-      "It’s an adaptable format that can evolve across new goals, seasons, and audiences.",
+      "It’s a reusable, adaptable decision structure that can serve different goals and contexts.",
   },
 } as const;
-
-/** ───────────── PRINCIPLES COPY ───────────── */
 const principlesCopy = {
   hu: {
-    heroTitle: "Egyetlen motor, több kampánycélhoz",
+    heroTitle: "Egyetlen motor, több döntési helyzetre",
     heroBody:
-      "Ugyanaz a rendszer használható brand-élményre, insight-gyűjtésre vagy konverzióra.\nA cél határozza meg a logikát – nem egy előre rögzített sablon.",
+      "Ugyanaz a rendszer különböző döntési folyamatokat képes modellezni és mérhetővé tenni.\nA cél határozza meg a struktúrát, nem egy előre rögzített sablon.",
     bullets: [
-      "Gyors pilot, skálázható kampány",
-      "Célhoz hangolt flow és hangnem",
-      "Ugyanazon platform, több use-case",
+      "Strukturált, bejárható flow",
+      "Átlátható és mérhető döntési logika",
+      "Rugalmasan formálható rendszer",
     ],
-    p1Title: "Döntésekre épülő kampánylogika",
+    p1Title: "Döntésekre épülő, mérhető struktúra",
     p1Body:
-      "A felhasználói válaszok nem a flow végén jelennek meg, hanem aktív építőelemei az élménynek.\nMinden döntés alakítja a következő lépést.",
-    p2Title: "Valódi személyre szabott kimenetek",
+      "A válaszok nem csak rögzítésre kerülnek.\nMinden lépés állapotváltást eredményez, amely visszakövethető és elemezhető.",
+    p2Title: "Eltérő útvonalak, eltérő mintázatok",
     p2Body:
-      "Nincs egyetlen „helyes” út.\nMinden döntési irány más narratívát, más vizuált és más végkimenetet eredményez.",
-    p3Title: "AI, márkára szabott vizuális rendszerben",
+      "A különböző döntési irányok más folyamatot és más végpontot eredményeznek.\nAz elágazások és útvonalak pontosan láthatók és összehasonlíthatók.",
+    p3Title: "Integrált vizuális és AI-réteg",
     p3Body:
-      "A vizuálok a kampány céljához és hangulatához igazodnak.\nNem önálló generálásként, hanem integrált élményelemként jelennek meg.",
+      "Az AI-alapú vizuálok a döntési logikához igazodva jelennek meg.\nA tartalom a folyamat része, nem attól független elem.",
     closing:
-      "Nem külön eszköz engagementre, insight-gyűjtésre és ajánlásra – ugyanaz a motor szolgál több kampánycélt.",
+      "A rendszer nem csak levezeti a döntési folyamatot — hanem láthatóvá és elemezhetővé is teszi azt.",
   },
   en: {
-    heroTitle: "One engine. Multiple campaign goals.",
+    heroTitle: "One engine. Multiple decision contexts.",
     heroBody:
-      "The same system powers brand experiences, insight collection, and conversion flows.\nThe goal defines the logic — not a fixed template.",
+      "The same system can model and measure different decision processes.\nThe goal defines the structure — not a fixed template.",
     bullets: [
-      "Fast pilot, scalable campaign",
-      "Goal-aligned flow and tone",
-      "One platform, multiple use cases",
+      "Structured, walkable flows",
+      "Transparent and measurable logic",
+      "Adaptable system design",
     ],
-    p1Title: "Decision-based campaign logic",
+    p1Title: "Decision-driven, measurable structure",
     p1Body:
-      "User responses don’t appear only at the end — they actively shape the experience.\nEvery decision influences the next step.",
-    p2Title: "Truly personalized outcomes",
+      "Responses are not only recorded.\nEach step produces a state transition that can be tracked and analyzed.",
+    p2Title: "Different paths, observable patterns",
     p2Body:
-      "There is no single 'correct' path.\nEach decision direction leads to a different narrative, visual layer, and outcome.",
-    p3Title: "AI within a brand-aligned visual system",
+      "Different decision directions produce different flows and endpoints.\nBranches and pathways remain visible and comparable.",
+    p3Title: "Integrated visual and AI layer",
     p3Body:
-      "Visuals adapt to campaign goals and tone.\nNot as standalone generation, but as an integrated experience layer.",
+      "AI-based visuals align with the decision logic.\nContent remains part of the process, not a separate layer.",
     closing:
-      "Not separate tools for engagement, insight, and recommendation — the same engine serves multiple campaign goals.",
+      "The engine doesn’t just guide decisions — it makes the process visible and analyzable.",
   },
 } as const;
-
 /** ───────────── COLLAB COPY ───────────── */
 const collabCopy = {
   hu: {
@@ -390,7 +387,7 @@ const collabCopy = {
     body:
       "A folyamat átlátható, hatékony és minden döntési pontnál kézben tartható. A célok rögzítése után a kreatív és technológiai megvalósítás fókuszált, jól kontrollált keretben történik.",
     closing:
-      "Az együttműködés lépésenként épül: az első futtatás után egy önállóan működő élmény marad, nem egy függőség.",
+    "Az együttműködés lépésről lépésre épül, és egy működő, önállóan futtatható rendszert eredményez.",
   },
   en: {
     title: "How does the collaboration work?",
@@ -399,7 +396,7 @@ const collabCopy = {
     body:
       "The process is transparent, efficient, and controllable at every decision point. After defining goals, creative and technical execution happens in a focused, structured framework.",
     closing:
-      "The collaboration builds step by step: after the first launch, you’re left with a self-sustaining experience — not a dependency.",
+      "The collaboration builds step by step and results in a functioning, independently operable system.",
   },
 } as const;
 
@@ -431,8 +428,9 @@ const cCopy = collabCopy[lang];
     audienceStatement: {
       aria: "Kinek szól a Questell",
       textBeforeStrong:
-        "A Questell egyedi kampányokhoz készült, ahol a felhasználói döntések valódi, mérhető adatot adnak",
-      strong: "Hosszú fejlesztés és kiszámíthatatlan költségek nélkül.",
+  "A Questell döntési folyamatok modellezésére és mérésére készült.",
+strong:
+  "Strukturált, irányított és visszakövethető rendszerként.",
     },
     langSwitch: {
       aria: "Nyelv váltása",
@@ -440,40 +438,40 @@ const cCopy = collabCopy[lang];
       en: "EN",
     },
 
-    audience: {
-      aria: "Kinek szól a Questell",
-      title: "Kiknek ajánljuk?",
-      leadClosed:
-        "Márkáknak és ügynökségeknek, akik mélyebb bevonódást szeretnének a hagyományos quizeknél és űrlap-alapú eszközöknél.",
-      leadOpen:
-        "Akik pontosabb döntési insightot és irányított, logikaalapú élményt keresnek — nem egyszerű kitöltéseket, hanem valódi döntési útvonalakat.",
-      items: [
-        {
-          title:
-            "Amikor a kampány hatékonyságát a döntési útvonal, nem pedig a kitöltésszám határozza meg",
-          body:
-            "Promóciókhoz vagy termékbevezetésekhez, ahol az a cél, hogy a felhasználó valós preferenciákat feltáró döntéssoron menjen végig, ne csak végigkattintson egy lineáris folyamaton. A motor emlékező logikája összefüggő, magasabb minőségű felhasználói mintázatokat tár fel, ami pontosabb célzást és hatékonyabb kampányokat eredményez.",
-        },
-        {
-          title:
-            "Amikor komplex szolgáltatást vagy terméklogikát kell egyszerű, érthető folyamatba rendezni",
-          body:
-            "Telekom, tech, pénzügyi vagy bármilyen több összetevős ajánlat esetén, ahol a statikus landingek és a funkciófelsorolások nem adják át a működési logika lényegét. A motor a bonyolult struktúrákat irányított, bejárható döntési folyamattá alakítja, így a felhasználó saját útvonalon jut el a számára releváns megoldásig — félreértés és információvesztés nélkül.",
-        },
-        {
-          title:
-            "Amikor a leadek mellett a viselkedési mintákra és a döntések mögötti logikára is szükség van",
-          body:
-            "A rendszer nem csak a végső választ, hanem a teljes bejárási útvonalat méri: döntési sorrendet, csomóponti viselkedést, lemorzsolódási pontokat. Ez pontos remarketing-szegmenseket, értékesebb insightot és jobban optimalizálható kampányokat eredményez — olyan adatminőséggel, amit klasszikus lineáris eszközök nem tudnak biztosítani.",
-        },
-        {
-          title:
-            "Amikor ügynökségként új, határidő-biztos formátumra van szükség, egyedi fejlesztés nélkül",
-          body:
-            "Olyan briefekhez, ahol az interaktív, élményalapú megoldás az elvárás, de szükség van előre keretezett, kiszámítható kivitelezésre. A pilot fix struktúrával, mérhető eredményekkel és brandkontrollált vizuállal záruló élményt ad — alacsony kockázattal, garantált minőségben.",
-        },
-      ],
+audience: {
+  aria: "Kinek szól a Questell",
+  title: "Kiknek ajánljuk?",
+  leadClosed:
+    "Azoknak, akik nem csak információt akarnak megmutatni, hanem döntési helyzetet akarnak teremteni.",
+  leadOpen:
+    "Akiknek fontos, hogy a felhasználó ne végigkattintson egy oldalon, hanem valódi választási pontokon haladjon át — és ez látható is legyen.",
+  items: [
+    {
+      title:
+        "Ha egy bevezetésnél nem a figyelem, hanem a döntés számít",
+      body:
+        "Amikor azt akarod, hogy a felhasználó kontextusban értse meg a terméket vagy szolgáltatást, és saját döntései mentén jusson el a következő lépéshez.",
     },
+    {
+      title:
+        "Ha nem egy kérdőívet, hanem egy döntési folyamatot akarsz felépíteni",
+      body:
+        "Amikor a válaszok egymásra épülnek, és a cél nem egy lista, hanem egy irányított, következetes útvonal.",
+    },
+    {
+      title:
+        "Ha látni akarod, hogyan gondolkodik a felhasználó",
+      body:
+        "Amikor a sorrend, az elágazások és a bizonytalansági pontok is fontosak — nem csak az, hogy mi lett a végső választás.",
+    },
+    {
+      title:
+        "Ha interaktív rendszert akarsz, nem egyedi fejlesztési projektet",
+      body:
+        "Amikor szükséged van strukturált, stabil működésre, de nem akarsz minden alkalommal nulláról fejleszteni.",
+    },
+  ],
+},
 
     tech: {
       title: "Technológia & Biztonság",
@@ -569,39 +567,39 @@ const cCopy = collabCopy[lang];
     },
 
     audience: {
-      aria: "Who Questell is for",
-      title: "Who is it for?",
-      leadClosed:
-        "For brands and agencies who want deeper engagement than traditional quizzes and form-based tools.",
-      leadOpen:
-        "For teams looking for clearer decision insight and guided, logic-based experiences — not simple submissions, but real decision paths.",
-      items: [
-        {
-          title:
-            "When campaign performance is defined by decision paths — not submission counts",
-          body:
-            "For promotions and product launches where the goal is to lead users through a preference-revealing decision sequence, not a linear click-through. The engine’s memory-like logic surfaces coherent, higher-quality user patterns — enabling sharper targeting and more effective campaigns.",
-        },
-        {
-          title:
-            "When complex services or product logic must become a simple, understandable flow",
-          body:
-            "For telecom, tech, finance, or any multi-component offering where static landings and feature lists don’t communicate the real logic. The engine transforms complexity into a guided decision flow, so users reach the relevant solution through their own path — without misunderstanding or information loss.",
-        },
-        {
-          title:
-            "When you need behavioral patterns and decision logic — not just leads",
-          body:
-            "The system measures not only the final choice but the full journey: decision sequences, node behavior, drop-off points. This enables precise remarketing segments, more valuable insights, and better optimization — with a data quality classic linear tools can’t provide.",
-        },
-        {
-          title:
-            "When agencies need a deadline-safe format without custom development",
-          body:
-            "For briefs that require interactive, experience-led solutions while still demanding predictable delivery. A pilot delivers a fixed structure, measurable outcomes, and brand-controlled visuals — with low risk and consistent quality.",
-        },
-      ],
+  aria: "Who Questell is for",
+  title: "Who is it for?",
+  leadClosed:
+    "For those who don’t just want to present information, but want to create real decision situations.",
+  leadOpen:
+    "For teams who want users to move through meaningful choice points — and to see how those decisions unfold.",
+  items: [
+    {
+      title:
+        "If what matters is the decision process, not just the final click",
+      body:
+        "When you want users to understand a product or service through context and choice — and move forward based on their own decisions, not a linear path.",
     },
+    {
+      title:
+        "If you need to turn complex logic into something walkable",
+      body:
+        "When a multi-layered product or service can’t be explained through static pages alone. The system structures complexity into a guided, understandable decision process.",
+    },
+    {
+      title:
+        "If you want to see how users think — not just what they choose",
+      body:
+        "When the order of decisions, the branches taken, and the hesitation points matter — not only the final outcome.",
+    },
+    {
+      title:
+        "If you need an interactive system without building everything from scratch",
+      body:
+        "When you want a structured, stable framework for interactivity — without turning every project into a full custom development effort.",
+    },
+  ],
+},
 
     tech: {
       title: "Technology & Security",
