@@ -1288,11 +1288,15 @@ def rollup_range(
         domains[dom] = agg
         return agg
 
-    # Runes: top választott opciók (pickedLabels a puzzle_result-ból, kind=runes)
+    # Runes: top választott opciók + hányadik próbálkozásra sikerül (attempt when isCorrect)
     runes_option_counts: Dict[str, int] = {}
-    # Riddle: run-szintű aggregátumok (a run loopban töltjük)
+    runes_solved_attempts: List[int] = []  # attempt szám minden sikeres megoldásnál
+    runes_solved_by_attempt: Dict[int, int] = {}  # 1 -> count, 2 -> count, ...
+    # Riddle: run-szintű aggregátumok (a run loopban töltjük); 1 run = 1 kérdésszett
     riddle_retries_per_run: List[float] = []
     riddle_wrong_by_page: Dict[str, int] = {}
+    riddle_run_tries: int = 0
+    riddle_run_solved: int = 0
 
     # -------------------------
     # Beolvasás: nap fájlok
@@ -1394,26 +1398,35 @@ def rollup_range(
                         choice_counts[pid_s][cid] = choice_counts[pid_s].get(cid, 0) + 1
 
                 elif t == "puzzle_try":
-                    totals["puzzles"]["tries"] += 1
-                    domAgg["totals"]["puzzles"]["tries"] += 1
                     kind = (props.get("kind") or "unknown").strip() or "unknown"
-                    totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
-                    domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
+                    # Riddle: ne event-szinten számoljuk, run-szinten számoljuk a run loopban
+                    if kind != "riddle":
+                        totals["puzzles"]["tries"] += 1
+                        domAgg["totals"]["puzzles"]["tries"] += 1
+                        totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
+                        domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
 
                 elif t == "puzzle_result":
-                    if props.get("isCorrect"):
-                        totals["puzzles"]["solved"] += 1
-                        domAgg["totals"]["puzzles"]["solved"] += 1
                     kind = (props.get("kind") or "unknown").strip() or "unknown"
-                    if props.get("isCorrect"):
-                        totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
-                        domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
-                    # Runes: választott opciók szövege (top 2 a reporthoz)
+                    # Riddle: ne event-szinten, run-szinten (run loopban)
+                    if kind != "riddle":
+                        if props.get("isCorrect"):
+                            totals["puzzles"]["solved"] += 1
+                            domAgg["totals"]["puzzles"]["solved"] += 1
+                        if props.get("isCorrect"):
+                            totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
+                            domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
+                    # Runes: választott opciók szövege (top 2) + hányadik próbára sikerült
                     if kind == "runes":
                         for label in props.get("pickedLabels") or []:
                             if isinstance(label, str) and label.strip():
                                 key = label.strip()[:200]
                                 runes_option_counts[key] = runes_option_counts.get(key, 0) + 1
+                        if props.get("isCorrect"):
+                            attempt = props.get("attempt")
+                            a = int(attempt) if attempt is not None else 1
+                            runes_solved_attempts.append(a)
+                            runes_solved_by_attempt[a] = runes_solved_by_attempt.get(a, 0) + 1
 
                 elif t == "rune_unlock":
                     totals["runes"] += 1
@@ -1539,7 +1552,7 @@ def rollup_range(
 
         evs.sort(key=lambda e: (e.get("ts") or 0, e.get("t") or ""))
 
-        # ---------- Riddle run-szintű statok ----------
+        # ---------- Riddle run-szintű statok (1 run = 1 kérdésszett) ----------
         riddle_evs = [e for e in evs if e.get("t") == "puzzle_result" and (e.get("props") or {}).get("kind") == "riddle"]
         if riddle_evs:
             by_page: Dict[str, Dict[str, Any]] = {}
@@ -1549,6 +1562,7 @@ def rollup_range(
                     continue
                 by_page[str(pid)] = e
             if by_page:
+                riddle_run_tries += 1  # egy run riddle-dal = 1 "try"
                 attempt_vals = []
                 for p, e in by_page.items():
                     a = (e.get("props") or {}).get("attempt")
@@ -1556,6 +1570,8 @@ def rollup_range(
                 retries_sum = sum(max(0, a - 1) for a in attempt_vals)
                 riddle_retries_per_run.append(retries_sum / len(by_page))
                 has_wrong = any((e.get("props") or {}).get("isCorrect") is False for e in by_page.values())
+                if not has_wrong:
+                    riddle_run_solved += 1  # sikeres run = minden kérdés helyes
                 if has_wrong:
                     for pid, e in by_page.items():
                         if (e.get("props") or {}).get("isCorrect") is False:
@@ -1943,10 +1959,17 @@ def rollup_range(
         )
     end_dist_out.sort(key=lambda x: x["count"], reverse=True)
 
-    # Puzzle (Runes): top 2 választott opció
+    # Puzzle (Runes): top 2 választott opció + átlag hányadik próbára sikerül, eloszlás
     puzzle_runes_top_options: List[Dict[str, Any]] = []
     for label, cnt in sorted(runes_option_counts.items(), key=lambda kv: kv[1], reverse=True)[:2]:
         puzzle_runes_top_options.append({"label": label, "count": cnt})
+    runes_avg_attempt_when_solved = (sum(runes_solved_attempts) / len(runes_solved_attempts)) if runes_solved_attempts else None
+    runes_solved_by_attempt_out: List[Dict[str, Any]] = []
+    for a in sorted(runes_solved_by_attempt.keys()):
+        runes_solved_by_attempt_out.append({"attempt": a, "count": runes_solved_by_attempt[a]})
+
+    # Riddle: run-alapú tries/solved (1 run = 1 kérdésszett) felülírja a byKind.riddle-t
+    totals["puzzles"]["byKind"]["riddle"] = {"tries": riddle_run_tries, "solved": riddle_run_solved}
 
     # Riddle: átlagos újrapróbálások runonként; hibás lefutásoknál melyik kérdés
     riddle_avg_retries = (sum(riddle_retries_per_run) / len(riddle_retries_per_run)) if riddle_retries_per_run else 0.0
@@ -1966,6 +1989,10 @@ def rollup_range(
         "runs": run_count,
         "totals": totals,
         "puzzleRunesTopOptions": puzzle_runes_top_options,
+        "puzzleRunesStats": {
+            "avgAttemptWhenSolved": round(runes_avg_attempt_when_solved, 2) if runes_avg_attempt_when_solved is not None else None,
+            "solvedByAttempt": runes_solved_by_attempt_out,
+        },
         "riddleStats": {
             "avgRetriesPerRun": round(riddle_avg_retries, 4),
             "runsWithRiddle": len(riddle_retries_per_run),

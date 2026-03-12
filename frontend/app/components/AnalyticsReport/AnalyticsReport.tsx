@@ -122,8 +122,12 @@ dropOffs?: Array<{
     share: number;     // 0..1
   }>;
 
-  // Puzzle (Runes): top 2 választott opció a report szekcióhoz
+  // Puzzle (Runes): top 2 választott opció + hányadik próbára sikerül
   puzzleRunesTopOptions?: Array<{ label: string; count: number }>;
+  puzzleRunesStats?: {
+    avgAttemptWhenSolved: number | null;
+    solvedByAttempt: Array<{ attempt: number; count: number }>;
+  };
   // Riddle: run-szintű statok (átlag újrapróbálás, hibás kérdések)
   riddleStats?: {
     avgRetriesPerRun: number;
@@ -447,6 +451,27 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     {runes.tries > 0 ? ((runes.solved / runes.tries) * 100).toFixed(1) : "—"}
                     %
                   </div>
+                  {rangeData.puzzleRunesStats && (rangeData.puzzleRunesStats.avgAttemptWhenSolved != null || (rangeData.puzzleRunesStats.solvedByAttempt?.length ?? 0) > 0) && (
+                    <div style={{ fontSize: "0.875rem" }}>
+                      {rangeData.puzzleRunesStats.avgAttemptWhenSolved != null && (
+                        <>
+                          <strong>Átlagosan hányadik próbálkozásra sikerül:</strong>{" "}
+                          {rangeData.puzzleRunesStats.avgAttemptWhenSolved.toFixed(1)}. próba
+                        </>
+                      )}
+                      {rangeData.puzzleRunesStats.solvedByAttempt && rangeData.puzzleRunesStats.solvedByAttempt.length > 0 && (
+                        <div style={{ marginTop: "0.35rem" }}>
+                          <span style={{ color: "#666" }}>Sikerülési eloszlás: </span>
+                          {rangeData.puzzleRunesStats.solvedByAttempt.map((row, i) => (
+                            <span key={row.attempt}>
+                              {i > 0 ? " · " : ""}
+                              {row.attempt}. próba: {row.count}×
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {rangeData.puzzleRunesTopOptions && rangeData.puzzleRunesTopOptions.length > 0 && (
                     <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                       {rangeData.puzzleRunesTopOptions.map((opt, i) => (
