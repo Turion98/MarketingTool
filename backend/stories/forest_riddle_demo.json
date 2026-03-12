@@ -111,17 +111,17 @@
         "nextSwitch": {
           "switch": "score",
           "cases": {
-            "0": "end_fail",
-            "1": "end_kiraly",
-            "2": "end_king",
-            "3": "end_king",
-            "__default": "end_kiraly"
+            "0": "END__frest_demo__fail",
+            "1": "END__frest_demo__kiraly",
+            "2": "END__frest_demo__king",
+            "3": "END__frest_demo__king",
+            "__default": "END__frest_demo__kiraly"
           }
         }
       }
     },
-    "end_kiraly": {
-      "id": "end_kiraly",
+    "END__frest_demo__kiraly": {
+      "id": "END__frest_demo__kiraly",
       "type": "end",
       "title": "Király vagy!",
       "text": "Legalább egy helyes választ adtál — szép munka!",
@@ -129,8 +129,8 @@
         "cta": "google"
       }
     },
-    "end_king": {
-      "id": "end_king",
+    "END__frest_demo__king": {
+      "id": "END__frest_demo__king",
       "type": "end",
       "title": "KING 👑",
       "text": "Kettő vagy annál több helyes válasz — igazi király vagy!",
@@ -138,8 +138,8 @@
         "cta": "google"
       }
     },
-    "end_fail": {
-      "id": "end_fail",
+    "END__frest_demo__fail": {
+      "id": "END__frest_demo__fail",
       "type": "end",
       "title": "Köszönjük!",
       "text": "Most nem jött össze. Próbáld újra — menni fog!",

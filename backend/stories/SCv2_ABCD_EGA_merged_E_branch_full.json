@@ -344,6 +344,7 @@
     },
     {
       "id": "Route_A_final_HS_lifting",
+      "type": "end",
       "title": "A célzott feszességre ez a legjobb választás",
       "text": [
         {
@@ -356,6 +357,7 @@
     },
     {
       "id": "Route_A_final_HS_texture",
+      "type": "end",
       "title": "A simább textúrához ez lesz a legjobb lépés",
       "text": [
         {
@@ -368,6 +370,7 @@
     },
     {
       "id": "Route_A_final_HW_serum",
+      "type": "end",
       "title": "A koncentrált esti megoldásod",
       "text": [
         {
@@ -380,6 +383,7 @@
     },
     {
       "id": "Route_A_final_HW_gel",
+      "type": "end",
       "title": "A könnyű nappali hidratáló a legjobb választás",
       "text": [
         {
@@ -392,6 +396,7 @@
     },
     {
       "id": "Route_A_final_SW_softfocus",
+      "type": "end",
       "title": "A textúra-egyenletesség most a kulcs",
       "text": [
         {
@@ -404,6 +409,7 @@
     },
     {
       "id": "Route_A_final_SW_watergel",
+      "type": "end",
       "title": "A kényelmes, friss érzet a legfontosabb most",
       "text": [
         {
@@ -534,6 +540,7 @@
     },
     {
       "id": "Route_B_final_SW_softfocus",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus bőrkisimító szérum – glow, ami bírja a tempót",
       "text": [
         {
@@ -546,6 +553,7 @@
     },
     {
       "id": "Route_B_final_SW_watergel",
+      "type": "end",
       "title": "Ajánlásod: Water Gel hidratáló krém – instant komfort smink alá is",
       "text": [
         {
@@ -558,6 +566,7 @@
     },
     {
       "id": "Route_B_final_SC_softfocus",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus bőrkisimító szérum – esztétikai upgrade a védelem előtt",
       "text": [
         {
@@ -570,6 +579,7 @@
     },
     {
       "id": "Route_B_final_SC_calmshield",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF 50 ",
       "text": [
         {
@@ -582,6 +592,7 @@
     },
     {
       "id": "Route_B_final_WC_watergel",
+      "type": "end",
       "title": "Ajánlásod: Water Gel hidratáló krém – a minimalista rutin alapja",
       "text": [
         {
@@ -594,6 +605,7 @@
     },
     {
       "id": "Route_B_final_WC_calmshield",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF 50 – fényvédelem, ami minimalista rutinba is belefér",
       "text": [
         {
@@ -724,6 +736,7 @@
     },
     {
       "id": "Route_C_final_CB_calmshield",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF 50 – érzékeny bőrre hangolt, mindennapi fényvédelem",
       "text": [
         {
@@ -736,6 +749,7 @@
     },
     {
       "id": "Route_C_final_CB_barrier",
+      "type": "end",
       "title": "Ajánlásod: Barrier Repair krém – a nyugtató, illatmentes védőréteg",
       "text": [
         {
@@ -748,6 +762,7 @@
     },
     {
       "id": "Route_C_final_CH_calmshield",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF 50 – védelem, ami mellett az anti-age lépésekre is nyitva marad a tér",
       "text": [
         {
@@ -760,6 +775,7 @@
     },
     {
       "id": "Route_C_final_CH_hydralift",
+      "type": "end",
       "title": "Ajánlásod: HydraLift szérum – kíméletes feszesítés érzékeny bőrre is",
       "text": [
         {
@@ -772,6 +788,7 @@
     },
     {
       "id": "Route_C_final_BH_barrier",
+      "type": "end",
       "title": "Ajánlásod: Barrier Repair krém – először a bőr nyugtatása, aztán minden más",
       "text": [
         {
@@ -784,6 +801,7 @@
     },
     {
       "id": "Route_C_final_BH_hydralift",
+      "type": "end",
       "title": "Ajánlásod: HydraLift szérum – feszesítő boost óvatos bőrre",
       "text": [
         {
@@ -971,6 +989,7 @@
     },
     {
       "id": "Route_D_final_texture_minimal_day",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus + Calm Shield SPF – nappali textúra-finomító duó",
       "text": [
         {
@@ -980,6 +999,7 @@
     },
     {
       "id": "Route_D_final_texture_minimal_night",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus + Barrier Repair – esti simító duó",
       "text": [
         {
@@ -989,6 +1009,7 @@
     },
     {
       "id": "Route_D_final_texture_advanced_spfbase",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF + Soft Focus – védelemre épülő textúra-duó",
       "text": [
         {
@@ -998,6 +1019,7 @@
     },
     {
       "id": "Route_D_final_texture_advanced_serumbase",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus + HydraLift – mélyebb, aktív textúra-duó",
       "text": [
         {
@@ -1007,6 +1029,7 @@
     },
     {
       "id": "Route_D_final_hydration_minimal_fresh",
+      "type": "end",
       "title": "Ajánlásod: Water Gel + Calm Shield SPF – friss nappali hidratáló duó",
       "text": [
         {
@@ -1016,6 +1039,7 @@
     },
     {
       "id": "Route_D_final_hydration_minimal_comfort",
+      "type": "end",
       "title": "Ajánlásod: Water Gel + Barrier Repair – esti komfort duó",
       "text": [
         {
@@ -1025,6 +1049,7 @@
     },
     {
       "id": "Route_D_final_hydration_advanced_plump",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Water Gel + Calm Shield SPF – plump nappali–esti rendszer",
       "text": [
         {
@@ -1034,6 +1059,7 @@
     },
     {
       "id": "Route_D_final_hydration_advanced_barrier",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Barrier Repair + Calm Shield SPF – hidratálás + barrier",
       "text": [
         {
@@ -1043,6 +1069,7 @@
     },
     {
       "id": "Route_D_final_lifting_minimal_gentle",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Calm Shield SPF – kíméletes nappali lifting duó",
       "text": [
         {
@@ -1052,6 +1079,7 @@
     },
     {
       "id": "Route_D_final_lifting_minimal_plump",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Water Gel – plump boost duó",
       "text": [
         {
@@ -1061,6 +1089,7 @@
     },
     {
       "id": "Route_D_final_lifting_advanced_dayfocus",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Barrier Repair – célzott feszesítés + komfort",
       "text": [
         {
@@ -1070,6 +1099,7 @@
     },
     {
       "id": "Route_D_final_lifting_advanced_nightfocus",
+      "type": "end",
       "title": "Ajánlásod: HydraLift + Calm Shield SPF + Barrier Repair – esti regeneráló feszesítés",
       "text": [
         {
@@ -1378,6 +1408,7 @@
     },
     {
       "id": "Route_E_final_softfocus",
+      "type": "end",
       "title": "Ajánlásod: Soft Focus",
       "text": [
         {
@@ -1461,6 +1492,7 @@
     },
     {
       "id": "Route_E_final_watergel",
+      "type": "end",
       "title": "Ajánlásod: Water Gel",
       "text": [
         {
@@ -1544,6 +1576,7 @@
     },
     {
       "id": "Route_E_final_calmshield",
+      "type": "end",
       "title": "Ajánlásod: Calm Shield SPF",
       "text": [
         {
@@ -1627,6 +1660,7 @@
     },
     {
       "id": "Route_E_final_barrier",
+      "type": "end",
       "title": "Ajánlásod: Barrier Repair",
       "text": [
         {
@@ -1710,6 +1744,7 @@
     },
     {
       "id": "Route_E_final_hydralift",
+      "type": "end",
       "title": "Ajánlásod: HydraLift szérum",
       "text": [
         {

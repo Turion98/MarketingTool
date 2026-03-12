@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import styles from "./PuzzleRunes.module.scss";
-import { trackPuzzleResult } from "../../../lib/analytics";
+import { trackPuzzleTry, trackPuzzleResult } from "../../../lib/analytics";
 import { useUiClickSound } from "../../../lib/useUiClickSound";
 
 type PuzzleRunesMode = "ordered" | "set";
@@ -255,24 +255,29 @@ export default function PuzzleRunes({
         playError();
       }
 
-      // 3) Analitika – minden próbálkozásról log
+      // 3) Analitika – try + result (hogy a report tries/solved és success rate helyes legyen)
+      const attemptNum = attempts + 1;
+      const extra = {
+        kind: "runes" as const,
+        size: options.length,
+        mode,
+        pickedCount: pickedSnapshot.length,
+        keptCorrect: lockedCorrect.size,
+        hasAnswer,
+        maxPick,
+        pickedLabels: [...pickedSnapshot],
+      };
       try {
+        trackPuzzleTry(storyId, sessionId, pageId, puzzleId, attemptNum, extra);
         trackPuzzleResult(
           storyId,
           sessionId,
           pageId,
           puzzleId,
           ok,
-          attempts + 1,
+          attemptNum,
           durationMs,
-          {
-            size: options.length,
-            mode,
-            pickedCount: pickedSnapshot.length,
-            keptCorrect: lockedCorrect.size,
-            hasAnswer,
-            maxPick,
-          }
+          extra
         );
       } catch {}
 

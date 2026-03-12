@@ -93,7 +93,7 @@
         },
         {
           "text": "Befejezés",
-          "next": "end"
+          "next": "END__runes_set_demo__reward"
         }
       ]
     },
@@ -157,7 +157,7 @@
         },
         {
           "text": "Befejezés",
-          "next": "end"
+          "next": "END__runes_set_demo__reward"
         }
       ]
     },
@@ -176,8 +176,8 @@
         }
       ]
     },
-    "end": {
-      "id": "end",
+    "END__runes_set_demo__reward": {
+      "id": "END__runes_set_demo__reward",
       "type": "end",
       "title": "Köszönjük!",
       "text": "Végigtesztelted a halmaz logikát.",

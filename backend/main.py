@@ -992,10 +992,13 @@ def rollup_day(storyId: str, day: str):
     users: set[str] = set()
     pages: set[str] = set()
 
+    def _puzzle_by_kind() -> Dict[str, Dict[str, int]]:
+        return {"riddle": {"tries": 0, "solved": 0}, "runes": {"tries": 0, "solved": 0}, "unknown": {"tries": 0, "solved": 0}}
+
     counters = {
         "pageViews": 0,
         "choices": 0,
-        "puzzles": {"tries": 0, "solved": 0},
+        "puzzles": {"tries": 0, "solved": 0, "byKind": _puzzle_by_kind()},
         "runes": 0,
         "mediaStarts": 0,
         "mediaStops": 0,
@@ -1018,7 +1021,7 @@ def rollup_day(storyId: str, day: str):
             "totals": {
                 "pageViews": 0,
                 "choices": 0,
-                "puzzles": {"tries": 0, "solved": 0},
+                "puzzles": {"tries": 0, "solved": 0, "byKind": _puzzle_by_kind()},
                 "runes": 0,
                 "mediaStarts": 0,
                 "mediaStops": 0,
@@ -1093,11 +1096,27 @@ def rollup_day(storyId: str, day: str):
             elif t == "puzzle_try":
                 counters["puzzles"]["tries"] += 1
                 domAgg["totals"]["puzzles"]["tries"] += 1
+                kind = (props.get("kind") or "unknown").strip() or "unknown"
+                if kind not in counters["puzzles"]["byKind"]:
+                    counters["puzzles"]["byKind"][kind] = {"tries": 0, "solved": 0}
+                counters["puzzles"]["byKind"][kind]["tries"] += 1
+                if kind not in domAgg["totals"]["puzzles"]["byKind"]:
+                    domAgg["totals"]["puzzles"]["byKind"][kind] = {"tries": 0, "solved": 0}
+                domAgg["totals"]["puzzles"]["byKind"][kind]["tries"] += 1
 
             elif t == "puzzle_result":
                 if props.get("isCorrect"):
                     counters["puzzles"]["solved"] += 1
                     domAgg["totals"]["puzzles"]["solved"] += 1
+                kind = (props.get("kind") or "unknown").strip() or "unknown"
+                if kind not in counters["puzzles"]["byKind"]:
+                    counters["puzzles"]["byKind"][kind] = {"tries": 0, "solved": 0}
+                if props.get("isCorrect"):
+                    counters["puzzles"]["byKind"][kind]["solved"] += 1
+                if kind not in domAgg["totals"]["puzzles"]["byKind"]:
+                    domAgg["totals"]["puzzles"]["byKind"][kind] = {"tries": 0, "solved": 0}
+                if props.get("isCorrect"):
+                    domAgg["totals"]["puzzles"]["byKind"][kind]["solved"] += 1
 
             elif t == "rune_unlock":
                 counters["runes"] += 1
@@ -1217,10 +1236,13 @@ def rollup_range(
     exits_after_page: Dict[str, int] = {}  # session alapú exit szám
     drop_offs: Dict[str, Dict[str, Any]] = {}  # run alapú drop-off
 
+    def _puzzles_totals() -> Dict[str, Any]:
+        return {"tries": 0, "solved": 0, "byKind": {"riddle": {"tries": 0, "solved": 0}, "runes": {"tries": 0, "solved": 0}, "unknown": {"tries": 0, "solved": 0}}}
+
     totals = {
         "pageViews": 0,
         "choices": 0,
-        "puzzles": {"tries": 0, "solved": 0},
+        "puzzles": _puzzles_totals(),
         "runes": 0,
         "mediaStarts": 0,
         "mediaStops": 0,
@@ -1254,7 +1276,7 @@ def rollup_range(
             "totals": {
                 "pageViews": 0,
                 "choices": 0,
-                "puzzles": {"tries": 0, "solved": 0},
+                "puzzles": _puzzles_totals(),
                 "runes": 0,
                 "mediaStarts": 0,
                 "mediaStops": 0,
@@ -1265,6 +1287,12 @@ def rollup_range(
         }
         domains[dom] = agg
         return agg
+
+    # Runes: top választott opciók (pickedLabels a puzzle_result-ból, kind=runes)
+    runes_option_counts: Dict[str, int] = {}
+    # Riddle: run-szintű aggregátumok (a run loopban töltjük)
+    riddle_retries_per_run: List[float] = []
+    riddle_wrong_by_page: Dict[str, int] = {}
 
     # -------------------------
     # Beolvasás: nap fájlok
@@ -1368,11 +1396,24 @@ def rollup_range(
                 elif t == "puzzle_try":
                     totals["puzzles"]["tries"] += 1
                     domAgg["totals"]["puzzles"]["tries"] += 1
+                    kind = (props.get("kind") or "unknown").strip() or "unknown"
+                    totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
+                    domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["tries"] += 1
 
                 elif t == "puzzle_result":
                     if props.get("isCorrect"):
                         totals["puzzles"]["solved"] += 1
                         domAgg["totals"]["puzzles"]["solved"] += 1
+                    kind = (props.get("kind") or "unknown").strip() or "unknown"
+                    if props.get("isCorrect"):
+                        totals["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
+                        domAgg["totals"]["puzzles"]["byKind"].setdefault(kind, {"tries": 0, "solved": 0})["solved"] += 1
+                    # Runes: választott opciók szövege (top 2 a reporthoz)
+                    if kind == "runes":
+                        for label in props.get("pickedLabels") or []:
+                            if isinstance(label, str) and label.strip():
+                                key = label.strip()[:200]
+                                runes_option_counts[key] = runes_option_counts.get(key, 0) + 1
 
                 elif t == "rune_unlock":
                     totals["runes"] += 1
@@ -1462,6 +1503,25 @@ def rollup_range(
             sk = str(sid_val)
             session_run_counts[sk] = session_run_counts.get(sk, 0) + 1
 
+    # Sessionenként: restart_click események ts-ei (hogy mely runok restart UTÁN indultak)
+    session_restart_ts: Dict[str, List[int]] = {}
+    for sid_s, sess_evs in per_session_events.items():
+        for e in sess_evs:
+            if e.get("t") != "ui_click":
+                continue
+            props = e.get("props") or {}
+            if not isinstance(props, dict):
+                continue
+            ctrl = str(props.get("control") or "").lower()
+            if "restart" not in ctrl:
+                continue
+            ts_val = e.get("ts") or 0
+            try:
+                ts_val = int(ts_val)
+            except (TypeError, ValueError):
+                ts_val = 0
+            session_restart_ts.setdefault(str(sid_s), []).append(ts_val)
+
     restart_total_runs = 0
     restart_runs_with = 0
     restart_completed_with = 0
@@ -1478,6 +1538,28 @@ def rollup_range(
             continue
 
         evs.sort(key=lambda e: (e.get("ts") or 0, e.get("t") or ""))
+
+        # ---------- Riddle run-szintű statok ----------
+        riddle_evs = [e for e in evs if e.get("t") == "puzzle_result" and (e.get("props") or {}).get("kind") == "riddle"]
+        if riddle_evs:
+            by_page: Dict[str, Dict[str, Any]] = {}
+            for e in riddle_evs:
+                pid = e.get("pageId") or (e.get("props") or {}).get("puzzleId")
+                if pid is None or pid == "":
+                    continue
+                by_page[str(pid)] = e
+            if by_page:
+                attempt_vals = []
+                for p, e in by_page.items():
+                    a = (e.get("props") or {}).get("attempt")
+                    attempt_vals.append(int(a) if a is not None else 1)
+                retries_sum = sum(max(0, a - 1) for a in attempt_vals)
+                riddle_retries_per_run.append(retries_sum / len(by_page))
+                has_wrong = any((e.get("props") or {}).get("isCorrect") is False for e in by_page.values())
+                if has_wrong:
+                    for pid, e in by_page.items():
+                        if (e.get("props") or {}).get("isCorrect") is False:
+                            riddle_wrong_by_page[pid] = riddle_wrong_by_page.get(pid, 0) + 1
 
         uid_run = run_user.get(rid)
         sid_run = run_session.get(rid)
@@ -1527,14 +1609,20 @@ def rollup_range(
         # végoldal END-e? (a run utolsó page_enter alapján)
         final_is_end = bool(seq and _is_end_page_id(str(seq[-1]), end_flags_for_run))
 
-        # restart viselkedés: több run ugyanabban a sessionben
-        session_has_multi_runs = False
-        if sid_run:
-            sc = session_run_counts.get(str(sid_run), 0)
-            if sc > 1:
-                session_has_multi_runs = True
-
-        run_has_restart = bool(has_restart_event or session_has_multi_runs)
+        # restart viselkedés: ez a run restart_click UTÁN indult? (sessionben volt korábbi restart)
+        first_ts_run = 0
+        if evs:
+            try:
+                first_ts_run = min(int(e.get("ts") or 0) for e in evs)
+            except (TypeError, ValueError):
+                first_ts_run = 0
+        run_has_restart = bool(
+            sid_run
+            and any(
+                restart_ts < first_ts_run
+                for restart_ts in session_restart_ts.get(str(sid_run), [])
+            )
+        )
         if run_has_restart:
             restart_runs_with += 1
             if completed:
@@ -1855,6 +1943,19 @@ def rollup_range(
         )
     end_dist_out.sort(key=lambda x: x["count"], reverse=True)
 
+    # Puzzle (Runes): top 2 választott opció
+    puzzle_runes_top_options: List[Dict[str, Any]] = []
+    for label, cnt in sorted(runes_option_counts.items(), key=lambda kv: kv[1], reverse=True)[:2]:
+        puzzle_runes_top_options.append({"label": label, "count": cnt})
+
+    # Riddle: átlagos újrapróbálások runonként; hibás lefutásoknál melyik kérdés
+    riddle_avg_retries = (sum(riddle_retries_per_run) / len(riddle_retries_per_run)) if riddle_retries_per_run else 0.0
+    total_wrong = sum(riddle_wrong_by_page.values())
+    riddle_wrong_by_question_out: List[Dict[str, Any]] = []
+    for pid, cnt in sorted(riddle_wrong_by_page.items(), key=lambda kv: kv[1], reverse=True):
+        pct = (cnt / total_wrong) if total_wrong else 0.0
+        riddle_wrong_by_question_out.append({"pageId": pid, "count": cnt, "pct": round(pct, 4)})
+
     return {
         "storyId": storyId,
         "from": _from,
@@ -1864,6 +1965,12 @@ def rollup_range(
         "users": user_count,
         "runs": run_count,
         "totals": totals,
+        "puzzleRunesTopOptions": puzzle_runes_top_options,
+        "riddleStats": {
+            "avgRetriesPerRun": round(riddle_avg_retries, 4),
+            "runsWithRiddle": len(riddle_retries_per_run),
+            "wrongByQuestion": riddle_wrong_by_question_out,
+        },
         "kpis": {
             "completionRate": round(completion_rate, 4),
             "avgSessionDurationMs": avg_session_ms,

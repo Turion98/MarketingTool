@@ -60,6 +60,8 @@ import {
   trackChoice,
   trackRuneUnlock,
   trackUiClick,
+  trackPuzzleTry,
+  trackPuzzleResult,
   setTerminalPages,
   inferTerminalPagesFromStory,
   startNewRunSession ,
@@ -3153,12 +3155,32 @@ window.setTimeout(() => {
                           onPlaySfx={() => {
                             // opcionális SFX trigger
                           }}
-                          onResult={({
-                            choiceIdx,
-                          }) => {
-                            handleRiddleAnswer(
-                              choiceIdx
-                            );
+                          onResult={(result) => {
+                            const pageId = pageData?.id;
+                            const puzzleId = (r as any)?.id ?? pageId ?? "riddle";
+                            if (derivedStoryId && derivedSessionId && pageId) {
+                              try {
+                                trackPuzzleTry(
+                                  derivedStoryId,
+                                  derivedSessionId,
+                                  pageId,
+                                  puzzleId,
+                                  1,
+                                  { kind: "riddle" }
+                                );
+                                trackPuzzleResult(
+                                  derivedStoryId,
+                                  derivedSessionId,
+                                  pageId,
+                                  puzzleId,
+                                  result.correct,
+                                  1,
+                                  result.elapsedMs ?? 0,
+                                  { kind: "riddle" }
+                                );
+                              } catch (_) {}
+                            }
+                            handleRiddleAnswer(result.choiceIdx);
                           }}
                         />
                       </div>

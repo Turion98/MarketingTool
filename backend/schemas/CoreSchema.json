@@ -99,7 +99,7 @@
             { "type": "string" },
             {
               "type": "array",
-              "minItems": 1,
+              "minItems": 0,
               "items": {
                 "oneOf": [
                   { "type": "string" },
@@ -150,8 +150,19 @@
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
           "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end"],
+          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "conditionalRouting"],
           "default": "default"
+        },
+        "title": { "type": "string" },
+        "logic": {
+          "description": "Logic routing: array of if/goto rules (coffee style) or ifHasFragment/elseGoTo object (Mrk6 style).",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/LogicRule" }
+            },
+            { "$ref": "#/$defs/LogicObject" }
+          ]
         },
         "layout": {},
         "globalUI": {},
@@ -464,6 +475,42 @@
             "showImage": { "type": "boolean" }
           }
         }
+      }
+    },
+    "LogicRule": {
+      "description": "Egy feltételes ugrás: ha minden megadott lock/fragment igaz, menj a goto oldalra.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["if", "goto"],
+      "properties": {
+        "if": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "goto": { "type": "string", "minLength": 1 }
+      }
+    },
+    "LogicIfHasFragment": {
+      "description": "Fragment alapú elágazás egy eleme: ha a fragment megvan, menj a goTo oldalra.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fragment", "goTo"],
+      "properties": {
+        "fragment": { "type": "string", "minLength": 1 },
+        "goTo": { "type": "string", "minLength": 1 }
+      }
+    },
+    "LogicObject": {
+      "description": "Objektum formátumú logic: ifHasFragment listával és opcionális elseGoTo.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ifHasFragment": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/LogicIfHasFragment" }
+        },
+        "elseGoTo": { "type": "string", "minLength": 1 }
       }
     },
     "CtaPreset": {

@@ -20,7 +20,11 @@ type RangeRollup = {
   totals: {
     pageViews: number;
     choices: number;
-    puzzles: { tries: number; solved: number };
+    puzzles: {
+      tries: number;
+      solved: number;
+      byKind?: Record<string, { tries: number; solved: number }>;
+    };
     runes: number;
     mediaStarts: number;
     mediaStops: number;
@@ -117,6 +121,15 @@ dropOffs?: Array<{
     count: number;
     share: number;     // 0..1
   }>;
+
+  // Puzzle (Runes): top 2 választott opció a report szekcióhoz
+  puzzleRunesTopOptions?: Array<{ label: string; count: number }>;
+  // Riddle: run-szintű statok (átlag újrapróbálás, hibás kérdések)
+  riddleStats?: {
+    avgRetriesPerRun: number;
+    runsWithRiddle: number;
+    wrongByQuestion: Array<{ pageId: string; count: number; pct: number }>;
+  };
 
   steps?: Array<{
     stepId: string; // pl. "Q1", "taste_profile", "rotate_style"
@@ -366,6 +379,49 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 </div>
               </div>
 
+              {/* Puzzle bontás típus szerint (riddle / runes) */}
+              {rangeData.totals.puzzles?.byKind && Object.keys(rangeData.totals.puzzles.byKind).length > 0 && (
+                <div className={styles.kpi} style={{ gridColumn: "1 / -1" }}>
+                  <div className={styles.kpiLabel}>Puzzle típus szerint</div>
+                  <div className={styles.kpiValue} style={{ display: "block", marginTop: "0.25rem" }}>
+                    <table className={styles.table} style={{ fontSize: "0.85rem", width: "auto", minWidth: "280px" }}>
+                      <thead>
+                        <tr>
+                          <th>Típus</th>
+                          <th>Tries</th>
+                          <th>Solved</th>
+                          <th>Success</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const order = ["riddle", "runes", "unknown"];
+                          const entries = Object.entries(rangeData.totals.puzzles!.byKind!).filter(
+                            ([_, v]) => v && (v.tries > 0 || v.solved > 0)
+                          );
+                          const sorted = entries.sort(
+                            (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]) || b[1].tries - a[1].tries
+                          );
+                          const labelOf = (k: string) =>
+                            k === "riddle" ? "Riddle" : k === "runes" ? "Runes" : k === "unknown" ? "Egyéb" : k;
+                          return sorted.map(([kind, row]) => {
+                            const pct = row.tries > 0 ? ((row.solved / row.tries) * 100).toFixed(1) : "—";
+                            return (
+                              <tr key={kind}>
+                                <td>{labelOf(kind)}</td>
+                                <td>{row.tries}</td>
+                                <td>{row.solved}</td>
+                                <td>{pct}%</td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               {/* ✅ ÚJ: CTA CTR (ha van adat) */}
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>CTA CTR</div>
@@ -374,6 +430,118 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 </div>
               </div>
             </div>
+
+            {/* ---------- Puzzle (Runes) szekció ---------- */}
+            {(rangeData.totals.puzzles?.byKind?.runes?.tries ?? 0) > 0 && (() => {
+              const runes = rangeData.totals.puzzles!.byKind!.runes!;
+              return (
+              <div className={styles.card} style={{ marginTop: "1rem" }}>
+                <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Puzzle (Runes)</h4>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
+                  <div style={{ fontSize: "0.875rem" }}>
+                    <strong>Tries:</strong> {runes.tries}
+                    {" · "}
+                    <strong>Solved:</strong> {runes.solved}
+                    {" · "}
+                    <strong>Success:</strong>{" "}
+                    {runes.tries > 0 ? ((runes.solved / runes.tries) * 100).toFixed(1) : "—"}
+                    %
+                  </div>
+                  {rangeData.puzzleRunesTopOptions && rangeData.puzzleRunesTopOptions.length > 0 && (
+                    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                      {rangeData.puzzleRunesTopOptions.map((opt, i) => (
+                        <div
+                          key={i}
+                          className={styles.card}
+                          style={{
+                            padding: "0.5rem 0.75rem",
+                            minWidth: "140px",
+                            border: "1px solid #e6e8ee",
+                            borderRadius: "10px",
+                            background: "#fafbfc",
+                          }}
+                        >
+                          <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.25rem" }}>
+                            Leggyakrabban választott #{i + 1}
+                          </div>
+                          <div style={{ fontSize: "0.8125rem", wordBreak: "break-word" }} title={opt.label}>
+                            {opt.label.length > 60 ? opt.label.slice(0, 60) + "…" : opt.label}
+                          </div>
+                          <div style={{ fontSize: "0.875rem", fontWeight: 600, marginTop: "0.25rem" }}>
+                            {opt.count}×
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              );
+            })()}
+
+            {/* ---------- Riddle szekció ---------- */}
+            {(rangeData.totals.puzzles?.byKind?.riddle?.tries ?? 0) > 0 && (() => {
+              const riddle = rangeData.totals.puzzles!.byKind!.riddle!;
+              return (
+              <div className={styles.card} style={{ marginTop: "1rem" }}>
+                <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Riddle</h4>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
+                  <div style={{ fontSize: "0.875rem" }}>
+                    <strong>Tries:</strong> {riddle.tries}
+                    {" · "}
+                    <strong>Solved:</strong> {riddle.solved}
+                    {" · "}
+                    <strong>Success:</strong>{" "}
+                    {riddle.tries > 0 ? ((riddle.solved / riddle.tries) * 100).toFixed(1) : "—"}
+                    %
+                  </div>
+                  {rangeData.riddleStats && rangeData.riddleStats.runsWithRiddle > 0 && (
+                    <div style={{ fontSize: "0.875rem" }}>
+                      <strong>Átlagos újrapróbálások runonként:</strong>{" "}
+                      {rangeData.riddleStats.avgRetriesPerRun.toFixed(2)}
+                      {" "}
+                      <span style={{ color: "#666" }}>({rangeData.riddleStats.runsWithRiddle} run riddle-dal)</span>
+                    </div>
+                  )}
+                </div>
+                {rangeData.riddleStats?.wrongByQuestion && rangeData.riddleStats.wrongByQuestion.length > 0 && (
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                      Hibás lefutásoknál melyik kérdésnél volt helytelen válasz
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                      {rangeData.riddleStats.wrongByQuestion.map((q) => (
+                        <div key={q.pageId} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8125rem" }}>
+                          <span style={{ minWidth: "100px" }}>{q.pageId}</span>
+                          <span style={{ width: "80px", textAlign: "right" }}>{q.count}×</span>
+                          <div
+                            style={{
+                              flex: 1,
+                              maxWidth: 200,
+                              height: 8,
+                              background: "#e6e8ee",
+                              borderRadius: 4,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${q.pct * 100}%`,
+                                height: "100%",
+                                background: "#c53030",
+                                borderRadius: 4,
+                              }}
+                            />
+                          </div>
+                          <span style={{ width: "44px", textAlign: "right" }}>{(q.pct * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              );
+            })()}
 
 <h4>Végoldalak és outcome-ok</h4>
 {(() => {
