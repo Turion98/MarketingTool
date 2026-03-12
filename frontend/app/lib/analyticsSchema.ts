@@ -12,7 +12,7 @@ export type AnalyticsEventType =
   | "cta_shown"
   | "cta_click";  
 
-export type GenericProps = Record<string, string | number | boolean | null | undefined>;
+export type GenericProps = Record<string, string | number | boolean | null | undefined | string[]>;
 
 export type DeviceMeta = {
   ua?: string;
