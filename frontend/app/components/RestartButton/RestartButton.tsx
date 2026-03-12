@@ -7,7 +7,7 @@ import style from "./RestartButton.module.scss";
 import { createSessionSeeds } from "../../lib/sessionSeeds";
 import { clearAllCache } from "../../lib/clearAllCache";
 import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick, startNewRunSession, startNewRunId } from "../../lib/analytics";
+import { trackUiClick, startNewRunSession } from "../../lib/analytics";
 
 type RestartButtonProps = {
   seedCount?: number;
@@ -17,11 +17,6 @@ type RestartButtonProps = {
   /** Felirat testreszabása (alap: "Restart") */
   label?: string;
 };
-
-// Új session indítása restartnál (a StoryPage a localStorage "sessionId_v2" kulcsot olvassa)
-const generateNewSessionId = () =>
-  `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
-
 
 const RestartButton: React.FC<RestartButtonProps> = ({
   seedCount = 20,
@@ -86,20 +81,6 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       console.warn("hardResetAudio warn:", e);
     }
   };
-
-  const scopeKey =
-  (typeof window !== "undefined" ? window.location.host : "default");
-
-// ✅ ne töröld a globális sessionId_v2-t, az nem a te keyed
-// inkább indíts új sessiont a helyes scope-pal, ha tényleg új session kell
-try {
-  if (storyId) startNewRunSession(String(storyId), scopeKey);
-} catch {}
-
-// ✅ és MINDENKÉPPEN indíts új run-t is (ha sessiont nem akarsz váltani, akkor csak ez kell)
-try {
-  if (storyId) startNewRunId(String(storyId), scopeKey);
-} catch {}
 
   // --- backend admin restart hívás
   const callAdminRestart = async () => {
@@ -170,12 +151,14 @@ try {
       console.error("Restart error:", err);
     }
 
-    // ✅ Restart = új run session
-try {
-  startNewRunSession(String(storyId || "unknown"));
-} catch {}
+    // ✅ Restart = egy új session + egy új runId (cache/session független, csak itt)
+    const scopeKey =
+      typeof window !== "undefined" ? window.location.host : "default";
+    try {
+      if (storyId) startNewRunSession(String(storyId), scopeKey);
+    } catch {}
 
-          // redirect – ha admin volt, vigyük tovább az admin=1-et
+    // redirect – ha admin volt, vigyük tovább az admin=1-et
       const baseTarget = `/play/${encodeURIComponent(startPageId)}`;
       // biztosítsuk, hogy ugyanarra a route-ra navigálva is újra mountoljon
       const rs = Date.now();

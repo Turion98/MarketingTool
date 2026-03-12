@@ -599,28 +599,37 @@ useEffect(() => {
   (typeof window !== "undefined" ? window.location.host : "default");
 
     const rk = (globals as any)?.runKey;
-    const sess = rk
-      ? startNewRunSession(sid, scopeKey)
-      : getOrCreateSessionId(sid, scopeKey);
-
-    setSessionId(sess);
-
-    // runId: csak storage-ból olvassuk ki, ne generáljunk feleslegesen újat
+    let sess: string;
     let rid: string | undefined;
-    try {
-      const key = runStorageKey(sid, scopeKey);
-      const existing = sessionStorage.getItem(key);
-      rid = existing || undefined;
-    } catch {
-      rid = undefined;
+    if (rk) {
+      // Restart: a RestartButton már beírta az új sessionId + runId-t; ne hívjunk újat (dupla runId elkerülés)
+      try {
+        const scope = String(scopeKey || "default").trim() || "default";
+        const bucket = `q_an:${sid}:${scope}`;
+        sess = localStorage.getItem(`${bucket}:sessionId_v2`) || "";
+        rid = sessionStorage.getItem(runStorageKey(sid, scopeKey)) || undefined;
+      } catch {
+        sess = "";
+        rid = undefined;
+      }
+      if (!sess) sess = startNewRunSession(sid, scopeKey);
+      if (!rid) rid = startNewRunId(sid, scopeKey);
+    } else {
+      sess = getOrCreateSessionId(sid, scopeKey);
+      try {
+        rid = sessionStorage.getItem(runStorageKey(sid, scopeKey)) || undefined;
+      } catch {
+        rid = undefined;
+      }
     }
+    setSessionId(sess);
+    setRunId(rid);
     console.log("[GameState] initAnalyticsForStory/useEffect runId", {
       storyId: sid,
       scopeKey,
       hasRunKey: !!rk,
       runId: rid,
     });
-    setRunId(rid);
 
     
     // opcionális: hogy a "startPageId-re visszajöttünk" logika ne duplázzon
