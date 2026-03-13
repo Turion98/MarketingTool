@@ -1,0 +1,778 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "marketing_story_v5_en",
+  "locale": "en",
+  "meta": {
+    "id": "marketing_story_v5_en",
+    "title": "Marketing Story v5 (EN)",
+    "author": "Qzera",
+    "description": "Interactive marketing decision game: aligning marketing, dev, and strategy tracks for a Questell-based campaign.",
+    "coverImage": "/assets/covers/forest.jpg",
+    "startPageId": "start",
+    "campaignId": "marketing_story_v5_en",
+    "logo": "assets/my_logo.png",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Open your reward",
+        "urlTemplate": "https://www.google.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "start",
+      "title": "Morning coffee",
+      "choices": [
+        {
+          "next": "client_brief",
+          "text": "I open it"
+        },
+        {
+          "next": "coffee",
+          "text": "I’ll have one more coffee first"
+        }
+      ],
+      "text": [
+        {
+          "text": "You’ve just put your morning coffee mug down on the desk when a new notification pops up: an email from the client, naturally marked as “URGENT”."
+        }
+      ]
+    },
+    {
+      "id": "coffee",
+      "title": "One more coffee",
+      "text": [
+        {
+          "text": "You give yourself half a minute of quiet with the coffee.\nNow you’re ready to see what today’s “urgent” task is."
+        }
+      ],
+      "choices": [
+        {
+          "next": "client_brief",
+          "text": "I open the email"
+        }
+      ]
+    },
+    {
+      "id": "client_brief",
+      "title": "Client brief",
+      "choices": [
+        {
+          "next": "A_entry",
+          "text": "Time for a kick-off meeting"
+        },
+        {
+          "next": "B1",
+          "text": "I go straight to the dev team"
+        },
+        {
+          "next": "C1",
+          "text": "Let’s pause for a moment…"
+        }
+      ],
+      "text": [
+        {
+          "text": "The client wants an interactive, shareable, insight-driven campaign, live within a month and a half.\n\nExtra request: every user should receive a unique visual outcome at the end.\n\nIn other words:\nIt has to be eye-catching, interesting, cost-efficient, and unlike anything you’ve done for them before — all on a tight timeline."
+        }
+      ]
+    },
+    {
+      "id": "A_entry",
+      "title": "Team meeting",
+      "logic": {
+        "ifHasFragment": [
+          {
+            "fragment": "A_done",
+            "goTo": "A5"
+          }
+        ],
+        "elseGoTo": "A1"
+      },
+      "text": "(The screen is dark. A low hum. The meeting link is already open, but no one has spoken yet.)\nLoading… then suddenly all cameras turn on at once, and everyone looks at you:\nWhat’s the best way forward? What does everyone think?"
+    },
+    {
+      "id": "A1",
+      "title": "Team meeting",
+      "unlockEnterFragments": [
+        "A_done"
+      ],
+      "choices": [
+        {
+          "next": "A1B",
+          "reward": {
+            "unlockFragments": [
+              "A1_storyly"
+            ]
+          },
+          "text": "Tappable story format"
+        },
+        {
+          "next": "A1B",
+          "reward": {
+            "unlockFragments": [
+              "A1_logic_puzzle"
+            ]
+          },
+          "text": "Apester-style interactive quiz"
+        },
+        {
+          "next": "A2",
+          "reward": {
+            "unlockFragments": [
+              "A1_game"
+            ]
+          },
+          "text": "Decision-based game"
+        }
+      ],
+      "text": [
+        {
+          "text": "Let’s start with the basics: how do we pull people in?\nIt has to be simple, work smoothly on mobile, and still feel like something the client hasn’t seen from us before."
+        }
+      ]
+    },
+    {
+      "id": "A1B",
+      "title": "Team meeting",
+      "choices": [
+        {
+          "next": "A2",
+          "text": "This is acceptable… but"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A1_storyly",
+          "text": "{fragment:A1_storyly}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A1_logic_puzzle",
+          "text": "{fragment:A1_logic_puzzle}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "We need something more complex, with a higher level of interactivity — ideally a dedicated, decision-based game."
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "title": "Team meeting",
+      "choices": [
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_graphic"
+            ]
+          },
+          "text": "Use existing images"
+        },
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_ai_risky"
+            ]
+          },
+          "text": "AI-generated, but unmoderated"
+        },
+        {
+          "next": "A3",
+          "reward": {
+            "unlockFragments": [
+              "A2_ai_safe"
+            ]
+          },
+          "text": "AI-generated, with moderation"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A1_game",
+          "text": "{fragment:A1_game}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Okay, we have a rough idea of the format. Now let’s talk about the unique visual layer. We need something that isn’t generic, doesn’t repeat itself, and is still safe, controllable, and scalable at a reasonable cost."
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "title": "Team meeting",
+      "choices": [
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_draw"
+            ]
+          },
+          "text": "Prize draw"
+        },
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_reward"
+            ]
+          },
+          "text": "Everyone wins something"
+        },
+        {
+          "next": "A4",
+          "reward": {
+            "unlockFragments": [
+              "A3_ai_flow"
+            ]
+          },
+          "text": "Experience-based reward"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A2_graphic",
+          "text": "{fragment:A2_graphic}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A2_ai_risky",
+          "text": "{fragment:A2_ai_risky}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A2_ai_safe",
+          "text": "{fragment:A2_ai_safe}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Now back to the core: to get users through the experience, we need to keep their interest all the way.\nLet’s make the reward structure concrete."
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "title": "Team meeting",
+      "choices": [
+        {
+          "next": "B1",
+          "hideIfHasFragment": [
+            "B_done"
+          ],
+          "text": "Let’s talk to the dev team"
+        },
+        {
+          "next": "A5",
+          "showIfHasFragment": [
+            "B_done"
+          ],
+          "text": "Let’s share what the devs said"
+        }
+      ],
+      "text": [
+        {
+          "ifUnlocked": "A3_draw",
+          "text": "{fragment:A3_draw}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A3_reward",
+          "text": "{fragment:A3_reward}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "A3_ai_flow",
+          "text": "{fragment:A3_ai_flow}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Okay, the shape is there now: decision-based game, AI visuals, experience-based reward.\nTime to check with the dev team how we can make this work technically."
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "title": "Team meeting",
+      "needsFragment": [
+        "B_final_solution"
+      ],
+      "choices": [
+        {
+          "next": "A6",
+          "text": "Move to the conclusion"
+        }
+      ],
+      "text": [
+        {
+          "text": "You walk through all three directions with the dev team.\nThe only option that truly fits the client’s expectations is a bespoke game: experience, data, shareability — all in one."
+        }
+      ]
+    },
+    {
+      "id": "A6",
+      "title": "Team meeting",
+      "choices": [
+        {
+          "next": "C1",
+          "text": "Think it through on your own"
+        }
+      ],
+      "text": [
+        {
+          "text": "In this exact form, you probably can’t deliver this quickly and cost-effectively in-house — at least not the way you’d like.\nOkay, let’s find the version that will actually work."
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "title": "Dev meeting",
+      "unlockEnterFragments": [
+        "B_done"
+      ],
+      "choices": [
+        {
+          "next": "BA1",
+          "text": "You ask for their opinion right away"
+        },
+        {
+          "next": "BB1",
+          "text": "The team is a bit slow to start today"
+        },
+        {
+          "next": "BC1",
+          "text": "You’ve already talked to the team and have a draft concept",
+          "showIfHasFragment": [
+            "A_done"
+          ]
+        }
+      ],
+      "text": "You walk into the dev meeting with the fresh concept. The real question here: how do we build this in a stable, on-time way?"
+    },
+    {
+      "id": "BA1",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "BA2",
+          "text": "You explain why a quiz alone is not enough"
+        }
+      ],
+      "text": "You lay out the client needs clearly.\nOne of the devs doesn’t even look up:\n“Why isn’t a normal quiz enough?”\nThe others nod — for them that’s the simplest option."
+    },
+    {
+      "id": "BA2",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "BA3",
+          "text": "You ask about real cost and timeline"
+        }
+      ],
+      "text": "Finally someone looks up:\n“Or… we could build an Interactive AI assistant.”\nThe rest latch on instantly — they start firing off technological possibilities in quick succession."
+    },
+    {
+      "id": "BA3",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "BA4",
+          "text": "You reframe the need with clearer technical boundaries"
+        }
+      ],
+      "text": "The excitement dies down the second the numbers land: half a year of development and a budget the client will never approve.\nIt’s obvious: this is not the realistic solution right now."
+    },
+    {
+      "id": "BA4",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "You go back to the team to align"
+        }
+      ],
+      "text": "After a few rounds of back-and-forth, a middle-ground proposal emerges:\n“Let’s build a bespoke game. It’s doable, predictable, and it will work.”\nThe team nods — technically, this is feasible.\nYou quickly play through how far this diverges from the client’s realistic budget."
+    },
+    {
+      "id": "BB1",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "BB3",
+          "text": "Bespoke game, tailored to the brand"
+        },
+        {
+          "next": "BB2",
+          "text": "Template-based, fast-to-assemble version"
+        }
+      ],
+      "text": "The lead dev sums it up:\n“We have two options: a bespoke game or an existing template.”\nBespoke is more flexible and more tailored.\nThe template is faster but more constrained — a compromise at every point."
+    },
+    {
+      "id": "BB2",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "BB3",
+          "text": "You check the other option"
+        }
+      ],
+      "text": "The template-based version comes up: minimal customization options, and you’ve already used it for this brand several times.\nYou can already see the client’s face when they look at it.\nThis won’t land as the right solution."
+    },
+    {
+      "id": "BB3",
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "You go back to the team to align"
+        }
+      ],
+      "text": "The bespoke development route sounds appealing — until the real time and cost appear.\nThe team is honest: this is platform-level work, not a pilot.\nThe client doesn’t have that kind of budget, and it wouldn’t be ready in time.\nThis is not the solution for now."
+    },
+    {
+      "id": "BC1",
+      "needsFragment": [
+        "A_done"
+      ],
+      "title": "Dev meeting",
+      "choices": [
+        {
+          "next": "A_entry",
+          "reward": {
+            "unlockFragments": [
+              "B_final_solution",
+              "B_done"
+            ]
+          },
+          "text": "You return to your team to align"
+        }
+      ],
+      "text": "The spec is clear: non-linear experience, stateful campaign engine, AI-based visual output.\nBespoke development would solve it, but the price is high, the timeline long, and the result single-use without heavy refactoring.\nIt needs a new approach — these proposals won’t work in the current frame."
+    },
+    {
+      "id": "C1",
+      "title": "Let’s pause for a second",
+      "choices": [
+        {
+          "next": "B1",
+          "text": "You go back to the dev team to clarify",
+          "hideIfHasFragment": [
+            "B_done"
+          ]
+        },
+        {
+          "next": "A1",
+          "text": "You return to the team to align",
+          "hideIfHasFragment": [
+            "A_done"
+          ]
+        },
+        {
+          "next": "C2",
+          "text": "You summarize the situation for yourself"
+        }
+      ],
+      "text": [
+        {
+          "text": "Based on the internal meetings, it’s clear what we’d actually need — but we can’t realistically build that right now.\nTime to approach it from a different angle."
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "keep",
+      "title": "Selecting key elements",
+      "text": "Let’s start at the beginning. Think through what the client really needs.\nPick the 3 correct options.",
+      "options": [
+        "Unique experience",
+        "More than a quiz",
+        "Forgettable experience",
+        "Cheap stock visuals",
+        "Long bespoke development",
+        "Insight report"
+      ],
+      "answer": [
+        "Unique experience",
+        "More than a quiz",
+        "Insight report"
+      ],
+      "maxAttempts": 3,
+      "onSuccess": {
+        "goto": "C3",
+        "setFlags": [
+          "c2_core_elements_ok"
+        ]
+      },
+      "onFail": {
+        "goto": "C2",
+        "setFlags": [
+          "c2_core_elements_retry"
+        ]
+      }
+    },
+    {
+      "id": "C3",
+      "title": "Next step",
+      "text": [
+        {
+          "default": "After a short round of research you find Questell: a platform built for non-linear, decision-based experiences that track user choices and generate personalized visual outcomes — quickly and cost-efficiently.\n\nIt’s exactly the kind of solution marketing can build on, while also reducing dev load.",
+          "mode": "append_after"
+        },
+        {
+          "ifUnlocked": "B_final_solution",
+          "text": "{fragment:B_final_solution}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "choices": [
+        {
+          "next": "D1",
+          "text": "On to the client"
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "title": "Client room",
+      "choices": [
+        {
+          "next": "D2",
+          "text": "Let’s begin"
+        }
+      ],
+      "text": [
+        {
+          "text": "You sit down with the client for a short alignment.\n“Okay. I’m listening. I just need one thing:\nit has to be clear that this is a strong business decision, not just a flashy solution.”\n\nThey ask three questions."
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Client presentation",
+      "text": [
+        {
+          "default": "Client: “Let’s start with the most important part. Does the system make sure only brand-safe content appears? I don’t want AI visuals out there that don’t match the brand.”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "The client is a bit impatient now: “Is the AI experience safe? No off-brand content can go out, right?”",
+          "mode": "override"
+        }
+      ],
+      "question": "What’s the strongest business argument for a brand-safe AI experience?",
+      "options": [
+        "Brand-safe AI visuals and moderation are built in.",
+        "We hope the AI won’t make mistakes.",
+        "If there’s a problem, we’ll just pull the campaign quickly."
+      ],
+      "correctIndex": 0,
+      "correctLabel": "Exactly. Brand-safe AI visuals with moderation.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "correct",
+          "cases": {
+            "true": "D3",
+            "false": "D3",
+            "__default": "D3"
+          }
+        }
+      }
+    },
+    {
+      "id": "D3",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Client presentation",
+      "text": [
+        {
+          "default": "Client: “Okay. And the experience itself? Will this be a truly interactive, decision-based flow — or will it end up behaving like a questionnaire?”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "Same question again, only with raised eyebrows now.",
+          "mode": "override"
+        }
+      ],
+      "question": "What do you highlight so it clearly feels like an experience, not a questionnaire?",
+      "options": [
+        "Non-linear story, decision points, and a stateful system.",
+        "We’ll send an extra follow-up survey.",
+        "We’ll occasionally throw in random questions."
+      ],
+      "correctIndex": 0,
+      "correctLabel": "Right: non-linear, stateful flow — not a plain survey.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "correct",
+          "cases": {
+            "true": "D4",
+            "false": "D4",
+            "__default": "D4"
+          }
+        }
+      }
+    },
+    {
+      "id": "D4",
+      "type": "puzzle",
+      "kind": "riddle",
+      "title": "Client presentation",
+      "text": [
+        {
+          "default": "Client: “Last question. Do I get real insight from this? Not just click counts — I want to see how people think.”"
+        },
+        {
+          "ifUnlocked": "route_d_second_run",
+          "text": "They repeat the question, this time more slowly.",
+          "mode": "override"
+        }
+      ],
+      "question": "What proves best that this generates real insight, not just numbers?",
+      "options": [
+        "We only provide basic stats: how many people clicked.",
+        "Decision paths, drop-off points, and remarketing segments are built from interactions.",
+        "We leave insight up to the client’s gut feeling."
+      ],
+      "correctIndex": 1,
+      "correctLabel": "Exactly. Decision paths, drop-offs, and remarketing segments = real insight.",
+      "onAnswer": {
+        "setGlobals": {
+          "score": "{{ (score||0) + ((correct===true || correct=='true') ? 1 : 0) }}"
+        },
+        "nextSwitch": {
+          "switch": "score",
+          "cases": {
+            "3": "finale",
+            "0": "D_retry",
+            "1": "D_retry",
+            "2": "D_retry",
+            "__default": "D_retry"
+          }
+        }
+      }
+    },
+    {
+      "id": "D_retry",
+      "title": "Client presentation",
+      "choices": [
+        {
+          "next": "D2",
+          "actions": [
+            {
+              "type": "setFlag",
+              "id": "route_d_second_run"
+            }
+          ],
+          "reward": {
+            "setGlobal": {
+              "score": 0
+            }
+          },
+          "text": "I’ll try again from the beginning"
+        }
+      ],
+      "text": [
+        {
+          "text": "The client leans back and quietly sighs. “That’s not enough. Think back to what was in the brief.”\n\nThe short silence says it all: you’ll have to start over — but at least now you know what doesn’t work."
+        }
+      ]
+    },
+    {
+      "id": "finale",
+      "type": "end",
+      "title": "Finale",
+      "text": "The campaign plan goes through.\n\nThe client nods, marketing is smiling, and the devs are not objecting.\n\nThe Questell-based, non-linear, stateful, AI-visual experience has been accepted.\n\nEveryone is suddenly quiet — maybe because for once there is nothing to argue about.\n\nThe project doesn’t just work; it finally makes sense.",
+      "endMeta": {
+        "cta": "default"
+      }
+    }
+  ],
+  "fragments": {
+    "A1_storyly": {
+      "id": "A1_storyly",
+      "text": "The tappable story format is fast and visual, but engagement lasts just a few seconds. There’s no real decision space or story arc."
+    },
+    "A1_logic_puzzle": {
+      "id": "A1_logic_puzzle",
+      "text": "Apester-style quizzes or polls are useful for quick feedback, but because they behave like questionnaires, they provide limited engagement and are not enough for a deep experience."
+    },
+    "A1_game": {
+      "id": "A1_game",
+      "text": "A decision-based, game-like format is a strong solution: a short story, choices, feedback, and meaningful insight gathered along the way. Brand-tailored visuals and a strong balance of experience, measurability, and cost make it ideal for a launch campaign."
+    },
+    "A2_graphic": {
+      "id": "A2_graphic",
+      "text": "With existing photos or stock images we simply can’t give every user their own visual; there aren’t enough variations available."
+    },
+    "A2_ai_risky": {
+      "id": "A2_ai_risky",
+      "text": "Unmoderated AI visuals are flashy and fast, but unpredictable. A single bad generation can create serious legal and brand safety risk."
+    },
+    "A2_ai_safe": {
+      "id": "A2_ai_safe",
+      "text": "Controlled AI visuals use predefined styles and an approval process, so you can generate consistent, personalized images quickly — without anything unacceptable going live."
+    },
+    "A3_draw": {
+      "id": "A3_draw",
+      "text": "A simple prize draw is quick, but it doesn’t build a real connection with the brand: people enter, submit, and move on. If there is a reward, it should be built into the experience itself, not just attached at the end."
+    },
+    "A3_reward": {
+      "id": "A3_reward",
+      "text": "Giving every participant a reward is safe, but on its own it doesn’t necessarily drive deeper engagement.\nIt easily becomes a formality people claim quickly and then forget."
+    },
+    "A3_ai_flow": {
+      "id": "A3_ai_flow",
+      "text": "The flow itself is the reward. When users feel their decisions matter, and the story responds to them, you gather insight without anyone complaining. It’s a rare win–win that makes a campaign meaningful in the long run."
+    },
+    "A_done": {
+      "id": "A_done",
+      "text": "Marketing has already said, “it’s all a matter of creative decisions.”"
+    },
+    "B_done": {
+      "id": "B_done",
+      "text": "The devs have already said, “this is technically impossible — maybe one day.”"
+    },
+    "B_final_solution": {
+      "id": "B_final_solution",
+      "text": "This aligns with both the dev and marketing recommendations — probably for the first time in the project."
+    }
+  }
+}
+

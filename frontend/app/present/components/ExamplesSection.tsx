@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 // ⬇️ igazítsd az útvonalat a saját struktúrádhoz
 import s from "../LandingPage.module.scss";
 
+type Lang = "hu" | "en";
+
 type ExampleDetailBlock =
   | { type: "intro"; text: string }
   | { type: "howItWorks" | "whyInCampaign" | "output"; title: string; bullets: string[] }
@@ -29,7 +31,8 @@ export type ExampleItem = {
   runes?: string;
   runemode?: "single" | "triple";
 };
-const EXAMPLES: ExampleItem[] = [
+
+const EXAMPLES_HU: ExampleItem[] = [
   // ─────────────────────────────────────────────────────────────
   // SKINCARE
   // ─────────────────────────────────────────────────────────────
@@ -386,16 +389,395 @@ const EXAMPLES: ExampleItem[] = [
   },
 ];
 
+const EXAMPLES_EN: ExampleItem[] = [
+  {
+    id: "skincare",
+    navLabel: "Recommender / decision model",
+    jsonFile: "SCv2_ABCD_EGA_merged_E_branch_full.json",
+
+    title: "Structured recommender model – example",
+    heroLine:
+      "A branching decision model where the full journey – not a single answer – produces a coherent, explainable recommendation.",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "An example of a structured, branching decision system where the outcome is built from the entire path, not a single response.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Users make choices based on preferences and focus points — there are no right or wrong answers.",
+            "Each decision changes state and influences the next step.",
+            "Different branches create different routes and recognizable patterns.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "The recommendation is not a fixed template — it’s the structured result of the full decision process.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit?",
+          bullets: [
+            "Modeling complex product or service systems.",
+            "Situations where recommendations must follow the full decision pattern.",
+            "Structuring configurable offers or multi-variable choice situations.",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A structured, explainable recommendation.",
+            "A traceable decision path that makes the outcome interpretable.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View details",
+    startLabel: "Start recommender model",
+    startPageId: "L1_routine_style",
+    skinId: "skin_care",
+  },
+  {
+    id: "coffee",
+    navLabel: "Quick pattern discovery model",
+    jsonFile: "coffee_quiz_demo_full.json",
+
+    title: "Short decision profile – example",
+    heroLine:
+      "A low-step decision model that turns a few choices into a structured, interpretable preference pattern.",
+
+    startPageId: "Q1",
+    skinId: "contract_coffee_dark_roast",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "An example of a short, structured decision process where even a few steps produce a clear pattern.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Users make a handful of decisions tied to familiar, everyday situations.",
+            "Each choice moves the model into a different state.",
+            "Branches outline a distinct, characterful preference pattern.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "A small number of well-defined decision points quickly reveals recognizable patterns.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit?",
+          bullets: [
+            "Fast qualification or pre-screening.",
+            "Mapping preferences with minimal friction.",
+            "Entry-level decision data collection.",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A structured, categorized preference profile.",
+            "A traceable decision path that makes the pattern explainable.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View details",
+    startLabel: "Start profile model",
+  },
+  {
+    id: "holiday",
+    navLabel: "Seasonal activation",
+    jsonFile: "karácsony.json",
+
+    title: "Seasonal decision pattern – example",
+    heroLine:
+      "A short, mood-based decision model where a few choices produce a coherent, personalized holiday outcome.",
+
+    startPageId: "Q1",
+    skinId: "kari",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "An example of a short seasonal decision flow where choices combine into a visual and narrative outcome.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Users make a few mood-based choices about their holiday preferences.",
+            "Decisions push the model along different routes (tone, style, scene).",
+            "The result is a consistent, personalized holiday mode outcome.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "The short decision path doesn’t just give a result — it makes visible which preferences led there.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit?",
+          bullets: [
+            "Seasonal activations where speed and low entry friction are crucial.",
+            "A format that can be re-opened and refreshed with new skins and outcomes year over year.",
+            "Entry experiences with shareable outcomes (social / landing entry point).",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A personalized holiday mode outcome derived from decisions.",
+            "A cohesive, shareable holiday visual / profile-card style result.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View details",
+    startLabel: "Start holiday mode",
+  },
+  {
+    id: "marketing-sim",
+    navLabel: "Onboarding / educational flow",
+    jsonFile: "Mrk6_D_text_updated_en.json",
+
+    title: "Educational decision model – example",
+    heroLine:
+      "A scenario-based decision flow where choices build a clear, structured solution logic.",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "A story-driven educational example where participants understand a complex problem through decision points.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Participants make decisions in realistic scenarios — not quiz-style test questions.",
+            "Each decision leads to a different route and logical consequence.",
+            "The result is a coherent solution framework that can be traced back through the decisions.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "The focus is not on pushing information, but on understanding decision logic and cause–effect relationships.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit?",
+          bullets: [
+            "Onboarding or internal training where understanding is built through decision scenarios.",
+            "Structuring complex systems or solutions into an understandable decision logic.",
+            "Educational environments where consequences of decisions must be visible.",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A structured solution logic built around decisions.",
+            "A traceable decision path that helps participants understand relationships.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View details",
+    startLabel: "Start flow",
+  },
+  {
+    id: "softdrink",
+    navLabel: "Recommender / decision path",
+    jsonFile: "uditő.json",
+
+    title: "Fast product recommender model – example",
+    heroLine:
+      "A short decision model where a few choices narrow recommendation direction down to a concrete product.",
+
+    startPageId: "Q1",
+    skinId: "contract_softdrink_fresh",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "An example of a low-step recommender model that leads directly into a product outcome.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Users make a few simple choices based on taste or context.",
+            "Each choice narrows the space of possible product outcomes.",
+            "The flow ends in a clear, structured recommendation.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "The decision path is short but traceable — you can see which preferences led to the recommendation.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit?",
+          bullets: [
+            "Structuring product families into a quick walkable overview.",
+            "Acting as an entry-level recommender in retail or promotional contexts.",
+            "Contexts where fast decision support matters more than deep configuration.",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A concrete product recommendation derived from decisions.",
+            "A visually consistent output tied to the choices made.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View details",
+    startLabel: "Start recommender",
+  },
+  {
+    id: "creative",
+    navLabel: "Creative problem-solving profile",
+    jsonFile: "uj.json",
+
+    title: "Creative problem-solving profile",
+    heroLine:
+      "An experience that builds a clear creative archetype from just a few decisions.",
+
+    startPageId: "Q1",
+    skinId: "contract_creative_light_breeze",
+
+    details: {
+      blocks: [
+        {
+          type: "intro",
+          text:
+            "A short, decision-based experience where the combination of answers produces a creative problem-solving archetype.",
+        },
+        {
+          type: "howItWorks",
+          title: "How does it work?",
+          bullets: [
+            "Users make three decisions about mindset and how they handle situations.",
+            "Choices steer the experience toward different archetype directions.",
+            "The result is a coherent, easy-to-read creative profile.",
+          ],
+        },
+        {
+          type: "bridge",
+          text:
+            "The decision path shows which problem-solving style feels natural to the user — and why.",
+        },
+        {
+          type: "whyInCampaign",
+          title: "Where does it fit in campaigns?",
+          bullets: [
+            "Employer branding and HR communication campaigns.",
+            "Creating personal, shareable profile cards.",
+            "Experiences where decisions genuinely shape the outcome.",
+          ],
+        },
+        {
+          type: "output",
+          title: "What is the outcome?",
+          bullets: [
+            "A creative problem-solving archetype derived from decisions.",
+            "A visually cohesive, shareable profile card.",
+          ],
+        },
+      ],
+    },
+
+    revealLabel: "View more",
+    startLabel: "Start creative profile",
+  },
+];
+
+const EXAMPLES_BY_LANG: Record<Lang, ExampleItem[]> = {
+  hu: EXAMPLES_HU,
+  en: EXAMPLES_EN,
+};
+
+const examplesCopy = {
+  hu: {
+    title: "Döntési modellek működés közben",
+    intro1:
+      "Az alábbi példák bemutatják, hogyan modellezhetők különböző döntési helyzetek a Questell rendszerében.",
+    intro2:
+      "Minden struktúra szabadon alakítható, bővíthető vagy új célra konfigurálható.",
+    loadingAria: "Példa kampányok (betöltés)",
+    chooserAria: "Példa kampányok választó",
+    listAria: "Kampányok listája",
+    scrollHint: "Görgess ide a betöltéshez…",
+    selectHint: "Válassz egy példa kampányt a bal oldalon.",
+    closing:
+      'A Questell pilot rövid ciklusban készül: gyorsan kipróbálható, és azonnal éles helyzetben működik.',
+  },
+  en: {
+    title: "Decision models in action",
+    intro1:
+      "The examples below show how different decision situations can be modeled inside the Questell engine.",
+    intro2:
+      "Every structure can be freely adapted, extended, or reconfigured for a new objective.",
+    loadingAria: "Example campaigns (loading)",
+    chooserAria: "Example campaigns selector",
+    listAria: "Campaign list",
+    scrollHint: "Scroll here to load…",
+    selectHint: "Select an example campaign on the left.",
+    closing:
+      "Questell pilots run in short cycles: fast to test, and immediately usable in live environments.",
+  },
+} as const;
+
 
 type Props = {
   defaultLogoSrc: string;
   logoAlt?: string;
   // opcionális: ha szeretnéd késleltetni a mountot
   lazyMount?: boolean;
+  lang: Lang;
 };
 
-function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount = true }: Props) {
+function ExamplesSectionInner({
+  defaultLogoSrc,
+  logoAlt = "Questell",
+  lazyMount = true,
+  lang,
+}: Props) {
   const router = useRouter();
+  const t = examplesCopy[lang];
+  const EXAMPLES = EXAMPLES_BY_LANG[lang];
 
   // ✅ (nagy nyereség): csak akkor rendereld a részletes UI-t, ha közel van a viewporthoz
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -446,7 +828,10 @@ function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount 
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
 
-  const active = useMemo(() => EXAMPLES.find((x) => x.id === activeId), [activeId]);
+  const active = useMemo(
+    () => EXAMPLES.find((x) => x.id === activeId),
+    [EXAMPLES, activeId]
+  );
 
   const playedPreviewRef = useRef<Set<string>>(new Set());
   const [previewNonce, setPreviewNonce] = useState(0);
@@ -461,38 +846,40 @@ function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount 
       <div className={s.examplesInner}>
         <header className={s.examplesHeader}>
           <h2 id="examples-title" className={s.examplesTitle}>
-            Döntési modellek működés közben
+            {t.title}
           </h2>
         </header>
 
         <div className={s.examplesIntrok}>
+          <p className={s.examplesIntroLead}>{t.intro1}</p>
           <p className={s.examplesIntroLead}>
-            Az alábbi példák bemutatják, hogyan modellezhetők különböző döntési helyzetek a Questell rendszerében.
-          </p>
-          <p className={s.examplesIntroLead}>
-            <strong>Minden struktúra szabadon alakítható, bővíthető vagy új célra konfigurálható.</strong>
+            <strong>{t.intro2}</strong>
           </p>
         </div>
 
         {/* ✅ ha még nincs mount (lazy), csak egy könnyű placeholder */}
         {!mounted ? (
           <div className={s.examplesChooser}>
-            <div className={s.examplesPanel} aria-label="Példa kampányok (betöltés)">
+            <div className={s.examplesPanel} aria-label={t.loadingAria}>
               <div className={s.examplesEmptyPanel}>
                 <div className={s.examplesEmpty}>
                   <div className={s.examplesEmptyLogo}>
                     <img src={defaultLogoSrc} alt={logoAlt} className={s.examplesLogo} />
                   </div>
                 </div>
-                <p className={s.examplesEmptyText}>Görgess ide a betöltéshez…</p>
+                <p className={s.examplesEmptyText}>{t.scrollHint}</p>
               </div>
             </div>
           </div>
         ) : (
           <div className={s.examplesChooser}>
-            <div className={s.examplesPanel} role="region" aria-label="Példa kampányok választó">
+            <div
+              className={s.examplesPanel}
+              role="region"
+              aria-label={t.chooserAria}
+            >
               {/* Bal oszlop */}
-              <aside className={s.examplesNav} aria-label="Kampányok listája">
+              <aside className={s.examplesNav} aria-label={t.listAria}>
                 <ul className={s.examplesNavList}>
                   {EXAMPLES.map((item) => {
                     const isActive = item.id === activeId;
@@ -538,7 +925,7 @@ function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount 
                         <img src={defaultLogoSrc} alt={logoAlt} className={s.examplesLogo} />
                       </div>
                     </div>
-                    <p className={s.examplesEmptyText}>Válassz egy példa kampányt a bal oldalon.</p>
+                    <p className={s.examplesEmptyText}>{t.selectHint}</p>
                   </div>
                 )}
 
@@ -645,10 +1032,7 @@ function ExamplesSectionInner({ defaultLogoSrc, logoAlt = "Questell", lazyMount 
           </div>
         )}
 
-        <div className={s.examplesClosing}>
-          A Questell pilot <strong>rövid ciklusban készül</strong>: gyorsan kipróbálható, és{" "}
-          <strong>azonnal</strong> éles helyzetben <strong>működik</strong>.
-        </div>
+        <div className={s.examplesClosing}>{t.closing}</div>
       </div>
     </section>
   );

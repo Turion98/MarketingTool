@@ -3,15 +3,31 @@
 import React from "react";
 import s from "../LandingPage.module.scss";
 
-const steps = [
-  { id: 1, line1: "Kapcsolatfelvétel", line2: "& igény" },
-  { id: 2, line1: "Árajánlat", line2: "& szerződés" },
-  { id: 3, line1: "Kickoff", line2: "meeting" },
-  { id: 4, line1: "Szöveg + demo", line2: "(1 hét)" },
-  { id: 5, line1: "Módosítási körök", line2: "(1–2 hét)" },
-  { id: 6, line1: "AI-vizuálok", line2: "(1 hét)" },
-  { id: 7, line1: "Kész link", line2: "átadása" },
-];
+type Lang = "hu" | "en";
+
+const stepsByLang: Record<
+  Lang,
+  { id: number; line1: string; line2: string }[]
+> = {
+  hu: [
+    { id: 1, line1: "Kapcsolatfelvétel", line2: "& igény" },
+    { id: 2, line1: "Árajánlat", line2: "& szerződés" },
+    { id: 3, line1: "Kickoff", line2: "meeting" },
+    { id: 4, line1: "Szöveg + demo", line2: "(1 hét)" },
+    { id: 5, line1: "Módosítási körök", line2: "(1–2 hét)" },
+    { id: 6, line1: "AI-vizuálok", line2: "(1 hét)" },
+    { id: 7, line1: "Kész link", line2: "átadása" },
+  ],
+  en: [
+    { id: 1, line1: "Intro call", line2: "& brief" },
+    { id: 2, line1: "Proposal", line2: "& contract" },
+    { id: 3, line1: "Kickoff", line2: "meeting" },
+    { id: 4, line1: "Copy + demo", line2: "(~1 week)" },
+    { id: 5, line1: "Review", line2: "& iterations (1–2 weeks)" },
+    { id: 6, line1: "AI visuals", line2: "(~1 week)" },
+    { id: 7, line1: "Final link", line2: "handover" },
+  ],
+};
 
 // Pontokat az ívre pozicionáljuk
 const getEllipsePoint = (t: number) => {
@@ -27,7 +43,13 @@ const getEllipsePoint = (t: number) => {
   return { x, y };
 };
 
-export const CollabDiagram = () => {
+type CollabDiagramProps = {
+  lang: Lang;
+};
+
+export const CollabDiagram: React.FC<CollabDiagramProps> = ({ lang }) => {
+  const steps = stepsByLang[lang];
+
   return (
     <div className={s.collabDiagram}>
       <svg

@@ -1042,10 +1042,14 @@ const t = copy[lang];
   <strong>{pCopy.closing}</strong> <br />
   {pCopy.closingAfter}
 </p>
-</div>
+  </div>
 </section>
 
-<ExamplesSection defaultLogoSrc={DEFAULT_LOGO} lazyMount={true} />
+<ExamplesSection
+  defaultLogoSrc={DEFAULT_LOGO}
+  lazyMount={true}
+  lang={lang}
+/>
 
 <div
   ref={principlesRef}
@@ -1140,7 +1144,7 @@ const t = copy[lang];
       {cCopy.body}
     </p>
 
-    <CollabDiagram />
+    <CollabDiagram lang={lang} />
 
     <div className={s.collabClosing}>
       {cCopy.closing}
