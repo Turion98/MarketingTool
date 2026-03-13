@@ -328,6 +328,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
         </div>
       </div>
 
+      <div className={styles.reportContainer}>
       {/* KPI blokk (megtartjuk) */}
       <div className={styles.kpis}>
         {loadingRange && <div className={styles.info}>Időszakos riport töltése…</div>}
@@ -385,43 +386,45 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 
               {/* Puzzle bontás típus szerint (riddle / runes) */}
               {rangeData.totals.puzzles?.byKind && Object.keys(rangeData.totals.puzzles.byKind).length > 0 && (
-                <div className={styles.kpi} style={{ gridColumn: "1 / -1" }}>
+                <div className={`${styles.kpi} ${styles.kpiFullWidth}`}>
                   <div className={styles.kpiLabel}>Puzzle típus szerint</div>
-                  <div className={styles.kpiValue} style={{ display: "block", marginTop: "0.25rem" }}>
-                    <table className={styles.table} style={{ fontSize: "0.85rem", width: "auto", minWidth: "280px" }}>
-                      <thead>
-                        <tr>
-                          <th>Típus</th>
-                          <th>Tries</th>
-                          <th>Solved</th>
-                          <th>Success</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const order = ["riddle", "runes", "unknown"];
-                          const entries = Object.entries(rangeData.totals.puzzles!.byKind!).filter(
-                            ([_, v]) => v && (v.tries > 0 || v.solved > 0)
-                          );
-                          const sorted = entries.sort(
-                            (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]) || b[1].tries - a[1].tries
-                          );
-                          const labelOf = (k: string) =>
-                            k === "riddle" ? "Riddle" : k === "runes" ? "Runes" : k === "unknown" ? "Egyéb" : k;
-                          return sorted.map(([kind, row]) => {
-                            const pct = row.tries > 0 ? ((row.solved / row.tries) * 100).toFixed(1) : "—";
-                            return (
-                              <tr key={kind}>
-                                <td>{labelOf(kind)}</td>
-                                <td>{row.tries}</td>
-                                <td>{row.solved}</td>
-                                <td>{pct}%</td>
-                              </tr>
+                  <div className={styles.kpiValue}>
+                    <div className={styles.kpiTableWrap}>
+                      <table className={`${styles.table} ${styles.kpiTable}`}>
+                        <thead>
+                          <tr>
+                            <th>Típus</th>
+                            <th>Tries</th>
+                            <th>Solved</th>
+                            <th>Success</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const order = ["riddle", "runes", "unknown"];
+                            const entries = Object.entries(rangeData.totals.puzzles!.byKind!).filter(
+                              ([_, v]) => v && (v.tries > 0 || v.solved > 0)
                             );
-                          });
-                        })()}
-                      </tbody>
-                    </table>
+                            const sorted = entries.sort(
+                              (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]) || b[1].tries - a[1].tries
+                            );
+                            const labelOf = (k: string) =>
+                              k === "riddle" ? "Riddle" : k === "runes" ? "Runes" : k === "unknown" ? "Egyéb" : k;
+                            return sorted.map(([kind, row]) => {
+                              const pct = row.tries > 0 ? ((row.solved / row.tries) * 100).toFixed(1) : "—";
+                              return (
+                                <tr key={kind}>
+                                  <td>{labelOf(kind)}</td>
+                                  <td>{row.tries}</td>
+                                  <td>{row.solved}</td>
+                                  <td>{pct}%</td>
+                                </tr>
+                              );
+                            });
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -439,10 +442,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             {(rangeData.totals.puzzles?.byKind?.runes?.tries ?? 0) > 0 && (() => {
               const runes = rangeData.totals.puzzles!.byKind!.runes!;
               return (
-              <div className={styles.card} style={{ marginTop: "1rem" }}>
-                <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Puzzle (Runes)</h4>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
-                  <div style={{ fontSize: "0.875rem" }}>
+              <div className={`${styles.card} ${styles.cardSection}`}>
+                <h4>Puzzle (Runes)</h4>
+                <div className={styles.puzzleStatsRow}>
+                  <div className={styles.puzzleStatBlock}>
                     <strong>Tries:</strong> {runes.tries}
                     {" · "}
                     <strong>Solved:</strong> {runes.solved}
@@ -452,7 +455,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     %
                   </div>
                   {rangeData.puzzleRunesStats && (rangeData.puzzleRunesStats.avgAttemptWhenSolved != null || (rangeData.puzzleRunesStats.solvedByAttempt?.length ?? 0) > 0) && (
-                    <div style={{ fontSize: "0.875rem" }}>
+                    <div className={styles.puzzleStatBlock}>
                       {rangeData.puzzleRunesStats.avgAttemptWhenSolved != null && (
                         <>
                           <strong>Átlagosan hányadik próbálkozásra sikerül:</strong>{" "}
@@ -473,26 +476,16 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     </div>
                   )}
                   {rangeData.puzzleRunesTopOptions && rangeData.puzzleRunesTopOptions.length > 0 && (
-                    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                    <div className={styles.topOptionsRow}>
                       {rangeData.puzzleRunesTopOptions.map((opt, i) => (
-                        <div
-                          key={i}
-                          className={styles.card}
-                          style={{
-                            padding: "0.5rem 0.75rem",
-                            minWidth: "140px",
-                            border: "1px solid #e6e8ee",
-                            borderRadius: "10px",
-                            background: "#fafbfc",
-                          }}
-                        >
-                          <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.25rem" }}>
+                        <div key={i} className={styles.topOptionCard}>
+                          <div className={styles.topOptionCardLabel}>
                             Leggyakrabban választott #{i + 1}
                           </div>
-                          <div style={{ fontSize: "0.8125rem", wordBreak: "break-word" }} title={opt.label}>
-                            {opt.label.length > 60 ? opt.label.slice(0, 60) + "…" : opt.label}
+                          <div className={styles.topOptionCardValue} title={opt.label}>
+                            {opt.label}
                           </div>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 600, marginTop: "0.25rem" }}>
+                          <div className={styles.topOptionCardCount}>
                             {opt.count}×
                           </div>
                         </div>
@@ -508,10 +501,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             {(rangeData.totals.puzzles?.byKind?.riddle?.tries ?? 0) > 0 && (() => {
               const riddle = rangeData.totals.puzzles!.byKind!.riddle!;
               return (
-              <div className={styles.card} style={{ marginTop: "1rem" }}>
-                <h4 style={{ margin: "0 0 0.5rem", fontSize: "1rem" }}>Riddle</h4>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
-                  <div style={{ fontSize: "0.875rem" }}>
+              <div className={`${styles.card} ${styles.cardSection}`}>
+                <h4>Riddle</h4>
+                <div className={styles.puzzleStatsRow}>
+                  <div className={styles.puzzleStatBlock}>
                     <strong>Tries:</strong> {riddle.tries}
                     {" · "}
                     <strong>Solved:</strong> {riddle.solved}
@@ -521,7 +514,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     %
                   </div>
                   {rangeData.riddleStats && rangeData.riddleStats.runsWithRiddle > 0 && (
-                    <div style={{ fontSize: "0.875rem" }}>
+                    <div className={styles.puzzleStatBlock}>
                       <strong>Átlagos újrapróbálások runonként:</strong>{" "}
                       {rangeData.riddleStats.avgRetriesPerRun.toFixed(2)}
                       {" "}
@@ -530,35 +523,22 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                   )}
                 </div>
                 {rangeData.riddleStats?.wrongByQuestion && rangeData.riddleStats.wrongByQuestion.length > 0 && (
-                  <div style={{ marginTop: "0.75rem" }}>
-                    <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  <div className={styles.wrongByQuestionBlock}>
+                    <div className={styles.wrongByQuestionTitle}>
                       Hibás lefutásoknál melyik kérdésnél volt helytelen válasz
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <div className={styles.wrongByQuestionList}>
                       {rangeData.riddleStats.wrongByQuestion.map((q) => (
-                        <div key={q.pageId} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8125rem" }}>
-                          <span style={{ minWidth: "100px" }}>{q.pageId}</span>
-                          <span style={{ width: "80px", textAlign: "right" }}>{q.count}×</span>
-                          <div
-                            style={{
-                              flex: 1,
-                              maxWidth: 200,
-                              height: 8,
-                              background: "#e6e8ee",
-                              borderRadius: 4,
-                              overflow: "hidden",
-                            }}
-                          >
+                        <div key={q.pageId} className={styles.wrongByQuestionRow}>
+                          <span className={styles.wrongByQuestionPageId} title={q.pageId}>{q.pageId}</span>
+                          <span className={styles.wrongByQuestionCount}>{q.count}×</span>
+                          <div className={styles.wrongByQuestionBar}>
                             <div
-                              style={{
-                                width: `${q.pct * 100}%`,
-                                height: "100%",
-                                background: "#c53030",
-                                borderRadius: 4,
-                              }}
+                              className={styles.wrongByQuestionBarFill}
+                              style={{ width: `${q.pct * 100}%` }}
                             />
                           </div>
-                          <span style={{ width: "44px", textAlign: "right" }}>{(q.pct * 100).toFixed(0)}%</span>
+                          <span className={styles.wrongByQuestionPct}>{(q.pct * 100).toFixed(0)}%</span>
                         </div>
                       ))}
                     </div>
@@ -663,62 +643,65 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
       {outcomes.length > 0 && (
         <>
           <div className={styles.info}>Outcome megoszlás (üzleti)</div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Outcome</th>
-                <th>Runs</th>
-                <th>Users</th>
-                <th>Share</th>
-                <th>CTA shown</th>
-                <th>CTA clicks</th>
-                <th>CTA CTR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {outcomes.map((x) => (
-                <tr key={x.key}>
-                  <td title={x.key}>{x.label}</td>
-                  <td>{x.runs}</td>
-                  <td>{x.users ?? "—"}</td>
-                  <td>{fmtPct(x.share)}</td>
-                  <td>{x.shown ?? "—"}</td>
-                  <td>{x.clicks ?? "—"}</td>
-                  <td>{x.shown == null || x.clicks == null ? "—" : fmtPct(x.ctr * 100)}</td>
-                  
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Outcome</th>
+                  <th>Runs</th>
+                  <th>Users</th>
+                  <th>Share</th>
+                  <th>CTA shown</th>
+                  <th>CTA clicks</th>
+                  <th>CTA CTR</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {outcomes.map((x) => (
+                  <tr key={x.key}>
+                    <td className={styles.cellTruncate} title={x.key}>{x.label}</td>
+                    <td>{x.runs}</td>
+                    <td>{x.users ?? "—"}</td>
+                    <td>{fmtPct(x.share)}</td>
+                    <td>{x.shown ?? "—"}</td>
+                    <td>{x.clicks ?? "—"}</td>
+                    <td>{x.shown == null || x.clicks == null ? "—" : fmtPct(x.ctr * 100)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 
       
 
-      {/* ✅ 3) DROP-OFF – nem végoldalak, ahol elhagyták */}
+       {/* ✅ 3) DROP-OFF – nem végoldalak, ahol elhagyták */}
 {dropOffRows.length > 0 && (
   <>
     <div className={styles.info}>Lemorzsolódási pontok (nem-végoldalak)</div>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Page</th>
-          <th>Drop-offs</th>
-          <th>Runs (total)</th>
-          <th>Drop-off %</th>
-        </tr>
-      </thead>
-      <tbody>
-        {dropOffRows.map((d) => (
-          <tr key={d.pageId}>
-            <td>{d.pageId}</td>
-            <td>{d.dropOffRuns}</td>
-            <td>{totalRuns}</td>
-            <td>{fmtPct(d.dropOffPct)}</td>
+    <div className={styles.tableWrapper}>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Drop-offs</th>
+            <th>Runs (total)</th>
+            <th>Drop-off %</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {dropOffRows.map((d) => (
+            <tr key={d.pageId}>
+              <td className={styles.cellTruncate} title={d.pageId}>{d.pageId}</td>
+              <td>{d.dropOffRuns}</td>
+              <td>{totalRuns}</td>
+              <td>{fmtPct(d.dropOffPct)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </>
 )}
     </>
@@ -731,32 +714,32 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 (Még nincs path adat a range riportban.)
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Path</th>
-                    <th>Sessions</th>
-                    <th>Users</th>
-                    <th>Top outcome</th>
-                    <th>CTA shown</th>
-                    <th>CTA clicks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rangeData.paths.map((p) => (
-                    <tr key={p.pathId}>
-                      <td style={{ maxWidth: 520, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {p.pathId}
-                      </td>
-                      <td>{p.sessions}</td>
-                      <td>{p.users ?? "—"}</td>
-                      <td>{p.topOutcomeId ?? "—"}</td>
-                      <td>{p.ctaShown ?? "—"}</td>
-                      <td>{p.ctaClicks ?? "—"}</td>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th>Sessions</th>
+                      <th>Users</th>
+                      <th>Top outcome</th>
+                      <th>CTA shown</th>
+                      <th>CTA clicks</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rangeData.paths.map((p) => (
+                      <tr key={p.pathId}>
+                        <td className={styles.cellTruncatePath} title={p.pathId}>{p.pathId}</td>
+                        <td>{p.sessions}</td>
+                        <td>{p.users ?? "—"}</td>
+                        <td>{p.topOutcomeId ?? "—"}</td>
+                        <td>{p.ctaShown ?? "—"}</td>
+                        <td>{p.ctaClicks ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {/* ÚJ: Path Conversion Efficiency */}
@@ -766,28 +749,28 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 (Még nincs path conversion adat a range riportban.)
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Path</th>
-                    <th>Runs</th>
-                    <th>Reached END</th>
-                    <th>Conversion rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rangeData.pathConversion.map((row) => (
-                    <tr key={row.pathId}>
-                      <td style={{ maxWidth: 520, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {row.pathId}
-                      </td>
-                      <td>{row.runs}</td>
-                      <td>{row.endRuns}</td>
-                      <td>{fmtPct((row.conversionRate ?? 0) * 100)}</td>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th>Runs</th>
+                      <th>Reached END</th>
+                      <th>Conversion rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rangeData.pathConversion.map((row) => (
+                      <tr key={row.pathId}>
+                        <td className={styles.cellTruncatePath} title={row.pathId}>{row.pathId}</td>
+                        <td>{row.runs}</td>
+                        <td>{row.endRuns}</td>
+                        <td>{fmtPct((row.conversionRate ?? 0) * 100)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {/* ÚJ: Restart Behavior Rate */}
@@ -828,24 +811,26 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 (Még nincs end-type distribution adat a range riportban.)
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>End type</th>
-                    <th>Count</th>
-                    <th>Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rangeData.endDistribution.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.id}</td>
-                      <td>{row.count}</td>
-                      <td>{fmtPct((row.share ?? 0) * 100)}</td>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>End type</th>
+                      <th>Count</th>
+                      <th>Share</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rangeData.endDistribution.map((row) => (
+                      <tr key={row.id}>
+                        <td className={styles.cellTruncate} title={row.id}>{row.id}</td>
+                        <td>{row.count}</td>
+                        <td>{fmtPct((row.share ?? 0) * 100)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {/* ✅ ÚJ: Decision step teljesítmény */}
@@ -859,36 +844,37 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 
       {/* Lokális rollup maradhat debugnak */}
       <h4>Napi összesítés (lokális rollup)</h4>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Nap</th>
-            <th>Sessions</th>
-            <th>Pages</th>
-            <th>PV</th>
-            <th>Choices</th>
-            <th>Puzzle tries</th>
-            <th>Solved</th>
-            <th>Runes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {daily.map((d: any) => (
-            <tr key={d.day}>
-              <td>{d.day}</td>
-              <td>{d.sessions}</td>
-              <td>{d.pages}</td>
-              <td>{d.totals.pageViews}</td>
-              <td>{d.totals.choices}</td>
-              <td>{d.totals.puzzles.tries}</td>
-              <td>{d.totals.puzzles.solved}</td>
-              <td>{d.totals.runes}</td>
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Nap</th>
+              <th>Sessions</th>
+              <th>Pages</th>
+              <th>PV</th>
+              <th>Choices</th>
+              <th>Puzzle tries</th>
+              <th>Solved</th>
+              <th>Runes</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* ❌ Top oldalak – kiszedve */}
+          </thead>
+          <tbody>
+            {daily.map((d: any) => (
+              <tr key={d.day}>
+                <td>{d.day}</td>
+                <td>{d.sessions}</td>
+                <td>{d.pages}</td>
+                <td>{d.totals.pageViews}</td>
+                <td>{d.totals.choices}</td>
+                <td>{d.totals.puzzles.tries}</td>
+                <td>{d.totals.puzzles.solved}</td>
+                <td>{d.totals.runes}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
     </div>
   );
 }
