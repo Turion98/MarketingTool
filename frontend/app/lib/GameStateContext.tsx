@@ -844,6 +844,21 @@ useEffect(() => {
               if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
               if (story.meta?.id) setGlobal("storyId", story.meta.id);
               try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+
+              // progress milestones a meta-ból (ha van)
+              const raw = (story.meta as any)?.progress?.milestones;
+              const metaMilestones =
+                raw && Array.isArray(raw)
+                  ? raw
+                      .map((m: any) => (typeof m === "number" ? { x: m } : m))
+                      .filter((m: any) => typeof m.x === "number")
+                      .map((m: any) => ({
+                        x: Math.max(0, Math.min(1, m.x)),
+                        label: typeof m.label === "string" ? m.label : undefined,
+                      }))
+                  : [];
+              setProgressDisplay({ value: 0, milestones: metaMilestones });
+
               console.log("[GameState] Meta loaded:", story.meta);
             }
           })
@@ -852,7 +867,7 @@ useEffect(() => {
         console.warn("[GameState] meta prefetch failed", err);
       }
 
-      // 🔄 új sztori: progress reset
+      // 🔄 új sztori: progress reset (milestones a meta betöltésekor kerülnek be)
       setVisitedPages(new Set());
       setProgressValue(0);
       setProgressDisplay({ value: 0, milestones: [] });

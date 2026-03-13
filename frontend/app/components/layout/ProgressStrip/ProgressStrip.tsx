@@ -9,12 +9,15 @@ export type ProgressStripProps = {
   className?: string;
   /** visual mode: "bar" = thin top line only, "hud" = with label */
   variant?: "bar" | "hud";
+  /** optional milestones along the bar in [0..1] */
+  milestones?: Array<{ x: number; label?: string }>;
 };
 
 const ProgressStrip: React.FC<ProgressStripProps> = ({
   value = 0,
   className = "",
   variant = "bar",
+  milestones,
 }) => {
   const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
 
@@ -31,6 +34,18 @@ const ProgressStrip: React.FC<ProgressStripProps> = ({
             { ["--progress-pct" as any]: `${pct}%` } as React.CSSProperties
           }
         />
+        {milestones?.map((m, i) => (
+          <div
+            key={i}
+            className={s.progressMarker}
+            style={{
+              ["--progress-marker-x" as any]: `${Math.round(
+                Math.max(0, Math.min(1, m.x)) * 100
+              )}%`,
+            } as React.CSSProperties}
+            title={m.label}
+          />
+        ))}
       </div>
       {variant === "hud" && (
         <div className={s.progressLabel}>{pct}%</div>

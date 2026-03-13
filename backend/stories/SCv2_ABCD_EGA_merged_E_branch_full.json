@@ -4,15 +4,23 @@
   "storyId": "skincare_story_v2_full",
   "locale": "hu",
   "meta": {
-    "id": "skincare_story_v2_full",
-    "title": "SkinCare Story – Teljes útvonal (A–B–C–D + E ág)",
-    "author": "Qzera",
-    "description": "Interaktív döntésalapú bőrápolási útvonal, puzzle logikával, személyre szabott ajánlásokkal és kapu-fragmentekkel. A teljes A–B–C–D útvonal és az E-ág összevont logikája.",
-    "coverImage": "/assets/covers/skincare.jpg",
-    "startPageId": "L1_routine_style",
-    "campaignId": "skincare_story_v2_full",
-    "logo": "/assets/my_logo.png",
-    "ctaPresets": {
+  "id": "skincare_story_v2_full",
+  "title": "SkinCare Story – Teljes útvonal (A–B–C–D + E ág)",
+  "author": "Qzera",
+  "description": "Interaktív döntésalapú bőrápolási útvonal, puzzle logikával, személyre szabott ajánlásokkal és kapu-fragmentekkel. A teljes A–B–C–D útvonal és az E-ág összevont logikája.",
+  "coverImage": "/assets/covers/skincare.jpg",
+  "startPageId": "L1_routine_style",
+  "campaignId": "skincare_story_v2_full",
+  "logo": "/assets/my_logo.png",
+  "progress": {
+    "milestones": [
+      { "x": 0.1, "label": "Rutin-stílus választás" },
+      { "x": 0.35, "label": "Puzzle & preferenciák" },
+      { "x": 0.7, "label": "Szűkített fókusz & igények" },
+      { "x": 1.0, "label": "Ajánlás & összefoglaló" }
+    ]
+  },
+  "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Tovább a márkaoldalra",

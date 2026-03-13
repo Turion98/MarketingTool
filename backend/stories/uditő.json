@@ -3,15 +3,23 @@
   "storyId": "softdrink_quiz_demo",
   "locale": "hu",
   "meta": {
-    "id": "softdrink_quiz_demo",
-    "title": "Melyik NovaFizz üdítő passzol hozzád most?",
-    "author": "Qzera",
-    "description": "Könnyed, kétlépéses mini-ajánló, amely a NovaFizz öt üdítője közül segít kiválasztani azt, amelyik most a legjobban passzol hozzád.",
-    "coverImage": "/assets/covers/softdrink.jpg",
-    "startPageId": "Q1",
-    "campaignId": "softdrink_quiz_demo",
-    "logo": "/assets/my_logo.png",
-    "ctaPresets": {
+  "id": "softdrink_quiz_demo",
+  "title": "Melyik NovaFizz üdítő passzol hozzád most?",
+  "author": "Qzera",
+  "description": "Könnyed, kétlépéses mini-ajánló, amely a NovaFizz öt üdítője közül segít kiválasztani azt, amelyik most a legjobban passzol hozzád.",
+  "coverImage": "/assets/covers/softdrink.jpg",
+  "startPageId": "Q1",
+  "campaignId": "softdrink_quiz_demo",
+  "logo": "/assets/my_logo.png",
+  "progress": {
+    "milestones": [
+      { "x": 0.2, "label": "Kiinduló helyzet" },
+      { "x": 0.5, "label": "Íz- és hangulatválasztás" },
+      { "x": 0.8, "label": "Szűkített ajánlási irány" },
+      { "x": 1.0, "label": "Konkrét üdítő ajánlás" }
+    ]
+  },
+  "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Tovább",

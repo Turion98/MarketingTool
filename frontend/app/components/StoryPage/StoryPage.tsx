@@ -583,7 +583,7 @@ const StoryPage: React.FC = () => {
     setFlag: (f: string) => void;
     globals: Record<string, any>;
     setGlobal: (k: string, v: string) => void;
-    progressDisplay: { value?: number };
+    progressDisplay: { value?: number; milestones?: Array<{ x: number; label?: string }> };
     storyId?: string;
     sessionId?: string;
     runId?: string;
@@ -3001,10 +3001,8 @@ window.setTimeout(() => {
         }
         progress={
           <ProgressStrip
-            value={
-              progressDisplay.value ??
-              0
-            }
+            value={progressDisplay.value ?? 0}
+            milestones={progressDisplay.milestones}
           />
         }
                 media={mediaNode}

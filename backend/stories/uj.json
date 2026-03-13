@@ -3,15 +3,23 @@
   "storyId": "creative_profiler_demo",
   "locale": "hu",
   "meta": {
-    "id": "creative_profiler_demo",
-    "title": "Creative Problem-Solving Profiler – Demo",
-    "author": "Qzera",
-    "description": "Rövid, háromkérdéses döntésalapú élmény, amely a felhasználó kreatív problémamegoldási stílusa alapján három archetípus egyikéhez irányít.",
-    "coverImage": "/assets/covers/creative.jpg",
-    "startPageId": "Q1",
-    "campaignId": "creative_profiler_demo",
-    "logo": "/assets/my_logo.png",
-    "ctaPresets": {
+  "id": "creative_profiler_demo",
+  "title": "Creative Problem-Solving Profiler – Demo",
+  "author": "Qzera",
+  "description": "Rövid, háromkérdéses döntésalapú élmény, amely a felhasználó kreatív problémamegoldási stílusa alapján három archetípus egyikéhez irányít.",
+  "coverImage": "/assets/covers/creative.jpg",
+  "startPageId": "Q1",
+  "campaignId": "creative_profiler_demo",
+  "logo": "/assets/my_logo.png",
+  "progress": {
+    "milestones": [
+      { "x": 0.15, "label": "Belépő kreatív helyzet" },
+      { "x": 0.45, "label": "Második döntési szempont" },
+      { "x": 0.75, "label": "Harmadik döntés & fókusz" },
+      { "x": 1.0, "label": "Kreatív archetípus profil" }
+    ]
+  },
+  "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Tovább",

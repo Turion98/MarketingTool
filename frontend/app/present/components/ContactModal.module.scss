@@ -16,6 +16,8 @@
 .modal {
   position: relative;
   max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
   width: 100%;
   border-radius: 18px;
 
@@ -48,6 +50,64 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.section {
+  border: none;
+  margin: 0;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.sectionTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.95;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  display: block;
+}
+
+.label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.checkboxGroup,
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.checkboxLabel,
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+  opacity: 0.95;
+
+  input {
+    width: auto;
+    margin: 0;
+    accent-color: #f5b14b;
+  }
 }
 
 .row {

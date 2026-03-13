@@ -3,15 +3,23 @@
   "storyId": "coffee_quiz_demo",
   "locale": "hu",
   "meta": {
-    "id": "coffee_quiz_demo",
-    "title": "Milyen kávé vagy most?",
-    "author": "Qzera",
-    "description": "Háromkérdéses, könnyed kvíz arról, hogy jelenleg melyik kávé-hangulat áll hozzád a legközelebb.",
-    "coverImage": "/assets/covers/coffee.jpg",
-    "startPageId": "Q1",
-    "campaignId": "coffee_quiz_demo",
-    "logo": "/assets/my_logo.png",
-    "ctaPresets": {
+  "id": "coffee_quiz_demo",
+  "title": "Milyen kávé vagy most?",
+  "author": "Qzera",
+  "description": "Háromkérdéses, könnyed kvíz arról, hogy jelenleg melyik kávé-hangulat áll hozzád a legközelebb.",
+  "coverImage": "/assets/covers/coffee.jpg",
+  "startPageId": "Q1",
+  "campaignId": "coffee_quiz_demo",
+  "logo": "/assets/my_logo.png",
+  "progress": {
+    "milestones": [
+      { "x": 0.15, "label": "Első helyzet" },
+      { "x": 0.45, "label": "Második döntés" },
+      { "x": 0.75, "label": "Harmadik döntés" },
+      { "x": 1.0, "label": "Kávé-hangulat profil" }
+    ]
+  },
+  "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Tovább",

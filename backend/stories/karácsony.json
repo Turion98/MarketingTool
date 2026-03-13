@@ -3,15 +3,23 @@
   "storyId": "christmas_holiday_mode_demo",
   "locale": "hu",
   "meta": {
-    "id": "christmas_holiday_mode_demo",
-    "title": "Hogyan töltöd a karácsonyod idén?",
-    "author": "Qzera",
-    "description": "Rövid, háromkérdéses ünnepi mini-élmény, amely megmutatja, milyen karácsonyi üzemmódban vagy idén.",
-    "coverImage": "/assets/covers/christmas.jpg",
-    "startPageId": "Q1",
-    "campaignId": "christmas_holiday_mode_demo",
-    "logo": "/assets/my_logo.png",
-    "ctaPresets": {
+  "id": "christmas_holiday_mode_demo",
+  "title": "Hogyan töltöd a karácsonyod idén?",
+  "author": "Qzera",
+  "description": "Rövid, háromkérdéses ünnepi mini-élmény, amely megmutatja, milyen karácsonyi üzemmódban vagy idén.",
+  "coverImage": "/assets/covers/christmas.jpg",
+  "startPageId": "Q1",
+  "campaignId": "christmas_holiday_mode_demo",
+  "logo": "/assets/my_logo.png",
+  "progress": {
+    "milestones": [
+      { "x": 0.15, "label": "Belépő hangulat" },
+      { "x": 0.45, "label": "Döntés: ünnepi ritmus" },
+      { "x": 0.75, "label": "Hangulati preferenciák" },
+      { "x": 1.0, "label": "Karácsonyi üzemmód" }
+    ]
+  },
+  "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Tovább",
