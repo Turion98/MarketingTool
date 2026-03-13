@@ -59,18 +59,33 @@ function buildBriefBody(data: BriefFormData): string {
     data.website ? `Weboldal: ${data.website}` : "Weboldal: –",
     "",
     "[Kampány kontextus]",
-    `Fő cél: ${MAIN_GOALS.find((g) => g.value === data.mainGoal)?.label ?? data.mainGoal || "–"}`,
+    `Fő cél: ${
+      (MAIN_GOALS.find((g) => g.value === data.mainGoal)?.label ?? data.mainGoal) || "–"
+    }`,
     data.targetAudience ? `Célközönség: ${data.targetAudience}` : "Célközönség: –",
-    `Időzítés: ${TIMING_OPTIONS.find((t) => t.value === data.timing)?.label ?? data.timing || "–"}`,
+    `Időzítés: ${
+      (TIMING_OPTIONS.find((t) => t.value === data.timing)?.label ?? data.timing) || "–"
+    }`,
     "",
     "[Modell / példa]",
-    `Kiinduló példa: ${REFERENCE_EXAMPLES.find((e) => e.value === data.referenceExample)?.label ?? data.referenceExample || "–"}`,
+    `Kiinduló példa: ${
+      (REFERENCE_EXAMPLES.find((e) => e.value === data.referenceExample)?.label ??
+        data.referenceExample) || "–"
+    }`,
     data.exampleNote ? `Megjegyzés: ${data.exampleNote}` : "",
     "",
     "[Korlátok / output]",
-    `Büdzsé-sáv: ${BUDGET_BANDS.find((b) => b.value === data.budgetBand)?.label ?? data.budgetBand || "–"}`,
+    `Büdzsé-sáv: ${
+      (BUDGET_BANDS.find((b) => b.value === data.budgetBand)?.label ?? data.budgetBand) || "–"
+    }`,
     data.expectedOutputs.length
-      ? `Várt kimenet: ${data.expectedOutputs.map((v) => EXPECTED_OUTPUTS.find((o) => o.value === v)?.label ?? v).join(", ")}`
+      ? `Várt kimenet: ${data.expectedOutputs
+          .map(
+            (v) =>
+              EXPECTED_OUTPUTS.find((o) => o.value === v)?.label ??
+              v
+          )
+          .join(", ")}`
       : "Várt kimenet: –",
     `Brand guideline: ${data.hasBrandGuideline === "yes" ? "Igen" : data.hasBrandGuideline === "no" ? "Nem" : "–"}`,
     data.brandNote ? `Brand megjegyzés: ${data.brandNote}` : "",
