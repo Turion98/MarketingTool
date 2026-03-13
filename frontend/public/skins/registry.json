@@ -39,6 +39,11 @@
   "id": "contract_creative_light_breeze",
   "title": "Creative – Light Breeze",
   "preview": "/assets/skins/contract_creative_light_breeze.png"
+},
+    {
+  "id": "contract_creative_dusk",
+  "title": "Creative – Dusk",
+  "preview": "/assets/skins/contract_creative_dusk.png"
 }
 
   ]

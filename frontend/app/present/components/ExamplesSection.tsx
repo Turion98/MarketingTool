@@ -223,6 +223,9 @@ const EXAMPLES_HU: ExampleItem[] = [
   heroLine:
     "Szituáció-alapú döntési folyamat, ahol a választások mentén épül fel egy érthető, strukturált megoldáslogika.",
 
+  startPageId: "start",
+  skinId: "contract_creative_dusk",
+
   details: {
     blocks: [
       {
@@ -565,6 +568,9 @@ const EXAMPLES_EN: ExampleItem[] = [
     title: "Educational decision model – example",
     heroLine:
       "A scenario-based decision flow where choices build a clear, structured solution logic.",
+
+    startPageId: "start",
+    skinId: "contract_creative_dusk",
 
     details: {
       blocks: [
