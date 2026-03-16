@@ -1,40 +1,28 @@
 {
   "schemaVersion": "1.0.0",
-  "storyId": "christmas_holiday_mode_demo",
-  "locale": "hu",
+  "storyId": "christmas_holiday_mode_demo_en",
+  "locale": "en",
   "meta": {
-    "id": "christmas_holiday_mode_demo",
-    "title": "Hogyan töltöd a karácsonyod idén?",
+    "id": "christmas_holiday_mode_demo_en",
+    "title": "What’s your holiday mode this year?",
     "author": "Qzera",
-    "description": "Rövid, háromkérdéses ünnepi mini-élmény, amely megmutatja, milyen karácsonyi üzemmódban vagy idén.",
+    "description": "A short three-question holiday mini-experience that shows which Christmas mode you’re in this year.",
     "coverImage": "/assets/covers/christmas.jpg",
     "startPageId": "Q1",
-    "campaignId": "christmas_holiday_mode_demo",
+    "campaignId": "christmas_holiday_mode_demo_en",
     "logo": "/assets/my_logo.png",
     "progress": {
       "milestones": [
-        {
-          "x": 0.15,
-          "label": "Belépő hangulat"
-        },
-        {
-          "x": 0.45,
-          "label": "Döntés: ünnepi ritmus"
-        },
-        {
-          "x": 0.75,
-          "label": "Hangulati preferenciák"
-        },
-        {
-          "x": 1.0,
-          "label": "Karácsonyi üzemmód"
-        }
+        { "x": 0.15, "label": "Opening mood" },
+        { "x": 0.45, "label": "Decision: holiday rhythm" },
+        { "x": 0.75, "label": "Mood preferences" },
+        { "x": 1.0, "label": "Christmas mode" }
       ]
     },
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Tovább",
+        "label": "Next",
         "urlTemplate": "https://www.example.com"
       }
     },
@@ -43,19 +31,19 @@
   "fragments": {
     "Q2_A": {
       "id": "Q2_A",
-      "text": "Egy pillanatra megállsz\n\nAmikor kezd szétesni a napod, inkább lassítasz: leülsz egy teával, meggyújtasz egy gyertyát, és hagyod, hogy a meleg fény visszahozzon az ünnepi hangulatba."
+      "text": "You pause for a moment\n\nWhen your day starts to fall apart a bit, you’d rather slow down: you sit down with a tea, light a candle, and let the warm light pull you back into a holiday mood."
     },
     "Q2_B": {
       "id": "Q2_B",
-      "text": "Keresel egy kis ünnepi löketet\n\nHa kifáradsz, rákapcsolsz: elindítasz egy karácsonyi playlistet, felkapcsolod a fényfüzért, vagy kitalálsz egy spontán programot, hogy újra beinduljon az energia."
+      "text": "You look for a bit of festive boost\n\nWhen you’re getting tired, you turn things up: you start a Christmas playlist, switch on the fairy lights, or come up with a spontaneous plan to get the energy going again."
     },
     "Q2_C": {
       "id": "Q2_C",
-      "text": "Visszanyúlsz egy bevált rituáléhoz\n\nHa kibillen a nap, előveszel egy ismerős ünnepi szokást: egy receptet, egy közös filmet vagy egy esti sétát a fények között, ami segít visszaállítani a hangulatot."
+      "text": "You go back to a trusted ritual\n\nWhen the day wobbles, you reach for a familiar tradition: a recipe, a favorite movie, or an evening walk among the lights that helps you reset the mood."
     },
     "Q2_D": {
       "id": "Q2_D",
-      "text": "Adsz magadnak egy csendes szünetet\n\nAmikor túl sok minden történik, inkább kiszállsz egy időre: kikapcsolod a zajt, elvonulsz pár percre, és hagyod, hogy lenyugodjon benned az ünnepi nap."
+      "text": "You give yourself a quiet break\n\nWhen too many things are happening at once, you’d rather step out for a while: you turn down the noise, retreat for a few minutes, and let the holiday day settle inside you."
     },
     "SCENE_CONTEXT_1": {
       "id": "SCENE_CONTEXT_1",
@@ -109,177 +97,133 @@
   "pages": [
     {
       "id": "Q1",
-      "title": "Hogyan indul nálad az ünnepi időszak?",
+      "title": "How does the holiday season start for you?",
       "text": [
         {
-          "text": "Válaszd ki, melyik indulás áll hozzád közel."
+          "text": "Pick the kind of start that feels closest to you."
         }
       ],
       "choices": [
         {
-          "text": "Reggel gyertyát gyújtok és rendet rakok.",
+          "text": "In the morning I light a candle and tidy up.",
           "next": "Q2",
           "value": "A",
           "reward": {
-            "locks": [
-              "Q1_A"
-            ],
-            "unlockFragments": [
-              "SCENE_CONTEXT_1"
-            ]
+            "locks": ["Q1_A"],
+            "unlockFragments": ["SCENE_CONTEXT_1"]
           }
         },
         {
-          "text": "Üzenetek, szervezés, találkozók már reggeltől.",
+          "text": "Messages, planning and meetups start from the morning.",
           "next": "Q2",
           "value": "B",
           "reward": {
-            "locks": [
-              "Q1_B"
-            ],
-            "unlockFragments": [
-              "SCENE_CONTEXT_2"
-            ]
+            "locks": ["Q1_B"],
+            "unlockFragments": ["SCENE_CONTEXT_2"]
           }
         },
         {
-          "text": "Előveszem a kedvenc bögrémet és egy régi filmet.",
+          "text": "I take out my favorite mug and a classic movie.",
           "next": "Q2",
           "value": "C",
           "reward": {
-            "locks": [
-              "Q1_C"
-            ],
-            "unlockFragments": [
-              "SCENE_CONTEXT_3"
-            ]
+            "locks": ["Q1_C"],
+            "unlockFragments": ["SCENE_CONTEXT_3"]
           }
         },
         {
-          "text": "Egyszer rohanás, aztán csend a fények mellett.",
+          "text": "First there’s running around, then quiet by the lights.",
           "next": "Q2",
           "value": "D",
           "reward": {
-            "locks": [
-              "Q1_D"
-            ],
-            "unlockFragments": [
-              "SCENE_CONTEXT_4"
-            ]
+            "locks": ["Q1_D"],
+            "unlockFragments": ["SCENE_CONTEXT_4"]
           }
         }
       ]
     },
     {
       "id": "Q2",
-      "title": "Mi segít visszahozni az ünnepi hangulatot?",
+      "title": "What brings you back into a holiday mood?",
       "text": [
         {
-          "text": "Ha kicsit kizökkensz, mi hoz vissza legjobban az ünnepi hangulatba?"
+          "text": "When you’re a bit out of it, what brings you back into the festive feeling most reliably?"
         }
       ],
       "choices": [
         {
-          "text": "Leülök egy forró teával a fények mellé.",
+          "text": "I sit down with a hot tea next to the lights.",
           "next": "Q3",
           "reward": {
-            "unlockFragments": [
-              "Q2_A",
-              "IDEA_STATE_1"
-            ]
+            "unlockFragments": ["Q2_A", "IDEA_STATE_1"]
           }
         },
         {
-          "text": "Felrakok egy karácsonyi zenét.",
+          "text": "I put on some Christmas music.",
           "next": "Q3",
           "reward": {
-            "unlockFragments": [
-              "Q2_B",
-              "IDEA_STATE_2"
-            ]
+            "unlockFragments": ["Q2_B", "IDEA_STATE_2"]
           }
         },
         {
-          "text": "Elkezdődik a sütés a konyhában.",
+          "text": "Baking begins in the kitchen.",
           "next": "Q3",
           "reward": {
-            "unlockFragments": [
-              "Q2_C",
-              "IDEA_STATE_3"
-            ]
+            "unlockFragments": ["Q2_C", "IDEA_STATE_3"]
           }
         },
         {
-          "text": "Kimegyek pár percre a hideg levegőre.",
+          "text": "I step outside into the cold air for a few minutes.",
           "next": "Q3",
           "reward": {
-            "unlockFragments": [
-              "Q2_D",
-              "IDEA_STATE_4"
-            ]
+            "unlockFragments": ["Q2_D", "IDEA_STATE_4"]
           }
         }
       ]
     },
     {
       "id": "Q3",
-      "title": "Mi alapján áll össze benned az idei karácsony hangulata?",
+      "title": "What shapes your Christmas mood the most this year?",
       "text": [
         {
-          "text": "A nap végén mi határozza meg leginkább az ünnepi hangulatodat?"
+          "text": "By the end of the day, what defines your holiday mood the most?"
         }
       ],
       "choices": [
         {
-          "text": "Ha végre nyugalom van a lakásban.",
+          "text": "When there’s finally calm in the home.",
           "next": "logic",
           "value": "1",
           "reward": {
-            "locks": [
-              "Q3_1"
-            ],
-            "unlockFragments": [
-              "MICRO_DETAILS_1"
-            ]
+            "locks": ["Q3_1"],
+            "unlockFragments": ["MICRO_DETAILS_1"]
           }
         },
         {
-          "text": "Ha történik valami emlékezetes.",
+          "text": "When something memorable happens.",
           "next": "logic",
           "value": "2",
           "reward": {
-            "locks": [
-              "Q3_2"
-            ],
-            "unlockFragments": [
-              "MICRO_DETAILS_2"
-            ]
+            "locks": ["Q3_2"],
+            "unlockFragments": ["MICRO_DETAILS_2"]
           }
         },
         {
-          "text": "Ha vannak csendes, meghitt pillanatok.",
+          "text": "When there are quiet, intimate moments.",
           "next": "logic",
           "value": "3",
           "reward": {
-            "locks": [
-              "Q3_3"
-            ],
-            "unlockFragments": [
-              "MICRO_DETAILS_3"
-            ]
+            "locks": ["Q3_3"],
+            "unlockFragments": ["MICRO_DETAILS_3"]
           }
         },
         {
-          "text": "Ha a nap végén minden kisimul.",
+          "text": "When by the end of the day everything has smoothed out.",
           "next": "logic",
           "value": "4",
           "reward": {
-            "locks": [
-              "Q3_4"
-            ],
-            "unlockFragments": [
-              "MICRO_DETAILS_4"
-            ]
+            "locks": ["Q3_4"],
+            "unlockFragments": ["MICRO_DETAILS_4"]
           }
         }
       ]
@@ -287,128 +231,33 @@
     {
       "id": "logic",
       "type": "logic",
-      "title": "Elemzés...",
+      "title": "Analyzing...",
       "text": [
         {
-          "text": "A válaszaid alapján megmutatjuk, milyen ünnepi üzemmódban vagy idén."
+          "text": "Based on your answers, we’ll show you which holiday mode you’re in this year."
         }
       ],
       "logic": [
-        {
-          "if": [
-            "Q1_A",
-            "Q3_1"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q3_4"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q3_1"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q3_4"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q3_1"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q3_1"
-          ],
-          "goto": "end_synthesizer"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q3_2"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q3_2"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q3_2"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q3_2"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q3_4"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_D",
-            "Q3_3"
-          ],
-          "goto": "end_explorer"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q3_3"
-          ],
-          "goto": "end_refiner"
-        },
-        {
-          "if": [
-            "Q1_C",
-            "Q3_4"
-          ],
-          "goto": "end_refiner"
-        },
-        {
-          "if": [
-            "Q1_A",
-            "Q3_3"
-          ],
-          "goto": "end_refiner"
-        },
-        {
-          "if": [
-            "Q1_B",
-            "Q3_3"
-          ],
-          "goto": "end_refiner"
-        },
-        {
-          "default": "end_synthesizer"
-        }
+        { "if": ["Q1_A", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_A", "Q3_4"], "goto": "end_synthesizer" },
+        { "if": ["Q1_D", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_D", "Q3_4"], "goto": "end_synthesizer" },
+        { "if": ["Q1_C", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_B", "Q3_1"], "goto": "end_synthesizer" },
+
+        { "if": ["Q1_B", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_D", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_A", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_C", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_B", "Q3_4"], "goto": "end_explorer" },
+        { "if": ["Q1_D", "Q3_3"], "goto": "end_explorer" },
+
+        { "if": ["Q1_C", "Q3_3"], "goto": "end_refiner" },
+        { "if": ["Q1_C", "Q3_4"], "goto": "end_refiner" },
+        { "if": ["Q1_A", "Q3_3"], "goto": "end_refiner" },
+        { "if": ["Q1_B", "Q3_3"], "goto": "end_refiner" },
+
+        { "default": "end_synthesizer" }
       ]
     },
     {
@@ -419,27 +268,8 @@
       },
       "text": [
         {
-          "default": "Az idei ünneped alapvetően nyugodt, rendezett üzemmódban fut. Fontos neked, hogy átlásd a napot: legyen benne struktúra, levegő és pár csendesebb szakasz, amikor tényleg jelen tudsz lenni. Nem a maximális program a célod, hanem az, hogy kényelmesen, saját tempódban éld meg a karácsonyt."
-        },
-        {
-          "ifUnlocked": "Q3_1",
-          "text": "{fragment:OVR_SYNTH_Q3_1}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_2",
-          "text": "{fragment:OVR_SYNTH_Q3_2}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_3",
-          "text": "{fragment:OVR_SYNTH_Q3_3}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_4",
-          "text": "{fragment:OVR_SYNTH_Q3_4}",
-          "mode": "override"
+          "default": "This year your holidays run in a calm, structured mode. It matters to you that you can see the shape of the day: space to breathe, structure, and a few quieter stretches where you can really be present. You’re not chasing maximum program density – you want to experience Christmas in your own tempo, comfortably.",
+          "mode": "append_after"
         },
         {
           "ifUnlocked": "Q2_A",
@@ -488,27 +318,8 @@
       },
       "text": [
         {
-          "default": "Az idei karácsonyod inkább pörgős, társasági üzemmódba kapcsol. Jól érzed magad, ha történik valami: találkozók, közös programok, spontán ötletek. Az ad energiát, ha az ünnep nem statikus, hanem élő, mozgó és tele van kisebb-nagyobb élményekkel."
-        },
-        {
-          "ifUnlocked": "Q3_1",
-          "text": "{fragment:OVR_EXPL_Q3_1}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_2",
-          "text": "{fragment:OVR_EXPL_Q3_2}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_3",
-          "text": "{fragment:OVR_EXPL_Q3_3}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_4",
-          "text": "{fragment:OVR_EXPL_Q3_4}",
-          "mode": "override"
+          "default": "This year your Christmas leans into a more social, energetic mode. You feel good when things are happening: meetups, shared programs, spontaneous ideas. What gives you energy is when the holidays aren’t static, but alive and moving, filled with smaller and bigger experiences.",
+          "mode": "append_after"
         },
         {
           "ifUnlocked": "Q2_A",
@@ -557,27 +368,8 @@
       },
       "text": [
         {
-          "default": "Nálad az idei karácsony lényege a kapcsolódás és a tartalom: nem a mennyiség számít, hanem az, hogy legyen egy-két olyan pillanat, ami igazán megmarad. Lehet ez egy beszélgetés, egy közös vacsora vagy egy apró gesztus – a fontos, hogy őszinte legyen és helye legyen benne mindenkinek."
-        },
-        {
-          "ifUnlocked": "Q3_1",
-          "text": "{fragment:OVR_REFIN_Q3_1}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_2",
-          "text": "{fragment:OVR_REFIN_Q3_2}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_3",
-          "text": "{fragment:OVR_REFIN_Q3_3}",
-          "mode": "override"
-        },
-        {
-          "ifUnlocked": "Q3_4",
-          "text": "{fragment:OVR_REFIN_Q3_4}",
-          "mode": "override"
+          "default": "For you, the heart of this Christmas is connection and depth: it’s not about quantity, but about having one or two moments that truly stay with you. It might be a conversation, a shared dinner, or a small gesture — what matters is that it feels honest, and there’s real space in it for everyone.",
+          "mode": "append_after"
         },
         {
           "ifUnlocked": "Q2_A",
@@ -620,3 +412,4 @@
     }
   ]
 }
+

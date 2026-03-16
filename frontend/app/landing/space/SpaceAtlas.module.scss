@@ -1,0 +1,205 @@
+.pageRoot {
+  min-height: 100vh;
+  padding: 0;
+  color: #fff;
+  background:
+    radial-gradient(circle at 10% -10%, rgba(56, 90, 180, 0.36), transparent 55%),
+    radial-gradient(circle at 80% -20%, rgba(176, 82, 255, 0.4), transparent 60%),
+    radial-gradient(circle at 50% 120%, rgba(0, 229, 255, 0.35), transparent 60%),
+    radial-gradient(circle at top, #151c2f 0, #050712 55%, #020309 100%);
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.inner {
+  max-width: 1120px;
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 2.5rem;
+}
+
+.kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.title {
+  margin-top: 0.5rem;
+  font-size: clamp(2.1rem, 3.1vw, 2.7rem);
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin-top: 1rem;
+  max-width: 640px;
+  opacity: 0.82;
+  font-size: 0.98rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.1fr);
+  gap: 1.75rem;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.canvasShell {
+  position: relative;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+
+.hint {
+  position: absolute;
+  inset: auto 1.3rem 1.1rem auto;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(7, 11, 24, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  opacity: 0.86;
+}
+
+.sidePanel {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(150deg, rgba(9, 14, 32, 0.98), rgba(4, 7, 18, 0.98));
+  padding: 1.75rem 1.4rem 1.6rem;
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.82),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.sideTitle {
+  font-size: 0.9rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.78;
+  margin-bottom: 0.75rem;
+}
+
+.sideBody {
+  font-size: 0.92rem;
+  opacity: 0.9;
+  margin-bottom: 0.85rem;
+}
+
+.legendList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  opacity: 0.9;
+}
+
+.legendDot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.8);
+}
+
+.legendDotPlatform {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #00e5ff 60%, #0079ff 100%);
+}
+
+.legendDotExamples {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #7cffb2 60%, #1eaa52 100%);
+}
+
+.legendDotPrinciples {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #b46cff 60%, #5a24c5 100%);
+}
+
+.legendDotCollab {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #ffb36c 60%, #e36a1f 100%);
+}
+
+.legendDotAudience {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #ff4fd8 60%, #b0128f 100%);
+}
+
+.legendDotTech {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #9be7ff 60%, #1d9ad1 100%);
+}
+
+.legendDotFinal {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #f5ff8c 60%, #c8d141 100%);
+}
+
+.legendLabel {
+  font-weight: 500;
+}
+
+.legendNote {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.9rem;
+}
+
+.orbitLabel {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+.systemTag {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+.bgStars {
+  opacity: 0.9;
+}
+
+.decorTrail {
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+.planetCore {
+  transition: transform 220ms ease-out, filter 220ms ease-out;
+  transform-origin: center center;
+}
+
+.planetCore:hover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.9));
+}
+

@@ -1,0 +1,391 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "coffee_quiz_demo_en",
+  "locale": "en",
+  "meta": {
+    "id": "coffee_quiz_demo_en",
+    "title": "Which coffee are you right now?",
+    "author": "Qzera",
+    "description": "A light three-question quiz about which coffee mood fits you most right now.",
+    "coverImage": "/assets/covers/coffee.jpg",
+    "startPageId": "Q1",
+    "campaignId": "coffee_quiz_demo_en",
+    "logo": "/assets/my_logo.png",
+    "progress": {
+      "milestones": [
+        { "x": 0.15, "label": "First situation" },
+        { "x": 0.45, "label": "Second decision" },
+        { "x": 0.75, "label": "Third decision" },
+        { "x": 1.0, "label": "Coffee mood profile" }
+      ]
+    },
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Next",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "Q1",
+      "title": "",
+      "text": [
+        {
+          "text": "Choose the situation that feels most familiar to you in everyday life."
+        }
+      ],
+      "choices": [
+        {
+          "text": "If something slips from your hand, you laugh it off.",
+          "next": "Q2",
+          "value": "A",
+          "reward": {
+            "locks": ["Q1_A"],
+            "unlockFragments": ["FRAG_PAGE_SITUATION_1"]
+          }
+        },
+        {
+          "text": "You automatically start tidying up the things around you.",
+          "next": "Q2",
+          "value": "B",
+          "reward": {
+            "locks": ["Q1_B"],
+            "unlockFragments": ["FRAG_PAGE_SITUATION_2"]
+          }
+        },
+        {
+          "text": "You look around and immediately notice something interesting.",
+          "next": "Q2",
+          "value": "C",
+          "reward": {
+            "locks": ["Q1_C"],
+            "unlockFragments": ["FRAG_PAGE_SITUATION_3"]
+          }
+        },
+        {
+          "text": "You’d rather pause for a moment and take a deep breath.",
+          "next": "Q2",
+          "value": "D",
+          "reward": {
+            "locks": ["Q1_D"],
+            "unlockFragments": ["FRAG_PAGE_SITUATION_4"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Imagine you suddenly get 10 minutes just for yourself. What would you most like to spend that time on?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "I’d quickly take care of a small task.",
+          "next": "Q3",
+          "value": "A",
+          "reward": {
+            "locks": ["Q2_A"],
+            "unlockFragments": ["FRAG_Q2_VARIANT_1"]
+          }
+        },
+        {
+          "text": "I’d tidy up my surroundings a little.",
+          "next": "Q3",
+          "value": "B",
+          "reward": {
+            "locks": ["Q2_B"],
+            "unlockFragments": ["FRAG_Q2_VARIANT_2"]
+          }
+        },
+        {
+          "text": "I’d check out something new – a video, idea, or inspiration.",
+          "next": "Q3",
+          "value": "C",
+          "reward": {
+            "locks": ["Q2_C"],
+            "unlockFragments": ["FRAG_Q2_VARIANT_3"]
+          }
+        },
+        {
+          "text": "I’d sit down in silence and rest.",
+          "next": "Q3",
+          "value": "D",
+          "reward": {
+            "locks": ["Q2_D"],
+            "unlockFragments": ["FRAG_Q2_VARIANT_4"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q3",
+      "title": "",
+      "text": [
+        {
+          "text": "Pick the sentence that feels most true for you lately."
+        }
+      ],
+      "choices": [
+        {
+          "text": "“It’s good when things move forward.”",
+          "next": "logic",
+          "value": "1",
+          "reward": {
+            "locks": ["Q3_1"]
+          }
+        },
+        {
+          "text": "“It’s good when things smooth out.”",
+          "next": "logic",
+          "value": "2",
+          "reward": {
+            "locks": ["Q3_2"]
+          }
+        },
+        {
+          "text": "“It’s good when there’s some playfulness.”",
+          "next": "logic",
+          "value": "3",
+          "reward": {
+            "locks": ["Q3_3"]
+          }
+        },
+        {
+          "text": "“It’s good when there’s room to breathe.”",
+          "next": "logic",
+          "value": "4",
+          "reward": {
+            "locks": ["Q3_4"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Analyzing...",
+      "text": [
+        {
+          "text": "Based on your answers, we’ll show you which coffee mood fits you best right now."
+        }
+      ],
+      "logic": [
+        { "if": ["Q1_A", "Q2_A", "Q3_1"], "goto": "END_001" },
+        { "if": ["Q1_A", "Q2_A", "Q3_2"], "goto": "END_001" },
+        { "if": ["Q1_A", "Q2_A", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_A", "Q2_A", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_A", "Q2_B", "Q3_1"], "goto": "END_001" },
+        { "if": ["Q1_A", "Q2_B", "Q3_2"], "goto": "END_002" },
+        { "if": ["Q1_A", "Q2_B", "Q3_3"], "goto": "END_005" },
+        { "if": ["Q1_A", "Q2_B", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_A", "Q2_C", "Q3_1"], "goto": "END_003" },
+        { "if": ["Q1_A", "Q2_C", "Q3_2"], "goto": "END_005" },
+        { "if": ["Q1_A", "Q2_C", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_A", "Q2_C", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_A", "Q2_D", "Q3_1"], "goto": "END_001" },
+        { "if": ["Q1_A", "Q2_D", "Q3_2"], "goto": "END_004" },
+        { "if": ["Q1_A", "Q2_D", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_A", "Q2_D", "Q3_4"], "goto": "END_006" },
+
+        { "if": ["Q1_B", "Q2_A", "Q3_1"], "goto": "END_001" },
+        { "if": ["Q1_B", "Q2_A", "Q3_2"], "goto": "END_002" },
+        { "if": ["Q1_B", "Q2_A", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_B", "Q2_A", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_B", "Q2_B", "Q3_1"], "goto": "END_002" },
+        { "if": ["Q1_B", "Q2_B", "Q3_2"], "goto": "END_002" },
+        { "if": ["Q1_B", "Q2_B", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_B", "Q2_B", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_B", "Q2_C", "Q3_1"], "goto": "END_005" },
+        { "if": ["Q1_B", "Q2_C", "Q3_2"], "goto": "END_002" },
+        { "if": ["Q1_B", "Q2_C", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_B", "Q2_C", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_B", "Q2_D", "Q3_1"], "goto": "END_004" },
+        { "if": ["Q1_B", "Q2_D", "Q3_2"], "goto": "END_004" },
+        { "if": ["Q1_B", "Q2_D", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_B", "Q2_D", "Q3_4"], "goto": "END_006" },
+
+        { "if": ["Q1_C", "Q2_A", "Q3_1"], "goto": "END_001" },
+        { "if": ["Q1_C", "Q2_A", "Q3_2"], "goto": "END_001" },
+        { "if": ["Q1_C", "Q2_A", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_C", "Q2_A", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_C", "Q2_B", "Q3_1"], "goto": "END_002" },
+        { "if": ["Q1_C", "Q2_B", "Q3_2"], "goto": "END_004" },
+        { "if": ["Q1_C", "Q2_B", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_C", "Q2_B", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_C", "Q2_C", "Q3_1"], "goto": "END_005" },
+        { "if": ["Q1_C", "Q2_C", "Q3_2"], "goto": "END_005" },
+        { "if": ["Q1_C", "Q2_C", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_C", "Q2_C", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_C", "Q2_D", "Q3_1"], "goto": "END_004" },
+        { "if": ["Q1_C", "Q2_D", "Q3_2"], "goto": "END_004" },
+        { "if": ["Q1_C", "Q2_D", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_C", "Q2_D", "Q3_4"], "goto": "END_006" },
+
+        { "if": ["Q1_D", "Q2_A", "Q3_1"], "goto": "END_004" },
+        { "if": ["Q1_D", "Q2_A", "Q3_2"], "goto": "END_002" },
+        { "if": ["Q1_D", "Q2_A", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_D", "Q2_A", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_D", "Q2_B", "Q3_1"], "goto": "END_004" },
+        { "if": ["Q1_D", "Q2_B", "Q3_2"], "goto": "END_004" },
+        { "if": ["Q1_D", "Q2_B", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_D", "Q2_B", "Q3_4"], "goto": "END_004" },
+
+        { "if": ["Q1_D", "Q2_C", "Q3_1"], "goto": "END_005" },
+        { "if": ["Q1_D", "Q2_C", "Q3_2"], "goto": "END_005" },
+        { "if": ["Q1_D", "Q2_C", "Q3_3"], "goto": "END_003" },
+        { "if": ["Q1_D", "Q2_C", "Q3_4"], "goto": "END_005" },
+
+        { "if": ["Q1_D", "Q2_D", "Q3_1"], "goto": "END_006" },
+        { "if": ["Q1_D", "Q2_D", "Q3_2"], "goto": "END_006" },
+        { "if": ["Q1_D", "Q2_D", "Q3_3"], "goto": "END_006" },
+        { "if": ["Q1_D", "Q2_D", "Q3_4"], "goto": "END_006" }
+      ]
+    },
+    {
+      "id": "END_001",
+      "type": "end",
+      "endAlias": "espresso",
+      "title": "YOU ARE AN ESPRESSO",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Espresso",
+        "subtitle": "Fast, straightforward, no small talk.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    },
+    {
+      "id": "END_002",
+      "type": "end",
+      "endAlias": "latte",
+      "title": "YOU ARE A LATTE",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Latte",
+        "subtitle": "Balanced, calm, comforting.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    },
+    {
+      "id": "END_003",
+      "type": "end",
+      "endAlias": "cappuccino",
+      "title": "YOU ARE A CAPPUCCINO",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Cappuccino",
+        "subtitle": "Creative, playful, inventive.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    },
+    {
+      "id": "END_004",
+      "type": "end",
+      "endAlias": "filter",
+      "title": "YOU ARE A FILTER COFFEE",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Filter coffee",
+        "subtitle": "Patient, thoughtful, quiet strength.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    },
+    {
+      "id": "END_005",
+      "type": "end",
+      "endAlias": "coldbrew",
+      "title": "YOU ARE A COLD BREW",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Cold brew",
+        "subtitle": "Fresh, light, a bit different from the rest.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    },
+    {
+      "id": "END_006",
+      "type": "end",
+      "endAlias": "decaf",
+      "title": "YOU ARE A DECAF",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Decaf",
+        "subtitle": "Calm, attentive, considerate.",
+        "extra": ""
+      },
+      "text": [],
+      "endMeta": { "cta": "default" }
+    }
+  ],
+  "fragments": {
+    "FRAG_Q2_VARIANT_1": {
+      "id": "FRAG_Q2_VARIANT_1",
+      "text": "You like it when things eventually fall into place and appear clear in front of you."
+    },
+    "FRAG_Q2_VARIANT_2": {
+      "id": "FRAG_Q2_VARIANT_2",
+      "text": "It’s important for you that there is some natural order and flow in your environment."
+    },
+    "FRAG_Q2_VARIANT_3": {
+      "id": "FRAG_Q2_VARIANT_3",
+      "text": "You easily find small, new impulses that keep your attention fresh."
+    },
+    "FRAG_Q2_VARIANT_4": {
+      "id": "FRAG_Q2_VARIANT_4",
+      "text": "It feels good when there is a bit of inner quiet and space where you can simply be present."
+    },
+    "FRAG_PAGE_SITUATION_1": {
+      "id": "FRAG_PAGE_SITUATION_1",
+      "text": "the coffee appears during a transition moment, between two activities or mental states, when something has just ended and the next thing has not fully begun yet; the environment feels paused, as if allowing a brief reset before moving on"
+    },
+    "FRAG_PAGE_SITUATION_2": {
+      "id": "FRAG_PAGE_SITUATION_2",
+      "text": "the coffee is present within an active ongoing situation, not as a break but as a companion; the environment suggests that something is already happening, and the coffee naturally integrates into that flow without stopping it"
+    },
+    "FRAG_PAGE_SITUATION_3": {
+      "id": "FRAG_PAGE_SITUATION_3",
+      "text": "the coffee appears in a brief pause that does not fully interrupt momentum; the situation feels momentarily softened, as if space has opened for reflection without losing direction"
+    },
+    "FRAG_PAGE_SITUATION_4": {
+      "id": "FRAG_PAGE_SITUATION_4",
+      "text": "the coffee exists in an independent moment with no immediate task attached; the situation feels self-contained, as if the moment is valuable on its own, without needing justification or outcome"
+    }
+  }
+}

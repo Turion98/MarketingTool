@@ -302,7 +302,6 @@ const LandingPage: React.FC = () => {
           Questell prezentáció
         </button>
 
-
         <button className={styles.testButton} onClick={handleTestMode}>
           Teszt mód (API nélkül)
         </button>

@@ -417,7 +417,8 @@ const cCopy = collabCopy[lang];
       hintConvert: "Konverzió → görgess tovább",
     },
     hero: {
-      title: "Döntésvezérelt, interaktív élmény",
+      titleLine1: "Döntésvezérelt,",
+      titleLine2: "interaktív élmény",
       subtitle:
         "Egy élő rendszer, ahol a felhasználói döntések alakítják a folyamatot és a kimenetet.",
       subtitles:
@@ -428,9 +429,8 @@ const cCopy = collabCopy[lang];
     audienceStatement: {
       aria: "Kinek szól a Questell",
       textBeforeStrong:
-  "A Questell döntési folyamatok modellezésére és mérésére készült.",
-strong:
-  "Strukturált, irányított és visszakövethető rendszerként.",
+        "A Questell döntési folyamatok modellezésére és mérésére készült.",
+      strong: "Strukturált, irányított és visszakövethető rendszerként.",
     },
     langSwitch: {
       aria: "Nyelv váltása",
@@ -546,7 +546,8 @@ audience: {
       hintConvert: "Conversion → scroll down",
     },
     hero: {
-      title: "Decision-driven interactive experiences",
+      titleLine1: "Decision-driven",
+      titleLine2: "interactive experiences",
       subtitle:
         "A living system where user choices shape both the journey and the outcome.",
       subtitles:
@@ -745,7 +746,9 @@ const t = copy[lang];
 
             <div className={s.heroContent}>
               <h1 id="hero-title" className={s.heroTitle}>
-                {t.hero.title}
+                {t.hero.titleLine1}
+                <br />
+                <span className={s.heroTitleAccent}>{t.hero.titleLine2}</span>
               </h1>
 
               <p className={s.heroSubtitle}>{t.hero.subtitle}</p>
@@ -1039,7 +1042,7 @@ const t = copy[lang];
 )}
 
 <p className={s.platformClosing}>
-  <strong>{pCopy.closing}</strong> <br />
+  {pCopy.closing} <br />
   {pCopy.closingAfter}
 </p>
   </div>
@@ -1319,6 +1322,7 @@ const t = copy[lang];
 <ContactModal
   open={isContactOpen}
   onClose={() => setIsContactOpen(false)}
+  lang={lang}
 />
 
 

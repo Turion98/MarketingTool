@@ -5,14 +5,15 @@ import { useGameState } from "../../lib/GameStateContext";
 
 /**
  * Stabil alapértelmezett szünetek – modul szinten, fagyasztva (nem változik a referencia).
+ * Kicsit gyorsabb, feszesebb értékek, hogy ne törjön meg annyira a flow.
  */
 const DEFAULT_PUNCTUATION_PAUSES = Object.freeze({
-  ".": 1250,
-  ",": 150,
-  "!": 1220,
-  "?": 220,
-  "…": 280,
-  "\n": 120,
+  ".": 650,
+  ",": 90,
+  "!": 650,
+  "?": 180,
+  "…": 200,
+  "\n": 90,
 });
 
 const PARA = "\u2029"; // bekezdés-törés jel
@@ -41,7 +42,8 @@ type Props = {
 
 const TypingText: React.FC<Props> = ({
   lines,
-  speed = 40,
+  // Alap sebesség: kicsit gyorsabb, hogy tempósabban írjon
+  speed = 30,
   cps,
   skipRequested = false,
   replayTrigger = 0,

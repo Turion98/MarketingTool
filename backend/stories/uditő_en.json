@@ -1,0 +1,530 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "softdrink_quiz_demo_en",
+  "locale": "en",
+  "meta": {
+    "id": "softdrink_quiz_demo_en",
+    "title": "Which NovaFizz drink fits you now?",
+    "author": "Qzera",
+    "description": "A light two-step mini-recommender that helps you pick the NovaFizz soft drink that fits you best right now.",
+    "coverImage": "/assets/covers/softdrink.jpg",
+    "startPageId": "Q1",
+    "campaignId": "softdrink_quiz_demo_en",
+    "logo": "/assets/my_logo.png",
+    "progress": {
+      "milestones": [
+        { "x": 0.2, "label": "Starting situation" },
+        { "x": 0.5, "label": "Taste & mood choice" },
+        { "x": 0.8, "label": "Narrowed recommendation direction" },
+        { "x": 1.0, "label": "Concrete drink recommendation" }
+      ]
+    },
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Next",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "Q1",
+      "title": "What situation are you choosing a drink for?",
+      "text": [
+        {
+          "text": "Pick the situation that feels most familiar right now – we’ll use it as a starting point for the recommendation."
+        }
+      ],
+      "choices": [
+        {
+          "text": "With lunch or a main dish, more as a companion.",
+          "next": "L2_flavor_puzzle",
+          "value": "A",
+          "reward": {
+            "locks": ["Q1_A"],
+            "unlockFragments": ["Q1_A_note", "Q1_A_mood"]
+          }
+        },
+        {
+          "text": "In a busy day, between two tasks.",
+          "next": "L2_flavor_puzzle",
+          "value": "B",
+          "reward": {
+            "locks": ["Q1_B"],
+            "unlockFragments": ["Q1_B_note", "Q1_B_mood"]
+          }
+        },
+        {
+          "text": "For a friendly chat, with company.",
+          "next": "L2_flavor_puzzle",
+          "value": "C",
+          "reward": {
+            "locks": ["Q1_C"],
+            "unlockFragments": ["Q1_C_note", "Q1_C_mood"]
+          }
+        },
+        {
+          "text": "In the evening, with a show or movie, to unwind.",
+          "next": "L2_flavor_puzzle",
+          "value": "D",
+          "reward": {
+            "locks": ["Q1_D"],
+            "unlockFragments": ["Q1_D_note", "Q1_D_mood"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2_flavor_puzzle",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "keep",
+      "maxPick": 2,
+      "optionFlagsBase": "L2_opt_",
+      "title": "What are the two most important aspects?",
+      "text": [
+        {
+          "text": "Look through the aspects and pick the TWO elements that matter most to you in a soft drink right now."
+        }
+      ],
+      "options": [
+        "Light feel, not too sweet",
+        "Refreshing, thirst-quenching",
+        "Familiar, classic taste",
+        "More characterful, a bit unusual",
+        "Playful, fruity mood",
+        "Safe choice for social situations"
+      ],
+      "maxAttempts": 1,
+      "onSuccess": {
+        "goto": "logic",
+        "setFlags": ["L2_traits_selected"]
+      },
+      "onFail": {
+        "goto": "L2_flavor_puzzle",
+        "setFlags": ["L2_retry"]
+      }
+    },
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Analyzing...",
+      "text": [
+        {
+          "text": "Based on your choices, we’ll determine which NovaFizz drink fits you best right now."
+        }
+      ],
+      "logic": [
+        { "if": ["L2_opt_1", "L2_opt_2"], "goto": "insight_citrus_light" },
+        { "if": ["L2_opt_1", "L2_opt_3"], "goto": "insight_cola_zero" },
+        { "if": ["L2_opt_1", "L2_opt_4"], "goto": "insight_ginger_lime" },
+        { "if": ["L2_opt_1", "L2_opt_5"], "goto": "insight_berry_breeze" },
+        { "if": ["L2_opt_1", "L2_opt_6"], "goto": "insight_cola_zero" },
+
+        { "if": ["L2_opt_2", "L2_opt_3"], "goto": "insight_classic_cola" },
+        { "if": ["L2_opt_2", "L2_opt_4"], "goto": "insight_ginger_lime" },
+        { "if": ["L2_opt_2", "L2_opt_5"], "goto": "insight_berry_breeze" },
+        { "if": ["L2_opt_2", "L2_opt_6"], "goto": "insight_citrus_light" },
+
+        { "if": ["L2_opt_3", "L2_opt_4"], "goto": "insight_ginger_lime" },
+        { "if": ["L2_opt_3", "L2_opt_5"], "goto": "insight_classic_cola" },
+        { "if": ["L2_opt_3", "L2_opt_6"], "goto": "insight_classic_cola" },
+
+        { "if": ["L2_opt_4", "L2_opt_5"], "goto": "insight_ginger_lime" },
+        { "if": ["L2_opt_4", "L2_opt_6"], "goto": "insight_ginger_lime" },
+
+        { "if": ["L2_opt_5", "L2_opt_6"], "goto": "insight_berry_breeze" },
+
+        { "default": "insight_classic_cola" }
+      ]
+    },
+    {
+      "id": "insight_classic_cola",
+      "title": "Recommendation: NovaFizz Classic Cola",
+      "text": [
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Your picks point to a familiar, balanced taste profile. You like it when a soft drink is classic, reliable, and works in almost any situation – with food, in company, or as a quick refresh.\n\nFor this pattern, **NovaFizz Classic Cola** is the best fit from the NovaFizz range: a stable “safe hands” cola, just as sweet and characterful as it needs to be, without going overboard."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Show the product card",
+          "next": "end_classic_cola"
+        }
+      ]
+    },
+    {
+      "id": "insight_cola_zero",
+      "title": "Recommendation: NovaFizz Cola Zero",
+      "text": [
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Your combinations show that a classic taste is important to you, but you don’t want too much sugar. You like it when a drink feels light, yet still delivers the familiar cola experience.\n\nFor this preference, **NovaFizz Cola Zero** is the best match: sugar free, yet following the classic flavor line – a good choice when you want to watch your intake without compromise."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Show the product card",
+          "next": "end_cola_zero"
+        }
+      ]
+    },
+    {
+      "id": "insight_citrus_light",
+      "title": "Recommendation: NovaFizz Citrus Light",
+      "text": [
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Your choices point toward a refreshing, thirst-quenching, lighter drink. You’re looking for something that doesn’t sit heavy, isn’t overly syrupy, but rather refreshes and moves you forward.\n\nIn this direction, **NovaFizz Citrus Light** is the best candidate from the NovaFizz lineup: citrusy, bright, with reduced sugar – ideal for sipping during the day, whether you’re working or in the middle of a busy schedule."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Show the product card",
+          "next": "end_citrus_light"
+        }
+      ]
+    },
+    {
+      "id": "insight_berry_breeze",
+      "title": "Recommendation: NovaFizz Berry Breeze – No Added Sugar",
+      "text": [
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Your pairings suggest you’re happy to choose a fruity, playful taste, while not wanting too much added sugar. It’s important that the drink feels like an experience, but still leaves a lighter after-feel.\n\nFor this preference, **NovaFizz Berry Breeze – No Added Sugar** is the best fit: a berry, fruity mood with no added sugar – a small “dessert experience” with minimal guilt."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Show the product card",
+          "next": "end_berry_breeze"
+        }
+      ]
+    },
+    {
+      "id": "insight_ginger_lime",
+      "title": "Recommendation: NovaFizz Ginger Lime Craft",
+      "text": [
+        {
+          "ifUnlocked": "Q1_A_note",
+          "text": "{fragment:Q1_A_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_B_note",
+          "text": "{fragment:Q1_B_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_C_note",
+          "text": "{fragment:Q1_C_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q1_D_note",
+          "text": "{fragment:Q1_D_note}",
+          "mode": "prepend_before",
+          "separator": "\n\n"
+        },
+        {
+          "text": "Your choices draw a more characterful, slightly unusual direction. You’re open to flavors with a spicier or more distinctive tone, and you don’t mind if the drink feels a bit more “grown-up”.\n\nFor this pattern, **NovaFizz Ginger Lime Craft** fits best in the NovaFizz range: ginger-lime with a strong, crafted character that stands out – a good pick when you’re not looking for the usual option."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Show the product card",
+          "next": "end_ginger_lime"
+        }
+      ]
+    },
+    {
+      "id": "end_classic_cola",
+      "title": "Your recommended drink: NovaFizz Classic Cola",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "NovaFizz Classic Cola",
+        "subtitle": "Classic, balanced cola experience.",
+        "extra": ""
+      },
+      "text": [],
+      "imagePrompt": {
+        "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+        "chapter": "warm balanced cola atmosphere with soft amber tones and calm highlights, stable and familiar mood",
+        "page": "the scene shows a cola beverage with warm amber reflections in the glass, soft balanced highlights and calm carbonation, with a subtle warm gradient background that reinforces the classic and reliable character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+        "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+        "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+        "styleProfile": {
+          "mood": "clean-commercial",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_cola_zero",
+      "title": "Your recommended drink: NovaFizz Cola Zero",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "NovaFizz Cola Zero",
+        "subtitle": "Classic taste, no sugar.",
+        "extra": ""
+      },
+      "text": [],
+      "imagePrompt": {
+        "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+        "chapter": "clean light-toned zero-sugar atmosphere with cool reflections, crisp minimal contrast and a fresh modern feel",
+        "page": "the scene features a zero-sugar cola with clear sparkling texture in the glass, cool neutral highlights, more negative space around the product and a light gradient background that emphasizes a clean, easy-to-drink character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+        "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+        "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+        "styleProfile": {
+          "mood": "clean-commercial",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_citrus_light",
+      "title": "Your recommended drink: NovaFizz Citrus Light",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "NovaFizz Citrus Light",
+        "subtitle": "Refreshing, citrusy, light.",
+        "extra": ""
+      },
+      "text": [],
+      "imagePrompt": {
+        "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+        "chapter": "bright citrus-infused refreshing atmosphere with airy yellow-green accents and light playful reflections",
+        "page": "the scene emphasizes a refreshing citrus drink with bright translucent tones in the glass, lively small bubbles, clear highlights and an airy light-gradient background that conveys freshness, energy and an easy, uplifting character; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+        "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+        "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+        "styleProfile": {
+          "mood": "clean-commercial",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_berry_breeze",
+      "title": "Your recommended drink: NovaFizz Berry Breeze – No Added Sugar",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "NovaFizz Berry Breeze – No Added Sugar",
+        "subtitle": "Fruity experience, no added sugar.",
+        "extra": ""
+      },
+      "text": [],
+      "imagePrompt": {
+        "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+        "chapter": "soft berry-tinted playful atmosphere with gentle purple-magenta gradients and light sparkling highlights",
+        "page": "the scene displays a berry-inspired drink with subtle purple tones in the glass, soft playful bubbles, delicate fruity highlights and a light gradient background that feels airy, fun and pleasantly sweet without being heavy; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+        "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+        "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+        "styleProfile": {
+          "mood": "clean-commercial",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_ginger_lime",
+      "title": "Your recommended drink: NovaFizz Ginger Lime Craft",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "NovaFizz Ginger Lime Craft",
+        "subtitle": "Characterful craft soft drink with ginger and lime.",
+        "extra": ""
+      },
+      "text": [],
+      "imagePrompt": {
+        "global": "high-quality product photography of a single soft drink can with a matching glass filled with a sparkling beverage, minimal clean studio background, soft diffused lighting, crisp reflections, subtle carbonation bubbles, modern commercial style, no text, no labels, no logos, no brand identifiers, no watermark, high resolution, balanced composition",
+        "chapter": "craft-inspired warm-spicy atmosphere with golden-amber accents and subtle lime-green highlights, refined and slightly bold",
+        "page": "the scene presents a ginger-lime craft drink with rich amber-golden tones in the glass, defined energetic bubbles, a touch of green citrus highlight and a softly textured gradient background that suggests warmth, character and a more mature flavor profile; {fragment:Q1_A_mood}; {fragment:Q1_B_mood}; {fragment:Q1_C_mood}; {fragment:Q1_D_mood}",
+        "combinedPrompt": "{global}, {chapter}, refined commercial product scene, {page}",
+        "negativePrompt": "no text, no labels, no logos, no watermark, no brand names, no UI elements, no people, no hands, no distorted objects, no low resolution, no clutter, no extreme reflections, no busy background",
+        "styleProfile": {
+          "mood": "clean-commercial",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    }
+  ],
+  "fragments": {
+    "Q1_A_note": {
+      "id": "Q1_A_note",
+      "text": "Right now you’d enjoy a taste that quietly does its job and lets the moment itself stand out."
+    },
+    "Q1_B_note": {
+      "id": "Q1_B_note",
+      "text": "Every sip counts at the moment: a small push that carries you to the next step."
+    },
+    "Q1_C_note": {
+      "id": "Q1_C_note",
+      "text": "This calls for a mood that blends into the flow of conversation almost invisibly."
+    },
+    "Q1_D_note": {
+      "id": "Q1_D_note",
+      "text": "This is the part of the day when it feels good to have a taste that slows down with you."
+    },
+    "Q1_A_mood": {
+      "id": "Q1_A_mood",
+      "text": "warm soft directional light, gentle golden gradient background, calm slow bubble pattern, relaxed balanced atmosphere"
+    },
+    "Q1_B_mood": {
+      "id": "Q1_B_mood",
+      "text": "crisp bright cool-toned light, clean silver-white gradient background, strong upward bubble motion, energetic focused atmosphere"
+    },
+    "Q1_C_mood": {
+      "id": "Q1_C_mood",
+      "text": "light playful mixed-tone lighting, soft teal-magenta gradient background, swirling playful bubble patterns, sociable easy-going atmosphere"
+    },
+    "Q1_D_mood": {
+      "id": "Q1_D_mood",
+      "text": "soft evening low-contrast lighting, deep teal-navy gradient background, slow gentle bubble drift, calm unwinding atmosphere"
+    }
+  }
+}
+

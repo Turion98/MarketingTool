@@ -83,7 +83,9 @@ import ProfileCardFrame from "../layout/ProfileCardFrame/ProfileCardFrame";
 
 
 const DEBUG_RUNES = true;
-const DELAY_MS = 3000;
+// Globális narrációs / gépelési indulási késleltetés (ms).
+// 3000ms helyett alacsonyabb érték, hogy hamarabb induljon a szöveg + hang.
+const DELAY_MS = 1200;
 const FADE_IN_MS = 600;
 const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
@@ -2683,14 +2685,18 @@ window.setTimeout(() => {
   // rune dock
   const unlockedRunes = useMemo(
     () =>
-      Array.from(
-        flags ?? new Set<string>()
-      ).filter(isRuneId),
+      Array.from(flags ?? new Set<string>()).filter(isRuneId),
     [flags]
   );
+
+  // Rune dock csak akkor jelenjen meg, ha
+  // - van legalább egy aktuálisan feloldott rúna, ÉS
+  // - az adott kampányhoz tartozik runePack konfiguráció (runePackForDisplay)
   const showRuneDock = useMemo(
-    () => (unlockedRunes?.length ?? 0) > 0,
-    [unlockedRunes]
+    () =>
+      !!runePackForDisplay &&
+      (unlockedRunes?.length ?? 0) > 0,
+    [runePackForDisplay, unlockedRunes]
   );
 
   // prefetch sound toggle icons

@@ -6,7 +6,7 @@ import "./global.css";
 import "@/styles/_typography.scss";
 import { GameStateProvider } from "./lib/GameStateContext";
 import { StyleProfileProvider } from "./lib/StyleProfileContext";
-import { Cormorant_Garamond } from "next/font/google";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import PaperEffect from "./components/filters/PaperEffect";
 import "@/styles/skins/legacy-default.css";
 import "@/styles/skins/legacy-contract-overlay.css";
@@ -22,6 +22,12 @@ const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-heading-present",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata = {
   title: "Adventure App",
   description: "AI-narratív játék",
@@ -32,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       data-skin="legacy-default"
-      className={cormorant.variable}
+      className={`${cormorant.variable} ${plusJakarta.variable}`}
     >
       <body>
         {/* ✅ Globális Auth-keret (mock auth most, később bővíthető) */}

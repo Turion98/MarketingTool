@@ -3,93 +3,336 @@
 import React, { useState } from "react";
 import styles from "./ContactModal.module.scss";
 
+type Lang = "hu" | "en";
+
 type ContactModalProps = {
   open: boolean;
   onClose: () => void;
+  lang?: Lang;
 };
 
-const MAIN_GOALS = [
-  { value: "lead", label: "Lead generálás" },
-  { value: "brand_edu", label: "Márkaélmény / edukáció" },
-  { value: "recommender", label: "Termékajánló / konfigurátor" },
-  { value: "hr", label: "HR / employer branding" },
-  { value: "other", label: "Egyéb" },
-] as const;
+type Option = { value: string; label: string };
 
-const TIMING_OPTIONS = [
-  { value: "", label: "Válassz (opcionális)" },
-  { value: "1m", label: "Következő 1 hónapban" },
-  { value: "1-3m", label: "1–3 hónap" },
-  { value: "3-6m", label: "3–6 hónap" },
-  { value: "6m+", label: "6+ hónap" },
-];
+const MAIN_GOALS_BY_LANG: Record<Lang, Option[]> = {
+  hu: [
+    { value: "", label: "Válassz (opcionális)" },
+    { value: "lead", label: "Lead generálás" },
+    { value: "brand_edu", label: "Márkaélmény / edukáció" },
+    { value: "recommender", label: "Termékajánló / konfigurátor" },
+    { value: "hr", label: "HR / employer branding" },
+    { value: "other", label: "Egyéb" },
+  ],
+  en: [
+    { value: "", label: "Select (optional)" },
+    { value: "lead", label: "Lead generation" },
+    { value: "brand_edu", label: "Brand experience / education" },
+    { value: "recommender", label: "Product recommender / configurator" },
+    { value: "hr", label: "HR / employer branding" },
+    { value: "other", label: "Other" },
+  ],
+};
 
-const REFERENCE_EXAMPLES = [
-  { value: "", label: "Válassz (opcionális)" },
-  { value: "skincare", label: "Strukturált ajánlómodell (pl. bőrápolás)" },
-  { value: "coffee", label: "Gyors döntési profil (pl. kávé)" },
-  { value: "holiday", label: "Szezonális döntési minta (pl. ünnep)" },
-  { value: "marketing-sim", label: "Edukációs / onboarding flow" },
-  { value: "softdrink", label: "Gyors termékajánló" },
-  { value: "creative", label: "Kreatív problémamegoldó profil" },
-  { value: "other", label: "Nem tudom / Egyéb" },
-];
+const TIMING_OPTIONS_BY_LANG: Record<Lang, Option[]> = {
+  hu: [
+    { value: "", label: "Válassz (opcionális)" },
+    { value: "1m", label: "Következő 1 hónapban" },
+    { value: "1-3m", label: "1–3 hónap" },
+    { value: "3-6m", label: "3–6 hónap" },
+    { value: "6m+", label: "6+ hónap" },
+  ],
+  en: [
+    { value: "", label: "Select (optional)" },
+    { value: "1m", label: "Within 1 month" },
+    { value: "1-3m", label: "1–3 months" },
+    { value: "3-6m", label: "3–6 months" },
+    { value: "6m+", label: "6+ months" },
+  ],
+};
 
-const BUDGET_BANDS = [
-  { value: "", label: "Válassz (opcionális)" },
-  { value: "entry", label: "Belépő (< 1M Ft)" },
-  { value: "mid", label: "Közepes (1–3M Ft)" },
-  { value: "complex", label: "Komplex (3M+ Ft)" },
-  { value: "unknown", label: "Még nem tudom" },
-];
+const REFERENCE_EXAMPLES_BY_LANG: Record<Lang, Option[]> = {
+  hu: [
+    { value: "", label: "Válassz (opcionális)" },
+    { value: "skincare", label: "Strukturált ajánlómodell (pl. bőrápolás)" },
+    { value: "coffee", label: "Gyors döntési profil (pl. kávé)" },
+    { value: "holiday", label: "Szezonális döntési minta (pl. ünnep)" },
+    { value: "marketing-sim", label: "Edukációs / onboarding flow" },
+    { value: "softdrink", label: "Gyors termékajánló" },
+    { value: "creative", label: "Kreatív problémamegoldó profil" },
+    { value: "other", label: "Nem tudom / Egyéb" },
+  ],
+  en: [
+    { value: "", label: "Select (optional)" },
+    { value: "skincare", label: "Structured recommender (e.g. skincare)" },
+    { value: "coffee", label: "Short decision profile (e.g. coffee)" },
+    { value: "holiday", label: "Seasonal decision pattern (e.g. holiday)" },
+    { value: "marketing-sim", label: "Educational / onboarding flow" },
+    { value: "softdrink", label: "Quick product recommender" },
+    { value: "creative", label: "Creative problem-solving profile" },
+    { value: "other", label: "Not sure / Other" },
+  ],
+};
 
-const EXPECTED_OUTPUTS = [
-  { value: "embed", label: "Landingre beágyazható modul" },
-  { value: "social", label: "Social share kimenet" },
-  { value: "training", label: "Belső tréning / onboarding" },
-  { value: "other_out", label: "Egyéb" },
-];
+const BUDGET_BANDS_BY_LANG: Record<Lang, Option[]> = {
+  hu: [
+    { value: "", label: "Válassz (opcionális)" },
+    { value: "entry", label: "Belépő (< 1M Ft)" },
+    { value: "mid", label: "Közepes (1–3M Ft)" },
+    { value: "complex", label: "Komplex (3M+ Ft)" },
+    { value: "unknown", label: "Még nem tudom" },
+  ],
+  en: [
+    { value: "", label: "Select (optional)" },
+    { value: "entry", label: "Entry level" },
+    { value: "mid", label: "Mid range" },
+    { value: "complex", label: "Complex / large" },
+    { value: "unknown", label: "Not sure yet" },
+  ],
+};
 
-function buildBriefBody(data: BriefFormData): string {
+const EXPECTED_OUTPUTS_BY_LANG: Record<Lang, Option[]> = {
+  hu: [
+    { value: "embed", label: "Landingre beágyazható modul" },
+    { value: "social", label: "Social share kimenet" },
+    { value: "training", label: "Belső tréning / onboarding" },
+    { value: "other_out", label: "Egyéb" },
+  ],
+  en: [
+    { value: "embed", label: "Embeddable landing module" },
+    { value: "social", label: "Social share output" },
+    { value: "training", label: "Internal training / onboarding" },
+    { value: "other_out", label: "Other" },
+  ],
+};
+
+const CONTACT_COPY: Record<
+  Lang,
+  {
+    title: string;
+    lead: string;
+    closeAria: string;
+    sectionBasics: string;
+    sectionContext: string;
+    sectionExample: string;
+    sectionOutput: string;
+    labelName: string;
+    labelCompany: string;
+    labelEmail: string;
+    labelWebsite: string;
+    labelMainGoal: string;
+    labelTargetAudience: string;
+    labelTiming: string;
+    labelReference: string;
+    labelExampleNote: string;
+    labelBudget: string;
+    labelExpectedOutputs: string;
+    labelBrandGuideline: string;
+    labelBrandNote: string;
+    labelOtherNote: string;
+    placeholderName: string;
+    placeholderCompany: string;
+    placeholderEmail: string;
+    placeholderWebsite: string;
+    placeholderAudience: string;
+    placeholderExampleNote: string;
+    placeholderBrandNote: string;
+    placeholderOther: string;
+    yes: string;
+    no: string;
+    cancel: string;
+    submit: string;
+    emailSubject: string;
+    emailSectionBasics: string;
+    emailSectionContext: string;
+    emailSectionExample: string;
+    emailSectionOutput: string;
+    emailName: string;
+    emailCompany: string;
+    emailEmail: string;
+    emailWebsite: string;
+    emailMainGoal: string;
+    emailTargetAudience: string;
+    emailTiming: string;
+    emailReference: string;
+    emailNote: string;
+    emailBudget: string;
+    emailExpectedOutput: string;
+    emailBrandGuideline: string;
+    emailBrandNote: string;
+    emailOtherNote: string;
+    dash: string;
+  }
+> = {
+  hu: {
+    title: "Rövid brief – 3 perc",
+    lead:
+      "Töltsd ki a blokkokat, és 24 órán belül válaszolok egy konkrét javaslattal. 2–3 mondat bőven elég a szöveges mezőkben.",
+    closeAria: "Bezárás",
+    sectionBasics: "Alapadatok",
+    sectionContext: "Kampány kontextus",
+    sectionExample: "Melyik példa áll közel?",
+    sectionOutput: "Korlátok és kimenet",
+    labelName: "Név *",
+    labelCompany: "Cég",
+    labelEmail: "Email *",
+    labelWebsite: "Weboldal / kampány URL",
+    labelMainGoal: "Fő cél",
+    labelTargetAudience: "Célközönség (1–2 mondat)",
+    labelTiming: "Időzítés",
+    labelReference: "Kiinduló példa",
+    labelExampleNote: "Mit kellene máshogy tudnia? (opcionális)",
+    labelBudget: "Büdzsé-sáv",
+    labelExpectedOutputs: "Várt kimenet (több is választható)",
+    labelBrandGuideline: "Van kész vizuális / brand guideline?",
+    labelBrandNote: "Brand megjegyzés / link (opcionális)",
+    labelOtherNote: "Egyéb megjegyzés",
+    placeholderName: "Név",
+    placeholderCompany: "Cég / márka",
+    placeholderEmail: "email@ceg.hu",
+    placeholderWebsite: "https://...",
+    placeholderAudience: "Kinek szól a kampány?",
+    placeholderExampleNote: "Rövid megjegyzés...",
+    placeholderBrandNote: "Pl. link a guideline-hoz",
+    placeholderOther: "Bármi más, ami fontos...",
+    yes: "Igen",
+    no: "Nem",
+    cancel: "Mégsem",
+    submit: "Brief küldése",
+    emailSubject: "Questell – brief / ajánlatkérés",
+    emailSectionBasics: "[Alapadatok]",
+    emailSectionContext: "[Kampány kontextus]",
+    emailSectionExample: "[Modell / példa]",
+    emailSectionOutput: "[Korlátok / output]",
+    emailName: "Név",
+    emailCompany: "Cég",
+    emailEmail: "Email",
+    emailWebsite: "Weboldal",
+    emailMainGoal: "Fő cél",
+    emailTargetAudience: "Célközönség",
+    emailTiming: "Időzítés",
+    emailReference: "Kiinduló példa",
+    emailNote: "Megjegyzés",
+    emailBudget: "Büdzsé-sáv",
+    emailExpectedOutput: "Várt kimenet",
+    emailBrandGuideline: "Brand guideline",
+    emailBrandNote: "Brand megjegyzés",
+    emailOtherNote: "Egyéb megjegyzés",
+    dash: "–",
+  },
+  en: {
+    title: "Short brief – 3 min",
+    lead:
+      "Fill in the sections and you’ll get a concrete proposal within 24 hours. A couple of sentences are enough for text fields.",
+    closeAria: "Close",
+    sectionBasics: "Basic info",
+    sectionContext: "Campaign context",
+    sectionExample: "Which example is closest?",
+    sectionOutput: "Constraints and output",
+    labelName: "Name *",
+    labelCompany: "Company",
+    labelEmail: "Email *",
+    labelWebsite: "Website / campaign URL",
+    labelMainGoal: "Main goal",
+    labelTargetAudience: "Target audience (1–2 sentences)",
+    labelTiming: "Timeline",
+    labelReference: "Reference example",
+    labelExampleNote: "What should work differently? (optional)",
+    labelBudget: "Budget band",
+    labelExpectedOutputs: "Expected output (select all that apply)",
+    labelBrandGuideline: "Do you have visual / brand guidelines?",
+    labelBrandNote: "Brand note / link (optional)",
+    labelOtherNote: "Other notes",
+    placeholderName: "Name",
+    placeholderCompany: "Company / brand",
+    placeholderEmail: "email@company.com",
+    placeholderWebsite: "https://...",
+    placeholderAudience: "Who is this campaign for?",
+    placeholderExampleNote: "Short note...",
+    placeholderBrandNote: "e.g. link to guidelines",
+    placeholderOther: "Anything else that matters...",
+    yes: "Yes",
+    no: "No",
+    cancel: "Cancel",
+    submit: "Send brief",
+    emailSubject: "Questell – brief / request",
+    emailSectionBasics: "[Basic info]",
+    emailSectionContext: "[Campaign context]",
+    emailSectionExample: "[Model / example]",
+    emailSectionOutput: "[Constraints / output]",
+    emailName: "Name",
+    emailCompany: "Company",
+    emailEmail: "Email",
+    emailWebsite: "Website",
+    emailMainGoal: "Main goal",
+    emailTargetAudience: "Target audience",
+    emailTiming: "Timeline",
+    emailReference: "Reference example",
+    emailNote: "Note",
+    emailBudget: "Budget band",
+    emailExpectedOutput: "Expected output",
+    emailBrandGuideline: "Brand guideline",
+    emailBrandNote: "Brand note",
+    emailOtherNote: "Other note",
+    dash: "–",
+  },
+};
+
+function buildBriefBody(
+  data: BriefFormData,
+  lang: Lang
+): string {
+  const c = CONTACT_COPY[lang];
+  const mainGoals = MAIN_GOALS_BY_LANG[lang];
+  const timingOpts = TIMING_OPTIONS_BY_LANG[lang];
+  const refExamples = REFERENCE_EXAMPLES_BY_LANG[lang];
+  const budgetBands = BUDGET_BANDS_BY_LANG[lang];
+  const expectedOutputs = EXPECTED_OUTPUTS_BY_LANG[lang];
+
   const lines: string[] = [
-    "[Alapadatok]",
-    `Név: ${data.name}`,
-    data.company ? `Cég: ${data.company}` : "Cég: –",
-    `Email: ${data.email}`,
-    data.website ? `Weboldal: ${data.website}` : "Weboldal: –",
+    c.emailSectionBasics,
+    `${c.emailName}: ${data.name}`,
+    data.company ? `${c.emailCompany}: ${data.company}` : `${c.emailCompany}: ${c.dash}`,
+    `${c.emailEmail}: ${data.email}`,
+    data.website ? `${c.emailWebsite}: ${data.website}` : `${c.emailWebsite}: ${c.dash}`,
     "",
-    "[Kampány kontextus]",
-    `Fő cél: ${
-      (MAIN_GOALS.find((g) => g.value === data.mainGoal)?.label ?? data.mainGoal) || "–"
+    c.emailSectionContext,
+    `${c.emailMainGoal}: ${
+      (mainGoals.find((g) => g.value === data.mainGoal)?.label ?? data.mainGoal) || c.dash
     }`,
-    data.targetAudience ? `Célközönség: ${data.targetAudience}` : "Célközönség: –",
-    `Időzítés: ${
-      (TIMING_OPTIONS.find((t) => t.value === data.timing)?.label ?? data.timing) || "–"
+    data.targetAudience
+      ? `${c.emailTargetAudience}: ${data.targetAudience}`
+      : `${c.emailTargetAudience}: ${c.dash}`,
+    `${c.emailTiming}: ${
+      (timingOpts.find((t) => t.value === data.timing)?.label ?? data.timing) || c.dash
     }`,
     "",
-    "[Modell / példa]",
-    `Kiinduló példa: ${
-      (REFERENCE_EXAMPLES.find((e) => e.value === data.referenceExample)?.label ??
-        data.referenceExample) || "–"
+    c.emailSectionExample,
+    `${c.emailReference}: ${
+      (refExamples.find((e) => e.value === data.referenceExample)?.label ??
+        data.referenceExample) || c.dash
     }`,
-    data.exampleNote ? `Megjegyzés: ${data.exampleNote}` : "",
+    data.exampleNote ? `${c.emailNote}: ${data.exampleNote}` : "",
     "",
-    "[Korlátok / output]",
-    `Büdzsé-sáv: ${
-      (BUDGET_BANDS.find((b) => b.value === data.budgetBand)?.label ?? data.budgetBand) || "–"
+    c.emailSectionOutput,
+    `${c.emailBudget}: ${
+      (budgetBands.find((b) => b.value === data.budgetBand)?.label ?? data.budgetBand) || c.dash
     }`,
     data.expectedOutputs.length
-      ? `Várt kimenet: ${data.expectedOutputs
+      ? `${c.emailExpectedOutput}: ${data.expectedOutputs
           .map(
             (v) =>
-              EXPECTED_OUTPUTS.find((o) => o.value === v)?.label ??
-              v
+              expectedOutputs.find((o) => o.value === v)?.label ?? v
           )
           .join(", ")}`
-      : "Várt kimenet: –",
-    `Brand guideline: ${data.hasBrandGuideline === "yes" ? "Igen" : data.hasBrandGuideline === "no" ? "Nem" : "–"}`,
-    data.brandNote ? `Brand megjegyzés: ${data.brandNote}` : "",
-    data.otherNote ? `Egyéb megjegyzés: ${data.otherNote}` : "",
+      : `${c.emailExpectedOutput}: ${c.dash}`,
+    `${c.emailBrandGuideline}: ${
+      data.hasBrandGuideline === "yes"
+        ? c.yes
+        : data.hasBrandGuideline === "no"
+          ? c.no
+          : c.dash
+    }`,
+    data.brandNote ? `${c.emailBrandNote}: ${data.brandNote}` : "",
+    data.otherNote ? `${c.emailOtherNote}: ${data.otherNote}` : "",
   ];
   return lines.filter(Boolean).join("\n");
 }
@@ -128,7 +371,19 @@ const initialFormData: BriefFormData = {
   otherNote: "",
 };
 
-export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => {
+export const ContactModal: React.FC<ContactModalProps> = ({
+  open,
+  onClose,
+  lang: langProp,
+}) => {
+  const lang: Lang = langProp ?? "hu";
+  const t = CONTACT_COPY[lang];
+  const mainGoals = MAIN_GOALS_BY_LANG[lang];
+  const timingOptions = TIMING_OPTIONS_BY_LANG[lang];
+  const referenceExamples = REFERENCE_EXAMPLES_BY_LANG[lang];
+  const budgetBands = BUDGET_BANDS_BY_LANG[lang];
+  const expectedOutputs = EXPECTED_OUTPUTS_BY_LANG[lang];
+
   const [data, setData] = useState<BriefFormData>(initialFormData);
 
   const update = (key: keyof BriefFormData, value: string | string[]) => {
@@ -148,8 +403,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent("Questell – brief / ajánlatkérés");
-    const body = encodeURIComponent(buildBriefBody(data));
+    const subject = encodeURIComponent(t.emailSubject);
+    const body = encodeURIComponent(buildBriefBody(data, lang));
     window.location.href = `mailto:hello@questell.yourdomain?subject=${subject}&body=${body}`;
     setData(initialFormData);
     onClose();
@@ -168,81 +423,76 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
           type="button"
           className={styles.closeButton}
           onClick={onClose}
-          aria-label="Bezárás"
+          aria-label={t.closeAria}
         >
           ×
         </button>
 
         <h2 id="contact-modal-title" className={styles.title}>
-          Rövid brief – 3 perc
+          {t.title}
         </h2>
-        <p className={styles.lead}>
-          Töltsd ki a blokkokat, és 24 órán belül válaszolok egy konkrét
-          javaslattal. 2–3 mondat bőven elég a szöveges mezőkben.
-        </p>
+        <p className={styles.lead}>{t.lead}</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          {/* 1. Alapadatok */}
           <fieldset className={styles.section}>
-            <legend className={styles.sectionTitle}>Alapadatok</legend>
+            <legend className={styles.sectionTitle}>{t.sectionBasics}</legend>
             <div className={styles.row}>
               <div className={styles.field}>
-                <label htmlFor="contact-name">Név *</label>
+                <label htmlFor="contact-name">{t.labelName}</label>
                 <input
                   id="contact-name"
                   type="text"
                   required
                   value={data.name}
                   onChange={(e) => update("name", e.target.value)}
-                  placeholder="Név"
+                  placeholder={t.placeholderName}
                 />
               </div>
               <div className={styles.field}>
-                <label htmlFor="contact-company">Cég</label>
+                <label htmlFor="contact-company">{t.labelCompany}</label>
                 <input
                   id="contact-company"
                   type="text"
                   value={data.company}
                   onChange={(e) => update("company", e.target.value)}
-                  placeholder="Cég / márka"
+                  placeholder={t.placeholderCompany}
                 />
               </div>
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-email">Email *</label>
+              <label htmlFor="contact-email">{t.labelEmail}</label>
               <input
                 id="contact-email"
                 type="email"
                 required
                 value={data.email}
                 onChange={(e) => update("email", e.target.value)}
-                placeholder="email@ceg.hu"
+                placeholder={t.placeholderEmail}
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-website">Weboldal / kampány URL</label>
+              <label htmlFor="contact-website">{t.labelWebsite}</label>
               <input
                 id="contact-website"
                 type="url"
                 value={data.website}
                 onChange={(e) => update("website", e.target.value)}
-                placeholder="https://..."
+                placeholder={t.placeholderWebsite}
               />
             </div>
           </fieldset>
 
-          {/* 2. Kampány kontextus */}
           <fieldset className={styles.section}>
-            <legend className={styles.sectionTitle}>Kampány kontextus</legend>
+            <legend className={styles.sectionTitle}>{t.sectionContext}</legend>
             <div className={styles.field}>
-              <label>Fő cél</label>
+              <label htmlFor="contact-main-goal">{t.labelMainGoal}</label>
               <select
+                id="contact-main-goal"
                 value={data.mainGoal}
                 onChange={(e) => update("mainGoal", e.target.value)}
-                aria-label="Fő cél"
+                aria-label={t.labelMainGoal}
               >
-                <option value="">Válassz (opcionális)</option>
-                {MAIN_GOALS.map((g) => (
+                {mainGoals.map((g) => (
                   <option key={g.value} value={g.value}>
                     {g.label}
                   </option>
@@ -250,23 +500,23 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
               </select>
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-audience">Célközönség (1–2 mondat)</label>
+              <label htmlFor="contact-audience">{t.labelTargetAudience}</label>
               <textarea
                 id="contact-audience"
                 value={data.targetAudience}
                 onChange={(e) => update("targetAudience", e.target.value)}
-                placeholder="Kinek szól a kampány?"
+                placeholder={t.placeholderAudience}
                 rows={2}
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-timing">Időzítés</label>
+              <label htmlFor="contact-timing">{t.labelTiming}</label>
               <select
                 id="contact-timing"
                 value={data.timing}
                 onChange={(e) => update("timing", e.target.value)}
               >
-                {TIMING_OPTIONS.map((o) => (
+                {timingOptions.map((o) => (
                   <option key={o.value || "empty"} value={o.value}>
                     {o.label}
                   </option>
@@ -275,17 +525,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
             </div>
           </fieldset>
 
-          {/* 3. Modell / példa */}
           <fieldset className={styles.section}>
-            <legend className={styles.sectionTitle}>Melyik példa áll közel?</legend>
+            <legend className={styles.sectionTitle}>{t.sectionExample}</legend>
             <div className={styles.field}>
-              <label htmlFor="contact-reference">Kiinduló példa</label>
+              <label htmlFor="contact-reference">{t.labelReference}</label>
               <select
                 id="contact-reference"
                 value={data.referenceExample}
                 onChange={(e) => update("referenceExample", e.target.value)}
               >
-                {REFERENCE_EXAMPLES.map((e) => (
+                {referenceExamples.map((e) => (
                   <option key={e.value || "empty"} value={e.value}>
                     {e.label}
                   </option>
@@ -293,28 +542,27 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
               </select>
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-example-note">Mit kellene máshogy tudnia? (opcionális)</label>
+              <label htmlFor="contact-example-note">{t.labelExampleNote}</label>
               <textarea
                 id="contact-example-note"
                 value={data.exampleNote}
                 onChange={(e) => update("exampleNote", e.target.value)}
-                placeholder="Rövid megjegyzés..."
+                placeholder={t.placeholderExampleNote}
                 rows={2}
               />
             </div>
           </fieldset>
 
-          {/* 4. Korlátok és output */}
           <fieldset className={styles.section}>
-            <legend className={styles.sectionTitle}>Korlátok és kimenet</legend>
+            <legend className={styles.sectionTitle}>{t.sectionOutput}</legend>
             <div className={styles.field}>
-              <label htmlFor="contact-budget">Büdzsé-sáv</label>
+              <label htmlFor="contact-budget">{t.labelBudget}</label>
               <select
                 id="contact-budget"
                 value={data.budgetBand}
                 onChange={(e) => update("budgetBand", e.target.value)}
               >
-                {BUDGET_BANDS.map((b) => (
+                {budgetBands.map((b) => (
                   <option key={b.value || "empty"} value={b.value}>
                     {b.label}
                   </option>
@@ -322,9 +570,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
               </select>
             </div>
             <div className={styles.field}>
-              <span className={styles.label}>Várt kimenet (több is választható)</span>
+              <span className={styles.label}>{t.labelExpectedOutputs}</span>
               <div className={styles.checkboxGroup}>
-                {EXPECTED_OUTPUTS.map((o) => (
+                {expectedOutputs.map((o) => (
                   <label key={o.value} className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
@@ -337,7 +585,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
               </div>
             </div>
             <div className={styles.field}>
-              <span className={styles.label}>Van kész vizuális / brand guideline?</span>
+              <span className={styles.label}>{t.labelBrandGuideline}</span>
               <div className={styles.radioGroup}>
                 <label className={styles.radioLabel}>
                   <input
@@ -346,7 +594,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
                     checked={data.hasBrandGuideline === "yes"}
                     onChange={() => update("hasBrandGuideline", "yes")}
                   />
-                  <span>Igen</span>
+                  <span>{t.yes}</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input
@@ -355,27 +603,27 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
                     checked={data.hasBrandGuideline === "no"}
                     onChange={() => update("hasBrandGuideline", "no")}
                   />
-                  <span>Nem</span>
+                  <span>{t.no}</span>
                 </label>
               </div>
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-brand-note">Brand megjegyzés / link (opcionális)</label>
+              <label htmlFor="contact-brand-note">{t.labelBrandNote}</label>
               <input
                 id="contact-brand-note"
                 type="text"
                 value={data.brandNote}
                 onChange={(e) => update("brandNote", e.target.value)}
-                placeholder="Pl. link a guideline-hoz"
+                placeholder={t.placeholderBrandNote}
               />
             </div>
             <div className={styles.field}>
-              <label htmlFor="contact-other">Egyéb megjegyzés</label>
+              <label htmlFor="contact-other">{t.labelOtherNote}</label>
               <textarea
                 id="contact-other"
                 value={data.otherNote}
                 onChange={(e) => update("otherNote", e.target.value)}
-                placeholder="Bármi más, ami fontos..."
+                placeholder={t.placeholderOther}
                 rows={2}
               />
             </div>
@@ -383,10 +631,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({ open, onClose }) => 
 
           <div className={styles.actions}>
             <button type="button" className={styles.secondary} onClick={onClose}>
-              Mégsem
+              {t.cancel}
             </button>
             <button type="submit" className={styles.primary}>
-              Brief küldése
+              {t.submit}
             </button>
           </div>
         </form>

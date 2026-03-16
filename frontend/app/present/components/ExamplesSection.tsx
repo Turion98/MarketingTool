@@ -451,7 +451,7 @@ const EXAMPLES_EN: ExampleItem[] = [
   {
     id: "coffee",
     navLabel: "Quick pattern discovery model",
-    jsonFile: "coffee_quiz_demo_full.json",
+  jsonFile: "coffee_quiz_demo_full_en.json",
 
     title: "Short decision profile – example",
     heroLine:
@@ -507,7 +507,7 @@ const EXAMPLES_EN: ExampleItem[] = [
   {
     id: "holiday",
     navLabel: "Seasonal activation",
-    jsonFile: "karácsony.json",
+  jsonFile: "karácsony_en.json",
 
     title: "Seasonal decision pattern – example",
     heroLine:
@@ -619,7 +619,7 @@ const EXAMPLES_EN: ExampleItem[] = [
   {
     id: "softdrink",
     navLabel: "Recommender / decision path",
-    jsonFile: "uditő.json",
+  jsonFile: "uditő_en.json",
 
     title: "Fast product recommender model – example",
     heroLine:
@@ -675,7 +675,7 @@ const EXAMPLES_EN: ExampleItem[] = [
   {
     id: "creative",
     navLabel: "Creative problem-solving profile",
-    jsonFile: "uj.json",
+  jsonFile: "uj_en.json",
 
     title: "Creative problem-solving profile",
     heroLine:
@@ -978,11 +978,23 @@ function ExamplesSectionInner({
 
                     {isExpanded && (
                       <>
-                        <div className={s.examplesMedia}>
-                          <div className={s.examplesMediaPlaceholder} aria-hidden="true" />
-                        </div>
+                        {activeId !== "skincare" && (
+                          <div className={s.examplesMedia}>
+                            <div className={s.examplesMediaPlaceholder} aria-hidden="true" />
+                          </div>
+                        )}
 
                         <div className={s.examplesContent}>
+                          {activeId === "skincare" && (
+                            <div className={s.examplesMediaInContent}>
+                              <img
+                                src="/assets/Skincare.png"
+                                alt=""
+                                className={s.examplesMediaImage}
+                              />
+                            </div>
+                          )}
+
                           <h3 className={s.examplesContentTitle}>{active.title}</h3>
 
                           {active.details.blocks.map((block, idx) => {

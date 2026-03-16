@@ -2,13 +2,27 @@
 /* ================================
    PresentLandingPage.module.scss
    ================================ */
+
+/* ─── Tipográfia: body vs display címsorok ─── */
+$present-body-font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+  "Segoe UI", sans-serif;
+$present-heading-font: var(--font-heading-present), system-ui, sans-serif;
+
+/* ─── Színpaletta: szövegszínek ─── */
+.page {
+  --text-primary: rgba(230, 200, 150, 0.98);   /* címsorok, melegebb fehér */
+  --text-secondary: rgba(255, 255, 255, 0.9);  /* body, lead */
+  --text-muted: rgba(255, 255, 255, 0.75);     /* kisebb feliratok */
+  --text-accent: rgba(230, 200, 150, 0.95);    /* cián kék, kiemelések */
+}
+
 .page {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  color: var(--present-fg, #f5f5f7);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
+  color: var(--text-secondary);
+  font-family: $present-body-font;
+  font-weight: 400;
 
   /* page legyen “átlátszó”, csak blur */
 }
@@ -267,17 +281,25 @@
 }
 
 .heroTitle {
+  font-family: $present-heading-font;
+  font-weight: 800;
   font-size: clamp(1.9rem, 3vw, 2.7rem);
-  line-height: 1.15;
-  letter-spacing: 0.001em;
+  line-height: 1.12;
+  letter-spacing: 0.02em;
   margin-bottom: 2rem;
   margin-top: 3rem;
+  color: var(--text-primary);
+}
+
+.heroTitleAccent {
+  color: var(--text-accent);
 }
 
 .heroSubtitle {
   font-size: 1.08rem;
-  line-height: 1.3;
-  opacity: 0.85;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-secondary);
   font-style: italic;
   margin-bottom: 0.5rem;
   margin-right: 2rem;
@@ -285,9 +307,10 @@
 
 .heroSubtitles {
   font-size: 1.02rem;
+  font-weight: 500;
   font-style: italic;
-  line-height: 1.3;
-  opacity: 0.88;
+  line-height: 1.5;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   margin-right: 2rem;
 }
@@ -298,8 +321,7 @@
 .intentLabel {
   font-size: 1.08rem;
   line-height: 1.6;
-  opacity: 0.85;
-  color: rgba(230, 190, 225, 0.95);
+  color: var(--text-accent);
   text-align: center;
   margin-top: 0rem;
   
@@ -322,13 +344,14 @@
   display: flex;
   justify-content: center;
   font-size: 0.85rem;
+  color: var(--text-muted);
 
   opacity: 0;
   transform: translateY(-4px);
   transition: opacity 220ms ease, transform 220ms ease;
 
   &[data-visible="true"] {
-    opacity: 0.75;
+    opacity: 0.85;
     transform: translateY(0);
     animation: hintPulse 2.2s ease-in-out infinite;
   }
@@ -581,9 +604,8 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--text-muted);
 
-  opacity: 0.72;
-  
   padding: 0.25rem 0.55rem;
   border-radius: 999px;
 
@@ -686,11 +708,10 @@
   max-width: 64rem;
   text-align: center;
 
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   line-height: 1.85;
   letter-spacing: 0.004em;
-
-  opacity: 0.88;
+  color: var(--text-secondary);
 
   /* ❌ nincs háttér, nincs border, nincs shadow */
   background: none;
@@ -711,9 +732,8 @@
   font-style: normal;
   font-weight: 750;
   line-height: 2.0;
-  opacity: 1;
-  color: rgba(255, 255, 255, 0.98);
-  font-size: 1.35rem;
+  color: var(--text-accent);
+  font-size: 1.55rem;
 }
 
 /* ===========================
@@ -740,12 +760,12 @@
     line-height: 1.3;
     font-weight: 750;
 
-    color: rgba(255, 255, 255, 0.98);
+    color: var(--text-accent);
   }
 
   .audienceStatementInner {
-    padding-inline: 1rem;   /* vagy 0.75rem ha még levegősebb kell */
-    margin: 1.25rem auto;   /* kicsit feljebb húzza vertikálisan is */
+    padding-inline: 1rem;
+    margin: 1.25rem auto;
   }
 }
 
@@ -768,34 +788,38 @@
    =========================== */
 
 .platformTitle {
+  font-family: $present-heading-font;
+  font-weight: 700;
   font-size: clamp(1.9rem, 2.4vw, 2.3rem);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
   margin-bottom: 2rem;
+  color: var(--text-primary);
 }
 
 .platformLead {
   display: block;
   font-size: 1.26rem;
+  font-weight: 500;
   opacity: 0.9;
-  line-height: 1.8;
+  line-height: 1.5;
   max-width: 70%;
-  
 }
 .platformLead strong {
-  font-size: 1.28em;    /* 🔥 nagyobb hangsúly */
+  font-size: 1.28em;
   font-weight: 700;
   line-height: 1.25;
-  display: inline-block; /* stabilabb törés */
+  display: inline-block;
 }
 
 .platformLeadek {
   display: block;
   font-size: 1.0em;
-  opacity: 0.9;
+  color: var(--text-secondary);
   line-height: 1.5;
   max-width: 70%;
   font-style: italic;
   margin-bottom: 2.5rem;
-  
 }
 
 
@@ -945,7 +969,7 @@
 .campaignMoreLabel {
   pointer-events: none;
   font-size: 1.02rem;
-  opacity: 0.82;
+  color: var(--text-muted);
   letter-spacing: 0.01em;
 }
 
@@ -1161,11 +1185,11 @@
     opacity 220ms ease,
     transform 220ms ease; 
   padding: 10px 20px;
-   font-weight: 550;
+   font-weight: 500;
 }
 
 .campaignIdeal {
-  font-weight: 750;
+  font-weight: 700;
 }
 
 /* ✅ egységes kártyamagasság: mindkét grid ugyanazt a sor-magasságot kapja */
@@ -1236,7 +1260,7 @@
   line-height: 1.65;
   font-weight: 520;
   letter-spacing: 0.01em;
-  color: rgba(245, 247, 250, 0.94);
+  color: var(--text-secondary);
 
   /* 🔹 ugyanaz a színcsalád, de halkabb, „lezáró” tónus */
   background: #1E2636; // -1 lépcső a jelenlegihez képest
@@ -1274,9 +1298,9 @@
   strong {
     display: block;
     font-size: 1.1em;
-    font-weight: 650;
+    font-weight: 600;
     margin-bottom: 0.35rem;
-    opacity: 1;
+    color: var(--text-primary);
   }
 
   br {
@@ -1333,7 +1357,7 @@
     opacity: 1;
 
     font-size: 1.08rem;
-    font-weight: 650;
+    font-weight: 600;
     text-align: left;
     margin: 0;
   }
@@ -1355,7 +1379,7 @@
 
   .campaignIdeal {
     margin-top: 0.55rem;
-    font-weight: 750;
+    font-weight: 700;
   }
 
   /* hover logika mobilon ne szóljon bele */
@@ -1815,17 +1839,23 @@
    Title + body – kompakt ritmus
    ========================= */
 .whyItemTitle {
+  font-family: $present-heading-font;
   font-size: 1.34rem;
-  font-weight: 720;
+  font-weight: 700;
   margin: 0 0 0.65rem;
-  line-height: 1.12;
-  letter-spacing: 0.1px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
 }
 
 .whyHero .whyItemTitle {
+  font-family: $present-heading-font;
   font-size: clamp(1.75rem, 1.25vw + 1.2rem, 2.25rem);
   font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
   margin-bottom: 0.85rem;
+  color: var(--text-primary);
 }
 
 .whyBody {
@@ -1833,7 +1863,8 @@
   text-align: left;
 
   font-size: 1.06rem;
-  line-height: 1.58;
+  font-weight: 500;
+  line-height: 1.6;
   opacity: 0.9;
 }
 
@@ -1938,7 +1969,7 @@
   letter-spacing: 0.005em;
 
   opacity: 1;
-  color: rgba(245, 247, 250, 0.94);
+  color: var(--text-secondary);
 
   background: #1E2636;
   border-radius: 12px;
@@ -1992,6 +2023,7 @@
 
 .examplesTitle {
   font-size: clamp(2.4rem, 2.1vw, 1.8rem);
+  color: var(--text-primary);
 }
 
 /* nyitó mondatok */
@@ -2002,13 +2034,14 @@
 }
 
 .examplesIntroLead {
-  font-size: 1.12rem;
+  font-size: 1.22rem;
   line-height: 1.75;
   opacity: 0.9;
+  font-weight: 700;
 }
 
 .examplesIntroLead strong {
-  font-size: 1.32em;    /* 🔥 nagyobb hangsúly */
+  font-size: 1.22em;    /* 🔥 nagyobb hangsúly */
   font-weight: 700;
   line-height: 1.25;
   display: inline-block; /* stabilabb törés */
@@ -2352,7 +2385,7 @@ box-shadow:
   border: 1px solid rgba(255, 255, 255, 0.18);
 
   color: inherit;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 
   /* belépés – külön, hogy a gomb “külön életet” kapjon */
@@ -2446,9 +2479,12 @@ box-shadow:
 .examplesHeroTitle {
   margin-bottom: 10%;
 
+  font-family: $present-heading-font;
   font-size: clamp(1.95rem, 2.2vw, 2.35rem);
-  font-weight: 720;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
 
   opacity: 0;
   animation: examplesIn 980ms cubic-bezier(.6,.8,.2,1) forwards;
@@ -2632,6 +2668,7 @@ box-shadow:
   overflow: hidden;
 }
 
+
 .examplesMediaPlaceholder {
   width: 100%;
   height: clamp(160px, 24vh, 230px);
@@ -2641,6 +2678,35 @@ box-shadow:
     rgba(255, 255, 255, 0.02)
   );
   opacity: 0.85;
+}
+
+/* Skincare (és egyéb) placeholder kép – külön media blokkban */
+.examplesMedia .examplesMediaImage {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  vertical-align: top;
+}
+
+/* Kép a tartalmi görgetésben (skincare): header arányú keret, teteje/alja kitakarva */
+.examplesMediaInContent {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+  margin-bottom: 1rem;
+}
+
+.examplesMediaInContent .examplesMediaImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* szöveges tartalom görgethető */
@@ -2658,7 +2724,7 @@ box-shadow:
   display: flex;
   justify-content: center;
   font-size: 1.58rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.2px;
   margin-bottom: 1.05rem;
 
@@ -2742,7 +2808,7 @@ box-shadow:
   border: 1px solid rgba(255, 255, 255, 0.18);
 
   color: inherit;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
@@ -2773,7 +2839,7 @@ box-shadow:
   letter-spacing: 0.005em;
 
   opacity: 1;
-  color: rgba(245, 247, 250, 0.94);
+  color: var(--text-secondary);
 
   /* ✅ egységes QUESTELL closing tónus */
   background: #1E2636;
@@ -2879,6 +2945,7 @@ box-shadow:
   height: 100%;
 }
 
+
 .examplesDetailInner {
   min-height: 0;   /* 🔥 */
   height: 100%;
@@ -2890,6 +2957,11 @@ box-shadow:
   grid-template-rows: auto auto 1fr; /* HERO + MEDIA + CONTENT */
   gap: 0.85rem;
   min-height: 0; /* 🔥 */
+}
+
+/* Skincare: nincs külön media sor, csak a görgethető tartalom (kép benne) */
+.examplesDetailInner.isExpanded:not(:has(.examplesMedia)) {
+  grid-template-rows: 1fr;
 }
 
 /* A scrollozható résznek is kell shrink-elhetőség */
@@ -3343,10 +3415,13 @@ box-shadow:
    =========================== */
 
 .collabTitle {
+  font-family: $present-heading-font;
   font-size: clamp(1.6rem, 2.4vw, 1.8rem);
   font-weight: 700;
-  letter-spacing: 0.15px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   margin-bottom: 0.6rem;
+  color: var(--text-primary);
 }
 
 /* A teljes diagram belesimul a mesh háttérbe */
@@ -3392,32 +3467,38 @@ box-shadow:
   filter: drop-shadow(0 0 6px rgba(255,255,255,0.09));
 }
 
-/* ===== DOT ===== */
+/* ===== DOT – kisebb, stílusos állomás ===== */
 .collabDot {
-  fill: rgba(150,170,150,0.90);   
-  stroke: rgba(150,150,150,0.95);
-  stroke-width: 0.25;
-  
-  /* finom glow */
-  filter: 
-    drop-shadow(0 0 3px rgba(255,255,255,0.35))
-    drop-shadow(10px 10px 8px rgba(255,255,255,0.20));
+  fill: rgba(100, 218, 255, 0.35);
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 0.15;
+
+  filter: drop-shadow(0 0 3px rgba(100, 218, 255, 0.25));
 }
 
-/* ===== LABEL ===== */
+/* ===== Mozgó fénygömb ===== */
+.collabOrb {
+  fill: rgba(240, 218, 175, 0.95);
+  stroke: rgba(255, 248, 230, 0.8);
+  stroke-width: 0.2;
+  filter: url(#collabOrbGlow);
+  pointer-events: none;
+}
+
+/* ===== LABEL – fade átmenet ===== */
 .collabLabel {
   font-size: 2.3px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-anchor: middle;
 
-  fill: rgba(255,255,255,0.80);    /* nem vakító fehér */
+  fill: rgba(255, 255, 255, 0.88);
   paint-order: stroke;
-  stroke: rgba(0,0,0,0.35);
-  stroke-width: 0.13;              /* nagyon vékony kontraszt */
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 0.13;
 
-  /* valós glow, mint a mesh pontjain */
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.25));
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+  transition: opacity 0.4s ease;
 }
 .collabLead {
    font-size: 1.05rem;
@@ -3435,11 +3516,11 @@ box-shadow:
 
   font-size: clamp(1.02rem, 0.75vw + 0.8rem, 1.25rem);
   line-height: 1.65;
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: 0.006em;
 
   opacity: 1;
-  color: rgba(245, 247, 250, 0.94);
+  color: var(--text-secondary);
 
   /* ✅ egységes QUESTELL closing tónus */
   background: #1E2636;
@@ -3479,7 +3560,7 @@ box-shadow:
   }
 
   strong {
-    font-weight: 650;
+    font-weight: 600;
     color: rgba(255, 255, 255, 0.98);
     opacity: 1;
     white-space: nowrap;
@@ -3559,8 +3640,13 @@ box-shadow:
 
 .audienceTitle {
   grid-area: title;
+  font-family: $present-heading-font;
   font-size: clamp(1.4rem, 2.1vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   margin: 0 0 0.2rem 0;
+  color: var(--text-primary);
 }
 
 .audienceLead {
@@ -3774,8 +3860,13 @@ box-shadow:
 
 .techTitle {
   grid-area: title;
+  font-family: $present-heading-font;
   font-size: clamp(1.4rem, 2.1vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   margin: 0 0 0.2rem 0;
+  color: var(--text-primary);
 }
 
 .techLead {
@@ -3934,24 +4025,31 @@ box-shadow:
 }
 
 .finalCtaTitle {
+  font-family: $present-heading-font;
   font-size: clamp(1.6rem, 2.4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   margin-bottom: 0.9rem;
+  color: var(--text-primary);
 }
 
 .finalCtaText {
   max-width: 40rem;
   margin: 0 auto 1.7rem;
   font-size: 0.96rem;
-  line-height: 1.6;
-  opacity: 0.9;
+  font-weight: 500;
+  line-height: 1.65;
+  color: var(--text-secondary);
 }
 
 .finalCtaText strong {
-  font-size: 1.38em;    /* 🔥 nagyobb hangsúly */
+  font-size: 1.38em;
   font-weight: 700;
   line-height: 1.55;
   margin: 1rem auto 0.5rem auto;
-  display: inline-block; /* stabilabb törés */
+  display: inline-block;
+  color: var(--text-accent);
 }
 
 

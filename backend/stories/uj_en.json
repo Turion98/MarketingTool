@@ -1,0 +1,605 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "creative_profiler_demo_en",
+  "locale": "en",
+  "meta": {
+    "id": "creative_profiler_demo_en",
+    "title": "Creative Problem-Solving Profiler – Demo (EN)",
+    "author": "Qzera",
+    "description": "A short, three-question decision-based experience that guides the participant to one of three creative problem-solving archetypes.",
+    "coverImage": "/assets/covers/creative.jpg",
+    "startPageId": "Q1",
+    "campaignId": "creative_profiler_demo_en",
+    "logo": "/assets/my_logo.png",
+    "progress": {
+      "milestones": [
+        { "x": 0.15, "label": "Opening creative situation" },
+        { "x": 0.45, "label": "Second decision lens" },
+        { "x": 0.75, "label": "Third decision & focus" },
+        { "x": 1.0, "label": "Creative archetype profile" }
+      ]
+    },
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Next",
+        "urlTemplate": "https://www.example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "fragments": {
+    "Q2_A": {
+      "id": "Q2_A",
+      "text": "The Light That Opens a New Direction\n\nFor you, a different viewpoint doesn’t throw you off — it opens up a new space. It’s like light coming in from another angle, suddenly revealing where it’s actually worth moving next."
+    },
+    "Q2_B": {
+      "id": "Q2_B",
+      "text": "The Light From Which Form Emerges\n\nFree flow isn’t chaos for you: when you let impulses run, the light eventually pulls together and shows which direction holds the strongest potential."
+    },
+    "Q2_C": {
+      "id": "Q2_C",
+      "text": "The Light That Frames Your Focus\n\nStructure isn’t a constraint for you, but a point of orientation. Like a steady horizon line, it helps you see proportions clearly and keep what moves you forward in focus."
+    },
+    "Q2_D": {
+      "id": "Q2_D",
+      "text": "The Light That Clears in Silence\n\nA brief pause doesn’t slow you down — it clears your vision. In the quiet, it becomes sharper what the next real point of connection or forward step should be."
+    },
+    "SCENE_CONTEXT_1": {
+      "id": "SCENE_CONTEXT_1",
+      "text": "a minimal creative workspace with a clean desk and soft neutral background"
+    },
+    "SCENE_CONTEXT_2": {
+      "id": "SCENE_CONTEXT_2",
+      "text": "a tidy studio environment with subtle organizational structure around the workstation"
+    },
+    "SCENE_CONTEXT_3": {
+      "id": "SCENE_CONTEXT_3",
+      "text": "a focused work area with muted tones and a calm, orderly atmosphere"
+    },
+    "SCENE_CONTEXT_4": {
+      "id": "SCENE_CONTEXT_4",
+      "text": "a simple concept board in the background with lightly suggested shapes and faint markers"
+    },
+    "SCENE_CONTEXT_5": {
+      "id": "SCENE_CONTEXT_5",
+      "text": "a well-organized workstation where only the essential creative materials are visible"
+    },
+    "SCENE_CONTEXT_6": {
+      "id": "SCENE_CONTEXT_6",
+      "text": "a minimal, abstractly hinted backdrop with very soft geometric cues"
+    },
+    "IDEA_STATE_1": {
+      "id": "IDEA_STATE_1",
+      "text": "the scene suggests early-stage preparation, as if the idea is about to take shape"
+    },
+    "IDEA_STATE_2": {
+      "id": "IDEA_STATE_2",
+      "text": "a sense of gentle exploration, with the first traces of direction appearing"
+    },
+    "IDEA_STATE_3": {
+      "id": "IDEA_STATE_3",
+      "text": "a quiet moment where patterns seem to be forming and elements begin to align"
+    },
+    "IDEA_STATE_4": {
+      "id": "IDEA_STATE_4",
+      "text": "a refined phase where the noise has settled and the concept feels more defined"
+    },
+    "IDEA_STATE_5": {
+      "id": "IDEA_STATE_5",
+      "text": "a thoughtful evaluation stage, as if options are being compared before a final choice"
+    },
+    "IDEA_STATE_6": {
+      "id": "IDEA_STATE_6",
+      "text": "a calm presence indicating that clarity is emerging from the previous steps"
+    },
+    "MICRO_DETAILS_1": {
+      "id": "MICRO_DETAILS_1",
+      "text": "a few light notes or sketches resting on the desk, nothing overwhelming"
+    },
+    "MICRO_DETAILS_2": {
+      "id": "MICRO_DETAILS_2",
+      "text": "very subtle connecting marks or faint diagram hints around the workspace"
+    },
+    "MICRO_DETAILS_3": {
+      "id": "MICRO_DETAILS_3",
+      "text": "a single clearly placed concept card suggesting the current focus"
+    },
+    "MICRO_DETAILS_4": {
+      "id": "MICRO_DETAILS_4",
+      "text": "a barely visible trace of movement, suggesting the idea is still evolving"
+    },
+    "MICRO_DETAILS_5": {
+      "id": "MICRO_DETAILS_5",
+      "text": "a neatly arranged notebook and pen adding structure to the scene"
+    },
+    "MICRO_DETAILS_6": {
+      "id": "MICRO_DETAILS_6",
+      "text": "soft tonal accents around the edges of the frame, giving a touch of creative energy"
+    },
+    "MICRO_DETAILS_7": {
+      "id": "MICRO_DETAILS_7",
+      "text": "tiny, precise marks or clean lines indicating careful refinement"
+    },
+    "MICRO_DETAILS_8": {
+      "id": "MICRO_DETAILS_8",
+      "text": "a gentle highlight on one element of the workspace, signaling importance"
+    },
+    "OVR_SYNTH_Q3_1": {
+      "id": "OVR_SYNTH_Q3_1",
+      "text": "You decide when you feel the harmony — that quiet yet unmistakable moment when every detail drops into place. For you, a choice is not a flash, but the recognition of a stable coherence, like sunrise that suddenly makes everything visible."
+    },
+    "OVR_SYNTH_Q3_2": {
+      "id": "OVR_SYNTH_Q3_2",
+      "text": "Order leads you, but you can also embrace strong impulses. Your decisions land when a clear, bright direction suddenly gives meaning to the outlines. It’s like when the sun breaks through the clouds and everything starts to look more defined."
+    },
+    "OVR_SYNTH_Q3_3": {
+      "id": "OVR_SYNTH_Q3_3",
+      "text": "Behind your final decision sits the logical proportion of fine details. When you see the lines meet cleanly, there are no more questions. Your “sunrise” is the structure revealing itself — clarity of contour is what brings the answer."
+    },
+    "OVR_SYNTH_Q3_4": {
+      "id": "OVR_SYNTH_Q3_4",
+      "text": "You read from the rhythm of the moment. Your decision appears when the light conditions of the situation — mood, dynamics, soft cues — all point the same way. You are like dawn: you reveal the world by adapting to its circumstances."
+    },
+    "OVR_EXPL_Q3_1": {
+      "id": "OVR_EXPL_Q3_1",
+      "text": "From many impulses you quickly spot the one that naturally forms a whole. For you, a decision is born when order emerges out of motion."
+    },
+    "OVR_EXPL_Q3_2": {
+      "id": "OVR_EXPL_Q3_2",
+      "text": "You commit when one direction suddenly moves something in you. You don’t follow caution, but what feels alive, vivid, and pulls you forward."
+    },
+    "OVR_EXPL_Q3_3": {
+      "id": "OVR_EXPL_Q3_3",
+      "text": "Even in the midst of experimentation you sense exactly which version carries clean proportions. Your decision appears at the moment of simplification."
+    },
+    "OVR_EXPL_Q3_4": {
+      "id": "OVR_EXPL_Q3_4",
+      "text": "You read from the mood of the environment and choose what resonates with the situation. For you, a decision is not a rule but a sensitive tuning-in."
+    },
+    "OVR_REFIN_Q3_1": {
+      "id": "OVR_REFIN_Q3_1",
+      "text": "Your final decision appears when the details settle like a sunset — clear, sharp contours and clean structure. For you, quality always starts from form: once the lines fall into place, the choice is almost self-evident."
+    },
+    "OVR_REFIN_Q3_2": {
+      "id": "OVR_REFIN_Q3_2",
+      "text": "You don’t avoid bold ideas — you start from their light and refine them into a coherent, premium-level form. Your decisions come together when you feel that even the most daring direction still rests on clear proportion and reassuring structure."
+    },
+    "OVR_REFIN_Q3_3": {
+      "id": "OVR_REFIN_Q3_3",
+      "text": "Your choice is decided by micro-balance: rhythm, typographic proportion, visual weight. You land on the solution that, like the subtle contrasts of a sunset, feels mature, harmonious, and precisely composed."
+    },
+    "OVR_REFIN_Q3_4": {
+      "id": "OVR_REFIN_Q3_4",
+      "text": "Your decisions adapt to the light conditions of the situation. You pay attention to timing, channel, format — and choose the direction that keeps proportions clear across all of them. You optimize like the last light of day: highlighting what works, letting go of what doesn’t."
+    }
+  },
+  "pages": [
+    {
+      "id": "Q1",
+      "title": "How does your day’s rhythm switch on?",
+      "text": [
+        {
+          "text": "Pick the starting mood that best captures how your energy wakes up at the beginning of a day — whether it’s a creative or a more ordinary context."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Things open up slowly and at first I just watch how the world comes together.",
+          "next": "Q2",
+          "value": "A",
+          "reward": {
+            "locks": ["Q1_A"],
+            "unlockFragments": ["SCENE_CONTEXT_1"]
+          }
+        },
+        {
+          "text": "I switch on fast: quick momentum, first sparks, sudden ideas.",
+          "next": "Q2",
+          "value": "B",
+          "reward": {
+            "locks": ["Q1_B"],
+            "unlockFragments": ["SCENE_CONTEXT_2"]
+          }
+        },
+        {
+          "text": "Small steps and fine-tuning: I start by committing to something right away.",
+          "next": "Q2",
+          "value": "C",
+          "reward": {
+            "locks": ["Q1_C"],
+            "unlockFragments": ["SCENE_CONTEXT_3"]
+          }
+        },
+        {
+          "text": "The day’s rhythm leads: I let the mood set how things begin.",
+          "next": "Q2",
+          "value": "D",
+          "reward": {
+            "locks": ["Q1_D"],
+            "unlockFragments": ["SCENE_CONTEXT_4"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q2",
+      "title": "What gets you back on track when the day loses momentum?",
+      "text": [
+        {
+          "text": "Sometimes the rhythm of the day slows down suddenly. Choose the move or shift in mood that helps you most to get your energy back on the rails."
+        }
+      ],
+      "choices": [
+        {
+          "text": "I take a small step back and look at how the light falls from another angle.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": ["Q2_A", "IDEA_STATE_1"]
+          }
+        },
+        {
+          "text": "I shake up my thinking: I let ideas scatter until something catches the light.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": ["Q2_B", "IDEA_STATE_2"]
+          }
+        },
+        {
+          "text": "I return to the point where everything felt ordered — and build forward from there.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": ["Q2_C", "IDEA_STATE_3"]
+          }
+        },
+        {
+          "text": "I take a quiet pause: when the day softens, I see more clearly.",
+          "next": "Q3",
+          "reward": {
+            "unlockFragments": ["Q2_D", "IDEA_STATE_4"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q3",
+      "title": "What sets your final rhythm by the end of the day?",
+      "text": [
+        {
+          "text": "When you reach the point where you just have to tune into the direction of your day, what sign, mood, or flash helps you decide where the light tips inside you?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "When everything settles into place and I see the harmony clearly.",
+          "next": "logic",
+          "value": "1",
+          "reward": {
+            "locks": ["Q3_1"],
+            "unlockFragments": [
+              "MICRO_DETAILS_1",
+              "OVR_SYNTH_Q3_1",
+              "OVR_EXPL_Q3_1",
+              "OVR_REFIN_Q3_1"
+            ]
+          }
+        },
+        {
+          "text": "I go with what flashes up the strongest — what cuts through the light.",
+          "next": "logic",
+          "value": "2",
+          "reward": {
+            "locks": ["Q3_2"],
+            "unlockFragments": [
+              "MICRO_DETAILS_2",
+              "OVR_SYNTH_Q3_2",
+              "OVR_EXPL_Q3_2",
+              "OVR_REFIN_Q3_2"
+            ]
+          }
+        },
+        {
+          "text": "The fine proportion of details decides it: where every small element lines up.",
+          "next": "logic",
+          "value": "3",
+          "reward": {
+            "locks": ["Q3_3"],
+            "unlockFragments": [
+              "MICRO_DETAILS_3",
+              "OVR_SYNTH_Q3_3",
+              "OVR_EXPL_Q3_3",
+              "OVR_REFIN_Q3_3"
+            ]
+          }
+        },
+        {
+          "text": "I listen to the inner rhythm: what resonates best with the day’s mood.",
+          "next": "logic",
+          "value": "4",
+          "reward": {
+            "locks": ["Q3_4"],
+            "unlockFragments": [
+              "MICRO_DETAILS_4",
+              "OVR_SYNTH_Q3_4",
+              "OVR_EXPL_Q3_4",
+              "OVR_REFIN_Q3_4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "type": "logic",
+      "title": "Analyzing...",
+      "text": [
+        {
+          "text": "Based on your choices, we’ll map your creative problem-solving character."
+        }
+      ],
+      "logic": [
+        { "if": ["Q1_A", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_A", "Q3_4"], "goto": "end_synthesizer" },
+        { "if": ["Q1_D", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_D", "Q3_4"], "goto": "end_synthesizer" },
+        { "if": ["Q1_C", "Q3_1"], "goto": "end_synthesizer" },
+        { "if": ["Q1_B", "Q3_1"], "goto": "end_synthesizer" },
+
+        { "if": ["Q1_B", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_D", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_A", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_C", "Q3_2"], "goto": "end_explorer" },
+        { "if": ["Q1_B", "Q3_4"], "goto": "end_explorer" },
+        { "if": ["Q1_D", "Q3_3"], "goto": "end_explorer" },
+
+        { "if": ["Q1_C", "Q3_3"], "goto": "end_refiner" },
+        { "if": ["Q1_C", "Q3_4"], "goto": "end_refiner" },
+        { "if": ["Q1_A", "Q3_3"], "goto": "end_refiner" },
+        { "if": ["Q1_B", "Q3_3"], "goto": "end_refiner" },
+
+        { "default": "end_synthesizer" }
+      ]
+    },
+    {
+      "id": "end_synthesizer",
+      "title": "YOUR PROFILE: THE SUNRISE",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "The Sunrise",
+        "subtitle": "The energy of fresh order, clear beginnings, and balanced awakening.",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "Your inner rhythm is like the first light of day. Things around you come together the way morning quietly unfolds the contours of the world: clearly, with order, and a calming sense of coherence.\n\nYou don’t rush headlong into things — you let patterns emerge, and when you see the structure, you know exactly where it’s worth moving.\n\nPeople around you often feel that their thoughts become clearer next to you: as if the light parted and the underlying organizing principle appeared. Your strength is quiet coherence: you can hold a situation together so that every element naturally falls into something that feels bigger and clearer than it did before.",
+          "mode": "append_after"
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_SYNTH_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_SYNTH_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_SYNTH_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_SYNTH_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "imagePrompt": {
+        "global": "portrait of a creative professional in a minimal, softly lit studio, waist-up, natural diffused light with early-day tones, calm atmospheric depth, subtle abstract light streaks suggesting the beginning of an idea, no text, no logos, no brands, no watermark, modern clean realism with a slight illustrative softness, high resolution, gentle sharpness, muted warm–cool palette",
+        "chapter": "the person appears at the start of a creative process, calm and observant, soft sunrise-like gradients behind them, subtle emerging shapes suggesting new ideas forming, atmosphere of openness and quiet clarity",
+        "page": "the scene reflects an early-stage creative moment with soft minimal lighting and gentle workspace hints; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+        "combinedPrompt": "{global}, {chapter}, the environment subtly mirrors the first spark of a creative idea, minimal and softly illuminated, {page}",
+        "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+        "styleProfile": {
+          "mood": "clean-minimal",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_explorer",
+      "title": "YOUR PROFILE: DAYLIGHT",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "Daylight",
+        "subtitle": "Curious, inspiration-driven creative profile.",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "Your presence is like midday light when everything shows itself in full. Motion, momentum, impulses, and quick recognition shape your decisions. You’re at your best where energy is flowing and the moment itself marks the next step.",
+          "mode": "append_after"
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_EXPL_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_EXPL_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_EXPL_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_EXPL_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "imagePrompt": {
+        "global": "portrait of a creative professional in a minimal studio, waist-up, natural soft daylight with a brighter energetic tone, gentle highlights suggesting movement, subtle abstract shapes indicating idea flow, no text, no logos, no brands, no watermark, modern clean realism with a slightly expressive illustrative touch, high resolution, crisp but soft edges, balanced warm–cool daylight palette",
+        "chapter": "the person appears curious and energized, slight motion in posture or hair, soft dynamic blur hints suggesting active exploration, playful abstract color accents forming behind them like emerging ideas, atmosphere of experimentation, openness and intuitive creative momentum",
+        "page": "the scene reflects an in-motion creative moment illuminated by bright soft daylight, with subtle workspace cues and evolving abstract hints; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+        "combinedPrompt": "{global}, {chapter}, the environment conveys daylight energy and intuitive discovery, soft motion cues and spontaneous abstract shapes, {page}",
+        "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+        "styleProfile": {
+          "mood": "clean-minimal",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    },
+    {
+      "id": "end_refiner",
+      "title": "YOUR PROFILE: THE SUNSET REFINER",
+      "layout": {
+        "mediaMode": "profile-card"
+      },
+      "profile": {
+        "name": "The Sunset Refiner",
+        "subtitle": "Quality-focused profile, sensitive to detail and proportion.",
+        "extra": ""
+      },
+      "text": [
+        {
+          "default": "Your work is about distillation. You see details like contours in sunset light: what’s too much, what’s off, where proportion breaks. It’s not quantity that leads you, but how you can polish the strongest direction to a premium level. Under your hand, things become a bit quieter, more precise, and more mature.",
+          "mode": "append_after"
+        },
+        {
+          "ifUnlocked": "Q3_1",
+          "text": "{fragment:OVR_REFIN_Q3_1}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_2",
+          "text": "{fragment:OVR_REFIN_Q3_2}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_3",
+          "text": "{fragment:OVR_REFIN_Q3_3}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q3_4",
+          "text": "{fragment:OVR_REFIN_Q3_4}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "Q2_A",
+          "text": "{fragment:Q2_A}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_B",
+          "text": "{fragment:Q2_B}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_C",
+          "text": "{fragment:Q2_C}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "Q2_D",
+          "text": "{fragment:Q2_D}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        }
+      ],
+      "imagePrompt": {
+        "global": "portrait of a creative professional in a minimal, softly lit studio, waist-up, natural diffused sunset-toned light with controlled warm–cool contrast, subtle geometric structure hints in the background, clean modern realism with precise detailing, no text, no logos, no brands, no watermark, high resolution, refined crispness, calm and disciplined visual tone",
+        "chapter": "the person appears focused and exacting, slightly leaned in as if refining details, soft sunset-edge highlights defining contours, subtle grid lines and micro-annotations behind them, atmosphere of precision, clarity, and thoughtful quality-polishing",
+        "page": "the scene reflects a late-stage refinement moment with structured minimal lighting and quiet, precise workspace cues; {fragment:SCENE_CONTEXT_1}; {fragment:SCENE_CONTEXT_2}; {fragment:SCENE_CONTEXT_3}; {fragment:SCENE_CONTEXT_4}; {fragment:IDEA_STATE_1}; {fragment:IDEA_STATE_2}; {fragment:IDEA_STATE_3}; {fragment:IDEA_STATE_4}; {fragment:MICRO_DETAILS_1}; {fragment:MICRO_DETAILS_2}; {fragment:MICRO_DETAILS_3}; {fragment:MICRO_DETAILS_4}",
+        "combinedPrompt": "{global}, {chapter}, the environment conveys sunset-clarity and meticulous fine-tuning, structured highlights and subtle geometric cues, {page}",
+        "negativePrompt": "no text, no logo, no watermark, no brands, no UI elements, no distorted anatomy, no extra limbs, no bad hands, no low resolution, no harsh shadows, no excessive saturation, no cluttered background",
+        "styleProfile": {
+          "mood": "clean-minimal",
+          "camera": "front",
+          "lighting": "soft studio"
+        }
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 300
+      },
+      "cta": "default"
+    }
+  ]
+}
+

@@ -207,7 +207,12 @@ export default function AdventuresPage() {
         <ParallaxBackground layers={layers} />
         <div className={styles.headerBar}>
           <h1>Adventures</h1>
-          <button onClick={() => router.push("/")}>Vissza</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => router.push("/landing/space")}>
+              Atlasz
+            </button>
+            <button onClick={() => router.push("/")}>Vissza</button>
+          </div>
         </div>
         <div className={styles.grid}>Loading…</div>
       </div>
@@ -220,7 +225,12 @@ export default function AdventuresPage() {
         <ParallaxBackground layers={layers} />
         <div className={styles.headerBar}>
           <h1>Adventures</h1>
-          <button onClick={() => router.push("/")}>Vissza</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => router.push("/landing/space")}>
+              Atlasz
+            </button>
+            <button onClick={() => router.push("/")}>Vissza</button>
+          </div>
         </div>
         <div className={styles.grid} style={{ color: "tomato" }}>
           {err}
@@ -235,7 +245,12 @@ export default function AdventuresPage() {
 
       <div className={styles.headerBar}>
         <h1>Adventures</h1>
-        <button onClick={() => router.push("/")}>Vissza</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => router.push("/landing/space")}>
+            Atlasz
+          </button>
+          <button onClick={() => router.push("/")}>Vissza</button>
+        </div>
       </div>
 
       <div className={styles.grid}>
