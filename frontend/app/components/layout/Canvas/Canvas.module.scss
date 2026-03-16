@@ -214,8 +214,8 @@
 /* ===== TABLET / DESKTOP ===== */
 @media (min-width: 641px) {
   .playfield {
-    /* desktop szabály itt lép életbe */
-    inline-size: var(--canvas-minw-desktop);
+    /* desktop szabály: töltse ki a viewportot a max szélességig */
+    inline-size: min(100%, var(--canvas-maxw-desktop));
     max-inline-size: var(--canvas-maxw-desktop);
 
     gap: var(--canvas-gap);

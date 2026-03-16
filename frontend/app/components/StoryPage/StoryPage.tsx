@@ -2943,6 +2943,13 @@ window.setTimeout(() => {
         background={
           <DecorBackground preset="subtle" />
         }
+        /* szélesebb tartalmi sáv a runtime-ban */
+        style={{
+          // narrációs panel max szélesség
+          ["--np-maxw" as any]: "1400px",
+          // InteractionDock wrapper max szélesség
+          ["--wrapper-maxw" as any]: "1400px",
+        }}
         topbar={
           <>
             <HeaderBar
