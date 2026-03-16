@@ -3,7 +3,8 @@
 /* Skin fallbackok */
 .canvaswrap {
   --canvas-minw-desktop: 820px;
-  --canvas-maxw-desktop: 1280px;
+  /* alap desktop szélesség: 1600px-ig engedjük */
+  --canvas-maxw-desktop: 1600px;
 
   --canvas-pad: clamp(12px, 2cqi, 20px);
   --canvas-gap: clamp(8px, 1.6cqi, 16px);
@@ -224,6 +225,14 @@
   .areaDock {
     display: grid;
     place-items: center;
+  }
+}
+
+/* Extra nagy kijelzőkön engedjük még szélesebbre (pl. nagy monitorok) */
+@media (min-width: 1680px) {
+  .canvaswrap {
+    /* nagyon széles kijelzőn is limitáljuk: max 1920px vagy 95vw (amelyik kisebb) */
+    --canvas-maxw-desktop: min(1920px, 95vw);
   }
 }
 

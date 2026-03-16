@@ -2746,13 +2746,15 @@ box-shadow:
   font-size: 1.15rem;
   line-height: 1.45;
   opacity: 0.85;
-  margin: 7% auto;
+  /* insight blokkok közti térköz: még feszesebbre húzva */
+  margin: 0.4% auto;
   max-width: 95%
 }
 
 /* blokkok */
 .examplesBlock {
-  margin-top: 0.95rem;
+  /* minimális függőleges távolság a blokk elején */
+  margin-top: 0.35rem;
   padding-left: 2.5%;
 }
 
@@ -2763,7 +2765,8 @@ box-shadow:
   text-transform: none;
   opacity: 0.95;
   text-indent: -3px;
-  margin-bottom: 0.85rem;
+  /* cím alatti tér csökkentése */
+  margin-bottom: 0.5rem;
 }
 
 .examplesParagraph {
@@ -2782,7 +2785,8 @@ box-shadow:
   padding-left: 1.05rem;
 
   display: grid;
-  gap: 0.45rem;
+  /* bullet sorok közti távolság csökkentése */
+  gap: 0.3rem;
 }
 
 .examplesBullet {
