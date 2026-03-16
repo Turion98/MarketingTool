@@ -2947,6 +2947,8 @@ window.setTimeout(() => {
         style={{
           // narrációs panel max szélesség
           ["--np-maxw" as any]: "1400px",
+          // MediaFrame max szélesség (szinkron a narrációval)
+          ["--mf-max-w" as any]: "1400px",
           // InteractionDock wrapper max szélesség
           ["--wrapper-maxw" as any]: "1400px",
         }}
