@@ -37,4 +37,4 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            ~/root/deploy-backend.sh
+            /root/deploy-backend.sh
