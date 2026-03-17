@@ -298,9 +298,11 @@
     max-width: 100%;
   }
 
-  /* Összecsukva: csak a toggle látszik, jobbról „kinő” a sáv */
+  /* Összecsukva: csak a toggle látszik bal oldalon (row-reverse miatt), jobbról „kinő” a sáv */
   .actionBar.collapsed {
     max-width: 3rem;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
   }
 
   .group,

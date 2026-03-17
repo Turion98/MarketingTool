@@ -276,9 +276,9 @@
     margin-bottom: 0;
   }
 
-  /* action bar a header alsó vonalához simul, nincs rés */
+  /* action bar a header alatt, 10px-rel feljebb */
   .areaAction {
-    margin-top: calc(-1 * var(--canvas-gap));
+    margin-top: calc(-1 * var(--canvas-gap) - 10px);
     display: flex;
     justify-content: center;
   }
