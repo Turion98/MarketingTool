@@ -373,6 +373,7 @@ def generate_image_asset(
             "storySlug": effective_slug,
         })
     else:
+        print("REPLICATE_API_TOKEN exists (api_key set):", bool(api_key), flush=True)
         while attempt <= max_retries:
             try:
                 REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
@@ -401,6 +402,7 @@ def generate_image_asset(
                     "storySlug": effective_slug,
                     "attempt": attempt,
                 })
+                print("about to call replicate", flush=True)
 
                 create_resp = requests.post(
                     "https://api.replicate.com/v1/predictions",
@@ -414,6 +416,8 @@ def generate_image_asset(
                     },
                     timeout=30,
                 )
+                print("Replicate raw status:", create_resp.status_code, flush=True)
+                print("Replicate raw body:", create_resp.text[:2000] if create_resp.text else "(empty)", flush=True)
                 create_resp.raise_for_status()
                 pred = create_resp.json()
                 pred_id = pred.get("id")
@@ -637,10 +641,12 @@ def generate_image_asset(
                 }
 
             except Exception as e:
+                print("IMAGE GEN ERROR:", e, flush=True)
                 replicate_body = None
                 try:
                     if hasattr(e, "response") and e.response is not None:
                         replicate_body = e.response.text
+                        print("Replicate error response body:", (replicate_body or "")[:2000], flush=True)
                 except Exception:
                     replicate_body = None
 
