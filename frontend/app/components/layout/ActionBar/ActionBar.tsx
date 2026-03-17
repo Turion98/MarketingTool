@@ -27,6 +27,7 @@ const ActionBar: React.FC<ActionBarProps> = ({
   className,
 }) => {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false); /* desktop: sáv elrejtve */
 
   // ⛳ hozzuk ki az analytics-hez szükséges azonosítókat
   const {
@@ -70,6 +71,15 @@ const ActionBar: React.FC<ActionBarProps> = ({
     setOpen((v) => {
       const next = !v;
       logAction("actionbar_toggle", { open: next ? "1" : "0" });
+      return next;
+    });
+  };
+
+  const handleDesktopCollapseToggle = () => {
+    playSlide();
+    setCollapsed((v) => {
+      const next = !v;
+      logAction("actionbar_desktop_collapse", { collapsed: next ? "1" : "0" });
       return next;
     });
   };
@@ -121,9 +131,10 @@ const ActionBar: React.FC<ActionBarProps> = ({
 
         <aside
           id="actionbar"
-          className={[s.actionBar, open ? s.open : "", className ?? ""].join(" ")}
+          className={[s.actionBar, open ? s.open : "", collapsed ? s.collapsed : "", className ?? ""].join(" ")}
           role="complementary"
           aria-label="Actions sidebar"
+          aria-expanded={!collapsed}
           data-testid="action-bar"
         >
           {/* felső gombsor */}
@@ -191,6 +202,19 @@ const ActionBar: React.FC<ActionBarProps> = ({
               />
             </div>
           )}
+
+          {/* desktop: collapse/expand gomb jobb oldalon (csak 769px+ látszik) */}
+          <div className={s.desktopToggleRow}>
+            <button
+              type="button"
+              className={s.btn}
+              onClick={handleDesktopCollapseToggle}
+              aria-label={collapsed ? "Show actions" : "Hide actions"}
+              aria-expanded={!collapsed}
+            >
+              <span className={s.label}>{collapsed ? "Actions" : "−"}</span>
+            </button>
+          </div>
         </aside>
       </div>
     </>

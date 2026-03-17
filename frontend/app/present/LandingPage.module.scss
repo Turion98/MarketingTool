@@ -3440,16 +3440,38 @@ box-shadow:
   backdrop-filter: blur(6px) saturate(1.2);
 }
 
+/* HERO nyelvváltó: lebegő pill a jobb felső sarokban */
 .langToggle {
-  margin-left: auto;
-  align-self: flex-start;
-  padding: 8px 10px;
+  position: absolute;
+  top: clamp(1.1rem, 3vw, 1.6rem);
+  right: clamp(1.2rem, 3vw, 1.9rem);
+
+  padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+
+  background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.08), transparent 55%),
+    rgba(0, 0, 0, 0.45);
   color: inherit;
   font: inherit;
   cursor: pointer;
+
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  z-index: 20;
+}
+
+.langToggle:hover {
+  background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.12), transparent 55%),
+    rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.langToggle:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
 }
 /* A teljes SVG tónusa */
 .collabSvg {

@@ -242,17 +242,17 @@
     grid-template-columns: 1fr;
   }
 
-  /* 🔹 Desktopon is külön layout media-val / media nélkül */
+  /* 🔹 Desktop: action bar a header (topbar) alatt, vízszintes sáv */
 
   .playfield[data-has-media="1"] {
     grid-template-rows: auto auto auto auto auto auto;
     grid-template-areas:
       "progress"
       "topbar"
+      "action"
       "media"
       "narr"
-      "dock"
-      "action";
+      "dock";
   }
 
   .playfield[data-has-media="0"] {
@@ -260,9 +260,9 @@
     grid-template-areas:
       "progress"
       "topbar"
+      "action"
       "narr"
-      "dock"
-      "action";
+      "dock";
   }
 
   .areaNarr,

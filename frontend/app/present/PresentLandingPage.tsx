@@ -689,6 +689,17 @@ const t = copy[lang];
           aria-labelledby="hero-title"
           data-intent={intent ?? "none"}
         >
+          {/* Nyelvváltó: finom, lebegő gomb a hero jobb felső sarkában */}
+          <button
+            type="button"
+            className={s.langToggle}
+            onClick={toggleLang}
+            aria-label={t.langSwitch.aria}
+            data-lang={lang}
+          >
+            {lang === "hu" ? t.langSwitch.en : t.langSwitch.hu}
+          </button>
+
           <div className={s.heroInner}>
             <div className={s.heroLogoSlot}>
               <img
@@ -696,17 +707,6 @@ const t = copy[lang];
                 alt={logoAlt ?? "Questell logo"}
                 className={s.heroLogo}
               />
-
-              {/* ✅ Language toggle */}
-              <button
-                type="button"
-                className={s.langToggle}
-                onClick={toggleLang}
-                aria-label={t.langSwitch.aria}
-                data-lang={lang}
-              >
-                {lang === "hu" ? t.langSwitch.en : t.langSwitch.hu}
-              </button>
 
               <div className={s.intentBlock} aria-label={t.intent.aria}>
                 <p className={s.intentLabel}>{t.intent.label}</p>

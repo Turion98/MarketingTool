@@ -230,7 +230,6 @@
     max-height: 90vh; /* 🔹 gombok ne vágódjanak le */
     overflow-y: auto;
     overflow-x: hidden;
-    
 
     width: var(--ab-w-mobile);
     border-radius: var(--ab-radius-mobile);
@@ -251,5 +250,68 @@
   .btn {
     height: 34px; /* 🔹 kisebb gomb */
     font-size: 0.65rem;
+  }
+
+  .desktopToggleRow { display: none !important; }
+}
+
+/* ===== Desktop: vízszintes sáv a header alatt, elrejthető ===== */
+@media (min-width: 769px) {
+  .mobileRow {
+    display: none !important; /* lebegő gomb csak mobilon */
+  }
+
+  .actionBar {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ab-gap);
+    padding: 6px var(--ab-pad);
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--ab-border);
+    box-shadow: none;
+    transition: opacity var(--btn-transition-dur) var(--btn-transition-ease),
+      transform var(--btn-transition-dur) var(--btn-transition-ease);
+  }
+  .actionBar.open { right: auto; }
+
+  .group,
+  .footer,
+  .stickyFooter {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .group > .btn,
+  .footer .btn,
+  .stickyFooter .btn {
+    width: auto;
+    min-width: 4rem;
+  }
+
+  /* Collapsed: csak a toggle gomb látszik */
+  .actionBar.collapsed .group,
+  .actionBar.collapsed .footer,
+  .actionBar.collapsed .stickyFooter {
+    display: none !important;
+  }
+
+  .desktopToggleRow {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
   }
 }
