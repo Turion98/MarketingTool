@@ -43,14 +43,24 @@ POST /generate_voice
 
 ---
 
-## 🖼️ Kép generálás
+## 🖼️ Kép generálás (Replicate)
+A backend a Replicate API-t használja. Kulcs a kérésben (apiKey) vagy a környezetből (REPLICATE_API_TOKEN).
 ```http
-POST /generate_image
+POST /api/generate-image
 {
   "pageId": "ch3a1_pg1",
-  "apiKey": "YOUR_OPENAI_KEY"
+  "apiKey": "YOUR_REPLICATE_TOKEN",
+  "prompt": "...",
+  "storySlug": "mystory"
 }
 ```
+
+---
+
+## 🔧 Környezeti változók (local vs production)
+
+- **Lokál:** Hozz létre a `backend` mappában egy `.env` fájlt (a `.env` nincs gitben). Másold a `backend/.env.example` tartalmát, és add meg a `REPLICATE_API_TOKEN=r8_...` értéket. Így a backend tud képet generálni anélkül, hogy a frontend küldene kulcsot.
+- **Production (pl. Railway, Render, VPS):** Ugyanaz a token kell a szerver környezetében: állítsd be a hostnál a `REPLICATE_API_TOKEN` env változót. A frontend (pl. Vercel) számára a gyökér `.env.example`-ban lévő `NEXT_PUBLIC_API_BASE` mutasson a production backend URL-re.
 
 ---
 
