@@ -255,10 +255,16 @@
   .desktopToggleRow { display: none !important; }
 }
 
-/* ===== Desktop: vízszintes sáv a header alatt, elrejthető ===== */
+/* ===== Desktop: vízszintes sáv a header alatt, 75% középen, animált ===== */
 @media (min-width: 769px) {
   .mobileRow {
     display: none !important; /* lebegő gomb csak mobilon */
+  }
+
+  /* wrapper: header 75%-a, középen */
+  .actionBarScope {
+    width: 75%;
+    margin-inline: auto;
   }
 
   .actionBar {
@@ -277,10 +283,21 @@
     border: none;
     border-top: 1px solid var(--ab-border);
     box-shadow: none;
-    transition: opacity var(--btn-transition-dur) var(--btn-transition-ease),
-      transform var(--btn-transition-dur) var(--btn-transition-ease);
+    overflow: hidden;
+    transform-origin: right center;
+    transition: max-width 0.28s var(--btn-transition-ease);
   }
   .actionBar.open { right: auto; }
+
+  /* Kinyitva: sáv teljes szélesség */
+  .actionBar:not(.collapsed) {
+    max-width: 100%;
+  }
+
+  /* Összecsukva: csak a toggle látszik, jobbról „kinő” a sáv */
+  .actionBar.collapsed {
+    max-width: 3rem;
+  }
 
   .group,
   .footer,
@@ -292,6 +309,19 @@
     gap: 8px;
     margin-top: 0;
     margin-bottom: 0;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.18s ease 0.12s, visibility 0s linear 0.12s;
+  }
+
+  /* Collapsed: gombok eltűnnek (animálva), majd a sáv zsugorodik */
+  .actionBar.collapsed .group,
+  .actionBar.collapsed .footer,
+  .actionBar.collapsed .stickyFooter {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.15s;
   }
 
   .group > .btn,
@@ -301,17 +331,11 @@
     min-width: 4rem;
   }
 
-  /* Collapsed: csak a toggle gomb látszik */
-  .actionBar.collapsed .group,
-  .actionBar.collapsed .footer,
-  .actionBar.collapsed .stickyFooter {
-    display: none !important;
-  }
-
   .desktopToggleRow {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     margin-left: auto;
+    flex-shrink: 0;
   }
 }
