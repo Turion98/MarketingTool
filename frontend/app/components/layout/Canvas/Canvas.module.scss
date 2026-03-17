@@ -271,7 +271,12 @@
     grid-column: 1 / -1;
   }
 
-  /* action bar a header alsó vonalához simul, nincs rés; tartalom középen 75% */
+  /* topbar (HeaderBar) ne hagyjon helyet alatta – action bar simuljon hozzá */
+  .areaTopbar > * {
+    margin-bottom: 0;
+  }
+
+  /* action bar a header alsó vonalához simul, nincs rés */
   .areaAction {
     margin-top: calc(-1 * var(--canvas-gap));
     display: flex;
