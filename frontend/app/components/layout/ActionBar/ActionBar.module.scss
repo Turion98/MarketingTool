@@ -40,8 +40,8 @@
   gap: var(--ab-gap);
 
   /* helyet hagyunk a láblécnek */
-  padding: var(--ab-pad);
-  padding-bottom: var(--ab-pad);
+  /* Fix padding: ne legyen tokenes vezérlés */
+  padding: 12px;
 
   border: 1px solid var(--ab-border);
   border-radius: var(--ab-radius);
@@ -236,8 +236,8 @@
     border-left: 1px solid var(--ab-border);
     border-right: 0;
 
-    padding: 10px;
-    padding-bottom: 10px;
+    /* Fix padding: ne legyen tokenes vezérlés */
+    padding: 12px;
     transition: right var(--btn-transition-dur) var(--btn-transition-ease);
   }
 
@@ -279,7 +279,8 @@
     align-items: center;
     justify-content: space-evenly;
     gap: 10px;
-    padding: 8px 14px;
+    /* Fix padding: ne legyen tokenes vezérlés */
+    padding: 10px 16px;
     border-radius: 0 0 12px 12px;
     border: none;
     border-top: 1px solid var(--ab-border);
@@ -289,7 +290,8 @@
     box-shadow: none;
     overflow: hidden;
     transform-origin: right center;
-    transition: max-width 0.28s var(--btn-transition-ease);
+    /* Bezárásnál: előbb a gombok tűnjenek el, utána csukódjon a konténer */
+    transition: max-width 0.42s var(--btn-transition-ease);
   }
   .actionBar.open { right: auto; }
 
@@ -303,6 +305,7 @@
     max-width: 3rem;
     flex-direction: row-reverse;
     justify-content: flex-end;
+    transition-delay: 0.22s;
   }
 
   .group,
@@ -317,7 +320,11 @@
     margin-bottom: 0;
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.18s ease 0.12s, visibility 0s linear 0.12s;
+    transition:
+      opacity 0.22s ease 0.08s,
+      transform 0.22s ease 0.08s,
+      visibility 0s linear 0.08s;
+    transform: translateY(0);
   }
 
   /* Collapsed: gombok eltűnnek (animálva), majd a sáv zsugorodik */
@@ -325,9 +332,13 @@
   .actionBar.collapsed .footer,
   .actionBar.collapsed .stickyFooter {
     opacity: 0;
+    transform: translateY(4px);
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.12s ease, visibility 0s linear 0.15s;
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s ease,
+      visibility 0s linear 0.22s;
   }
 
   .group > .btn,
