@@ -1200,6 +1200,7 @@ def rollup_range(
         END page detektálás:
         - explicit isEnd flag az adott run eseményeiben
         - pageId prefix: END_ / END__
+        - pageId prefix: end_ / end__ (régi story-k / lowercase)
         - opcionálisan: terminal_pages paraméter
         """
         if not pid:
@@ -1207,7 +1208,12 @@ def rollup_range(
         s = str(pid)
         if end_flags_for_run.get(s):
             return True
-        if s.startswith("END_") or s.startswith("END__") or s == "__END__":
+        # prefixek: END_ / END__ / __END__ (legacy) + end_ / end__ (lowercase)
+        if s == "__END__":
+            return True
+        if s.startswith("END_") or s.startswith("END__"):
+            return True
+        if s.startswith("end_") or s.startswith("end__"):
             return True
         if terminal_pages and s in terminal_pages:
             return True
@@ -1620,10 +1626,12 @@ def rollup_range(
         if completed:
             completed_runs += 1
 
-        end_page = end_alias or (seq[-1] if seq else None)
+        # A path lezárása mindig a tényleges utolsó page_enter pageId (nem az endAlias!)
+        final_page_id = (str(seq[-1]) if seq else None)
+        outcome_id = (str(end_alias) if end_alias else final_page_id)
 
         # végoldal END-e? (a run utolsó page_enter alapján)
-        final_is_end = bool(seq and _is_end_page_id(str(seq[-1]), end_flags_for_run))
+        final_is_end = bool(final_page_id and _is_end_page_id(str(final_page_id), end_flags_for_run))
 
         # restart viselkedés: ez a run restart_click UTÁN indult? (sessionben volt korábbi restart)
         first_ts_run = 0
@@ -1652,15 +1660,16 @@ def rollup_range(
         cta_click_run = sum(1 for e in evs if e.get("t") == "cta_click")
 
         # ✅ Outcome csak akkor, ha completed VAGY terminal végoldal
-        is_terminal_end = bool(end_page and terminal_pages and str(end_page) in terminal_pages)
-        is_outcome = bool(end_page and (completed or is_terminal_end))
+        is_terminal_end = bool(final_page_id and terminal_pages and str(final_page_id) in terminal_pages)
+        is_outcome = bool(outcome_id and (completed or is_terminal_end))
 
         # END PAGES + OUTCOMES csak "valódi" outcome-okra
         if is_outcome:
+            # endPages/outcomes kulcsa: outcome_id (endAlias ha van, különben final_page_id)
             ep = end_pages.setdefault(
-                str(end_page),
+                str(outcome_id),
                 {
-                    "pageId": str(end_page),
+                    "pageId": str(outcome_id),
                     "runsSet": set(),
                     "usersSet": set(),
                     "sessionsSet": set(),  # opcionális, ha kell
@@ -1677,9 +1686,9 @@ def rollup_range(
             ep["ctaClicks"] += int(cta_click_run)
 
             oc = outcomes.setdefault(
-                str(end_page),
+                str(outcome_id),
                 {
-                    "outcomeId": str(end_page),
+                    "outcomeId": str(outcome_id),
                     "runsSet": set(),
                     "usersSet": set(),
                     "ctaShown": 0,
@@ -1718,15 +1727,10 @@ def rollup_range(
         # PATHS (run alapon) – csak lezárt, END-del végződő utak
         if seq:
             # Csak akkor tekintjük path-nek, ha van outcome/end_page
-            if not is_outcome or not end_page:
+            if not is_outcome or not final_page_id:
                 continue
-
-            # Követelmény: az END oldal legyen a szekvencia utolsó eleme
-            if str(seq[-1]) != str(end_page):
-                continue
-
-            # Ha van explicit terminal_pages filter, az END-nek abban benne kell lennie
-            if terminal_pages and str(end_page) not in terminal_pages:
+            # Ha van explicit terminal_pages filter, a tényleges végoldalnak benne kell lennie
+            if terminal_pages and str(final_page_id) not in terminal_pages:
                 continue
 
             # PATH CONVERSION – csak a TELJES run path szintjén
@@ -1756,7 +1760,7 @@ def rollup_range(
             if uid_run:
                 p["usersSet"].add(str(uid_run))
 
-            endp = str(end_page)
+            endp = str(outcome_id)
             p["topOutcomeCounts"][endp] = p["topOutcomeCounts"].get(endp, 0) + 1
             p["ctaShown"] += int(cta_shown_run)
             p["ctaClicks"] += int(cta_click_run)
