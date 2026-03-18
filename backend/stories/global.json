@@ -5,7 +5,8 @@
     "title": "Quest Forge",
     "description": "A descent into the tower’s shadow — a dark fantasy journey.",
     "coverImage": "/assets/covers/global.jpg",
-    "startPageId": "ch1_pg1"
+    "startPageId": "ch1_pg1",
+    "logo": "assets/my_logo.png"
   },
   "landing": {
     "id": "landing_screen",
