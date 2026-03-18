@@ -533,9 +533,75 @@ function startNewRunId(storyId: string, scopeKey?: string) {
 
     try {
       const { toPng } = await import("html-to-image");
+      const el = rewardFrameRef.current;
+
+      // --- Stabilizálás: várjunk a layoutra / fontokra / képekre ---
+      const raf = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+      // 1) Layout settle (különösen animációk/transitions után)
+      await raf();
+      await raf();
+
+      // 2) Fontok (ha vannak tokenes/remote fontok)
+      try {
+        const fontsAny = (document as any).fonts;
+        if (fontsAny?.ready) await fontsAny.ready;
+      } catch {}
+
+      // 3) Img elemek betöltése a frame-en belül
+      const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
+      await Promise.all(
+        imgs.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete && img.naturalWidth > 0) return resolve();
+              const done = () => {
+                img.removeEventListener("load", done);
+                img.removeEventListener("error", done);
+                resolve();
+              };
+              img.addEventListener("load", done);
+              img.addEventListener("error", done);
+            })
+        )
+      );
+
+      // 4) SVG <image href="...">: best-effort prefetch
+      try {
+        const svgImages = Array.from(el.querySelectorAll("image")) as any[];
+        await Promise.all(
+          svgImages.map((node) => {
+            const href =
+              node?.getAttribute?.("href") ||
+              node?.getAttribute?.("xlink:href") ||
+              node?.href?.baseVal ||
+              "";
+            const url = String(href || "").trim();
+            if (!url) return Promise.resolve();
+            return new Promise<void>((resolve) => {
+              const im = new Image();
+              im.crossOrigin = "anonymous";
+              im.onload = () => resolve();
+              im.onerror = () => resolve();
+              im.src = url;
+            });
+          })
+        );
+      } catch {}
+
+      // 5) Méretezés védelem: zero-size esetén ne exportáljunk
+      const rect = el.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        console.warn("[RewardExport] export skip: frame méret 0", rect);
+        return;
+      }
+
       const dataUrl = await toPng(rewardFrameRef.current, {
         quality: 0.95,
         pixelRatio: window.devicePixelRatio || 2,
+        cacheBust: true,
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
       });
 
       const link = document.createElement("a");

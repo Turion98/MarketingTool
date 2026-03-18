@@ -45,19 +45,23 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
     useGameState() as any;
 
   const [opened, setOpened] = React.useState(false);
+  const [openAnimDone, setOpenAnimDone] = React.useState(false);
   const [nameReady, setNameReady] = React.useState(false);
   const [subtitleReady, setSubtitleReady] = React.useState(false);
+  const cardInnerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Kártya nyitása/zárása
   React.useEffect(() => {
     if (pageIsFadingOut) {
       setOpened(false);
+      setOpenAnimDone(false);
       setNameReady(false);
       setSubtitleReady(false);
       return;
     }
 
     setOpened(false);
+    setOpenAnimDone(false);
     setNameReady(false);
     setSubtitleReady(false);
 
@@ -67,6 +71,32 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
 
     return () => clearTimeout(t);
   }, [pageIsFadingOut]);
+
+  // Nyitó animáció vége: csak ezután engedjük a "Get" exportot
+  React.useEffect(() => {
+    const el = cardInnerRef.current;
+    if (!el) return;
+
+    if (!opened) {
+      setOpenAnimDone(false);
+      return;
+    }
+
+    const onEnd = (e: TransitionEvent) => {
+      if (e.propertyName !== "transform") return;
+      setOpenAnimDone(true);
+    };
+    el.addEventListener("transitionend", onEnd);
+
+    // Fallback: ha nincs transitionend (pl. reduced motion), egy kis késleltetéssel kész
+    // (CSS: transition-delay ~1000ms + duration ~2000ms → ~3000ms)
+    const tid = window.setTimeout(() => setOpenAnimDone(true), 3300);
+
+    return () => {
+      el.removeEventListener("transitionend", onEnd);
+      window.clearTimeout(tid);
+    };
+  }, [opened]);
 
   // Szöveg lépcsőzetes animáció
   React.useEffect(() => {
@@ -173,8 +203,10 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   };
 
   React.useEffect(() => {
-    setRewardImageReady(true);
-  }, [setRewardImageReady]);
+    // fontos: a profilkártyán a belső konténer scaleY(0)-ról nyílik,
+    // ezért az export csak akkor legyen aktív, ha a nyitó animáció lefutott.
+    setRewardImageReady(!!opened && !!openAnimDone && !pageIsFadingOut);
+  }, [opened, openAnimDone, pageIsFadingOut, setRewardImageReady]);
 
   return (
     <div
@@ -184,6 +216,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
       style={frameStyle}
     >
       <div
+        ref={cardInnerRef}
         className={`${s.cardInner} ${
           opened ? s.cardInnerOpen : s.cardInnerClosed
         }`}
