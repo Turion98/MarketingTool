@@ -1355,6 +1355,12 @@ def rollup_range(
                     or props.get("rid")
                 )
 
+                # ✅ Back-compat: régi kliensek nem küldtek runId-t.
+                # A run-alapú riportokhoz (paths/outcomes/dropoffs) képezzünk stabil runId-t sessionId-ból.
+                # Ez nem tökéletes (1 session = 1 run), de sokkal jobb, mint a teljesen üres path riport.
+                if (not rid) and sid:
+                    rid = f"sess:{sid}"
+
                 uid2 = props.get("userId")
 
                 # --- sets / DAU ---
