@@ -398,7 +398,17 @@ export function trackPageEnter(
       const endAlias =
   (extra as any)?.endAlias || (extra as any)?.rawPageId || pageId;
 
-trackGameComplete(storyId, sessionId, endAlias, { reason: "terminal_page" });
+      // ✅ nagyon fontos: a backend run-alapú riportjaihoz a game:complete eventnek
+      // ugyanahhoz a runId-hoz kell tartoznia, mint a page_enter-nek.
+      const runId =
+        extra && typeof (extra as any).runId === "string"
+          ? (extra as any).runId
+          : getRunIdFromSessionStorage(storyId);
+
+      trackGameComplete(storyId, sessionId, endAlias, {
+        reason: "terminal_page",
+        ...(runId ? { runId } : {}),
+      });
 
     }
   }
@@ -939,7 +949,13 @@ export function inferTerminalPagesFromStory(story: any): string[] {
     if (type === "logic" || hasLogic) continue;
 
     // univerzális: explicit end type, vagy END_* minták
-    if (type === "end" || /^END__/.test(id) || /^END_/.test(id)) out.push(id);
+    if (
+      type === "end" ||
+      /^END__/.test(id) ||
+      /^END_/.test(id) ||
+      /^end_/.test(id) // ✅ uditő/egyéb storyk: end_* oldalak is terminálnak számítsanak
+    )
+      out.push(id);
   }
 
   return out;
