@@ -305,7 +305,7 @@
   /* Összecsukva: csak a toggle látszik bal oldalon (row-reverse miatt), jobbról „kinő” a sáv */
   .actionBar.collapsed {
     /* legyen elég hely a toggle gombnak + paddingnek, különben levágódik bal oldalt */
-    max-width: 3.25rem;
+    max-width: 4.25rem;
     flex-direction: row-reverse;
     justify-content: flex-end;
     transition-delay: 0.22s;
