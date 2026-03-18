@@ -4,7 +4,7 @@
 const isDev = process.env.NODE_ENV !== "production";
 
 const imgSrc =
-  "img-src 'self' data: blob: https://replicate.delivery https://*.replicate.delivery";
+  "img-src 'self' data: blob: https://replicate.delivery https://*.replicate.delivery https://api.thequestell.com";
 
 const devCsp = [
   "default-src 'self'",
