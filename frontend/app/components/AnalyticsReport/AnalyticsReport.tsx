@@ -234,7 +234,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
         const res = await fetch(url, { signal: ac.signal });
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(`HTTP ${res.status} – ${text || "rollup-range hiba"}`);
+          throw new Error(`HTTP ${res.status} – ${text || "rollup-range error"}`);
         }
         const json = (await res.json()) as RangeRollup;
         console.log("[report] rollup ok", {
@@ -249,7 +249,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
       } catch (e: any) {
         if (e?.name !== "AbortError") {
           setRangeError(
-            e?.message || "Ismeretlen hiba a rollup-range lekérdezésekor."
+            e?.message || "Unknown error while fetching range rollup."
           );
           
         }
@@ -265,7 +265,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
   if (!storyId) {
     return (
       <div className={styles.root}>
-        <div className={styles.error}>Hiányzó storyId</div>
+        <div className={styles.error}>Missing storyId</div>
       </div>
     );
   }
@@ -287,7 +287,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 
   return (
     <div className={styles.card}>
-      <h3>Riport – {storyId}</h3>
+      <h3>Report – {storyId}</h3>
 
       <div className={styles.actions}>
         <button onClick={() => download(exportStoryCSV(storyId), `${storyId}.csv`)}>
@@ -317,7 +317,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </label>
           <label className={styles.terminalField}>
-            Terminal pages (opcionális, vesszővel):&nbsp;
+            Terminal pages (optional, comma-separated):&nbsp;
             <input
               type="text"
               placeholder="__END__,ch3_pg4_end"
@@ -331,32 +331,32 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
       <div className={styles.reportContainer}>
       {/* KPI blokk (megtartjuk) */}
       <div className={styles.kpis}>
-        {loadingRange && <div className={styles.info}>Időszakos riport töltése…</div>}
+        {loadingRange && <div className={styles.info}>Loading report for selected range…</div>}
         {rangeError && <div className={styles.error}>{rangeError}</div>}
 
         {rangeData && (
           <>
             <div className={styles.kpiGrid}>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>Időszak</div>
+                <div className={styles.kpiLabel}>Range</div>
                 <div className={styles.kpiValue}>
                   {rangeData.from} → {rangeData.to}
                 </div>
               </div>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>Felhasználók</div>
+                <div className={styles.kpiLabel}>Users</div>
                 <div className={styles.kpiValue}>{rangeData.users}</div>
               </div>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>Sessionök</div>
+                <div className={styles.kpiLabel}>Sessions</div>
                 <div className={styles.kpiValue}>{rangeData.sessions}</div>
               </div>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>Játék indítások (run)</div>
+                <div className={styles.kpiLabel}>Runs started</div>
                 <div className={styles.kpiValue}>{rangeData.runs ?? "—"}</div>
               </div>
               <div className={styles.kpi}>
-  <div className={styles.kpiLabel}>Átlag run / user</div>
+  <div className={styles.kpiLabel}>Avg runs per user</div>
   <div className={styles.kpiValue}>
     {rangeData.kpis.avgRunsPerUser == null
       ? (rangeData.runs != null && rangeData.users != null
@@ -372,7 +372,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                 </div>
               </div>
               <div className={styles.kpi}>
-                <div className={styles.kpiLabel}>Átlag session idő</div>
+                <div className={styles.kpiLabel}>Avg session duration</div>
                 <div className={styles.kpiValue}>
                   {msToHMS(rangeData.kpis.avgSessionDurationMs)}
                 </div>
@@ -387,13 +387,13 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
               {/* Puzzle bontás típus szerint (riddle / runes) */}
               {rangeData.totals.puzzles?.byKind && Object.keys(rangeData.totals.puzzles.byKind).length > 0 && (
                 <div className={`${styles.kpi} ${styles.kpiFullWidth}`}>
-                  <div className={styles.kpiLabel}>Puzzle típus szerint</div>
+                  <div className={styles.kpiLabel}>Puzzles by type</div>
                   <div className={styles.kpiValue}>
                     <div className={styles.kpiTableWrap}>
                       <table className={`${styles.table} ${styles.kpiTable}`}>
                         <thead>
                           <tr>
-                            <th>Típus</th>
+                            <th>Type</th>
                             <th>Tries</th>
                             <th>Solved</th>
                             <th>Success</th>
@@ -409,7 +409,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                               (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]) || b[1].tries - a[1].tries
                             );
                             const labelOf = (k: string) =>
-                              k === "riddle" ? "Riddle" : k === "runes" ? "Runes" : k === "unknown" ? "Egyéb" : k;
+                              k === "riddle" ? "Riddle" : k === "runes" ? "Runes" : k === "unknown" ? "Other" : k;
                             return sorted.map(([kind, row]) => {
                               const pct = row.tries > 0 ? ((row.solved / row.tries) * 100).toFixed(1) : "—";
                               return (
@@ -458,17 +458,17 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     <div className={styles.puzzleStatBlock}>
                       {rangeData.puzzleRunesStats.avgAttemptWhenSolved != null && (
                         <>
-                          <strong>Átlagosan hányadik próbálkozásra sikerül:</strong>{" "}
-                          {rangeData.puzzleRunesStats.avgAttemptWhenSolved.toFixed(1)}. próba
+                          <strong>Average attempt when solved:</strong>{" "}
+                          attempt {rangeData.puzzleRunesStats.avgAttemptWhenSolved.toFixed(1)}
                         </>
                       )}
                       {rangeData.puzzleRunesStats.solvedByAttempt && rangeData.puzzleRunesStats.solvedByAttempt.length > 0 && (
                         <div style={{ marginTop: "0.35rem" }}>
-                          <span style={{ color: "#666" }}>Sikerülési eloszlás: </span>
+                          <span style={{ color: "#666" }}>Solved distribution: </span>
                           {rangeData.puzzleRunesStats.solvedByAttempt.map((row, i) => (
                             <span key={row.attempt}>
                               {i > 0 ? " · " : ""}
-                              {row.attempt}. próba: {row.count}×
+                              attempt {row.attempt}: {row.count}×
                             </span>
                           ))}
                         </div>
@@ -480,7 +480,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                       {rangeData.puzzleRunesTopOptions.map((opt, i) => (
                         <div key={i} className={styles.topOptionCard}>
                           <div className={styles.topOptionCardLabel}>
-                            Leggyakrabban választott #{i + 1}
+                            Most picked #{i + 1}
                           </div>
                           <div className={styles.topOptionCardValue} title={opt.label}>
                             {opt.label}
@@ -515,17 +515,17 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                   </div>
                   {rangeData.riddleStats && rangeData.riddleStats.runsWithRiddle > 0 && (
                     <div className={styles.puzzleStatBlock}>
-                      <strong>Átlagos újrapróbálások runonként:</strong>{" "}
+                      <strong>Average retries per run:</strong>{" "}
                       {rangeData.riddleStats.avgRetriesPerRun.toFixed(2)}
                       {" "}
-                      <span style={{ color: "#666" }}>({rangeData.riddleStats.runsWithRiddle} run riddle-dal)</span>
+                      <span style={{ color: "#666" }}>({rangeData.riddleStats.runsWithRiddle} runs with riddle)</span>
                     </div>
                   )}
                 </div>
                 {rangeData.riddleStats?.wrongByQuestion && rangeData.riddleStats.wrongByQuestion.length > 0 && (
                   <div className={styles.wrongByQuestionBlock}>
                     <div className={styles.wrongByQuestionTitle}>
-                      Hibás lefutásoknál melyik kérdésnél volt helytelen válasz
+                      Where incorrect runs answered wrong
                     </div>
                     <div className={styles.wrongByQuestionList}>
                       {rangeData.riddleStats.wrongByQuestion.map((q) => (
@@ -548,7 +548,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
               );
             })()}
 
-<h4>Végoldalak és outcome-ok</h4>
+<h4>End pages and outcomes</h4>
 {(() => {
   const totalRuns =
     rangeData?.runs ??
@@ -632,7 +632,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
   if (!hasAnything) {
     return (
       <div className={styles.info}>
-        (Még nincs outcome / endPages / drop-off adat a range riportban.)
+        (No outcome / endPages / drop-off data in the range report yet.)
       </div>
     );
   }
@@ -642,7 +642,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
       {/* ✅ 1) OUTCOME MEGOSZLÁS – üzleti */}
       {outcomes.length > 0 && (
         <>
-          <div className={styles.info}>Outcome megoszlás (üzleti)</div>
+          <div className={styles.info}>Outcome distribution (business)</div>
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <thead>
@@ -679,7 +679,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
        {/* ✅ 3) DROP-OFF – nem végoldalak, ahol elhagyták */}
 {dropOffRows.length > 0 && (
   <>
-    <div className={styles.info}>Lemorzsolódási pontok (nem-végoldalak)</div>
+    <div className={styles.info}>Drop-off points (non-end pages)</div>
     <div className={styles.tableWrapper}>
       <table className={styles.table}>
         <thead>
@@ -708,10 +708,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
   );
 })()}
             {/* ✅ ÚJ: Pathok */}
-            <h4>Top pathok</h4>
+            <h4>Top paths</h4>
             {!rangeData.paths || rangeData.paths.length === 0 ? (
               <div className={styles.info}>
-                (Még nincs path adat a range riportban.)
+                (No path data in the range report yet.)
               </div>
             ) : (
               <div className={styles.tableWrapper}>
@@ -746,7 +746,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             <h4>Path Conversion Efficiency</h4>
             {!rangeData.pathConversion || rangeData.pathConversion.length === 0 ? (
               <div className={styles.info}>
-                (Még nincs path conversion adat a range riportban.)
+                (No path conversion data in the range report yet.)
               </div>
             ) : (
               <div className={styles.tableWrapper}>
@@ -777,7 +777,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             <h4>Restart Behavior Rate</h4>
             {!rangeData.restartStats ? (
               <div className={styles.info}>
-                (Még nincs restart statisztika a range riportban.)
+                (No restart statistics in the range report yet.)
               </div>
             ) : (
               <div className={styles.kpiGrid}>
@@ -808,7 +808,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             <h4>End-Type Distribution</h4>
             {!rangeData.endDistribution || rangeData.endDistribution.length === 0 ? (
               <div className={styles.info}>
-                (Még nincs end-type distribution adat a range riportban.)
+                (No end-type distribution data in the range report yet.)
               </div>
             ) : (
               <div className={styles.tableWrapper}>
@@ -843,12 +843,12 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
       </div>
 
       {/* Lokális rollup maradhat debugnak */}
-      <h4>Napi összesítés (lokális rollup)</h4>
+      <h4>Daily summary (local rollup)</h4>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Nap</th>
+              <th>Day</th>
               <th>Sessions</th>
               <th>Pages</th>
               <th>PV</th>
