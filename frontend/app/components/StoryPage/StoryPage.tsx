@@ -561,6 +561,7 @@ const StoryPage: React.FC = () => {
     setFlag,
     globals,
     setGlobal,
+    setStorySrc,
     progressDisplay,
     storyId,
     sessionId,
@@ -585,6 +586,7 @@ const StoryPage: React.FC = () => {
     setFlag: (f: string) => void;
     globals: Record<string, any>;
     setGlobal: (k: string, v: string) => void;
+    setStorySrc?: (src: string) => void;
     progressDisplay: { value?: number; milestones?: Array<{ x: number; label?: string }> };
     storyId?: string;
     sessionId?: string;
@@ -808,10 +810,8 @@ useEffect(() => {
   const rs = params.get("rs") || ""; // Restart / new-run marker
 
   if (src) {
-    setGlobal?.("storySrc", src);
-    try {
-      localStorage.setItem("storySrc", src);
-    } catch {}
+    // ✅ fontos: használjuk a context helper-t, mert ez tölti be a meta-t és beállítja a storyId-t is
+    setStorySrc?.(src);
   }
 
   if (title) {
