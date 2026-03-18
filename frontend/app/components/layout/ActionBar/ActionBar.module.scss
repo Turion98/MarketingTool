@@ -25,7 +25,8 @@
 /* ===== Sidebar (jobb oldal) ===== */
 .actionBar {
   position: fixed;
-  top: var(--ab-offset);
+  /* 10px-szel lejjebb: ne legyen "feljebb tolva" */
+  top: calc(var(--ab-offset) + 10px);
   right: calc(-1 * (var(--ab-w) + var(--ab-offset))); /* off-canvas ALAPHELYZET */
   height: auto;
   max-height: calc(100vh - (var(--ab-offset) * 2));
@@ -225,7 +226,8 @@
 @media (max-width: 768px) {
   .actionBar {
     right: calc(-1 * (var(--ab-w-mobile) + var(--ab-offset)));
-    top: var(--ab-offset);
+    /* 10px-szel lejjebb: ne legyen "feljebb tolva" */
+    top: calc(var(--ab-offset) + 10px);
     height: auto;
     max-height: 90vh; /* 🔹 gombok ne vágódjanak le */
     overflow-y: auto;
@@ -302,10 +304,13 @@
 
   /* Összecsukva: csak a toggle látszik bal oldalon (row-reverse miatt), jobbról „kinő” a sáv */
   .actionBar.collapsed {
-    max-width: 3rem;
+    /* legyen elég hely a toggle gombnak + paddingnek, különben levágódik bal oldalt */
+    max-width: 5.25rem;
     flex-direction: row-reverse;
     justify-content: flex-end;
     transition-delay: 0.22s;
+    padding: 6px 8px;
+    overflow: visible;
   }
 
   .group,
