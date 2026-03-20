@@ -4,31 +4,20 @@
   "locale": "hu",
   "meta": {
     "id": "market33_lunch_personality",
-    "title": "Mit ennél ma a Market 33-ban?",
-    "author": "Cursor + ChatGPT draft",
-    "description": "Játékos, több útvonalas ebédajánló a Market 33 standjaihoz. Két kérdés és egy mini puzzle alapján a végén egy konkrét standot és fogást ajánl.",
-    "coverImage": "/assets/covers/softdrink.jpg",
-    "startPageId": "Q1_mood",
+    "title": "Nem tudod, mit egyél?",
+    "description": "Gyors Market 33 ebédajánló konkrét fogásokkal.",
+    "startPageId": "intro",
     "campaignId": "market33_lunch_personality",
-    "logo": "/assets/my_logo.png",
-    "progress": {
-      "milestones": [
-        { "x": 0.18, "label": "Étvágy-irány" },
-        { "x": 0.45, "label": "Ízpreferencia" },
-        { "x": 0.72, "label": "Mini puzzle" },
-        { "x": 1.0, "label": "A mai ajánlatod" }
-      ]
-    },
     "ctaPresets": {
       "default": {
         "kind": "link",
         "label": "Fedezd fel a Market 33-at",
         "urlTemplate": "https://example.com/market33"
       },
-      "cta_lacatrina": {
+      "cta_7even": {
         "kind": "link",
-        "label": "Kóstold meg a La Catrina standnál",
-        "urlTemplate": "https://example.com/market33/la-catrina",
+        "label": "Kóstold meg a 7EVEN standnál",
+        "urlTemplate": "https://example.com/market33/7even",
         "target": "_blank"
       },
       "cta_granelli": {
@@ -37,10 +26,10 @@
         "urlTemplate": "https://example.com/market33/granelli",
         "target": "_blank"
       },
-      "cta_snackbear": {
+      "cta_lacatrina": {
         "kind": "link",
-        "label": "Kóstold meg a SnackBear standnál",
-        "urlTemplate": "https://example.com/market33/snackbear",
+        "label": "Kóstold meg a La Catrina standnál",
+        "urlTemplate": "https://example.com/market33/la-catrina",
         "target": "_blank"
       },
       "cta_cocodak": {
@@ -49,910 +38,988 @@
         "urlTemplate": "https://example.com/market33/cocodak",
         "target": "_blank"
       },
+      "cta_china_supreme": {
+        "kind": "link",
+        "label": "Kóstold meg a China Supreme standnál",
+        "urlTemplate": "https://example.com/market33/china-supreme",
+        "target": "_blank"
+      },
+      "cta_siam_corner": {
+        "kind": "link",
+        "label": "Kóstold meg a Siam Corner standnál",
+        "urlTemplate": "https://example.com/market33/siam-corner",
+        "target": "_blank"
+      },
       "cta_vietnam": {
         "kind": "link",
         "label": "Kóstold meg a Vietnam by Night standnál",
         "urlTemplate": "https://example.com/market33/vietnam-by-night",
         "target": "_blank"
       },
-      "cta_7even": {
+      "cta_sushi_sando": {
         "kind": "link",
-        "label": "Kóstold meg a 7EVEN standnál",
-        "urlTemplate": "https://example.com/market33/7even",
+        "label": "Kóstold meg a Sushi Sando standnál",
+        "urlTemplate": "https://example.com/market33/sushi-sando",
         "target": "_blank"
       },
-      "cta_siam": {
+      "cta_snackbear": {
         "kind": "link",
-        "label": "Kóstold meg a Siam Corner standnál",
-        "urlTemplate": "https://example.com/market33/siam-corner",
-        "target": "_blank"
-      },
-      "cta_ramen": {
-        "kind": "link",
-        "label": "Kóstold meg a Ramen Ramen standnál",
-        "urlTemplate": "https://example.com/market33/ramen-ramen",
+        "label": "Kóstold meg a SnackBear standnál",
+        "urlTemplate": "https://example.com/market33/snackbear",
         "target": "_blank"
       }
     },
     "endDefaultCta": "default"
   },
-  "fragments": {
-    "mood_light": {
-      "id": "mood_light",
-      "text": "Ma inkabb valami friss, tiszta ivu, gyorsan joledo fogas iranyaba huzol. Olyan ebeddel jarsz jol, ami nem nehezit el, de megis ad egy kis vilagjaros elmenyt a nap kozepere."
-    },
-    "mood_hearty": {
-      "id": "mood_hearty",
-      "text": "Ma hatarozottabb, laktatobb es karakteresebb iranyra vagysz. Nem csak valamit enned, hanem szeretnel beleallni egy olyan fogasba, ami tenyleg megadja az ebedszunet sulyat es oromet."
-    },
-    "branch_light_bright": {
-      "id": "branch_light_bright",
-      "text": "A valaszaid alapjan a savasabb, zoldfuszerebb, elevenebb izvilagok allnak hozzad kozel. Szereted, ha az ebed felraz, nem pedig lelassit."
-    },
-    "branch_light_balanced": {
-      "id": "branch_light_balanced",
-      "text": "A donteseid inkabb a kiegyensulyozott, bowl-osabb, finoman melengeto iranyba mutatnak. Neked a konnyedseg nem egyenlo az unalmassal: kell benne texturaja, rendezetsege es egy kis komfort is."
-    },
-    "branch_hearty_street": {
-      "id": "branch_hearty_street",
-      "text": "Nalad ma a street-food energia nyer. Imadod, ha az ebed kozvetlen, eros, kezbe veheto vagy azonnal joledo, es mar az elso falatnal egyertelmu, hogy jo helyre alltal be."
-    },
-    "branch_hearty_comfort": {
-      "id": "branch_hearty_comfort",
-      "text": "A valasztasaid a melyebb, komfortosabb, ramenes-tesztas vonal fele huznak. Olyan fogas kell, ami kicsit jobban korbeolel, es a nap kozepen is ad egy par nyugodtabb percet."
-    },
-    "img_light": {
-      "id": "img_light",
-      "text": "bright foodhall lunch scene, fresh modern urban atmosphere, clean daylight, colorful international street food presentation"
-    },
-    "img_hearty": {
-      "id": "img_hearty",
-      "text": "rich foodhall lunch scene, warm urban comfort-food atmosphere, appetizing depth, inviting restaurant-style presentation"
-    },
-    "img_light_bright": {
-      "id": "img_light_bright",
-      "text": "citrus accents, fresh herbs, lively contrast, energetic lunch break vibe"
-    },
-    "img_light_balanced": {
-      "id": "img_light_balanced",
-      "text": "balanced bowl composition, calm vibrant greens, soft steam, composed modern plating"
-    },
-    "img_hearty_street": {
-      "id": "img_hearty_street",
-      "text": "street-food energy, bold textures, toasted edges, vibrant color pops, satisfying handheld comfort"
-    },
-    "img_hearty_comfort": {
-      "id": "img_hearty_comfort",
-      "text": "deep broth tones, rich noodles, layered warmth, comforting city lunch mood"
-    }
-  },
   "pages": [
     {
-      "id": "Q1_mood",
-      "title": "Mit enne ma a vilagjaro ehed?",
+      "id": "intro",
+      "title": "Nem tudod, mit egyél?",
       "text": [
         {
-          "text": "A Market 33-ban ma is tobb konyha csabit egyszerre. Induljunk az alapkerdessel: inkabb egy konnyedebb, frissebb iranyra vagysz, vagy johet valami laktatobb, karakteresebb fogas?"
-        },
-        {
-          "text": "Valassz hangulatot, es ne aggodj: a vegen nem csak egy standot, hanem egy konkret etelt is kapsz."
+          "text": "Válaszolj pár gyors kérdésre, és adunk egy konkrét fogást a Market 33-ból."
         }
       ],
       "choices": [
         {
-          "id": "go_light",
-          "text": "Konnyu, friss, gyorsan joledo",
-          "next": "Q2_light",
-          "reward": {
-            "locks": ["track_light"],
-            "unlockFragments": ["mood_light", "img_light"]
-          }
-        },
-        {
-          "id": "go_hearty",
-          "text": "Laktato, karakteres, kicsit intenzivebb",
-          "next": "Q2_hearty",
-          "reward": {
-            "locks": ["track_hearty"],
-            "unlockFragments": ["mood_hearty", "img_hearty"]
-          }
+          "text": "Kezdjük",
+          "next": "Q1_people"
         }
       ]
     },
     {
-      "id": "Q2_light",
-      "title": "Milyen legyen a konnyu irany?",
+      "id": "Q1_people",
+      "title": "Egyedül eszel, vagy valakivel?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Egyedül vagy",
+          "next": "Q2_protein"
+        },
+        {
+          "text": "Egy baráttal",
+          "next": "Q2_protein",
+          "reward": {
+            "locks": ["with_friend"]
+          }
+        },
+        {
+          "text": "Többen vagytok",
+          "next": "group_open"
+        }
+      ]
+    },
+    {
+      "id": "group_open",
+      "title": "Ez az ág még nyitott",
       "text": [
         {
-          "text": "Rendben, ma a konnyedebb oldal nyert. De ezen belul sem mindegy, hogy az ebeded inkabb lime-osan pattanos es frissit, vagy selymesebb, rendezettebb bowl-erzetet ad."
+          "text": "A többfős ajánló ág később kerül kidolgozásra."
         }
       ],
       "choices": [
         {
-          "id": "light_bright",
-          "text": "Jojjenek a citrusos, zoldfuszerekes, eleven izvilagok",
-          "next": "PZ_light",
-          "reward": {
-            "locks": ["light_bright"],
-            "unlockFragments": ["branch_light_bright", "img_light_bright"]
-          }
-        },
-        {
-          "id": "light_balanced",
-          "text": "Inkább bowl-os, kiegyensulyozott, finoman komfortos vonal",
-          "next": "PZ_light",
-          "reward": {
-            "locks": ["light_balanced"],
-            "unlockFragments": ["branch_light_balanced", "img_light_balanced"]
-          }
+          "text": "Vissza",
+          "next": "Q1_people"
         }
       ]
     },
     {
-      "id": "Q2_hearty",
-      "title": "Milyen legyen a laktato irany?",
-      "text": [
-        {
-          "text": "Megvan: ma komolyabb ebed kell. Most mar csak azt kell eldonteni, hogy egy laza street-food sikerfogasra vagysz, vagy inkabb egy melyebb, ramenes-tesztas komfortebedre."
-        }
-      ],
+      "id": "Q2_protein",
+      "title": "Válaszd ki a fő proteinedet",
+      "text": [],
       "choices": [
         {
-          "id": "hearty_street",
-          "text": "Street-food energia, azonnali elso falatos orom",
-          "next": "PZ_hearty",
-          "reward": {
-            "locks": ["hearty_street"],
-            "unlockFragments": ["branch_hearty_street", "img_hearty_street"]
-          }
+          "text": "Vegán / Vegetáriánus",
+          "next": "PZ_veg"
         },
         {
-          "id": "hearty_comfort",
-          "text": "Leveses, tesztas, melegebb comfort-vonal",
-          "next": "PZ_hearty",
-          "reward": {
-            "locks": ["hearty_comfort"],
-            "unlockFragments": ["branch_hearty_comfort", "img_hearty_comfort"]
-          }
+          "text": "Chicken",
+          "next": "PZ_chicken"
+        },
+        {
+          "text": "Beef",
+          "next": "PZ_beef"
+        },
+        {
+          "text": "Pork",
+          "next": "PZ_pork"
+        },
+        {
+          "text": "Seafood",
+          "next": "PZ_seafood"
         }
       ]
     },
     {
-      "id": "PZ_light",
+      "id": "PZ_veg",
       "type": "puzzle",
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Valassz ket hozzavalot",
-      "prompt": "Nezd meg a negy iranyt, es valaszd ki azt a KET elemet, ami most a legjobban leirja, mire vagy. Ezek fogjak vegul eldonteni, melyik standnal fordulj be.",
-      "text": [
-        {
-          "text": "Itt most nincs rossz valasz. A ket kedvenc hozzavalodbol rajzolodik ki a mai ebedszemelyiseged."
-        }
-      ],
+      "title": "Milyen irányba mennél most? Válassz kettőt.",
       "options": [
-        "Ropogos zoldek",
-        "Rizs vagy konnyu teszta",
-        "Lime, citrus, kis savassag",
-        "Selymes ontet, oliva, fuszernoveny"
+        "friss",
+        "meleg",
+        "rizses",
+        "tésztás",
+        "sajtos / krémes",
+        "csípős"
       ],
       "maxPick": 2,
       "maxAttempts": 1,
-      "optionFlagsBase": "light_opt_",
+      "optionFlagsBase": "veg_opt_",
       "onSuccess": {
-        "goto": "logic_light",
-        "setFlags": ["light_puzzle_done"]
+        "goto": "logic_veg"
       }
     },
     {
-      "id": "PZ_hearty",
+      "id": "PZ_chicken",
       "type": "puzzle",
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Valassz ket intenziv iranyt",
-      "prompt": "Most azt a ket elemet keresd, amire mar az olvasastol is osszefut a nyal a szad. Ezek szukitik le a vegen, hogy melyik standnal talalod meg a mai nagy talalatot.",
-      "text": [
-        {
-          "text": "Valassz ket elemet, es a rendszer osszerakja, hogy tacos, burger, lasagna vagy ramen az igazi mai valasz."
-        }
-      ],
+      "title": "Milyen legyen a csirkés fogásod? Válassz kettőt.",
       "options": [
-        "Fust es chili",
-        "Olvadt sajt vagy sult teszta",
-        "Gazdag alaple es tojas",
-        "Szaftos, marinalt hus"
+        "ropogós",
+        "csípős",
+        "krémes / szószos",
+        "rizses",
+        "tésztás",
+        "kézben ehető"
       ],
       "maxPick": 2,
       "maxAttempts": 1,
-      "optionFlagsBase": "hearty_opt_",
+      "optionFlagsBase": "chicken_opt_",
       "onSuccess": {
-        "goto": "logic_hearty",
-        "setFlags": ["hearty_puzzle_done"]
+        "goto": "logic_chicken"
       }
     },
     {
-      "id": "logic_light",
-      "type": "logic",
-      "title": "Ajanlat keszul",
-      "text": [
-        {
-          "text": "Osszerakjuk a mai konnyu, vilagjaro ebedajanlatodat."
-        }
+      "id": "PZ_beef",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "Milyen legyen a marhás fogásod? Válassz kettőt.",
+      "options": [
+        "lassan főtt",
+        "leveses",
+        "rizses",
+        "tésztás",
+        "kézben ehető",
+        "intenzív / fűszeres"
       ],
+      "maxPick": 2,
+      "maxAttempts": 1,
+      "optionFlagsBase": "beef_opt_",
+      "onSuccess": {
+        "goto": "logic_beef"
+      }
+    },
+    {
+      "id": "PZ_pork",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "Milyen legyen a porkos fogásod? Válassz kettőt.",
+      "options": [
+        "szaftos",
+        "paradicsomos",
+        "sajtos",
+        "kézben ehető",
+        "rizses",
+        "füstös / karakteres"
+      ],
+      "maxPick": 2,
+      "maxAttempts": 1,
+      "optionFlagsBase": "pork_opt_",
+      "onSuccess": {
+        "goto": "logic_pork"
+      }
+    },
+    {
+      "id": "PZ_seafood",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "Milyen legyen a tengeri fogásod? Válassz kettőt.",
+      "options": [
+        "nyers",
+        "ropogós",
+        "leveses",
+        "rizses",
+        "tésztás",
+        "csípős"
+      ],
+      "maxPick": 2,
+      "maxAttempts": 1,
+      "optionFlagsBase": "sea_opt_",
+      "onSuccess": {
+        "goto": "logic_seafood"
+      }
+    },
+    {
+      "id": "logic_veg",
+      "type": "logic",
+      "title": "Ajánlat készül",
+      "text": [],
       "logic": [
-        { "if": ["flag:light_bright", "flag:light_opt_1", "flag:light_opt_3"], "goto": "end_siam_green_curry" },
-        { "if": ["flag:light_bright", "flag:light_opt_2", "flag:light_opt_3"], "goto": "end_siam_pad_thai" },
-        { "if": ["flag:light_bright", "flag:light_opt_1", "flag:light_opt_2"], "goto": "end_vietnam_spring_rolls" },
-        { "if": ["flag:light_bright", "flag:light_opt_3", "flag:light_opt_4"], "goto": "end_7even_salad" },
-        { "if": ["flag:light_balanced", "flag:light_opt_2", "flag:light_opt_3"], "goto": "end_vietnam_pho" },
-        { "if": ["flag:light_balanced", "flag:light_opt_1", "flag:light_opt_4"], "goto": "end_7even_tajine" },
-        { "if": ["flag:light_balanced", "flag:light_opt_1", "flag:light_opt_2"], "goto": "end_cocodak_bibimbap_meat" },
-        { "if": ["flag:light_balanced", "flag:light_opt_2", "flag:light_opt_4"], "goto": "end_cocodak_bibimbap_veg" },
-        { "default": "end_7even_salad" }
+        { "if": ["flag:veg_opt_1", "flag:veg_opt_3"], "goto": "end_veg_falafel_bowl" },
+        { "if": ["flag:veg_opt_1", "flag:veg_opt_2"], "goto": "end_veg_hummus_vegetables" },
+        { "if": ["flag:veg_opt_1", "flag:veg_opt_5"], "goto": "end_veg_caprese" },
+        { "if": ["flag:veg_opt_1", "flag:veg_opt_4"], "goto": "end_veg_veggie_tacos" },
+        { "if": ["flag:veg_opt_1", "flag:veg_opt_6"], "goto": "end_veg_vegan_burrito" },
+        { "if": ["flag:veg_opt_2", "flag:veg_opt_3"], "goto": "end_veg_bibimbap" },
+        { "if": ["flag:veg_opt_2", "flag:veg_opt_4"], "goto": "end_veg_japchae" },
+        { "if": ["flag:veg_opt_2", "flag:veg_opt_5"], "goto": "end_veg_4formaggi" },
+        { "if": ["flag:veg_opt_2", "flag:veg_opt_6"], "goto": "end_veg_mapo_tofu" },
+        { "if": ["flag:veg_opt_3", "flag:veg_opt_4"], "goto": "end_veg_bokkeumbap" },
+        { "if": ["flag:veg_opt_3", "flag:veg_opt_5"], "goto": "end_veg_falafel_bowl" },
+        { "if": ["flag:veg_opt_3", "flag:veg_opt_6"], "goto": "end_veg_stirfry_siam" },
+        { "if": ["flag:veg_opt_4", "flag:veg_opt_5"], "goto": "end_veg_pesto_pasta" },
+        { "if": ["flag:veg_opt_4", "flag:veg_opt_6"], "goto": "end_veg_stirfry_noodles" },
+        { "if": ["flag:veg_opt_5", "flag:veg_opt_6"], "goto": "end_veg_tomato_pasta" },
+        { "default": "end_veg_falafel_bowl" }
       ]
     },
     {
-      "id": "logic_hearty",
+      "id": "logic_chicken",
       "type": "logic",
-      "title": "Ajanlat keszul",
-      "text": [
-        {
-          "text": "Megnezzuk, melyik laktato stand es fogas passzol ma hozzad a legjobban."
-        }
-      ],
+      "title": "Ajánlat készül",
+      "text": [],
       "logic": [
-        { "if": ["flag:hearty_street", "flag:hearty_opt_1", "flag:hearty_opt_4"], "goto": "end_lacatrina_burrito" },
-        { "if": ["flag:hearty_street", "flag:hearty_opt_1", "flag:hearty_opt_2"], "goto": "end_lacatrina_tacos" },
-        { "if": ["flag:hearty_street", "flag:hearty_opt_2", "flag:hearty_opt_4"], "goto": "end_snackbear_burger" },
-        { "if": ["flag:hearty_street", "flag:hearty_opt_2", "flag:hearty_opt_3"], "goto": "end_snackbear_flammkuchen" },
-        { "if": ["flag:hearty_comfort", "flag:hearty_opt_3", "flag:hearty_opt_4"], "goto": "end_ramen_classic" },
-        { "if": ["flag:hearty_comfort", "flag:hearty_opt_1", "flag:hearty_opt_3"], "goto": "end_ramen_sticky_bowl" },
-        { "if": ["flag:hearty_comfort", "flag:hearty_opt_2", "flag:hearty_opt_4"], "goto": "end_granelli_pasta" },
-        { "if": ["flag:hearty_comfort", "flag:hearty_opt_2", "flag:hearty_opt_3"], "goto": "end_granelli_lasagna" },
-        { "default": "end_ramen_classic" }
+        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_2"], "goto": "end_chicken_korean_fried_chicken" },
+        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_3"], "goto": "end_chicken_wings" },
+        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_4"], "goto": "end_chicken_katsu_rice" },
+        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_5"], "goto": "end_chicken_crunchy_roll" },
+        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_6"], "goto": "end_chicken_burger" },
+        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_3"], "goto": "end_chicken_thai_curry" },
+        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_4"], "goto": "end_chicken_pad_kaprao" },
+        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_5"], "goto": "end_chicken_pad_thai" },
+        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_6"], "goto": "end_chicken_tinga_tacos" },
+        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_4"], "goto": "end_chicken_teriyaki_rice" },
+        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_5"], "goto": "end_chicken_pasta" },
+        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_6"], "goto": "end_chicken_quesadilla" },
+        { "if": ["flag:chicken_opt_4", "flag:chicken_opt_5"], "goto": "end_chicken_bokkeumbap" },
+        { "if": ["flag:chicken_opt_4", "flag:chicken_opt_6"], "goto": "end_chicken_tinga_burrito" },
+        { "if": ["flag:chicken_opt_5", "flag:chicken_opt_6"], "goto": "end_chicken_sushi_sando" },
+        { "default": "end_chicken_korean_fried_chicken" }
       ]
     },
     {
-      "id": "end_vietnam_pho",
-      "type": "end",
-      "title": "A mai parosod: Vietnam by Night - Pho",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Pho - Vietnam by Night",
-        "subtitle": "Illatos alaple, rizsteszta, friss zoldfuszerek.",
-        "extra": "Lunch personality: Broth Seeker"
-      },
-      "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_balanced", "text": "{fragment:branch_light_balanced}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma a friss lendulet es az okos komfort talalkozik. A Vietnam by Night standjanal a Pho marhahuslevessel pont azt a fajta ebedszunetet kapod meg, ami egyszerre rendezett, melengeto es megsem nehez.\n\nGazdag, illatos alaple, rizsteszta, friss fuszernovenyek es egy olyan tal, ami gyors ebednek is kerek. Ha szeretned, hogy legyen sulya a valasztasodnak, de ne uljon rad a delutanra, ez nagyon eros talalat."
-        }
-      ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "vietnamese pho with rich broth, rice noodles, thin beef slices, fresh herbs, steam rising, balanced fresh-comfort mood",
-        "page": "close-up bowl composition on a clean table, vibrant green herbs, subtle city lunch atmosphere, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_balanced}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, distorted food, messy composition, plastic look, low resolution",
-        "styleProfile": {
-          "mood": "fresh-editorial",
-          "camera": "three-quarter",
-          "lighting": "natural soft daylight"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_vietnam"
-      }
+      "id": "logic_beef",
+      "type": "logic",
+      "title": "Ajánlat készül",
+      "text": [],
+      "logic": [
+        { "if": ["flag:beef_opt_1", "flag:beef_opt_2"], "goto": "end_beef_stew" },
+        { "if": ["flag:beef_opt_1", "flag:beef_opt_3"], "goto": "end_beef_barbacoa_bowl" },
+        { "if": ["flag:beef_opt_1", "flag:beef_opt_4"], "goto": "end_beef_bolognese" },
+        { "if": ["flag:beef_opt_1", "flag:beef_opt_5"], "goto": "end_beef_barbacoa_tacos" },
+        { "if": ["flag:beef_opt_1", "flag:beef_opt_6"], "goto": "end_beef_barbacoa_burrito" },
+        { "if": ["flag:beef_opt_2", "flag:beef_opt_3"], "goto": "end_beef_bibimbap" },
+        { "if": ["flag:beef_opt_2", "flag:beef_opt_4"], "goto": "end_beef_pho" },
+        { "if": ["flag:beef_opt_2", "flag:beef_opt_5"], "goto": "end_beef_sushi" },
+        { "if": ["flag:beef_opt_2", "flag:beef_opt_6"], "goto": "end_beef_noodle_soup" },
+        { "if": ["flag:beef_opt_3", "flag:beef_opt_4"], "goto": "end_beef_noodles" },
+        { "if": ["flag:beef_opt_3", "flag:beef_opt_5"], "goto": "end_beef_smash_burger" },
+        { "if": ["flag:beef_opt_3", "flag:beef_opt_6"], "goto": "end_beef_thai_curry" },
+        { "if": ["flag:beef_opt_4", "flag:beef_opt_5"], "goto": "end_beef_bresaola_pizza" },
+        { "if": ["flag:beef_opt_4", "flag:beef_opt_6"], "goto": "end_beef_pad_thai" },
+        { "if": ["flag:beef_opt_5", "flag:beef_opt_6"], "goto": "end_beef_smash_burger" },
+        { "default": "end_beef_stew" }
+      ]
     },
     {
-      "id": "end_vietnam_spring_rolls",
-      "type": "end",
-      "title": "A mai parosod: Vietnam by Night - Tavaszi tekercsek",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Tavaszi tekercsek - Vietnam by Night",
-        "subtitle": "Ropogos, friss, salatas kiserettel.",
-        "extra": "Lunch personality: Fresh Explorer"
-      },
-      "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_bright", "text": "{fragment:branch_light_bright}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Ma egy olyan ebed illik hozzad, ami mozgekony, ropogos es nem tulgondolt: egyszeruen jo. A Vietnam by Night tavaszi tekercsei pontosan ezt hozzak, kulonosen akkor, ha valami frissre, levegosre es egy kicsit jatekosabb texturara vagysz.\n\nA salataval egyutt ez egy konnyu, de nem jellegtelen valasztas. Olyan fogas, amitol azt erzed, hogy ettel is valami jot, de a delutanodnak is hagytal helyet."
-        }
-      ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "crispy vietnamese spring rolls with fresh salad and herbs, bright fresh textures, clean lively lunch mood",
-        "page": "golden crunchy rolls, crisp greens, light dipping sauce, fresh urban midday energy, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_bright}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, distorted food, greasy blur, low resolution, cluttered background",
-        "styleProfile": {
-          "mood": "fresh-editorial",
-          "camera": "top-three-quarter",
-          "lighting": "bright daylight"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_vietnam"
-      }
+      "id": "logic_pork",
+      "type": "logic",
+      "title": "Ajánlat készül",
+      "text": [],
+      "logic": [
+        { "if": ["flag:pork_opt_1", "flag:pork_opt_2"], "goto": "end_pork_amatriciana" },
+        { "if": ["flag:pork_opt_1", "flag:pork_opt_3"], "goto": "end_pork_carbonara" },
+        { "if": ["flag:pork_opt_1", "flag:pork_opt_4"], "goto": "end_pork_cochinita_burrito" },
+        { "if": ["flag:pork_opt_1", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
+        { "if": ["flag:pork_opt_1", "flag:pork_opt_6"], "goto": "end_pork_chashiu" },
+        { "if": ["flag:pork_opt_2", "flag:pork_opt_3"], "goto": "end_pork_amatriciana" },
+        { "if": ["flag:pork_opt_2", "flag:pork_opt_4"], "goto": "end_pork_cochinita_tacos" },
+        { "if": ["flag:pork_opt_2", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
+        { "if": ["flag:pork_opt_2", "flag:pork_opt_6"], "goto": "end_pork_porchetta_pizza" },
+        { "if": ["flag:pork_opt_3", "flag:pork_opt_4"], "goto": "end_pork_bacon_flammkuchen" },
+        { "if": ["flag:pork_opt_3", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
+        { "if": ["flag:pork_opt_3", "flag:pork_opt_6"], "goto": "end_pork_porchetta_pizza" },
+        { "if": ["flag:pork_opt_4", "flag:pork_opt_5"], "goto": "end_pork_cochinita_burrito" },
+        { "if": ["flag:pork_opt_4", "flag:pork_opt_6"], "goto": "end_pork_bun" },
+        { "if": ["flag:pork_opt_5", "flag:pork_opt_6"], "goto": "end_pork_cochinita_bowl" },
+        { "default": "end_pork_amatriciana" }
+      ]
     },
     {
-      "id": "end_7even_tajine",
-      "type": "end",
-      "title": "A mai parosod: 7EVEN - Marokkoi tajine",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Marokkoi tajine - 7EVEN",
-        "subtitle": "Mediterran meleget ad, de konnyu marad.",
-        "extra": "Lunch personality: Calm Wanderer"
-      },
-      "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_balanced", "text": "{fragment:branch_light_balanced}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Neked ma nem a legvadabb csavar kell, hanem egy olyan fogas, ami szepen, nyugodtan all ossze. A 7EVEN marokkoi tajine-ja ezt adja: fuszeres, meleg, de nem nehez; karakteres, de megis konnyen hordozhato ebedszunetes valasztas.\n\nEz az a tipusu ajanlat, ami kicsit kiszakit a zuidasi tempobol, anelkul hogy tul sok lenne. Ha szereted, amikor az ebededben van utazas, de megmarad benne az egyensuly, ez telitalalat."
-        }
-      ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "moroccan tajine in a mediterranean lunch setting, warm spices, vegetables, soft steam, balanced colorful composition",
-        "page": "earthy ceramic serving style, elegant market-hall mood, herbs and subtle citrus accents, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_balanced}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, distorted bowls, low resolution, dark muddy colors",
-        "styleProfile": {
-          "mood": "warm-editorial",
-          "camera": "three-quarter",
-          "lighting": "soft natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_7even"
-      }
+      "id": "logic_seafood",
+      "type": "logic",
+      "title": "Ajánlat készül",
+      "text": [],
+      "logic": [
+        { "if": ["flag:sea_opt_1", "flag:sea_opt_2"], "goto": "end_sea_salmon_sushi" },
+        { "if": ["flag:sea_opt_1", "flag:sea_opt_3"], "goto": "end_sea_tuna_sushi" },
+        { "if": ["flag:sea_opt_1", "flag:sea_opt_4"], "goto": "end_sea_poke_bowl" },
+        { "if": ["flag:sea_opt_1", "flag:sea_opt_5"], "goto": "end_sea_salmon_roll" },
+        { "if": ["flag:sea_opt_1", "flag:sea_opt_6"], "goto": "end_sea_spicy_tuna" },
+        { "if": ["flag:sea_opt_2", "flag:sea_opt_3"], "goto": "end_sea_ebi_tempura" },
+        { "if": ["flag:sea_opt_2", "flag:sea_opt_4"], "goto": "end_sea_ebi_furai_rice" },
+        { "if": ["flag:sea_opt_2", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
+        { "if": ["flag:sea_opt_2", "flag:sea_opt_6"], "goto": "end_sea_shrimp_curry" },
+        { "if": ["flag:sea_opt_3", "flag:sea_opt_4"], "goto": "end_sea_seafood_pho" },
+        { "if": ["flag:sea_opt_3", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
+        { "if": ["flag:sea_opt_3", "flag:sea_opt_6"], "goto": "end_sea_five_spice_shrimp" },
+        { "if": ["flag:sea_opt_4", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
+        { "if": ["flag:sea_opt_4", "flag:sea_opt_6"], "goto": "end_sea_shrimp_curry" },
+        { "if": ["flag:sea_opt_5", "flag:sea_opt_6"], "goto": "end_sea_spicy_shrimp_noodles" },
+        { "default": "end_sea_salmon_sushi" }
+      ]
     },
     {
-      "id": "end_7even_salad",
+      "id": "end_veg_falafel_bowl",
       "type": "end",
-      "title": "A mai parosod: 7EVEN - Mediterran salata vagy szendvics",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Mediterran salata - 7EVEN",
-        "subtitle": "Friss, zold, varosiasan konnyu valasztas.",
-        "extra": "Lunch personality: Green Optimist"
-      },
+      "title": "Falafel bowl",
       "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_bright", "text": "{fragment:branch_light_bright}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_balanced", "text": "{fragment:branch_light_balanced}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "A te mai nyerod a 7EVEN konnyebb mediterran vonala. Egy salata vagy konnyu szendvics pont azt az erzetet hozza, amikor az ebeded friss, gyors, es kozben meg mindig eleg izgalmas ahhoz, hogy ne rutinbol egyel.\n\nHa olyan fogast keresel, ami jol illik egy suru nap kozepere, de megadja a 'na ez jol esett' pillanatot, ez nagyon jo irany. Tiszta izvek, sok zold, es pont eleg nyar egy amszterdami munkanapba."
-        }
+        { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Falafel bowl." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "mediterranean salad or sandwich with fresh greens, olives, herbs, colorful vegetables, clean bright lunch composition",
-        "page": "airy plating, crisp textures, vivid produce, modern foodhall tabletop scene, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_bright}; {fragment:img_light_balanced}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, soggy food, low resolution, messy table",
-        "styleProfile": {
-          "mood": "clean-editorial",
-          "camera": "top-three-quarter",
-          "lighting": "bright natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_7even"
-      }
+      "endMeta": { "cta": "cta_7even" }
     },
     {
-      "id": "end_siam_pad_thai",
+      "id": "end_veg_hummus_vegetables",
       "type": "end",
-      "title": "A mai parosod: Siam Corner - Pad Thai",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Pad Thai - Siam Corner",
-        "subtitle": "Villanos thai klasszikus, pont eleg csavarral.",
-        "extra": "Lunch personality: Quick Spice Hunter"
-      },
+      "title": "Hummus & vegetables",
       "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_bright", "text": "{fragment:branch_light_bright}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma a frissesseg nem szerenyseget jelent, hanem tempot es ritmust. A Siam Corner Pad Thai-ja jo valasz erre: gyorsan szerethetove valik, tele van ismeros, de megis izgalmas thai egyensullyal.\n\nVan benne mozgas, texturaja es egy kis savas-kerek jatek, amit pont jo elkapni ebedszunetben. Ha a mai hangulatod az, hogy valami felrazzon, de kozben ne vigyen el tul nehez iranyba, akkor ez az ajanlat nagyon ul."
-        }
+        { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Hummus & vegetables." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "thai pad thai noodles with bright garnishes, lime wedge, vibrant stir-fried textures, lively modern lunch mood",
-        "page": "sleek plate, energetic composition, warm highlights with fresh accents, urban foodhall backdrop, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_bright}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, mushy noodles, clutter",
-        "styleProfile": {
-          "mood": "vibrant-editorial",
-          "camera": "three-quarter",
-          "lighting": "bright soft daylight"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_siam"
-      }
+      "endMeta": { "cta": "cta_7even" }
     },
     {
-      "id": "end_siam_green_curry",
+      "id": "end_veg_caprese",
       "type": "end",
-      "title": "A mai parosod: Siam Corner - Zold curry",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Zold curry - Siam Corner",
-        "subtitle": "Fuszeres, kremes, zolden vibralo thai klasszikus.",
-        "extra": "Lunch personality: Bright Heat Chaser"
-      },
+      "title": "Caprese",
       "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_bright", "text": "{fragment:branch_light_bright}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "A valasztasaid alapjan te ma egy elevenebb, kicsit izfeszitettebb iranyba mennel. A Siam Corner zold curryje pontosan ilyen: friss, fuszeres, kremes, es megvan benne az a csipo-sejto mozgas, ami egyszerre elenkit es jo kedvre tesz.\n\nEz nem a legovatosabb valasztas, de pont ezert szeretheted. Ha szereted, amikor az ebedednek karaktere van, mikozben meg mindig marad benne konnyedseg es zold frissesseg, akkor ez a te mai fogasod."
-        }
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Caprese." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "thai green curry with vivid herbs, creamy green sauce, vegetables, aromatic steam, bright spicy freshness",
-        "page": "lush green tones, elegant bowl, dynamic fresh composition, modern city lunch energy, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_bright}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, muddy sauce, cluttered background",
-        "styleProfile": {
-          "mood": "vibrant-editorial",
-          "camera": "three-quarter",
-          "lighting": "soft daylight"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_siam"
-      }
+      "endMeta": { "cta": "cta_granelli" }
     },
     {
-      "id": "end_cocodak_bibimbap_veg",
+      "id": "end_veg_veggie_tacos",
       "type": "end",
-      "title": "A mai parosod: Coco Dak - Zoldseges bibimbap",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Zoldseges bibimbap - Coco Dak",
-        "subtitle": "Rendezett, szines, kiegyensulyozott bowl.",
-        "extra": "Lunch personality: Balanced Builder"
-      },
+      "title": "Veggie tacos",
       "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_balanced", "text": "{fragment:branch_light_balanced}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma egy olyan fogas nyer, ami szervezettnek, tisztanak es megis tartalmasnak hat. A Coco Dak zoldseges bibimbapja pont ilyen: rizs, sok friss komponens, jol elkulonulo texturak es egy olyan bowl-erzet, amitol a valasztasod tudatosnak, de egyaltalan nem unalmasnak tunik.\n\nEz az ajanlat akkor szol nagyot, ha szereted, hogy minden falatban mas aranyban talalkozik a frissesseg, a melegseg es a ropogossag. Egy okosan konnyu ebed, ami meglepoen elegnek erzodik."
-        }
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Veggie tacos." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "korean bibimbap bowl with colorful vegetables, rice, clean arrangement, balanced healthy lunch mood",
-        "page": "top-down bowl emphasis, vibrant components separated beautifully, polished urban canteen aesthetic, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_balanced}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, messy ingredients, dull colors",
-        "styleProfile": {
-          "mood": "clean-editorial",
-          "camera": "top-down",
-          "lighting": "bright soft natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_cocodak"
-      }
+      "endMeta": { "cta": "cta_lacatrina" }
     },
     {
-      "id": "end_cocodak_bibimbap_meat",
+      "id": "end_veg_vegan_burrito",
       "type": "end",
-      "title": "A mai parosod: Coco Dak - Husas bibimbap",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Husas bibimbap - Coco Dak",
-        "subtitle": "Bowl-formatumu komfort, koreai ritmusban.",
-        "extra": "Lunch personality: Structured Craver"
-      },
+      "title": "Vegan burrito",
       "text": [
-        { "ifUnlocked": "mood_light", "text": "{fragment:mood_light}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_light_balanced", "text": "{fragment:branch_light_balanced}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "A te mai ebeded valahol a konnyedseg es a rendes tartalmassag kozott van. A Coco Dak husfeltetes bibimbapja pont ezt hozza: megvan benne a bowl-os egyensuly, de kapsz egy hatarozottabb, szaftosabb tengelyt is, amitől teljesebbnek erzed az egeszet.\n\nEz akkor jo valasztas, ha nem szeretnel tul nehez fogast, de azt sem, hogy tul hamar ujra ehes legyel. Szep, rendezett, szines es gyakorlatilag egy eheto 'minden a helyen van' elmeny."
-        }
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Vegan burrito." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "korean bibimbap bowl with marinated meat, rice, vegetables, glossy savory details, balanced satisfying lunch mood",
-        "page": "elevated bowl shot, clean composition, rich but still fresh look, modern market hall backdrop, shareable profile-card aesthetic; {fragment:img_light}; {fragment:img_light_balanced}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, overly greasy meat, cluttered styling",
-        "styleProfile": {
-          "mood": "clean-editorial",
-          "camera": "three-quarter",
-          "lighting": "natural soft light"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_cocodak"
-      }
+      "endMeta": { "cta": "cta_lacatrina" }
     },
     {
-      "id": "end_lacatrina_tacos",
+      "id": "end_veg_bibimbap",
       "type": "end",
-      "title": "A mai parosod: La Catrina - Tinga de Pollo tacos",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Tinga de Pollo tacos - La Catrina",
-        "subtitle": "Chipotle-s, csirkes, egybol mosolyt csalo valasztas.",
-        "extra": "Lunch personality: Street-Food Spark"
-      },
+      "title": "Bibimbap (veg)",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_street", "text": "{fragment:branch_hearty_street}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma a gyors, eros es egyertelmu orom nyer. A La Catrina Tinga de Pollo tacoja olyan fogas, ami mar az elso harapasnal kozli, hogy jo dontest hoztal: tepett csirke, chipotle-s karakter es az a laza mexikoi energia, ami az egesz ebedszunetet feldobja.\n\nEz az ajanlat azoknak valo, akik nem csak tankolni akarnak, hanem szeretnenek egy kis iz-utazast is a nap kozepere. Nem tulkomplikalt, csak nagyon szerethető."
-        }
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap (veg)." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "mexican chicken tacos with chipotle character, colorful toppings, dynamic street-food energy, warm satisfying mood",
-        "page": "bold plating, vibrant textures, hand-held comfort feel without showing hands, energetic city lunch vibe, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_street}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, sloppy plating, overly dark image",
-        "styleProfile": {
-          "mood": "bold-editorial",
-          "camera": "three-quarter",
-          "lighting": "warm natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_lacatrina"
-      }
+      "endMeta": { "cta": "cta_cocodak" }
     },
     {
-      "id": "end_lacatrina_burrito",
+      "id": "end_veg_japchae",
       "type": "end",
-      "title": "A mai parosod: La Catrina - Cochinita Pibil burrito",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Cochinita Pibil burrito - La Catrina",
-        "subtitle": "Lassan sult, szaftos, mexikoi comfort tekerve.",
-        "extra": "Lunch personality: Bold Comfort Roller"
-      },
+      "title": "Japchae (veg)",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_street", "text": "{fragment:branch_hearty_street}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "A mai valasztasod hatarozott, tele van sullyal es egy kis laza tulzassal - jo ertelemben. A La Catrina Cochinita Pibil burritoja szaftos, lassan sult porkkel, nagyobb ivu street-food erzettel dolgozik, szoval pont jo, ha tenyleg valami komolyabbra vagysz.\n\nEz az a fogas, ami utan nem erzed azt, hogy 'csak bekaptam valamit'. Inkabb azt, hogy ma sikerult egy kicsit jobban ebedelni, mint szoktal."
-        }
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Japchae (veg)." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "mexican pulled pork burrito with rich filling, warm tortilla, bold satisfying street-food mood",
-        "page": "wrapped burrito focus, savory interior textures, warm punchy colors, modern market hall table scene, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_street}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, broken wrap, cluttered table",
-        "styleProfile": {
-          "mood": "bold-editorial",
-          "camera": "close three-quarter",
-          "lighting": "warm soft"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_lacatrina"
-      }
+      "endMeta": { "cta": "cta_cocodak" }
     },
     {
-      "id": "end_granelli_pasta",
+      "id": "end_veg_4formaggi",
       "type": "end",
-      "title": "A mai parosod: Granelli - Frissen keszitett pasta",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Frissen keszitett pasta - Granelli",
-        "subtitle": "Olaszos komfort, elegansabb ebedszunetes formaban.",
-        "extra": "Lunch personality: Pasta Loyalist"
-      },
+      "title": "4 Formaggi pizza",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_comfort", "text": "{fragment:branch_hearty_comfort}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma a klasszikus komfort nyer, de nem a legnehezebb formaban. A Granelli frissen keszitett pastaja nagyon jo valasz erre: ismeros, jo erzesu, olaszos, de megvan benne az a frissesseg, amitől nem lesz belole delutani padlofogas.\n\nHa szereted, amikor az ebed egyszerre biztos pont es kis jutalom, akkor ez pontos ajanlat. Nem kell hozza nagy magyarazat: jo teszta, jo ritmus, jo del."
-        }
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a 4 Formaggi pizza." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "fresh italian pasta, silky sauce, elegant comforting lunch mood, refined but satisfying city-foodhall aesthetic",
-        "page": "beautiful pasta curves, subtle steam, warm italian palette, polished tabletop composition, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_comfort}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, overcooked pasta, messy sauce splashes",
-        "styleProfile": {
-          "mood": "warm-editorial",
-          "camera": "three-quarter",
-          "lighting": "soft natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_granelli"
-      }
+      "endMeta": { "cta": "cta_granelli" }
     },
     {
-      "id": "end_granelli_lasagna",
+      "id": "end_veg_mapo_tofu",
       "type": "end",
-      "title": "A mai parosod: Granelli - Lasagna",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Lasagna - Granelli",
-        "subtitle": "Rejteges, sajtos, rendes comfort-food valasztas.",
-        "extra": "Lunch personality: Layered Comfort Lover"
-      },
+      "title": "Mapo tofu",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_comfort", "text": "{fragment:branch_hearty_comfort}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Ha a mai napodra egy etel tudna odatenni a 'most jol vagyok' pontot, akkor az valoszinuleg lasagna lenne. A Granelli ezen a teren pont azt hozza, amire ilyenkor vagyhatsz: retegek, sajt, tartas es egy kis olasz nyugalom a rohanas kozepere.\n\nEz az ajanlat kifejezetten azoknak szol, akik nem banjak, ha az ebeduk kicsit jobban lelassitja az idot. Nem draman nehez, inkabb kellemesen komoly."
-        }
+        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Mapo tofu." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "italian lasagna with golden baked top, layered richness, warm comforting lunch mood",
-        "page": "crispy cheese edges, soft interior layers, elegant urban lunch table, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_comfort}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, burnt cheese, messy composition",
-        "styleProfile": {
-          "mood": "warm-editorial",
-          "camera": "close three-quarter",
-          "lighting": "warm natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_granelli"
-      }
+      "endMeta": { "cta": "cta_china_supreme" }
     },
     {
-      "id": "end_snackbear_burger",
+      "id": "end_veg_bokkeumbap",
       "type": "end",
-      "title": "A mai parosod: SnackBear - Burger",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Burger - SnackBear",
-        "subtitle": "A direkt, szerethető, azonnal mukodo valasztas.",
-        "extra": "Lunch personality: No-Nonsense Craver"
-      },
+      "title": "Bokkeumbap (veg)",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_street", "text": "{fragment:branch_hearty_street}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Neked ma nem kell kerulout: burgerre vagysz, csak lehet, hogy meg nem mondtad ki magadnak. A SnackBear pontosan azt a fajta biztos, egyenes ebedelmenyt adja, amit egy ilyen napon keresel: karakter, szaftossag es azonnali elegedettseg.\n\nEz az ajanlat akkor a legerosebb, ha az ebedszunetedtol most egyszeruen egy jo dontest varsz. Nem filozofal, csak mukodik - es altalaban pont ezert olyan jo."
-        }
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap (veg)." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "gourmet burger with rich textures, toasted bun, juicy filling, bold satisfying urban lunch mood",
-        "page": "clean modern burger presentation, street-food confidence, warm contrast and depth, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_street}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, collapsed burger, greasy mess",
-        "styleProfile": {
-          "mood": "bold-editorial",
-          "camera": "close three-quarter",
-          "lighting": "warm soft"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_snackbear"
-      }
+      "endMeta": { "cta": "cta_cocodak" }
     },
     {
-      "id": "end_snackbear_flammkuchen",
+      "id": "end_veg_stirfry_siam",
       "type": "end",
-      "title": "A mai parosod: SnackBear - Flammkuchen",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Flammkuchen - SnackBear",
-        "subtitle": "Ropogos, sajtos, kicsit sorozos hangulatu comfort.",
-        "extra": "Lunch personality: Crispy Indulger"
-      },
+      "title": "Vegetable stir-fry",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_street", "text": "{fragment:branch_hearty_street}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Nalad ma a street-food vonal kicsit ropogosabb, sajtosabb es lazabb oldalrol jon be. A SnackBear flammkuchenje pont erre jatszik ra: vekony, sutott alap, gazdag feltetek es egy olyan karakter, ami egyszerre komfortos es jatekos.\n\nHa a burger most tul evidens lenne, de megis valami eros, azonnal szerethető fogasra vagysz, ez a jo kis kanyar. Olyan, mintha az ebedszuneted egy pillanatra esti beulos hangulatot kapna."
-        }
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Vegetable stir-fry." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "flammkuchen with crisp edges, savory toppings, melted richness, playful street-food comfort mood",
-        "page": "thin baked flatbread focus, golden toasted details, modern casual lunch scene, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_street}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, burned crust, messy toppings",
-        "styleProfile": {
-          "mood": "bold-editorial",
-          "camera": "top-three-quarter",
-          "lighting": "warm natural"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_snackbear"
-      }
+      "endMeta": { "cta": "cta_siam_corner" }
     },
     {
-      "id": "end_ramen_classic",
+      "id": "end_veg_pesto_pasta",
       "type": "end",
-      "title": "A mai parosod: Ramen Ramen - Klasszikus ramen",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Klasszikus ramen - Ramen Ramen",
-        "subtitle": "Gazdag alaple, tojas, kimcsi, teljes komfort.",
-        "extra": "Lunch personality: Deep Bowl Romantic"
-      },
+      "title": "Pesto pasta",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_comfort", "text": "{fragment:branch_hearty_comfort}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "Te ma nem felmegoldast keresel, hanem egy rendes, melengeto, mely fogast. A Ramen Ramen klasszikus ramenje pont ezt adja: gazdag alaple, teszta, tojas, kimcsi, es az a fajta kanalrol kanalra jobb komfort, amit nehany nap egyszeruen megkivan.\n\nEz nem csak ebed, inkabb mini visszateres a rendszerbe. Ha azt erzed, hogy ma valami komolyabban ossze kell rakjon, akkor itt erdemes kikotnod."
-        }
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Pesto pasta." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "classic ramen bowl with rich broth, noodles, egg and kimchi, deep comforting lunch atmosphere",
-        "page": "steaming bowl, layered depth, warm amber broth tones, refined urban foodhall setting, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_comfort}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, muddy broth, sloppy bowl styling",
-        "styleProfile": {
-          "mood": "deep-editorial",
-          "camera": "close three-quarter",
-          "lighting": "soft warm"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_ramen"
-      }
+      "endMeta": { "cta": "cta_granelli" }
     },
     {
-      "id": "end_ramen_sticky_bowl",
+      "id": "end_veg_stirfry_noodles",
       "type": "end",
-      "title": "A mai parosod: Ramen Ramen - Sticky ramen bowl",
-      "layout": {
-        "mediaMode": "profile-card"
-      },
-      "profile": {
-        "name": "Sticky ramen bowl - Ramen Ramen",
-        "subtitle": "Szaftosabb, testesebb, ramenes comfort mas ritmusban.",
-        "extra": "Lunch personality: Cozy Heat Collector"
-      },
+      "title": "Vegetable stir-fry noodles",
       "text": [
-        { "ifUnlocked": "mood_hearty", "text": "{fragment:mood_hearty}", "mode": "prepend_before", "separator": "\n\n" },
-        { "ifUnlocked": "branch_hearty_comfort", "text": "{fragment:branch_hearty_comfort}", "mode": "prepend_before", "separator": "\n\n" },
-        {
-          "text": "A te komfortfogalmad ma kicsit surubb, testesebb es ragadósabban jo. A Ramen Ramen sticky ramen bowlja ezt a hangulatot nagyon pontosan fogja meg: ramenes karakter, de bowl-osabb, szaftosabb, direktebb elmenyben.\n\nEz akkor a legjobb valasztas, ha szeretnel valami meleget, laktatot es izben egy kicsit jobban rad tapadot - a jo ertelemben. Nem elegansan tavoli, hanem baratsagosan eros."
-        }
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Vegetable stir-fry noodles." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
       ],
-      "imagePrompt": {
-        "global": "editorial food photography, stylish lunch personality card, modern urban foodhall setting, premium plated dish, no text, no logo, no watermark, high detail, appetizing natural light",
-        "chapter": "sticky ramen bowl with rich sauce, noodles, savory toppings, warm bold comfort-lunch mood",
-        "page": "glossy textures, deeper tones, satisfying bowl composition, cozy city-lunch presentation, shareable profile-card aesthetic; {fragment:img_hearty}; {fragment:img_hearty_comfort}",
-        "combinedPrompt": "{global}, {chapter}, {page}",
-        "negativePrompt": "text, logo, watermark, people, hands, low resolution, muddy sauce, cluttered composition",
-        "styleProfile": {
-          "mood": "deep-editorial",
-          "camera": "three-quarter",
-          "lighting": "warm soft"
-        }
-      },
-      "imageTiming": {
-        "generate": true,
-        "trigger": "onPageLoad",
-        "delayMs": 300
-      },
-      "endMeta": {
-        "cta": "cta_ramen"
-      }
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_veg_tomato_pasta",
+      "type": "end",
+      "title": "Tomato pasta",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Tomato pasta." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_chicken_korean_fried_chicken",
+      "type": "end",
+      "title": "Korean fried chicken",
+      "text": [
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Korean fried chicken." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_cocodak" }
+    },
+    {
+      "id": "end_chicken_wings",
+      "type": "end",
+      "title": "Chicken wings",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Chicken wings." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_chicken_katsu_rice",
+      "type": "end",
+      "title": "Chicken katsu rice",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken katsu rice." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_chicken_crunchy_roll",
+      "type": "end",
+      "title": "Crunchy chicken roll",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Crunchy chicken roll." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_chicken_burger",
+      "type": "end",
+      "title": "Crispy chicken burger",
+      "text": [
+        { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Crispy chicken burger." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_snackbear" }
+    },
+    {
+      "id": "end_chicken_thai_curry",
+      "type": "end",
+      "title": "Thai curry chicken",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai curry chicken." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_chicken_pad_kaprao",
+      "type": "end",
+      "title": "Pad Kaprao chicken",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Kaprao chicken." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_chicken_pad_thai",
+      "type": "end",
+      "title": "Pad Thai chicken",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai chicken." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_chicken_tinga_tacos",
+      "type": "end",
+      "title": "Tinga de Pollo tacos",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo tacos." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_chicken_teriyaki_rice",
+      "type": "end",
+      "title": "Teriyaki chicken rice",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Teriyaki chicken rice." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_chicken_pasta",
+      "type": "end",
+      "title": "Chicken pasta",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Chicken pasta." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_chicken_quesadilla",
+      "type": "end",
+      "title": "Tinga de Pollo quesadilla",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo quesadilla." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_chicken_bokkeumbap",
+      "type": "end",
+      "title": "Bokkeumbap chicken",
+      "text": [
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap chicken." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_cocodak" }
+    },
+    {
+      "id": "end_chicken_tinga_burrito",
+      "type": "end",
+      "title": "Tinga de Pollo burrito",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo burrito." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_chicken_sushi_sando",
+      "type": "end",
+      "title": "Chicken sushi sando",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken sushi sando." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_beef_stew",
+      "type": "end",
+      "title": "Beef stew",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef stew." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_beef_barbacoa_bowl",
+      "type": "end",
+      "title": "Barbacoa bowl",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa bowl." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_beef_bolognese",
+      "type": "end",
+      "title": "Bolognese",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bolognese." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_beef_barbacoa_tacos",
+      "type": "end",
+      "title": "Barbacoa tacos",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa tacos." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_beef_barbacoa_burrito",
+      "type": "end",
+      "title": "Barbacoa burrito",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa burrito." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_beef_bibimbap",
+      "type": "end",
+      "title": "Bibimbap beef",
+      "text": [
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap beef." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_cocodak" }
+    },
+    {
+      "id": "end_beef_pho",
+      "type": "end",
+      "title": "Beef pho",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef pho." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_beef_sushi",
+      "type": "end",
+      "title": "Beef sushi",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Beef sushi." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_beef_noodle_soup",
+      "type": "end",
+      "title": "Beef noodle soup",
+      "text": [
+        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Beef noodle soup." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_cocodak" }
+    },
+    {
+      "id": "end_beef_noodles",
+      "type": "end",
+      "title": "Beef noodles",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef noodles." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_beef_smash_burger",
+      "type": "end",
+      "title": "Smash burger",
+      "text": [
+        { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Smash burger." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_snackbear" }
+    },
+    {
+      "id": "end_beef_thai_curry",
+      "type": "end",
+      "title": "Thai beef curry",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai beef curry." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_beef_bresaola_pizza",
+      "type": "end",
+      "title": "Bresaola pizza",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bresaola pizza." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_beef_pad_thai",
+      "type": "end",
+      "title": "Pad Thai beef",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai beef." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_pork_amatriciana",
+      "type": "end",
+      "title": "Amatriciana",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától az Amatriciana." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_pork_carbonara",
+      "type": "end",
+      "title": "Carbonara",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Carbonara." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_pork_cochinita_burrito",
+      "type": "end",
+      "title": "Cochinita Pibil burrito",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita Pibil burrito." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_pork_cochinita_bowl",
+      "type": "end",
+      "title": "Cochinita bowl",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita bowl." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_pork_chashiu",
+      "type": "end",
+      "title": "Chashiu pork",
+      "text": [
+        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Chashiu pork." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_china_supreme" }
+    },
+    {
+      "id": "end_pork_cochinita_tacos",
+      "type": "end",
+      "title": "Cochinita tacos",
+      "text": [
+        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita tacos." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_lacatrina" }
+    },
+    {
+      "id": "end_pork_porchetta_pizza",
+      "type": "end",
+      "title": "Porchetta pizza",
+      "text": [
+        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Porchetta pizza." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_granelli" }
+    },
+    {
+      "id": "end_pork_bacon_flammkuchen",
+      "type": "end",
+      "title": "Bacon flammkuchen",
+      "text": [
+        { "text": "A mai ajánlatod a SnackBear konyhájától a Bacon flammkuchen." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_snackbear" }
+    },
+    {
+      "id": "end_pork_bun",
+      "type": "end",
+      "title": "Pork bun",
+      "text": [
+        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Pork bun." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_china_supreme" }
+    },
+    {
+      "id": "end_sea_salmon_sushi",
+      "type": "end",
+      "title": "Salmon sushi",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_tuna_sushi",
+      "type": "end",
+      "title": "Tuna sushi",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Tuna sushi." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_poke_bowl",
+      "type": "end",
+      "title": "Poké bowl",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Poké bowl." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_salmon_roll",
+      "type": "end",
+      "title": "Salmon sushi roll",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi roll." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_spicy_tuna",
+      "type": "end",
+      "title": "Spicy tuna",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Spicy tuna." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_ebi_tempura",
+      "type": "end",
+      "title": "Ebi tempura",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi tempura." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_ebi_furai_rice",
+      "type": "end",
+      "title": "Ebi furai rice",
+      "text": [
+        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi furai rice." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_sushi_sando" }
+    },
+    {
+      "id": "end_sea_shrimp_noodles",
+      "type": "end",
+      "title": "Shrimp noodles",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Shrimp noodles." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_sea_shrimp_curry",
+      "type": "end",
+      "title": "Shrimp curry",
+      "text": [
+        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Shrimp curry." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_siam_corner" }
+    },
+    {
+      "id": "end_sea_seafood_pho",
+      "type": "end",
+      "title": "Seafood pho",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Seafood pho." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
+    },
+    {
+      "id": "end_sea_five_spice_shrimp",
+      "type": "end",
+      "title": "Five spice shrimp",
+      "text": [
+        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Five spice shrimp." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_china_supreme" }
+    },
+    {
+      "id": "end_sea_spicy_shrimp_noodles",
+      "type": "end",
+      "title": "Spicy shrimp noodle dish",
+      "text": [
+        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Spicy shrimp noodle dish." },
+        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+      ],
+      "endMeta": { "cta": "cta_vietnam" }
     }
   ]
 }
