@@ -100,27 +100,1497 @@
           "text": "Egy baráttal",
           "next": "Q2_protein",
           "reward": {
-            "locks": ["with_friend"]
+            "locks": [
+              "with_friend"
+            ]
           }
         },
         {
           "text": "Többen vagytok",
-          "next": "group_open"
+          "next": "B1_group_veg"
         }
       ]
     },
     {
-      "id": "group_open",
+      "id": "B1_group_veg",
+      "title": "",
+      "text": "Mivel többen vagytok, meg kell kérdeznem valamit: van köztetek vegetáriánus?",
+      "choices": [
+        {
+          "text": "Mindenki vega",
+          "next": "PZ_group_allveg"
+        },
+        {
+          "text": "Van vega",
+          "next": "PZ_group_mix"
+        },
+        {
+          "text": "Nincs vega",
+          "next": "PZ_group_noveg"
+        }
+      ]
+    },
+    {
+      "id": "PZ_group_allveg",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
       "title": "",
       "text": [
         {
-          "text": "A többfős ajánló ág később kerül kidolgozásra."
+          "text": "Válasszatok 3 dolgot, ami most a legjobban illik a csapatotokhoz."
         }
       ],
-      "choices": [
+      "options": [
+        "Kézzel ehető falatok",
+        "Szószos, meleg ételek",
+        "Sok kis külön fogás",
+        "Rizs / tészta alapú főételek",
+        "Friss / könnyebb dolgok",
+        "Ropogós / sült elemek",
+        "Nagy megosztós tálak",
+        "Bowl / egytál étel"
+      ],
+      "maxPick": 3,
+      "maxAttempts": 1,
+      "optionFlagsBase": "bveg_opt_",
+      "onSuccess": {
+        "goto": "logic_group_allveg"
+      }
+    },
+    {
+      "id": "PZ_group_mix",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "",
+      "text": [
         {
-          "text": "Vissza",
-          "next": "Q1_people"
+          "text": "Válasszatok 3 dolgot, ami most a legjobban illik a vegyes társasághoz."
+        }
+      ],
+      "options": [
+        "Kézzel ehető falatok",
+        "Szószos, meleg ételek",
+        "Sok kis külön fogás",
+        "Rizs / tészta alapú főételek",
+        "Friss / könnyebb dolgok",
+        "Ropogós / sült elemek",
+        "Nagy megosztós tálak",
+        "Bowl / egytál étel"
+      ],
+      "maxPick": 3,
+      "maxAttempts": 1,
+      "optionFlagsBase": "bmix_opt_",
+      "onSuccess": {
+        "goto": "logic_group_mix"
+      }
+    },
+    {
+      "id": "PZ_group_noveg",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "",
+      "text": [
+        {
+          "text": "Válasszatok 3 dolgot, ami most a legjobban illik a teljesen húsos társasághoz."
+        }
+      ],
+      "options": [
+        "Kézzel ehető falatok",
+        "Szószos, meleg ételek",
+        "Sok kis külön fogás",
+        "Rizs / tészta alapú főételek",
+        "Friss / könnyebb dolgok",
+        "Ropogós / sült elemek",
+        "Nagy megosztós tálak",
+        "Bowl / egytál étel"
+      ],
+      "maxPick": 3,
+      "maxAttempts": 1,
+      "optionFlagsBase": "bnon_opt_",
+      "onSuccess": {
+        "goto": "logic_group_noveg"
+      }
+    },
+    {
+      "id": "logic_group_allveg",
+      "type": "logic",
+      "title": "",
+      "text": [],
+      "logic": [
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3"
+          ],
+          "goto": "end_b_veg_lacatrina_veggie_tacos"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_4"
+          ],
+          "goto": "end_b_veg_lacatrina_vegan_tacos"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_lacatrina_veggie_quesadilla"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_lacatrina_veggie_tacos"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_lacatrina_vegan_tacos"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_vietnam_vegetarian_pho"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4"
+          ],
+          "goto": "end_b_veg_sushi_california_collection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_sushi_veg_maki_mix"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_sushi_green_gohan_bento"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_sushi_california_collection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_granelli_pizza_selection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_granelli_pesto_ravioli"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_7even_grilled_vegetables_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_7even_grilled_vegetables_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_lacatrina_veggie_quesadilla"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_1",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4"
+          ],
+          "goto": "end_b_veg_china_mapo_tofu"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_vietnam_veg_dimsum"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_vietnam_vegetarian_pho"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_sushi_veg_maki_mix"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_vietnam_veg_dimsum"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_thai_pad_thai_tofu"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_thai_phad_phak_ruam"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_china_sweet_tomato_egg"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_vietnam_vegetarian_pho"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_vietnam_veg_dimsum"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_vietnam_vegetarian_pho"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_china_mini_bowls"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_thai_pad_thai_tofu"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_2",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_china_mapo_tofu"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5"
+          ],
+          "goto": "end_b_veg_sushi_green_gohan_bento"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_cocodak_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_sushi_california_collection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_sushi_veg_maki_mix"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_sushi_green_gohan_bento"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_sushi_california_collection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_sushi_veg_maki_mix"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_3",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_sushi_green_gohan_bento"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6"
+          ],
+          "goto": "end_b_veg_7even_grilled_vegetables_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_7even_grilled_vegetables_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_granelli_pizza_selection"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_4",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_7even_grilled_vegetables_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_5",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_7even_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:bveg_opt_6",
+            "flag:bveg_opt_7",
+            "flag:bveg_opt_8"
+          ],
+          "goto": "end_b_veg_cocodak_bokkeumbap"
+        },
+        {
+          "default": "end_b_veg_7even_falafel_bowl"
+        }
+      ]
+    },
+    {
+      "id": "logic_group_mix",
+      "type": "logic",
+      "title": "",
+      "text": [],
+      "logic": [
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3"
+          ],
+          "goto": "end_b_mix_world_sushi_tacos_guac"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_4"
+          ],
+          "goto": "end_b_mix_mexico_mixed_tacos"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_mexico_mixed_tacos_quesadilla"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_vegan_bitterballen"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_world_pizza_korean_falafel"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_mexico_mixed_tacos"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_world_mixed_tacos_sushi_edamame"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_burgers_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_vegan_bitterballen"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_world_sushi_tacos_guac"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_burgers_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_vegan_bitterballen"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_1",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_world_pizza_korean_falafel"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4"
+          ],
+          "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_world_mixed_tacos_sushi_edamame"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_china_orange_chicken_mapo"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_thai_pad_thai_green_curry"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_china_grilled_duck_tofu"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_thai_phad_kaprao_veg_stirfry"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_china_orange_chicken_mapo"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_china_grilled_duck_tofu"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_2",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_world_sushi_tacos_guac"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_world_pizza_korean_falafel"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_sushi_small_family_platter"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_3",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_world_mixed_tacos_sushi_edamame"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6"
+          ],
+          "goto": "end_b_mix_granelli_pizza_caprese_bresaola"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_granelli_carbonara_pesto_chicken_tiramisu"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_snackbar_snack_platter_burgers_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_4",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_world_sushi_tacos_guac"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_5",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_7even_bowls_mix"
+        },
+        {
+          "if": [
+            "flag:bmix_opt_6",
+            "flag:bmix_opt_7",
+            "flag:bmix_opt_8"
+          ],
+          "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
+        },
+        {
+          "default": "end_b_mix_world_sushi_tacos_guac"
+        }
+      ]
+    },
+    {
+      "id": "logic_group_noveg",
+      "type": "logic",
+      "title": "",
+      "text": [],
+      "logic": [
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3"
+          ],
+          "goto": "end_b_non_world_sushi_korean"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_4"
+          ],
+          "goto": "end_b_non_mexico_mixed_tacos"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_mexico_barbacoa_quesadilla"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_snackbar_smash_burger_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_sushi_snack_platter"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_mexico_mixed_tacos"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4"
+          ],
+          "goto": "end_b_non_sushi_family_platter_xl"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_sushi_signature_platter_deluxe"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_smash_burgers_tacos_korean"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_chicken_tuna_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_granelli_diavola_bresaola_mortadella"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_snackbar_ribeye_pastrami_fries"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_snackbar_smash_burger_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_granelli_bolognese_carbonara_porchetta"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_pizza_nachos_guac"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_granelli_diavola_bresaola_mortadella"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_snackbar_ribeye_pastrami_fries"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_chicken_tuna_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_1",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_world_china_thai_rice"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4"
+          ],
+          "goto": "end_b_non_vietnam_party_mix_beef_pho"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_vietnam_dimsum_fried_snacks"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_pho_padthai_dimsum"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_vietnam_party_mix_beef_pho"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_thai_pad_thai_massaman"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_thai_phad_kaprao_green_curry"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_china_orange_chicken_shrimp_duck"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_thai_pad_thai_massaman"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_vietnam_dimsum_fried_snacks"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_china_pork_chashiu_black_bean_beef"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_vietnam_party_mix_beef_pho"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_snack_tacos_sushi"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_chicken_tuna_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_2",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_world_sushi_korean"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5"
+          ],
+          "goto": "end_b_non_sushi_family_platter_xl"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_sushi_snack_platter"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_chicken_tuna_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_sushi_signature_platter_deluxe"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_sushi_family_platter_xl"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_sushi_signature_platter_deluxe"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_smash_burgers_tacos_korean"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_3",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_world_pizza_nachos_guac"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6"
+          ],
+          "goto": "end_b_non_granelli_bolognese_carbonara_porchetta"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_china_thai_rice"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_granelli_diavola_bresaola_mortadella"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_snackbar_smash_burger_loaded_fries"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_chicken_tuna_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_4",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_world_pho_padthai_dimsum"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7"
+          ],
+          "goto": "end_b_non_world_snack_tacos_sushi"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_granelli_bolognese_carbonara_porchetta"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_5",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_world_sushi_korean"
+        },
+        {
+          "if": [
+            "flag:bnon_opt_6",
+            "flag:bnon_opt_7",
+            "flag:bnon_opt_8"
+          ],
+          "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
+        },
+        {
+          "default": "end_b_non_world_sushi_korean"
         }
       ]
     },
@@ -296,22 +1766,114 @@
       "title": "",
       "text": [],
       "logic": [
-        { "if": ["flag:veg_opt_1", "flag:veg_opt_3"], "goto": "end_veg_falafel_bowl" },
-        { "if": ["flag:veg_opt_1", "flag:veg_opt_2"], "goto": "end_veg_hummus_vegetables" },
-        { "if": ["flag:veg_opt_1", "flag:veg_opt_5"], "goto": "end_veg_caprese" },
-        { "if": ["flag:veg_opt_1", "flag:veg_opt_4"], "goto": "end_veg_veggie_tacos" },
-        { "if": ["flag:veg_opt_1", "flag:veg_opt_6"], "goto": "end_veg_vegan_burrito" },
-        { "if": ["flag:veg_opt_2", "flag:veg_opt_3"], "goto": "end_veg_bibimbap" },
-        { "if": ["flag:veg_opt_2", "flag:veg_opt_4"], "goto": "end_veg_japchae" },
-        { "if": ["flag:veg_opt_2", "flag:veg_opt_5"], "goto": "end_veg_4formaggi" },
-        { "if": ["flag:veg_opt_2", "flag:veg_opt_6"], "goto": "end_veg_mapo_tofu" },
-        { "if": ["flag:veg_opt_3", "flag:veg_opt_4"], "goto": "end_veg_bokkeumbap" },
-        { "if": ["flag:veg_opt_3", "flag:veg_opt_5"], "goto": "end_veg_falafel_bowl" },
-        { "if": ["flag:veg_opt_3", "flag:veg_opt_6"], "goto": "end_veg_stirfry_siam" },
-        { "if": ["flag:veg_opt_4", "flag:veg_opt_5"], "goto": "end_veg_pesto_pasta" },
-        { "if": ["flag:veg_opt_4", "flag:veg_opt_6"], "goto": "end_veg_stirfry_noodles" },
-        { "if": ["flag:veg_opt_5", "flag:veg_opt_6"], "goto": "end_veg_tomato_pasta" },
-        { "default": "end_veg_falafel_bowl" }
+        {
+          "if": [
+            "flag:veg_opt_1",
+            "flag:veg_opt_3"
+          ],
+          "goto": "end_veg_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:veg_opt_1",
+            "flag:veg_opt_2"
+          ],
+          "goto": "end_veg_hummus_vegetables"
+        },
+        {
+          "if": [
+            "flag:veg_opt_1",
+            "flag:veg_opt_5"
+          ],
+          "goto": "end_veg_caprese"
+        },
+        {
+          "if": [
+            "flag:veg_opt_1",
+            "flag:veg_opt_4"
+          ],
+          "goto": "end_veg_veggie_tacos"
+        },
+        {
+          "if": [
+            "flag:veg_opt_1",
+            "flag:veg_opt_6"
+          ],
+          "goto": "end_veg_vegan_burrito"
+        },
+        {
+          "if": [
+            "flag:veg_opt_2",
+            "flag:veg_opt_3"
+          ],
+          "goto": "end_veg_bibimbap"
+        },
+        {
+          "if": [
+            "flag:veg_opt_2",
+            "flag:veg_opt_4"
+          ],
+          "goto": "end_veg_japchae"
+        },
+        {
+          "if": [
+            "flag:veg_opt_2",
+            "flag:veg_opt_5"
+          ],
+          "goto": "end_veg_4formaggi"
+        },
+        {
+          "if": [
+            "flag:veg_opt_2",
+            "flag:veg_opt_6"
+          ],
+          "goto": "end_veg_mapo_tofu"
+        },
+        {
+          "if": [
+            "flag:veg_opt_3",
+            "flag:veg_opt_4"
+          ],
+          "goto": "end_veg_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:veg_opt_3",
+            "flag:veg_opt_5"
+          ],
+          "goto": "end_veg_falafel_bowl"
+        },
+        {
+          "if": [
+            "flag:veg_opt_3",
+            "flag:veg_opt_6"
+          ],
+          "goto": "end_veg_stirfry_siam"
+        },
+        {
+          "if": [
+            "flag:veg_opt_4",
+            "flag:veg_opt_5"
+          ],
+          "goto": "end_veg_pesto_pasta"
+        },
+        {
+          "if": [
+            "flag:veg_opt_4",
+            "flag:veg_opt_6"
+          ],
+          "goto": "end_veg_stirfry_noodles"
+        },
+        {
+          "if": [
+            "flag:veg_opt_5",
+            "flag:veg_opt_6"
+          ],
+          "goto": "end_veg_tomato_pasta"
+        },
+        {
+          "default": "end_veg_falafel_bowl"
+        }
       ]
     },
     {
@@ -320,22 +1882,114 @@
       "title": "",
       "text": [],
       "logic": [
-        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_2"], "goto": "end_chicken_korean_fried_chicken" },
-        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_3"], "goto": "end_chicken_wings" },
-        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_4"], "goto": "end_chicken_katsu_rice" },
-        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_5"], "goto": "end_chicken_crunchy_roll" },
-        { "if": ["flag:chicken_opt_1", "flag:chicken_opt_6"], "goto": "end_chicken_burger" },
-        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_3"], "goto": "end_chicken_thai_curry" },
-        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_4"], "goto": "end_chicken_pad_kaprao" },
-        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_5"], "goto": "end_chicken_pad_thai" },
-        { "if": ["flag:chicken_opt_2", "flag:chicken_opt_6"], "goto": "end_chicken_tinga_tacos" },
-        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_4"], "goto": "end_chicken_teriyaki_rice" },
-        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_5"], "goto": "end_chicken_pasta" },
-        { "if": ["flag:chicken_opt_3", "flag:chicken_opt_6"], "goto": "end_chicken_quesadilla" },
-        { "if": ["flag:chicken_opt_4", "flag:chicken_opt_5"], "goto": "end_chicken_bokkeumbap" },
-        { "if": ["flag:chicken_opt_4", "flag:chicken_opt_6"], "goto": "end_chicken_tinga_burrito" },
-        { "if": ["flag:chicken_opt_5", "flag:chicken_opt_6"], "goto": "end_chicken_sushi_sando" },
-        { "default": "end_chicken_korean_fried_chicken" }
+        {
+          "if": [
+            "flag:chicken_opt_1",
+            "flag:chicken_opt_2"
+          ],
+          "goto": "end_chicken_korean_fried_chicken"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_1",
+            "flag:chicken_opt_3"
+          ],
+          "goto": "end_chicken_wings"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_1",
+            "flag:chicken_opt_4"
+          ],
+          "goto": "end_chicken_katsu_rice"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_1",
+            "flag:chicken_opt_5"
+          ],
+          "goto": "end_chicken_crunchy_roll"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_1",
+            "flag:chicken_opt_6"
+          ],
+          "goto": "end_chicken_burger"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_2",
+            "flag:chicken_opt_3"
+          ],
+          "goto": "end_chicken_thai_curry"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_2",
+            "flag:chicken_opt_4"
+          ],
+          "goto": "end_chicken_pad_kaprao"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_2",
+            "flag:chicken_opt_5"
+          ],
+          "goto": "end_chicken_pad_thai"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_2",
+            "flag:chicken_opt_6"
+          ],
+          "goto": "end_chicken_tinga_tacos"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_3",
+            "flag:chicken_opt_4"
+          ],
+          "goto": "end_chicken_teriyaki_rice"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_3",
+            "flag:chicken_opt_5"
+          ],
+          "goto": "end_chicken_pasta"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_3",
+            "flag:chicken_opt_6"
+          ],
+          "goto": "end_chicken_quesadilla"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_4",
+            "flag:chicken_opt_5"
+          ],
+          "goto": "end_chicken_bokkeumbap"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_4",
+            "flag:chicken_opt_6"
+          ],
+          "goto": "end_chicken_tinga_burrito"
+        },
+        {
+          "if": [
+            "flag:chicken_opt_5",
+            "flag:chicken_opt_6"
+          ],
+          "goto": "end_chicken_sushi_sando"
+        },
+        {
+          "default": "end_chicken_korean_fried_chicken"
+        }
       ]
     },
     {
@@ -344,22 +1998,114 @@
       "title": "",
       "text": [],
       "logic": [
-        { "if": ["flag:beef_opt_1", "flag:beef_opt_2"], "goto": "end_beef_stew" },
-        { "if": ["flag:beef_opt_1", "flag:beef_opt_3"], "goto": "end_beef_barbacoa_bowl" },
-        { "if": ["flag:beef_opt_1", "flag:beef_opt_4"], "goto": "end_beef_bolognese" },
-        { "if": ["flag:beef_opt_1", "flag:beef_opt_5"], "goto": "end_beef_barbacoa_tacos" },
-        { "if": ["flag:beef_opt_1", "flag:beef_opt_6"], "goto": "end_beef_barbacoa_burrito" },
-        { "if": ["flag:beef_opt_2", "flag:beef_opt_3"], "goto": "end_beef_bibimbap" },
-        { "if": ["flag:beef_opt_2", "flag:beef_opt_4"], "goto": "end_beef_pho" },
-        { "if": ["flag:beef_opt_2", "flag:beef_opt_5"], "goto": "end_beef_sushi" },
-        { "if": ["flag:beef_opt_2", "flag:beef_opt_6"], "goto": "end_beef_noodle_soup" },
-        { "if": ["flag:beef_opt_3", "flag:beef_opt_4"], "goto": "end_beef_noodles" },
-        { "if": ["flag:beef_opt_3", "flag:beef_opt_5"], "goto": "end_beef_smash_burger" },
-        { "if": ["flag:beef_opt_3", "flag:beef_opt_6"], "goto": "end_beef_thai_curry" },
-        { "if": ["flag:beef_opt_4", "flag:beef_opt_5"], "goto": "end_beef_bresaola_pizza" },
-        { "if": ["flag:beef_opt_4", "flag:beef_opt_6"], "goto": "end_beef_pad_thai" },
-        { "if": ["flag:beef_opt_5", "flag:beef_opt_6"], "goto": "end_beef_smash_burger" },
-        { "default": "end_beef_stew" }
+        {
+          "if": [
+            "flag:beef_opt_1",
+            "flag:beef_opt_2"
+          ],
+          "goto": "end_beef_stew"
+        },
+        {
+          "if": [
+            "flag:beef_opt_1",
+            "flag:beef_opt_3"
+          ],
+          "goto": "end_beef_barbacoa_bowl"
+        },
+        {
+          "if": [
+            "flag:beef_opt_1",
+            "flag:beef_opt_4"
+          ],
+          "goto": "end_beef_bolognese"
+        },
+        {
+          "if": [
+            "flag:beef_opt_1",
+            "flag:beef_opt_5"
+          ],
+          "goto": "end_beef_barbacoa_tacos"
+        },
+        {
+          "if": [
+            "flag:beef_opt_1",
+            "flag:beef_opt_6"
+          ],
+          "goto": "end_beef_barbacoa_burrito"
+        },
+        {
+          "if": [
+            "flag:beef_opt_2",
+            "flag:beef_opt_3"
+          ],
+          "goto": "end_beef_bibimbap"
+        },
+        {
+          "if": [
+            "flag:beef_opt_2",
+            "flag:beef_opt_4"
+          ],
+          "goto": "end_beef_pho"
+        },
+        {
+          "if": [
+            "flag:beef_opt_2",
+            "flag:beef_opt_5"
+          ],
+          "goto": "end_beef_sushi"
+        },
+        {
+          "if": [
+            "flag:beef_opt_2",
+            "flag:beef_opt_6"
+          ],
+          "goto": "end_beef_noodle_soup"
+        },
+        {
+          "if": [
+            "flag:beef_opt_3",
+            "flag:beef_opt_4"
+          ],
+          "goto": "end_beef_noodles"
+        },
+        {
+          "if": [
+            "flag:beef_opt_3",
+            "flag:beef_opt_5"
+          ],
+          "goto": "end_beef_smash_burger"
+        },
+        {
+          "if": [
+            "flag:beef_opt_3",
+            "flag:beef_opt_6"
+          ],
+          "goto": "end_beef_thai_curry"
+        },
+        {
+          "if": [
+            "flag:beef_opt_4",
+            "flag:beef_opt_5"
+          ],
+          "goto": "end_beef_bresaola_pizza"
+        },
+        {
+          "if": [
+            "flag:beef_opt_4",
+            "flag:beef_opt_6"
+          ],
+          "goto": "end_beef_pad_thai"
+        },
+        {
+          "if": [
+            "flag:beef_opt_5",
+            "flag:beef_opt_6"
+          ],
+          "goto": "end_beef_smash_burger"
+        },
+        {
+          "default": "end_beef_stew"
+        }
       ]
     },
     {
@@ -368,22 +2114,114 @@
       "title": "",
       "text": [],
       "logic": [
-        { "if": ["flag:pork_opt_1", "flag:pork_opt_2"], "goto": "end_pork_amatriciana" },
-        { "if": ["flag:pork_opt_1", "flag:pork_opt_3"], "goto": "end_pork_carbonara" },
-        { "if": ["flag:pork_opt_1", "flag:pork_opt_4"], "goto": "end_pork_cochinita_burrito" },
-        { "if": ["flag:pork_opt_1", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
-        { "if": ["flag:pork_opt_1", "flag:pork_opt_6"], "goto": "end_pork_chashiu" },
-        { "if": ["flag:pork_opt_2", "flag:pork_opt_3"], "goto": "end_pork_amatriciana" },
-        { "if": ["flag:pork_opt_2", "flag:pork_opt_4"], "goto": "end_pork_cochinita_tacos" },
-        { "if": ["flag:pork_opt_2", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
-        { "if": ["flag:pork_opt_2", "flag:pork_opt_6"], "goto": "end_pork_porchetta_pizza" },
-        { "if": ["flag:pork_opt_3", "flag:pork_opt_4"], "goto": "end_pork_bacon_flammkuchen" },
-        { "if": ["flag:pork_opt_3", "flag:pork_opt_5"], "goto": "end_pork_cochinita_bowl" },
-        { "if": ["flag:pork_opt_3", "flag:pork_opt_6"], "goto": "end_pork_porchetta_pizza" },
-        { "if": ["flag:pork_opt_4", "flag:pork_opt_5"], "goto": "end_pork_cochinita_burrito" },
-        { "if": ["flag:pork_opt_4", "flag:pork_opt_6"], "goto": "end_pork_bun" },
-        { "if": ["flag:pork_opt_5", "flag:pork_opt_6"], "goto": "end_pork_cochinita_bowl" },
-        { "default": "end_pork_amatriciana" }
+        {
+          "if": [
+            "flag:pork_opt_1",
+            "flag:pork_opt_2"
+          ],
+          "goto": "end_pork_amatriciana"
+        },
+        {
+          "if": [
+            "flag:pork_opt_1",
+            "flag:pork_opt_3"
+          ],
+          "goto": "end_pork_carbonara"
+        },
+        {
+          "if": [
+            "flag:pork_opt_1",
+            "flag:pork_opt_4"
+          ],
+          "goto": "end_pork_cochinita_burrito"
+        },
+        {
+          "if": [
+            "flag:pork_opt_1",
+            "flag:pork_opt_5"
+          ],
+          "goto": "end_pork_cochinita_bowl"
+        },
+        {
+          "if": [
+            "flag:pork_opt_1",
+            "flag:pork_opt_6"
+          ],
+          "goto": "end_pork_chashiu"
+        },
+        {
+          "if": [
+            "flag:pork_opt_2",
+            "flag:pork_opt_3"
+          ],
+          "goto": "end_pork_amatriciana"
+        },
+        {
+          "if": [
+            "flag:pork_opt_2",
+            "flag:pork_opt_4"
+          ],
+          "goto": "end_pork_cochinita_tacos"
+        },
+        {
+          "if": [
+            "flag:pork_opt_2",
+            "flag:pork_opt_5"
+          ],
+          "goto": "end_pork_cochinita_bowl"
+        },
+        {
+          "if": [
+            "flag:pork_opt_2",
+            "flag:pork_opt_6"
+          ],
+          "goto": "end_pork_porchetta_pizza"
+        },
+        {
+          "if": [
+            "flag:pork_opt_3",
+            "flag:pork_opt_4"
+          ],
+          "goto": "end_pork_bacon_flammkuchen"
+        },
+        {
+          "if": [
+            "flag:pork_opt_3",
+            "flag:pork_opt_5"
+          ],
+          "goto": "end_pork_cochinita_bowl"
+        },
+        {
+          "if": [
+            "flag:pork_opt_3",
+            "flag:pork_opt_6"
+          ],
+          "goto": "end_pork_porchetta_pizza"
+        },
+        {
+          "if": [
+            "flag:pork_opt_4",
+            "flag:pork_opt_5"
+          ],
+          "goto": "end_pork_cochinita_burrito"
+        },
+        {
+          "if": [
+            "flag:pork_opt_4",
+            "flag:pork_opt_6"
+          ],
+          "goto": "end_pork_bun"
+        },
+        {
+          "if": [
+            "flag:pork_opt_5",
+            "flag:pork_opt_6"
+          ],
+          "goto": "end_pork_cochinita_bowl"
+        },
+        {
+          "default": "end_pork_amatriciana"
+        }
       ]
     },
     {
@@ -392,22 +2230,114 @@
       "title": "",
       "text": [],
       "logic": [
-        { "if": ["flag:sea_opt_1", "flag:sea_opt_2"], "goto": "end_sea_salmon_sushi" },
-        { "if": ["flag:sea_opt_1", "flag:sea_opt_3"], "goto": "end_sea_tuna_sushi" },
-        { "if": ["flag:sea_opt_1", "flag:sea_opt_4"], "goto": "end_sea_poke_bowl" },
-        { "if": ["flag:sea_opt_1", "flag:sea_opt_5"], "goto": "end_sea_salmon_roll" },
-        { "if": ["flag:sea_opt_1", "flag:sea_opt_6"], "goto": "end_sea_spicy_tuna" },
-        { "if": ["flag:sea_opt_2", "flag:sea_opt_3"], "goto": "end_sea_ebi_tempura" },
-        { "if": ["flag:sea_opt_2", "flag:sea_opt_4"], "goto": "end_sea_ebi_furai_rice" },
-        { "if": ["flag:sea_opt_2", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
-        { "if": ["flag:sea_opt_2", "flag:sea_opt_6"], "goto": "end_sea_shrimp_curry" },
-        { "if": ["flag:sea_opt_3", "flag:sea_opt_4"], "goto": "end_sea_seafood_pho" },
-        { "if": ["flag:sea_opt_3", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
-        { "if": ["flag:sea_opt_3", "flag:sea_opt_6"], "goto": "end_sea_five_spice_shrimp" },
-        { "if": ["flag:sea_opt_4", "flag:sea_opt_5"], "goto": "end_sea_shrimp_noodles" },
-        { "if": ["flag:sea_opt_4", "flag:sea_opt_6"], "goto": "end_sea_shrimp_curry" },
-        { "if": ["flag:sea_opt_5", "flag:sea_opt_6"], "goto": "end_sea_spicy_shrimp_noodles" },
-        { "default": "end_sea_salmon_sushi" }
+        {
+          "if": [
+            "flag:sea_opt_1",
+            "flag:sea_opt_2"
+          ],
+          "goto": "end_sea_salmon_sushi"
+        },
+        {
+          "if": [
+            "flag:sea_opt_1",
+            "flag:sea_opt_3"
+          ],
+          "goto": "end_sea_tuna_sushi"
+        },
+        {
+          "if": [
+            "flag:sea_opt_1",
+            "flag:sea_opt_4"
+          ],
+          "goto": "end_sea_poke_bowl"
+        },
+        {
+          "if": [
+            "flag:sea_opt_1",
+            "flag:sea_opt_5"
+          ],
+          "goto": "end_sea_salmon_roll"
+        },
+        {
+          "if": [
+            "flag:sea_opt_1",
+            "flag:sea_opt_6"
+          ],
+          "goto": "end_sea_spicy_tuna"
+        },
+        {
+          "if": [
+            "flag:sea_opt_2",
+            "flag:sea_opt_3"
+          ],
+          "goto": "end_sea_ebi_tempura"
+        },
+        {
+          "if": [
+            "flag:sea_opt_2",
+            "flag:sea_opt_4"
+          ],
+          "goto": "end_sea_ebi_furai_rice"
+        },
+        {
+          "if": [
+            "flag:sea_opt_2",
+            "flag:sea_opt_5"
+          ],
+          "goto": "end_sea_shrimp_noodles"
+        },
+        {
+          "if": [
+            "flag:sea_opt_2",
+            "flag:sea_opt_6"
+          ],
+          "goto": "end_sea_shrimp_curry"
+        },
+        {
+          "if": [
+            "flag:sea_opt_3",
+            "flag:sea_opt_4"
+          ],
+          "goto": "end_sea_seafood_pho"
+        },
+        {
+          "if": [
+            "flag:sea_opt_3",
+            "flag:sea_opt_5"
+          ],
+          "goto": "end_sea_shrimp_noodles"
+        },
+        {
+          "if": [
+            "flag:sea_opt_3",
+            "flag:sea_opt_6"
+          ],
+          "goto": "end_sea_five_spice_shrimp"
+        },
+        {
+          "if": [
+            "flag:sea_opt_4",
+            "flag:sea_opt_5"
+          ],
+          "goto": "end_sea_shrimp_noodles"
+        },
+        {
+          "if": [
+            "flag:sea_opt_4",
+            "flag:sea_opt_6"
+          ],
+          "goto": "end_sea_shrimp_curry"
+        },
+        {
+          "if": [
+            "flag:sea_opt_5",
+            "flag:sea_opt_6"
+          ],
+          "goto": "end_sea_spicy_shrimp_noodles"
+        },
+        {
+          "default": "end_sea_salmon_sushi"
+        }
       ]
     },
     {
@@ -415,640 +2345,2624 @@
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Falafel bowl." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Falafel bowl."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_7even" }
+      "endMeta": {
+        "cta": "cta_7even"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Falafel bowl from 7EVEN, served as a premium lunch dish in a stylish urban food hall, fresh mediterranean ingredients, herbs, olive oil accents, bright inviting colors, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_hummus_vegetables",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Hummus & vegetables." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Hummus & vegetables."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_7even" }
+      "endMeta": {
+        "cta": "cta_7even"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Hummus & vegetables from 7EVEN, served as a premium lunch dish in a stylish urban food hall, fresh mediterranean ingredients, herbs, olive oil accents, bright inviting colors, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_caprese",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Caprese." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Caprese."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Caprese from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_veggie_tacos",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Veggie tacos." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Veggie tacos."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Veggie tacos from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_vegan_burrito",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Vegan burrito." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Vegan burrito."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Vegan burrito from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_bibimbap",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap (veg)." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap (veg)."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bibimbap (veg) from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_japchae",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Japchae (veg)." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Japchae (veg)."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Japchae (veg) from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_4formaggi",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a 4 Formaggi pizza." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a 4 Formaggi pizza."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of 4 Formaggi pizza from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_mapo_tofu",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Mapo tofu." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a China Supreme kínai konyhájától a Mapo tofu."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_china_supreme" }
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Mapo tofu from China Supreme, served as a premium lunch dish in a stylish urban food hall, rich chinese take on modern foodhall plating, aromatic detail, glossy sauces, layered textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_bokkeumbap",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap (veg)." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap (veg)."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bokkeumbap (veg) from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_stirfry_siam",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Vegetable stir-fry." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Vegetable stir-fry."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Vegetable stir-fry from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_pesto_pasta",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Pesto pasta." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Pesto pasta."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Pesto pasta from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_stirfry_noodles",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Vegetable stir-fry noodles." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Vegetable stir-fry noodles."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Vegetable stir-fry noodles from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_veg_tomato_pasta",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Tomato pasta." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Tomato pasta."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Tomato pasta from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_korean_fried_chicken",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Korean fried chicken." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Korean fried chicken."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Korean fried chicken from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_wings",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Chicken wings." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Chicken wings."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Chicken wings from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_katsu_rice",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken katsu rice." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken katsu rice."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Chicken katsu rice from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_crunchy_roll",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Crunchy chicken roll." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Crunchy chicken roll."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Crunchy chicken roll from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_burger",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Crispy chicken burger." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Crispy chicken burger."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_snackbear" }
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Crispy chicken burger from SnackBear, served as a premium lunch dish in a stylish urban food hall, gourmet burger styling, crunchy chicken texture, soft bun, appetizing layers, warm contrast, realistic food textures, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      },
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
     },
     {
       "id": "end_chicken_thai_curry",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai curry chicken." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai curry chicken."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Thai curry chicken from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_pad_kaprao",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Kaprao chicken." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Kaprao chicken."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Pad Kaprao chicken from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_pad_thai",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai chicken." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai chicken."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Pad Thai chicken from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_tinga_tacos",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo tacos." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo tacos."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Tinga de Pollo tacos from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_teriyaki_rice",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Teriyaki chicken rice." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Teriyaki chicken rice."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Teriyaki chicken rice from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_pasta",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Chicken pasta." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Chicken pasta."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Chicken pasta from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_quesadilla",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo quesadilla." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo quesadilla."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Tinga de Pollo quesadilla from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_bokkeumbap",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap chicken." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap chicken."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bokkeumbap chicken from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_tinga_burrito",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo burrito." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo burrito."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Tinga de Pollo burrito from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_chicken_sushi_sando",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken sushi sando." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken sushi sando."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Chicken sushi sando from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_stew",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef stew." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef stew."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Beef stew from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_barbacoa_bowl",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa bowl." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa bowl."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Barbacoa bowl from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_bolognese",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bolognese." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Bolognese."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bolognese from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_barbacoa_tacos",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa tacos." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa tacos."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Barbacoa tacos from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_barbacoa_burrito",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa burrito." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa burrito."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Barbacoa burrito from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_bibimbap",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap beef." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap beef."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bibimbap beef from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_pho",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef pho." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef pho."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Beef pho from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_sushi",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Beef sushi." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Beef sushi."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Beef sushi from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_noodle_soup",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Beef noodle soup." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Beef noodle soup."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_cocodak" }
+      "endMeta": {
+        "cta": "cta_cocodak"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Beef noodle soup from Coco Dak, served as a premium lunch dish in a stylish urban food hall, modern korean food presentation, glossy textures, balanced garnish, contemporary bowl styling, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_noodles",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef noodles." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef noodles."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Beef noodles from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_smash_burger",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Smash burger." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Smash burger."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_snackbear" }
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Smash burger from SnackBear, served as a premium lunch dish in a stylish urban food hall, gourmet burger styling, seared beef patty, glossy bun, layered toppings, rich appetizing textures, warm natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      },
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
     },
     {
       "id": "end_beef_thai_curry",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai beef curry." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai beef curry."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Thai beef curry from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_bresaola_pizza",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bresaola pizza." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Bresaola pizza."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bresaola pizza from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_beef_pad_thai",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai beef." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai beef."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Pad Thai beef from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_amatriciana",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától az Amatriciana." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától az Amatriciana."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Amatriciana from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_carbonara",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Carbonara." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Carbonara."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Carbonara from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_cochinita_burrito",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita Pibil burrito." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita Pibil burrito."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Cochinita Pibil burrito from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_cochinita_bowl",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita bowl." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita bowl."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Cochinita bowl from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_chashiu",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Chashiu pork." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a China Supreme kínai konyhájától a Chashiu pork."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_china_supreme" }
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Chashiu pork from China Supreme, served as a premium lunch dish in a stylish urban food hall, rich chinese take on modern foodhall plating, aromatic detail, glossy sauces, layered textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_cochinita_tacos",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita tacos." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita tacos."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_lacatrina" }
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Cochinita tacos from La Catrina, served as a premium lunch dish in a stylish urban food hall, vibrant mexican street-food styling, colorful toppings, warm spice notes, lively textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, close three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_porchetta_pizza",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Granelli olasz konyhájától a Porchetta pizza." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Granelli olasz konyhájától a Porchetta pizza."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_granelli" }
+      "endMeta": {
+        "cta": "cta_granelli"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Porchetta pizza from Granelli, served as a premium lunch dish in a stylish urban food hall, italian comfort-food styling, rich textures, elegant plating, warm appetizing tones, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_bacon_flammkuchen",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a SnackBear konyhájától a Bacon flammkuchen." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a SnackBear konyhájától a Bacon flammkuchen."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_snackbear" }
+      "endMeta": {
+        "cta": "cta_snackbear"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Bacon flammkuchen from SnackBear, served as a premium lunch dish in a stylish urban food hall, premium foodhall presentation, appetizing textures, stylish plating, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_pork_bun",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Pork bun." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a China Supreme kínai konyhájától a Pork bun."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_china_supreme" }
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Pork bun from China Supreme, served as a premium lunch dish in a stylish urban food hall, rich chinese take on modern foodhall plating, aromatic detail, glossy sauces, layered textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_salmon_sushi",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Salmon sushi from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_tuna_sushi",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Tuna sushi." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Tuna sushi."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Tuna sushi from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_poke_bowl",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Poké bowl." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Poké bowl."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Poké bowl from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_salmon_roll",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi roll." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi roll."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Salmon sushi roll from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_spicy_tuna",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Spicy tuna." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Spicy tuna."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Spicy tuna from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_ebi_tempura",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi tempura." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi tempura."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Ebi tempura from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_ebi_furai_rice",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi furai rice." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi furai rice."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_sushi_sando" }
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Ebi furai rice from Sushi Sando, served as a premium lunch dish in a stylish urban food hall, refined japanese food styling, clean composition, precise plating, premium minimalist look, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, top-three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_shrimp_noodles",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Shrimp noodles." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Shrimp noodles."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Shrimp noodles from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_shrimp_curry",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Shrimp curry." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Siam Corner thai konyhájától a Shrimp curry."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_siam_corner" }
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Shrimp curry from Siam Corner, served as a premium lunch dish in a stylish urban food hall, vivid thai food styling, aromatic herbs, dynamic color contrast, fresh heat, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_seafood_pho",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Seafood pho." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Seafood pho."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Seafood pho from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_five_spice_shrimp",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Five spice shrimp." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a China Supreme kínai konyhájától a Five spice shrimp."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_china_supreme" }
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Five spice shrimp from China Supreme, served as a premium lunch dish in a stylish urban food hall, rich chinese take on modern foodhall plating, aromatic detail, glossy sauces, layered textures, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
     },
     {
       "id": "end_sea_spicy_shrimp_noodles",
       "type": "end",
       "title": "",
       "text": [
-        { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Spicy shrimp noodle dish." },
-        { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
+        {
+          "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Spicy shrimp noodle dish."
+        },
+        {
+          "ifUnlocked": "with_friend",
+          "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit."
+        }
       ],
-      "endMeta": { "cta": "cta_vietnam" }
+      "endMeta": {
+        "cta": "cta_vietnam"
+      },
+      "imagePrompt": {
+        "combinedPrompt": "Atmospheric editorial food photography of Spicy shrimp noodle dish from Vietnam by Night, served as a premium lunch dish in a stylish urban food hall, fresh vietnamese food presentation, herbs, steam or crisp textures, clean bright composition, realistic food textures, appetizing plating, soft natural light, shallow depth of field, high detail, clean background, no visible branding, three-quarter view",
+        "negativePrompt": "text, logo, watermark, menu board, branded packaging, people, hands, low resolution, blurry food, distorted ingredients, messy composition"
+      },
+      "imageTiming": {
+        "generate": true,
+        "trigger": "onPageLoad",
+        "delayMs": 200
+      }
+    },
+    {
+      "id": "end_b_veg_sushi_california_collection",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando japán kínálatából a California Collection vegetáriánus platter."
+        },
+        {
+          "text": "California Collection avocado, cucumber és wakame makival, mellé edamame és wakame salad."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_veg_sushi_veg_maki_mix",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando japán kínálatából a Veg maki mix."
+        },
+        {
+          "text": "Avocado, cucumber és seaweed maki, mellé spinach gyoza és edamame."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_veg_sushi_green_gohan_bento",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando japán kínálatából a Green Gohan Bento Box."
+        },
+        {
+          "text": "Green Gohan Bento Box veggie gyozával és wakame salátával."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_veg_lacatrina_veggie_tacos",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina mexikói kínálatából a Veggie tacos összeállítás."
+        },
+        {
+          "text": "Veggie tacos cauliflower chipotle töltelékkel, mellé nachos és guac & chips."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_veg_lacatrina_vegan_tacos",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina mexikói kínálatából a Vegan tacos összeállítás."
+        },
+        {
+          "text": "Vegan tacos, mellé chips & salsa és guacamole."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_veg_lacatrina_veggie_quesadilla",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina mexikói kínálatából a Veggie quesadilla összeállítás."
+        },
+        {
+          "text": "Veggie quesadilla cauliflower töltelékkel, mellé nachos és pico de gallo."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_veg_china_mapo_tofu",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme vegetáriánus kínálatából a Mapo tofu menü."
+        },
+        {
+          "text": "Mapo tofu, green beans és large vegetarian fried rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_veg_china_sweet_tomato_egg",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme vegetáriánus kínálatából a Sweet tomato egg menü."
+        },
+        {
+          "text": "Sweet tomato egg, cucumber salad és vegetarian chow mein."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_veg_china_mini_bowls",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme vegetáriánus kínálatából a Mini bowls válogatás."
+        },
+        {
+          "text": "Tofu, green beans, tomato egg, steamed rice és noodles közös mini bowl válogatásban."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_veg_vietnam_vegetarian_pho",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Vietnam by Night vegetáriánus kombója."
+        },
+        {
+          "text": "Vegetarian pho, veg stir-fried noodles és summer rolls."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_vietnam"
+      }
+    },
+    {
+      "id": "end_b_veg_vietnam_veg_dimsum",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Vietnam by Night vegetáriánus snackes kombója."
+        },
+        {
+          "text": "Veg dimsum, mini spring rolls és tofu noodles."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_vietnam"
+      }
+    },
+    {
+      "id": "end_b_veg_thai_pad_thai_tofu",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner vegetáriánus thai kombója."
+        },
+        {
+          "text": "Pad Thai tofu, green curry tofu és steamed rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_veg_thai_phad_phak_ruam",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner vegetáriánus thai wok-kombója."
+        },
+        {
+          "text": "Phad Phak Ruam veg stir-fry, Massaman curry tofu és rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_veg_cocodak_bibimbap",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai vegetáriánus bowl-kombója."
+        },
+        {
+          "text": "Bibimbap veg, japchae veg és kimchi."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_veg_cocodak_bokkeumbap",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai vegetáriánus fried-rice kombója."
+        },
+        {
+          "text": "Bokkeumbap veg fried rice, japchae és fried egg sides."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_veg_7even_falafel_bowl",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a 7EVEN vegetáriánus mediterrán kombója."
+        },
+        {
+          "text": "Falafel bowl quinoa base-szel, hummus & vegetables és mini pitas."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_7even"
+      }
+    },
+    {
+      "id": "end_b_veg_7even_grilled_vegetables_bowl",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a 7EVEN vegetáriánus zöldség-bowl kombója."
+        },
+        {
+          "text": "Grilled vegetables bowl, avocado goat cheese salad, falafel és hummus."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_7even"
+      }
+    },
+    {
+      "id": "end_b_veg_granelli_pizza_selection",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli vegetáriánus olasz pizza-asztala."
+        },
+        {
+          "text": "Margherita, 4 Formaggi, Ortolana és Caprese salad."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_veg_granelli_pesto_ravioli",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli vegetáriánus olasz pasta-asztala."
+        },
+        {
+          "text": "Pesto pasta, Ravioli burro e salvia, Caprese és Lemon pie."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_mix_sushi_small_family_platter",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando vegyes japán plattere."
+        },
+        {
+          "text": "Small Family Platter salmon, california és ebi válogatással, mellé avocado maki és edamame."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_mix_mexico_mixed_tacos",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina vegyes mexikói tacós köre."
+        },
+        {
+          "text": "Mixed tacos pollo, barbacoa és veggie töltelékkel, mellé nachos és guac."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_mix_mexico_mixed_tacos_quesadilla",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina vegyes mexikói quesadilla-köre."
+        },
+        {
+          "text": "Mixed tacos, veggie quesadilla és chips & salsa."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_mix_china_orange_chicken_mapo",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme vegyes kínai meleg asztala."
+        },
+        {
+          "text": "Orange chicken, mapo tofu, large fried rice és chow mein."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_mix_china_grilled_duck_tofu",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme vegyes kínai grillasztala."
+        },
+        {
+          "text": "Grilled duck, tofu, green beans és noodles."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_mix_vietnam_pho_dimsum_summer_rolls",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Vietnam by Night közös vietnámi kombója."
+        },
+        {
+          "text": "Pho chicken és tofu alappal, mellé dimsum mix és summer rolls."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_vietnam"
+      }
+    },
+    {
+      "id": "end_b_mix_thai_pad_thai_green_curry",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner vegyes thai curry-kombója."
+        },
+        {
+          "text": "Pad Thai chicken és tofu, green curry és rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_mix_thai_phad_kaprao_veg_stirfry",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner vegyes thai wok-kombója."
+        },
+        {
+          "text": "Phad Kaprao chicken, veg stir-fry és curry."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_mix_cocodak_korean_fried_chicken_bibimbap",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai mix csomagja."
+        },
+        {
+          "text": "Korean fried chicken 8pcs honey soy, bibimbap veg és japchae."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_mix_cocodak_bokkeumbap_chicken_veg",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai fried-rice mixe."
+        },
+        {
+          "text": "Bokkeumbap chicken és veg mix, mellé kimchi és egg."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_mix_snackbar_snack_platter_vegan_bitterballen",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a SnackBear megosztós snack plattere."
+        },
+        {
+          "text": "Snack platter 20pcs bitterballen, nuggets és croquettes, mellé vegan bitterballen és fries."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
+    },
+    {
+      "id": "end_b_mix_snackbar_snack_platter_burgers_loaded_fries",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a SnackBear burgeres megosztós köre."
+        },
+        {
+          "text": "Snack platter, crispy chicken burger, meatless burger és loaded fries veg."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
+    },
+    {
+      "id": "end_b_mix_7even_bowls_mix",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a 7EVEN közös bowl-válogatása."
+        },
+        {
+          "text": "7EVEN bowls falafel, BBQ chicken és shrimp elemekkel, pita mixszel."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_7even"
+      }
+    },
+    {
+      "id": "end_b_mix_granelli_pizza_caprese_bresaola",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli vegyes olasz pizza-asztala."
+        },
+        {
+          "text": "Margherita, Porchetta pizza, Caprese és Bresaola salad."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_mix_granelli_carbonara_pesto_chicken_tiramisu",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli vegyes olasz pasta-asztala."
+        },
+        {
+          "text": "Carbonara, Pesto, Chicken salad és Tiramisu."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_mix_world_sushi_tacos_guac",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Sushi platter, veggie tacos és guac & chips."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_mix_world_pizza_korean_falafel",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Pizza Margherita és Diavola, mellé Korean fried chicken és falafel bowl."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_mix_world_mixed_tacos_sushi_edamame",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Mixed tacos, sushi rolls és edamame."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_sushi_family_platter_xl",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando nagy, húsos-tengeris family plattere."
+        },
+        {
+          "text": "Family Platter XL ebi, california, chicken és salmon elemekkel, mellé gyoza és edamame."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_non_sushi_signature_platter_deluxe",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Sushi Sando prémium nagy plattere."
+        },
+        {
+          "text": "Signature Platter Deluxe 48pcs salmon, tuna és chicken roll mixszel, mellé sashimi."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_sushi_sando"
+      }
+    },
+    {
+      "id": "end_b_non_mexico_mixed_tacos",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina közös mexikói tacós asztala."
+        },
+        {
+          "text": "Mixed tacos kétszeres pollo, cochinita és barbacoa körrel, mellé nachos és guac."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_non_mexico_barbacoa_quesadilla",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a La Catrina közös mexikói húsos asztala."
+        },
+        {
+          "text": "Barbacoa tacos, cochinita quesadilla, nachos és jalapeños."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_lacatrina"
+      }
+    },
+    {
+      "id": "end_b_non_china_orange_chicken_shrimp_duck",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme húsos tengelyű kínai asztala."
+        },
+        {
+          "text": "Orange chicken, five spice shrimp, grilled duck és large fried rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_non_china_pork_chashiu_black_bean_beef",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a China Supreme testes húsos wok-asztala."
+        },
+        {
+          "text": "Pork chashiu, black bean beef, chow mein large és fried rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_china_supreme"
+      }
+    },
+    {
+      "id": "end_b_non_vietnam_party_mix_beef_pho",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Vietnam by Night nagy húsos vietnámi köre."
+        },
+        {
+          "text": "Party mix, beef pho és Vietnamese chicken curry."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_vietnam"
+      }
+    },
+    {
+      "id": "end_b_non_vietnam_dimsum_fried_snacks",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Vietnam by Night snackesebb vietnámi köre."
+        },
+        {
+          "text": "Dimsum mix, fried snacks, beef stew és noodles."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_vietnam"
+      }
+    },
+    {
+      "id": "end_b_non_thai_pad_thai_massaman",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner kiadós thai curry-asztala."
+        },
+        {
+          "text": "Pad Thai chicken, massaman curry beef, phad med mamuang és rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_non_thai_phad_kaprao_green_curry",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Siam Corner kiadós thai wok-asztala."
+        },
+        {
+          "text": "Phad Kaprao beef, green curry chicken és fried rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_siam_corner"
+      }
+    },
+    {
+      "id": "end_b_non_cocodak_korean_fried_chicken_mix",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai csirkés asztala."
+        },
+        {
+          "text": "Korean fried chicken 8pcs mix flavors, bibimbap chicken és bokkeumbap chicken."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_non_cocodak_chicken_tuna_bokkeumbap",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Coco Dak koreai fried-rice asztala."
+        },
+        {
+          "text": "Chicken és tuna bokkeumbap, mellé japchae és kimchi."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_cocodak"
+      }
+    },
+    {
+      "id": "end_b_non_snackbar_smash_burger_loaded_fries",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a SnackBear nagy burgeres megosztós köre."
+        },
+        {
+          "text": "Snack platter, 2x smash burger és loaded fries chicken."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
+    },
+    {
+      "id": "end_b_non_snackbar_ribeye_pastrami_fries",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a SnackBear szendvicses-húsos köre."
+        },
+        {
+          "text": "Snack platter, rib eye sandwich, pastrami sandwich és fries."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_snackbear"
+      }
+    },
+    {
+      "id": "end_b_non_granelli_diavola_bresaola_mortadella",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli húsos olasz pizza-asztala."
+        },
+        {
+          "text": "Diavola, Bresaola és Mortadella pizza, mellé Chicken salad."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_non_granelli_bolognese_carbonara_porchetta",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok a Granelli húsos olasz pasta-asztala."
+        },
+        {
+          "text": "Bolognese, Carbonara, Porchetta salad és Tiramisu."
+        }
+      ],
+      "endMeta": {
+        "cta": "cta_granelli"
+      }
+    },
+    {
+      "id": "end_b_non_world_sushi_korean",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Sushi platter és Korean fried chicken honey soy + spicy ízekkel."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_sushi_snack_platter",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Sushi platter és 20 darabos snack platter."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_smash_burgers_tacos_korean",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Smash burgers, tacos és Korean chicken."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_pizza_nachos_guac",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Pizza Diavola és Napoli, mellé nachos és guac."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_china_thai_rice",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "China duck, shrimp és beef kombó, mellé Thai curry és rice."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_pho_padthai_dimsum",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Pho beef, pad thai chicken és dimsum mix."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_b_non_world_snack_tacos_sushi",
+      "type": "end",
+      "title": "",
+      "text": [
+        {
+          "text": "A mai csapat-ajánlatotok egy nagy, többkonyhás Market 33 mix."
+        },
+        {
+          "text": "Snack platter, tacos és sushi roll mix."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
     }
   ]
 }
