@@ -74,7 +74,7 @@
   "pages": [
     {
       "id": "intro",
-      "title": "Nem tudod, mit egyél?",
+      "title": "",
       "text": [
         {
           "text": "Válaszolj pár gyors kérdésre, és adunk egy konkrét fogást a Market 33-ból."
@@ -89,8 +89,8 @@
     },
     {
       "id": "Q1_people",
-      "title": "Egyedül eszel, vagy valakivel?",
-      "text": [],
+      "title": "",
+      "text": ["Egyedül eszel, vagy valakivel?"],
       "choices": [
         {
           "text": "Egyedül vagy",
@@ -111,7 +111,7 @@
     },
     {
       "id": "group_open",
-      "title": "Ez az ág még nyitott",
+      "title": "",
       "text": [
         {
           "text": "A többfős ajánló ág később kerül kidolgozásra."
@@ -126,8 +126,12 @@
     },
     {
       "id": "Q2_protein",
-      "title": "Válaszd ki a fő proteinedet",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Válaszd ki a fő proteinedet."
+        }
+      ],
       "choices": [
         {
           "text": "Vegán / Vegetáriánus",
@@ -157,7 +161,12 @@
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Milyen irányba mennél most? Válassz kettőt.",
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen irányba mennél most? Válassz kettőt."
+        }
+      ],
       "options": [
         "friss",
         "meleg",
@@ -179,7 +188,12 @@
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Milyen legyen a csirkés fogásod? Válassz kettőt.",
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen legyen a csirkés fogásod? Válassz kettőt."
+        }
+      ],
       "options": [
         "ropogós",
         "csípős",
@@ -201,7 +215,12 @@
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Milyen legyen a marhás fogásod? Válassz kettőt.",
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen legyen a marhás fogásod? Válassz kettőt."
+        }
+      ],
       "options": [
         "lassan főtt",
         "leveses",
@@ -223,7 +242,12 @@
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Milyen legyen a porkos fogásod? Válassz kettőt.",
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen legyen a porkos fogásod? Válassz kettőt."
+        }
+      ],
       "options": [
         "szaftos",
         "paradicsomos",
@@ -245,7 +269,12 @@
       "kind": "runes",
       "mode": "set",
       "feedback": "reset",
-      "title": "Milyen legyen a tengeri fogásod? Válassz kettőt.",
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen legyen a tengeri fogásod? Válassz kettőt."
+        }
+      ],
       "options": [
         "nyers",
         "ropogós",
@@ -264,7 +293,7 @@
     {
       "id": "logic_veg",
       "type": "logic",
-      "title": "Ajánlat készül",
+      "title": "",
       "text": [],
       "logic": [
         { "if": ["flag:veg_opt_1", "flag:veg_opt_3"], "goto": "end_veg_falafel_bowl" },
@@ -288,7 +317,7 @@
     {
       "id": "logic_chicken",
       "type": "logic",
-      "title": "Ajánlat készül",
+      "title": "",
       "text": [],
       "logic": [
         { "if": ["flag:chicken_opt_1", "flag:chicken_opt_2"], "goto": "end_chicken_korean_fried_chicken" },
@@ -312,7 +341,7 @@
     {
       "id": "logic_beef",
       "type": "logic",
-      "title": "Ajánlat készül",
+      "title": "",
       "text": [],
       "logic": [
         { "if": ["flag:beef_opt_1", "flag:beef_opt_2"], "goto": "end_beef_stew" },
@@ -336,7 +365,7 @@
     {
       "id": "logic_pork",
       "type": "logic",
-      "title": "Ajánlat készül",
+      "title": "",
       "text": [],
       "logic": [
         { "if": ["flag:pork_opt_1", "flag:pork_opt_2"], "goto": "end_pork_amatriciana" },
@@ -360,7 +389,7 @@
     {
       "id": "logic_seafood",
       "type": "logic",
-      "title": "Ajánlat készül",
+      "title": "",
       "text": [],
       "logic": [
         { "if": ["flag:sea_opt_1", "flag:sea_opt_2"], "goto": "end_sea_salmon_sushi" },
@@ -384,7 +413,7 @@
     {
       "id": "end_veg_falafel_bowl",
       "type": "end",
-      "title": "Falafel bowl",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Falafel bowl." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -394,7 +423,7 @@
     {
       "id": "end_veg_hummus_vegetables",
       "type": "end",
-      "title": "Hummus & vegetables",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a 7EVEN mediterrán konyhájától a Hummus & vegetables." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -404,7 +433,7 @@
     {
       "id": "end_veg_caprese",
       "type": "end",
-      "title": "Caprese",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Caprese." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -414,7 +443,7 @@
     {
       "id": "end_veg_veggie_tacos",
       "type": "end",
-      "title": "Veggie tacos",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Veggie tacos." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -424,7 +453,7 @@
     {
       "id": "end_veg_vegan_burrito",
       "type": "end",
-      "title": "Vegan burrito",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Vegan burrito." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -434,7 +463,7 @@
     {
       "id": "end_veg_bibimbap",
       "type": "end",
-      "title": "Bibimbap (veg)",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap (veg)." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -444,7 +473,7 @@
     {
       "id": "end_veg_japchae",
       "type": "end",
-      "title": "Japchae (veg)",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Japchae (veg)." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -454,7 +483,7 @@
     {
       "id": "end_veg_4formaggi",
       "type": "end",
-      "title": "4 Formaggi pizza",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a 4 Formaggi pizza." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -464,7 +493,7 @@
     {
       "id": "end_veg_mapo_tofu",
       "type": "end",
-      "title": "Mapo tofu",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Mapo tofu." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -474,7 +503,7 @@
     {
       "id": "end_veg_bokkeumbap",
       "type": "end",
-      "title": "Bokkeumbap (veg)",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap (veg)." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -484,7 +513,7 @@
     {
       "id": "end_veg_stirfry_siam",
       "type": "end",
-      "title": "Vegetable stir-fry",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Vegetable stir-fry." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -494,7 +523,7 @@
     {
       "id": "end_veg_pesto_pasta",
       "type": "end",
-      "title": "Pesto pasta",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Pesto pasta." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -504,7 +533,7 @@
     {
       "id": "end_veg_stirfry_noodles",
       "type": "end",
-      "title": "Vegetable stir-fry noodles",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Vegetable stir-fry noodles." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -514,7 +543,7 @@
     {
       "id": "end_veg_tomato_pasta",
       "type": "end",
-      "title": "Tomato pasta",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Tomato pasta." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -524,7 +553,7 @@
     {
       "id": "end_chicken_korean_fried_chicken",
       "type": "end",
-      "title": "Korean fried chicken",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Korean fried chicken." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -534,7 +563,7 @@
     {
       "id": "end_chicken_wings",
       "type": "end",
-      "title": "Chicken wings",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Chicken wings." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -544,7 +573,7 @@
     {
       "id": "end_chicken_katsu_rice",
       "type": "end",
-      "title": "Chicken katsu rice",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken katsu rice." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -554,7 +583,7 @@
     {
       "id": "end_chicken_crunchy_roll",
       "type": "end",
-      "title": "Crunchy chicken roll",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Crunchy chicken roll." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -564,7 +593,7 @@
     {
       "id": "end_chicken_burger",
       "type": "end",
-      "title": "Crispy chicken burger",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Crispy chicken burger." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -574,7 +603,7 @@
     {
       "id": "end_chicken_thai_curry",
       "type": "end",
-      "title": "Thai curry chicken",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai curry chicken." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -584,7 +613,7 @@
     {
       "id": "end_chicken_pad_kaprao",
       "type": "end",
-      "title": "Pad Kaprao chicken",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Kaprao chicken." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -594,7 +623,7 @@
     {
       "id": "end_chicken_pad_thai",
       "type": "end",
-      "title": "Pad Thai chicken",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai chicken." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -604,7 +633,7 @@
     {
       "id": "end_chicken_tinga_tacos",
       "type": "end",
-      "title": "Tinga de Pollo tacos",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo tacos." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -614,7 +643,7 @@
     {
       "id": "end_chicken_teriyaki_rice",
       "type": "end",
-      "title": "Teriyaki chicken rice",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Teriyaki chicken rice." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -624,7 +653,7 @@
     {
       "id": "end_chicken_pasta",
       "type": "end",
-      "title": "Chicken pasta",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Chicken pasta." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -634,7 +663,7 @@
     {
       "id": "end_chicken_quesadilla",
       "type": "end",
-      "title": "Tinga de Pollo quesadilla",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo quesadilla." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -644,7 +673,7 @@
     {
       "id": "end_chicken_bokkeumbap",
       "type": "end",
-      "title": "Bokkeumbap chicken",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bokkeumbap chicken." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -654,7 +683,7 @@
     {
       "id": "end_chicken_tinga_burrito",
       "type": "end",
-      "title": "Tinga de Pollo burrito",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Tinga de Pollo burrito." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -664,7 +693,7 @@
     {
       "id": "end_chicken_sushi_sando",
       "type": "end",
-      "title": "Chicken sushi sando",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Chicken sushi sando." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -674,7 +703,7 @@
     {
       "id": "end_beef_stew",
       "type": "end",
-      "title": "Beef stew",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef stew." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -684,7 +713,7 @@
     {
       "id": "end_beef_barbacoa_bowl",
       "type": "end",
-      "title": "Barbacoa bowl",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa bowl." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -694,7 +723,7 @@
     {
       "id": "end_beef_bolognese",
       "type": "end",
-      "title": "Bolognese",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bolognese." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -704,7 +733,7 @@
     {
       "id": "end_beef_barbacoa_tacos",
       "type": "end",
-      "title": "Barbacoa tacos",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa tacos." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -714,7 +743,7 @@
     {
       "id": "end_beef_barbacoa_burrito",
       "type": "end",
-      "title": "Barbacoa burrito",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Barbacoa burrito." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -724,7 +753,7 @@
     {
       "id": "end_beef_bibimbap",
       "type": "end",
-      "title": "Bibimbap beef",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Bibimbap beef." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -734,7 +763,7 @@
     {
       "id": "end_beef_pho",
       "type": "end",
-      "title": "Beef pho",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef pho." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -744,7 +773,7 @@
     {
       "id": "end_beef_sushi",
       "type": "end",
-      "title": "Beef sushi",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Beef sushi." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -754,7 +783,7 @@
     {
       "id": "end_beef_noodle_soup",
       "type": "end",
-      "title": "Beef noodle soup",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Coco Dak koreai konyhájától a Beef noodle soup." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -764,7 +793,7 @@
     {
       "id": "end_beef_noodles",
       "type": "end",
-      "title": "Beef noodles",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Beef noodles." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -774,7 +803,7 @@
     {
       "id": "end_beef_smash_burger",
       "type": "end",
-      "title": "Smash burger",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a SnackBear burgerkonyhájától a Smash burger." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -784,7 +813,7 @@
     {
       "id": "end_beef_thai_curry",
       "type": "end",
-      "title": "Thai beef curry",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Thai beef curry." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -794,7 +823,7 @@
     {
       "id": "end_beef_bresaola_pizza",
       "type": "end",
-      "title": "Bresaola pizza",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Bresaola pizza." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -804,7 +833,7 @@
     {
       "id": "end_beef_pad_thai",
       "type": "end",
-      "title": "Pad Thai beef",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Pad Thai beef." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -814,7 +843,7 @@
     {
       "id": "end_pork_amatriciana",
       "type": "end",
-      "title": "Amatriciana",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától az Amatriciana." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -824,7 +853,7 @@
     {
       "id": "end_pork_carbonara",
       "type": "end",
-      "title": "Carbonara",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Carbonara." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -834,7 +863,7 @@
     {
       "id": "end_pork_cochinita_burrito",
       "type": "end",
-      "title": "Cochinita Pibil burrito",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita Pibil burrito." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -844,7 +873,7 @@
     {
       "id": "end_pork_cochinita_bowl",
       "type": "end",
-      "title": "Cochinita bowl",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita bowl." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -854,7 +883,7 @@
     {
       "id": "end_pork_chashiu",
       "type": "end",
-      "title": "Chashiu pork",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Chashiu pork." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -864,7 +893,7 @@
     {
       "id": "end_pork_cochinita_tacos",
       "type": "end",
-      "title": "Cochinita tacos",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a La Catrina mexikói konyhájától a Cochinita tacos." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -874,7 +903,7 @@
     {
       "id": "end_pork_porchetta_pizza",
       "type": "end",
-      "title": "Porchetta pizza",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Granelli olasz konyhájától a Porchetta pizza." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -884,7 +913,7 @@
     {
       "id": "end_pork_bacon_flammkuchen",
       "type": "end",
-      "title": "Bacon flammkuchen",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a SnackBear konyhájától a Bacon flammkuchen." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -894,7 +923,7 @@
     {
       "id": "end_pork_bun",
       "type": "end",
-      "title": "Pork bun",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Pork bun." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -904,7 +933,7 @@
     {
       "id": "end_sea_salmon_sushi",
       "type": "end",
-      "title": "Salmon sushi",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -914,7 +943,7 @@
     {
       "id": "end_sea_tuna_sushi",
       "type": "end",
-      "title": "Tuna sushi",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Tuna sushi." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -924,7 +953,7 @@
     {
       "id": "end_sea_poke_bowl",
       "type": "end",
-      "title": "Poké bowl",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Poké bowl." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -934,7 +963,7 @@
     {
       "id": "end_sea_salmon_roll",
       "type": "end",
-      "title": "Salmon sushi roll",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Salmon sushi roll." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -944,7 +973,7 @@
     {
       "id": "end_sea_spicy_tuna",
       "type": "end",
-      "title": "Spicy tuna",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától a Spicy tuna." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -954,7 +983,7 @@
     {
       "id": "end_sea_ebi_tempura",
       "type": "end",
-      "title": "Ebi tempura",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi tempura." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -964,7 +993,7 @@
     {
       "id": "end_sea_ebi_furai_rice",
       "type": "end",
-      "title": "Ebi furai rice",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Sushi Sando japán konyhájától az Ebi furai rice." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -974,7 +1003,7 @@
     {
       "id": "end_sea_shrimp_noodles",
       "type": "end",
-      "title": "Shrimp noodles",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Shrimp noodles." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -984,7 +1013,7 @@
     {
       "id": "end_sea_shrimp_curry",
       "type": "end",
-      "title": "Shrimp curry",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Siam Corner thai konyhájától a Shrimp curry." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -994,7 +1023,7 @@
     {
       "id": "end_sea_seafood_pho",
       "type": "end",
-      "title": "Seafood pho",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Seafood pho." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -1004,7 +1033,7 @@
     {
       "id": "end_sea_five_spice_shrimp",
       "type": "end",
-      "title": "Five spice shrimp",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a China Supreme kínai konyhájától a Five spice shrimp." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
@@ -1014,7 +1043,7 @@
     {
       "id": "end_sea_spicy_shrimp_noodles",
       "type": "end",
-      "title": "Spicy shrimp noodle dish",
+      "title": "",
       "text": [
         { "text": "A mai ajánlatod a Vietnam by Night vietnámi konyhájától a Spicy shrimp noodle dish." },
         { "ifUnlocked": "with_friend", "text": "Ha tetszik, szívesen ajánlok a barátodnak is valamit." }
