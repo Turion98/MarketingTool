@@ -90,7 +90,7 @@
     {
       "id": "Q1_people",
       "title": "",
-      "text": ["Egyedül eszel, vagy valakivel?"],
+      "text": "Egyedül eszel, vagy valakivel?",
       "choices": [
         {
           "text": "Egyedül vagy",
