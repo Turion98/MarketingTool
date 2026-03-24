@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import type { MutableRefObject, ReactNode } from "react";
+import { useMemo } from "react";
+import type { ReactNode } from "react";
 
 import GeneratedImage_with_fadein from "../GeneratedImage/GeneratedImage";
 import MediaFrame from "../layout/MediaFrame/MediaFrame";
 import ProfileCardFrame from "../layout/ProfileCardFrame/ProfileCardFrame";
-import { isRuneId } from "../../lib/runeIcons";
-
 import type { FragmentBank } from "./storyPageTypes";
 
 type ReplayVisual = {
@@ -63,10 +61,6 @@ type StoryPageMediaData = {
   replayOverlay?: ReplayOverlayItem[];
 };
 
-type Measure = {
-  content: { x: number; y: number; width: number; height: number };
-};
-
 type UseStoryPageMediaAudioParams = {
   pageData?: StoryPageMediaData | null;
   showFrame: boolean;
@@ -80,10 +74,6 @@ type UseStoryPageMediaAudioParams = {
   unlockedPlus: Set<string>;
   unlockedFragments: string[];
   fragments: FragmentBank;
-  flags?: Set<string>;
-  runePackForDisplay?: unknown;
-  measure: Measure | null;
-  anchorPortalRef: MutableRefObject<Measure["content"] | null>;
 };
 
 function pickReplayVisual(
@@ -134,19 +124,12 @@ export function useStoryPageMediaAudio({
   unlockedPlus,
   unlockedFragments,
   fragments,
-  flags,
-  runePackForDisplay,
-  measure,
-  anchorPortalRef,
 }: UseStoryPageMediaAudioParams): {
   mediaNode: ReactNode;
   narrationPlaylistMemo: Array<{ src: string; gapAfterMs: number; label?: string }>;
   playModeMemo: "single" | "playlist";
   duckingMemo: { duckTo?: number; attackMs?: number; releaseMs?: number };
   selectedReplay: ReplayVisual;
-  unlockedRunes: string[];
-  showRuneDock: boolean;
-  anchorPortal: Measure["content"] | null;
 } {
   const mediaNode = useMemo(() => {
     if (!showFrame) return null;
@@ -266,30 +249,11 @@ export function useStoryPageMediaAudio({
     [pageData, unlockedFragments, fragments]
   );
 
-  const unlockedRunes = useMemo(
-    () => Array.from(flags ?? new Set<string>()).filter(isRuneId),
-    [flags]
-  );
-
-  const showRuneDock = useMemo(
-    () => Boolean(runePackForDisplay) && unlockedRunes.length > 0,
-    [runePackForDisplay, unlockedRunes]
-  );
-
-  const anchorPortal = useMemo(() => measure?.content ?? null, [measure]);
-
-  useEffect(() => {
-    anchorPortalRef.current = measure?.content ?? null;
-  }, [measure, anchorPortalRef]);
-
   return {
     mediaNode,
     narrationPlaylistMemo,
     playModeMemo,
     duckingMemo,
     selectedReplay,
-    unlockedRunes,
-    showRuneDock,
-    anchorPortal,
   };
 }

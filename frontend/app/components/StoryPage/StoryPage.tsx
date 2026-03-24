@@ -44,15 +44,12 @@ import AudioPlayer from "../AudioPlayer";
 import RewardOverlay from "../labs/RewardOverlay/RewardOverlay";
 import FragmentReplayOverlay from "../labs/FragmentReplayOverlay/FragmentReplayOverlay";
 import RestartButton from "../RestartButton/RestartButton";
-import SmokeField from "../SmokeField/SmokeField";
 import TransitionVideo from "../TransitionVideo/TransitionVideo";
 import FeedbackOverlay from "../FeedbackOverlay/FeedbackOverlay";
 import NineSlicePanel from "../NineSlicePanel/NineSlicePanel";
 import DecorBackground from "../layout/DecorBackground/DecorBackground";
 import ProgressStrip from "../layout/ProgressStrip/ProgressStrip";
 import NarrativePanel from "../layout/NarrativePanel/NarrativePanel";
-import RuneDockDisplay from "../runes/RuneDockDisplay";
-import BrickBottomOverlay from "../labs/BrickBottomOverlay/BrickBottomOverlay";
 import AnalyticsReport from "../AnalyticsReport/AnalyticsReport";
 import AnalyticsSync from "../AnalyticsSync/AnalyticsSync";
 import ActionBar from "../layout/ActionBar/ActionBar";
@@ -82,8 +79,6 @@ import {
 
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
 
-import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
-
 import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
 
 
@@ -97,6 +92,10 @@ const FADE_IN_MS = 600;
 const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
+
+function isRuneFlagId(id: string): boolean {
+  return id.startsWith("rune_");
+}
 
 type StoryPageContext = Omit<
   GameStateContextType,
@@ -203,7 +202,6 @@ const StoryPage: React.FC = () => {
   const narrFreezeRef = useRef<HTMLDivElement | null>(null);
   const dockFreezeRef = useRef<HTMLDivElement | null>(null);
 
-  const anchorPortalRef = useRef<Measure["content"] | null>(null);
 
   const prevWasChoiceRef = useRef(false);
   const enterTsRef = useRef<number | null>(null);
@@ -352,37 +350,6 @@ const stringGlobals = useMemo<Record<string, string>>(
   derivedStoryId && derivedSessionId ? (
     <AnalyticsSync storyId={derivedStoryId} sessionId={derivedSessionId} intervalMs={30000} />
   ) : null;
-
-    const runePackForDisplay = useMemo(() => {
-    const rp = globals?.runePack;
-    if (!rp || typeof rp !== "object") return undefined;
-
-    if (rp.mode === "triple") {
-      const icons: string[] = Array.isArray(rp.icons)
-        ? rp.icons.filter((x): x is string => typeof x === "string").slice(0, 3)
-        : [];
-      if (!icons.length) return undefined;
-      return {
-        mode: "triple" as const,
-        icons,
-        palette: rp.palette,
-      };
-    }
-
-    const icon: string | undefined =
-      typeof rp.icon === "string"
-        ? rp.icon
-        : Array.isArray(rp.icons) && typeof rp.icons?.[0] === "string"
-        ? rp.icons[0]
-        : undefined;
-    if (!icon) return undefined;
-
-    return {
-      mode: "single" as const,
-      icon,
-      palette: rp.palette,
-    };
-  }, [globals?.runePack]);
 
   // 🔹 ITT LEGYEN
   const unlockedPlus = useMemo(
@@ -608,10 +575,10 @@ const stringGlobals = useMemo<Record<string, string>>(
     if (!runeIds.length) return;
 
     const already = new Set(
-      Array.from(flags ?? new Set<string>()).filter(isRuneId)
+      Array.from(flags ?? new Set<string>()).filter(isRuneFlagId)
     );
     const newRunes = runeIds
-      .filter(isRuneId)
+      .filter(isRuneFlagId)
       .filter((id) => !already.has(id));
     if (!newRunes.length) return;
 
@@ -625,13 +592,13 @@ const stringGlobals = useMemo<Record<string, string>>(
           : [];
         locks.forEach((id) => {
           const s = String(id);
-          if (isRuneId(s)) choiceRuneIds.add(s);
+          if (isRuneFlagId(s)) choiceRuneIds.add(s);
         });
 
         if (Array.isArray(c?.actions)) {
           c.actions.forEach((a) => {
             const id = a?.id ?? a?.unlockRune ?? a?.setFlag;
-            if (id && isRuneId(String(id)))
+            if (id && isRuneFlagId(String(id)))
               choiceRuneIds.add(String(id));
           });
         }
@@ -1413,9 +1380,6 @@ const showFrame = useMemo(() => {
     playModeMemo,
     duckingMemo,
     selectedReplay,
-    unlockedRunes,
-    showRuneDock,
-    anchorPortal,
   } = useStoryPageMediaAudio({
     pageData,
     showFrame,
@@ -1429,10 +1393,6 @@ const showFrame = useMemo(() => {
     unlockedPlus,
     unlockedFragments,
     fragments,
-    flags,
-    runePackForDisplay,
-    measure,
-    anchorPortalRef,
   });
 
   // prefetch sound toggle icons
@@ -1512,8 +1472,6 @@ const showFrame = useMemo(() => {
       }
     }
   };
-  _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
-  _mustBeFn("RuneDockDisplay", RuneDockDisplay);
   _mustBeFn("NineSlicePanel", NineSlicePanel);
   _mustBeFn("AudioPlayer", AudioPlayer);
   _mustBeFn("TransitionVideo", TransitionVideo);
@@ -1523,8 +1481,6 @@ const showFrame = useMemo(() => {
     "FragmentReplayOverlay",
     FragmentReplayOverlay
   );
-  _mustBeFn("SmokeField", SmokeField);
-
   // transition/video page
   if (isTransitionVideoPage(pageData)) {
     const t = pageData.transition;
@@ -1696,48 +1652,8 @@ const showFrame = useMemo(() => {
                   {titleText}
                 </span>
               }
-              right={
-                showRuneDock ? (
-                  <div
-                    className={
-                      canvasStyles.showOnlyDesktop
-                    }
-                  >
-                    <RuneDockDisplay
-                      flagIds={unlockedRunes}
-                      imagesByFlag={
-                        imagesByFlag
-                      }
-                      runePack={
-                        runePackForDisplay
-                      }
-                      delayMs={0}
-                    />
-                  </div>
-                ) : null
-              }
+              right={null}
             />
-
-            {showRuneDock && (
-              <div
-                className={`${canvasStyles.runeDockTopRight} ${canvasStyles.showOnlyMobile} ${
-                  showRuneDock
-                    ? canvasStyles.isVisible
-                    : ""
-                }`}
-              >
-                <RuneDockDisplay
-                  flagIds={unlockedRunes}
-                  imagesByFlag={
-                    imagesByFlag
-                  }
-                  runePack={
-                    runePackForDisplay
-                  }
-                  delayMs={0}
-                />
-              </div>
-            )}
           </>
         }
         progress={
@@ -1787,23 +1703,6 @@ const showFrame = useMemo(() => {
         title={pageData?.title}
         exiting={isFadingOut}              // ha már bekötötted, maradjon
         exitMs={600}
-        backdrop={
-          anchorPortal ? (
-            <>
-              <BrickBottomOverlay
-                usePortal
-                anchor={anchorPortal}
-                position="bottom"
-              />
-              <BrickBottomOverlay
-                usePortal
-                anchor={anchorPortal}
-                src="/ui/brick.png"
-                position="top"
-              />
-            </>
-          ) : null
-        }
       />
     </div>
   )
