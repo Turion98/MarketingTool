@@ -8,6 +8,7 @@ import React, {
   ReactNode,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
 } from "react";
 
@@ -34,14 +35,20 @@ import {
 import {
   calculateProgressState,
   createEmptyProgressDisplay,
-  normalizeProgressMilestones,
   resolveInitialRuneChoice,
 } from "./gameStateProgress";
+import { applyStoryMetaToState, buildStoryMetaUrl } from "./gameStateMeta";
 import {
   collectRehydrationFragments,
   getUnlockEnterFragmentIds,
   mergeFragmentBanks,
 } from "./gameStateFragments";
+import {
+  clearAbortControllers,
+  clearRegisteredAudioElements,
+  clearRegisteredTimeouts,
+  resetPersistedGameState,
+} from "./gameStateResources";
 import {
   buildPageRequestUrl,
   normalizeFetchedPage,
@@ -79,7 +86,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [globalFragments, setGlobalFragments] = useState<FragmentBank>({});
   const [globals, setGlobals] = useState<GameStateGlobals>({});
     /** GLOBALS API — HOISTED (a használatok elé helyezve) */
-  const setGlobal = useCallback((key: string, value: any) => {
+  const setGlobal = useCallback((key: string, value: unknown) => {
     if (!key) return;
     setGlobals((prev) => {
       const next = { ...prev, [key]: value };
@@ -100,6 +107,41 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
   /** ⬅️ Rúna képek map (flagId → png src) */
   const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
+
+  const globalStorySrc = getStringGlobal(globals, "storySrc");
+  const globalStoryTitle = getStringGlobal(globals, "storyTitle");
+  const globalStoryId = getStringGlobal(globals, "storyId");
+  const globalRunKey = getRunKey(globals);
+  const globalAccountId = getStringGlobal(globals, "accountId");
+  const globalTenantId = getStringGlobal(globals, "tenantId");
+  const globalEmbedKey = getStringGlobal(globals, "embedKey");
+  const globalStartPageId = getStartPageId(globals);
+  const globalCampaign = getStringGlobal(globals, "campaign");
+  const globalRunePack = globals.runePack;
+  const analyticsGlobals = useMemo<GameStateGlobals>(
+    () => ({
+      storySrc: globalStorySrc,
+      storyTitle: globalStoryTitle,
+      storyId: globalStoryId,
+      runKey: globalRunKey,
+      accountId: globalAccountId,
+      tenantId: globalTenantId,
+      embedKey: globalEmbedKey,
+      startPageId: globalStartPageId,
+      campaign: globalCampaign,
+    }),
+    [
+      globalStorySrc,
+      globalStoryTitle,
+      globalStoryId,
+      globalRunKey,
+      globalAccountId,
+      globalTenantId,
+      globalEmbedKey,
+      globalStartPageId,
+      globalCampaign,
+    ]
+  );
 
   // I/O erőforrások
   const abortControllers = useRef<AbortController[]>([]);
@@ -194,8 +236,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       // 2) Fontok (ha vannak tokenes/remote fontok)
       try {
-        const fontsAny = (document as any).fonts;
-        if (fontsAny?.ready) await fontsAny.ready;
+        const fonts = document.fonts;
+        if (fonts?.ready) await fonts.ready;
       } catch {}
 
       // 3) Img elemek betöltése a frame-en belül
@@ -218,13 +260,13 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
       // 4) SVG <image href="...">: best-effort prefetch
       try {
-        const svgImages = Array.from(el.querySelectorAll("image")) as any[];
+        const svgImages = Array.from(el.querySelectorAll("image")) as SVGImageElement[];
         await Promise.all(
           svgImages.map((node) => {
             const href =
-              node?.getAttribute?.("href") ||
-              node?.getAttribute?.("xlink:href") ||
-              node?.href?.baseVal ||
+              node.getAttribute("href") ||
+              node.getAttribute("xlink:href") ||
+              node.href?.baseVal ||
               "";
             const url = String(href || "").trim();
             if (!url) return Promise.resolve();
@@ -269,7 +311,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const ensureRunOnStart = useCallback(() => {
   if (!storyId) return undefined;
 
-  const startId = getStartPageId(globals);
+  const startId = globalStartPageId;
   if (!startId) return runId;
 
   // csak akkor csinál újat, ha épp a start oldalon vagyunk
@@ -280,18 +322,18 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   if (now - (lastStartRunAtRef.current || 0) < 250) return runId;
   lastStartRunAtRef.current = now;
 
-  const scopeKey = getScopeKey(globals);
+  const scopeKey = getScopeKey(analyticsGlobals);
   const rid = startNewRunId(storyId, scopeKey);
   console.log("[GameState] ensureRunOnStart → new runId", { storyId, scopeKey, rid });
   setRunId(rid);
   return rid;
-}, [storyId, globals, currentPageId, runId]);
+}, [storyId, globalStartPageId, analyticsGlobals, currentPageId, runId]);
   
  /** 🔹 Analytics: storyId + sessionId előkészítés */
 useEffect(() => {
   if (!hydrated) return;
 
-  const sid = deriveStoryId(globals);
+  const sid = deriveStoryId(analyticsGlobals);
   setStoryId(sid);
 
   if (!sid) {
@@ -303,7 +345,7 @@ useEffect(() => {
   try {
     initAnalyticsForStory(sid);
     const { scopeKey, runKey, sessionId: nextSessionId, runId: nextRunId } =
-      initAnalyticsSessionState(sid, globals);
+      initAnalyticsSessionState(sid, analyticsGlobals);
     setSessionId(nextSessionId);
     setRunId(nextRunId);
     console.log("[GameState] initAnalyticsForStory/useEffect runId", {
@@ -319,8 +361,8 @@ useEffect(() => {
 
     const uid = getOrCreateUserId();
     setStoryMeta(sid, {
-      title: getStringGlobal(globals, "storyTitle"),
-      src: getStringGlobal(globals, "storySrc"),
+      title: globalStoryTitle,
+      src: globalStorySrc,
       userId: uid,
       domain: typeof window !== "undefined" ? window.location.hostname : undefined
     });
@@ -329,13 +371,9 @@ useEffect(() => {
   }
 },  [
   hydrated,
-  globals?.storySrc,
-  globals?.storyTitle,
-  globals?.storyId,
-  (globals as any)?.runKey,
-  (globals as any)?.accountId,
-  (globals as any)?.tenantId,
-  (globals as any)?.embedKey,
+  analyticsGlobals,
+  globalStorySrc,
+  globalStoryTitle,
 ]);
 
 /** 🔹 Analytics: ha start oldalra érkezünk → új RUN (mindig) */
@@ -344,12 +382,12 @@ useEffect(() => {
   if (!storyId) return;
 
   // runKey-s restart külön logika esetén skip (ha akarod)
-  if (getRunKey(globals)) {
+  if (globalRunKey) {
     prevPageIdRef.current = currentPageId || null;
     return;
   }
 
-  const startId = getStartPageId(globals);
+  const startId = globalStartPageId;
   if (!startId) {
     prevPageIdRef.current = currentPageId || null;
     return;
@@ -365,7 +403,7 @@ useEffect(() => {
     if (now - (lastStartRunAtRef.current || 0) > 250) {
       lastStartRunAtRef.current = now;
 
-      const scopeKey = getScopeKey(globals);
+      const scopeKey = getScopeKey(analyticsGlobals);
       // ✅ csak RUN-t váltunk (session maradhat)
       const newRun = startNewRunId(storyId, scopeKey);
       setRunId(newRun);
@@ -377,11 +415,9 @@ useEffect(() => {
   hydrated,
   storyId,
   currentPageId,
-  (globals as any)?.startPageId,
-  (globals as any)?.accountId,
-  (globals as any)?.tenantId,
-  (globals as any)?.embedKey,
-  (globals as any)?.runKey,
+  globalStartPageId,
+  analyticsGlobals,
+  globalRunKey,
 ]);
 
   const addFragment = useCallback((id: string, data: FragmentData) => {
@@ -506,27 +542,16 @@ useEffect(() => {
 
       // ✅ Meta-prefetch
       try {
-       const baseUrl = src.startsWith("http") ? src : `${(process.env.NEXT_PUBLIC_API_BASE || "")}${src}`;
-        const cacheBust = baseUrl.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
-        const metaUrl = `${baseUrl}${cacheBust}`;
+        const metaUrl = buildStoryMetaUrl(src);
 
         fetch(metaUrl, { cache: "no-store" })
           .then(r => r.json())
           .then(story => {
-            if (story?.meta) {
-              setGlobal("meta", story.meta);
-              if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
-              if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
-              if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
-              if (story.meta?.id) setGlobal("storyId", story.meta.id);
-              try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
-
-              // progress milestones a meta-ból (ha van)
-              const metaMilestones = normalizeProgressMilestones(
-                story.meta?.progress?.milestones
-              );
-              setProgressDisplay({ value: 0, milestones: metaMilestones });
-
+            if (applyStoryMetaToState({
+              meta: story?.meta,
+              setGlobal,
+              setProgressDisplay,
+            })) {
               console.log("[GameState] Meta loaded:", story.meta);
             }
           })
@@ -541,7 +566,7 @@ useEffect(() => {
       setProgressDisplay(createEmptyProgressDisplay());
 
       // 🔹 Analytics re-init
-      const newGlobals = { ...globals, storySrc: src };
+      const newGlobals = { ...analyticsGlobals, storySrc: src };
       const newStoryId = deriveStoryId(newGlobals);
       setStoryId(newStoryId);
 
@@ -549,15 +574,15 @@ useEffect(() => {
         try {
           initAnalyticsForStory(newStoryId);
           const { sessionId: nextSessionId, runId: nextRunId } =
-            initAnalyticsSessionState(newStoryId, globals);
+            initAnalyticsSessionState(newStoryId, newGlobals);
 
           setSessionId(nextSessionId);
           setRunId(nextRunId);
 
           setStoryMeta(newStoryId, {
-            title: localStorage.getItem(LS_KEYS.storyTitle) || getStringGlobal(globals, "storyTitle"),
+            title: localStorage.getItem(LS_KEYS.storyTitle) || globalStoryTitle,
             src,
-            campaign: getStringGlobal(globals, "campaign") || localStorage.getItem("campaign") || undefined,
+            campaign: globalCampaign || localStorage.getItem("campaign") || undefined,
             userId: getOrCreateUserId(),
           });
         } catch (e) {
@@ -579,17 +604,17 @@ useEffect(() => {
         setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
       }
     },
-    [setGlobal, globals]
+    [setGlobal, analyticsGlobals, globalStoryTitle, globalCampaign]
   );
 
    /** 🔹 Runes: query → globals.runePack (elsőbbség) */
   useEffect(() => {
     if (!hydrated) return;
     // ha már van runePack a globals-ban, nem írjuk felül
-    if (typeof globals.runePack !== "undefined") return;
+    if (typeof globalRunePack !== "undefined") return;
 
     // ha nincs query, jöhet LS per-kampány
-    const sid = deriveStoryId(globals);
+    const sid = deriveStoryId(analyticsGlobals);
     try {
       const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
       const runeChoice = resolveInitialRuneChoice({
@@ -601,7 +626,7 @@ useEffect(() => {
     } catch {
       setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
     }
-  }, [hydrated, globals?.storySrc, globals?.storyTitle, globals?.storyId, setGlobal, globals]);
+  }, [hydrated, analyticsGlobals, globalRunePack, setGlobal]);
 
   /** Helpers */
   const registerAbort = useCallback((ac: AbortController) => {
@@ -613,12 +638,7 @@ useEffect(() => {
   }, []);
 
   const clearAllTimeouts = useCallback(() => {
-    timeouts.current.forEach((id) => {
-      try {
-        clearTimeout(id);
-      } catch {}
-    });
-    timeouts.current = [];
+    clearRegisteredTimeouts(timeouts);
   }, []);
 
   const registerAudio = useCallback((el: HTMLAudioElement) => {
@@ -641,7 +661,8 @@ useEffect(() => {
     if (!flagId) return;
     setImagesByFlag((prev) => {
       if (!prev || !prev[flagId]) return prev;
-      const { [flagId]: _, ...rest } = prev;
+      const rest = { ...prev };
+      delete rest[flagId];
       try {
         localStorage.setItem(LS_KEYS.runeImgs, JSON.stringify(rest));
       } catch {}
@@ -672,7 +693,7 @@ useEffect(() => {
     if (!page) return;
 
     // 1) Globálok frissítése
-    const prevScore = Number(globals?.score ?? 0) || 0;
+    const prevScore = Number(globals.score ?? 0) || 0;
     const newScore = res.correct ? prevScore + 1 : prevScore;
 
     setGlobal("correct", res.correct);
@@ -688,16 +709,16 @@ useEffect(() => {
       const probe =
         key === "score"   ? String(newScore) :
         key === "correct" ? String(res.correct) :
-        String((globals as any)?.[key] ?? "");
+        String(globals[key] ?? "");
 
       nextId =
-        (ns.cases && (ns.cases as any)[probe]) ??
-        (ns.cases && (ns.cases as any).__default) ??
+        ns.cases?.[probe] ??
+        ns.cases?.__default ??
         ns.default ??
-        (page as any)?.next ??
+        (typeof page.next === "string" ? page.next : null) ??
         null;
     } else {
-      nextId = (page as any)?.next ?? null;
+      nextId = typeof page.next === "string" ? page.next : null;
     }
 
     // 3) Navigáció
@@ -719,22 +740,9 @@ useEffect(() => {
 
   /** Reset */
   const resetGame = useCallback(() => {
-    abortControllers.current.forEach((ac) => {
-      try {
-        ac.abort();
-      } catch {}
-    });
-    abortControllers.current = [];
-
+    clearAbortControllers(abortControllers);
     clearAllTimeouts();
-
-    audioEls.current.forEach((el) => {
-      try {
-        el.pause();
-        el.currentTime = 0;
-      } catch {}
-    });
-    audioEls.current = [];
+    clearRegisteredAudioElements(audioEls);
 
     setUnlockedFragmentsState([]);
     setFragments({});
@@ -754,15 +762,7 @@ useEffect(() => {
     setProgressValue(0);
     setProgressDisplay(createEmptyProgressDisplay());
 
-    try {
-      localStorage.removeItem(LS_KEYS.unlocked);
-      localStorage.removeItem(LS_KEYS.fragments);
-      localStorage.removeItem(LS_KEYS.globalBank);
-      localStorage.removeItem(LS_KEYS.flags);
-      localStorage.removeItem(LS_KEYS.globals);
-      localStorage.removeItem(LS_KEYS.runeImgs);
-      localStorage.setItem(LS_KEYS.page, "landing");
-    } catch {}
+    resetPersistedGameState();
   }, [clearAllTimeouts]);
 
   /** Oldal betöltése backendről + normalizálás */
@@ -793,10 +793,9 @@ useEffect(() => {
     }
 
     // Story forrás
-    const storySrcFromGlobals = getStringGlobal(globals, "storySrc");
     const storySrcFromLS =
       typeof window !== "undefined" ? localStorage.getItem(LS_KEYS.storySrc) : null;
-    const storySrc = storySrcFromGlobals || storySrcFromLS || "";
+    const storySrc = globalStorySrc || storySrcFromLS || "";
 
     // ⛔ Ha nincs storySrc, ne fetch-eljünk
     if (!storySrc) {
@@ -838,23 +837,15 @@ useEffect(() => {
 
         // Meta refresh (mindig)
         try {
-          const metaSrc = (getStringGlobal(globals, "storySrc") || localStorage.getItem(LS_KEYS.storySrc) || "")
-            .replace(/^\/?stories\//, "/stories/");
+          const metaSource = globalStorySrc || localStorage.getItem(LS_KEYS.storySrc) || "";
+          const metaSrc = metaSource.replace(/^\/?stories\//, "/stories/");
           if (metaSrc) {
-            const base = metaSrc.startsWith("http") ? metaSrc : `${(process.env.NEXT_PUBLIC_API_BASE || "")}${metaSrc}`;
-            const bust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
-            const full = `${base}${bust}`;
+            const full = buildStoryMetaUrl(metaSrc);
 
             fetch(full, { cache: "no-store" })
               .then(r => r.json())
               .then(story => {
-                if (story?.meta) {
-                  setGlobal("meta", story.meta);
-                  if (story.meta?.ctaPresets) setGlobal("ctaPresets", story.meta.ctaPresets);
-                  if (story.meta?.endDefaultCta) setGlobal("endDefaultCta", story.meta.endDefaultCta);
-                  if (story.meta?.title) setGlobal("storyTitle", story.meta.title);
-                  if (story.meta?.id) setGlobal("storyId", story.meta.id);
-                  try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
+                if (applyStoryMetaToState({ meta: story?.meta, setGlobal })) {
                   console.log("[GameState] Meta refreshed:", story.meta);
                 }
               })
@@ -882,7 +873,10 @@ useEffect(() => {
   }, [
     hydrated,
     currentPageId,
-    globals?.storySrc,
+    globalStorySrc,
+    unlockedFragments,
+    setCurrentPageId,
+    setGlobal,
     registerAbort,
     clearAllTimeouts,
   ]);
