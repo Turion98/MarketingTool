@@ -192,7 +192,11 @@ export function useStoryPageEndState({
       console.warn("[CTA] No ctaPresets found. Using engine default.");
     }
 
-    return { campaignId, ctaPresets: presets, endDefaultCta };
+    return {
+      campaignId,
+      ctaPresets: presets as CampaignConfig["ctaPresets"],
+      endDefaultCta,
+    };
   }, [pageData?.meta, globals, derivedStoryId]);
 
   const engineDefaultEndCta = useMemo(

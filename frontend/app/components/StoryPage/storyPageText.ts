@@ -132,7 +132,8 @@ export function composeBlocks(
         continue;
       }
 
-      const condId: string | undefined = item?.ifUnlocked;
+      const condId =
+        typeof item?.ifUnlocked === "string" ? item.ifUnlocked : undefined;
       if (typeof condId === "string") {
         const hit = unlockedSet.has(condId);
 

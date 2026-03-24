@@ -1,6 +1,6 @@
 "use client";
 
-import type { MutableRefObject } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 
 import type { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { trackPuzzleResult, trackPuzzleTry } from "../../lib/analytics";
@@ -90,7 +90,7 @@ export function StoryPageDock({
   handleChoice,
   setFlag,
   goToNextPage,
-}: StoryPageDockProps): JSX.Element | null {
+}: StoryPageDockProps): ReactElement | null {
   if (
     !showChoices ||
     choicePageId !== pageData.id ||

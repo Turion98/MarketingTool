@@ -139,7 +139,9 @@ export function resolveCta(
   const endDefaultKey = campaignCfg?.endDefaultCta;
 
   // 1) Node preferencia
-  const nodeCta = nodeEndMeta?.cta ?? nodeEndMeta;
+  const nodeRec = asRecord(nodeEndMeta);
+  const nodeCta =
+    nodeRec && "cta" in nodeRec ? nodeRec.cta : nodeEndMeta;
   if (nodeCta) {
     // a) ha string, presetet keresünk
     if (typeof nodeCta === "string") {

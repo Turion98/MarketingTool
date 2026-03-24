@@ -97,7 +97,7 @@ export function useImageCache({
   retryTrigger = 0,
   apiKey,
   storySlug = "default", // ⬅️ fontos: backend is ezt várta a tesztben
-}: UseImageCacheArgs): UseImageCacheResult {
+}: UseImageCacheArgs): ImageCacheResult {
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
