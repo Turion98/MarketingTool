@@ -19,6 +19,9 @@ import {
   resolvePromptFragments,
 } from "./storyPageText";
 import type { FragmentBank, FragmentData } from "./storyPageTypes";
+import { useStoryPageBootstrap } from "./useStoryPageBootstrap";
+import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
+import { useStoryPagePreloads } from "./useStoryPagePreloads";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 
@@ -53,8 +56,7 @@ import {
   resolveNextFromPage, normalizeImagePrompt
 } from "../../lib/GameStateContext";
 
-import { preloadImage } from "../../lib/preloadImage";
-import { preloadAudio, getLastAudioPerfLog } from "../../lib/audioCache";
+import { getLastAudioPerfLog } from "../../lib/audioCache";
 import { useSfxScheduler } from "../../lib/useSfxScheduler";
 import { setSfxMuted, stopAllSfx } from "../../lib/sfxBus";
 import { getLastImagePerfLog } from "../../lib/useImageCache";
@@ -62,20 +64,15 @@ import { clearImageCache } from "../../lib/clearImageCache";
 import { clearVoiceCache } from "../../lib/clearVoiceCache";
 
 import {
-  trackPageEnter,
-  trackPageExit,
   trackChoice,
   trackRuneUnlock,
   trackUiClick,
   trackPuzzleTry,
   trackPuzzleResult,
-  setTerminalPages,
-  inferTerminalPagesFromStory,
   startNewRunSession ,
 } from "../../lib/analytics";
 
 
-import { fetchPageJsonCached } from "@/app/lib/story/fetchPageJson";
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
 
 import { resolveCta } from "../../core/cta/ctaResolver";
@@ -371,15 +368,6 @@ const StoryPage: React.FC = () => {
   /** --- URL params / analytics --- */
   const params = useSearchParams();
 
-  useEffect(() => {
-  const skinParam = params.get("skin");
- 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
-
-
-
 const skin = useMemo(() => {
   return (globals as any)?.skin || params.get("skin") || "legacy-default";
 }, [(globals as any)?.skin, params]);
@@ -412,6 +400,24 @@ const skin = useMemo(() => {
 const derivedSessionId = sessionId; // ennyi
 const derivedRunId = runId;
 
+  useStoryPageBootstrap({
+    params,
+    currentPageId,
+    goToNextPage,
+    setGlobal,
+    setStorySrc,
+  });
+
+  useStoryPageAnalytics({
+    derivedStoryId,
+    derivedSessionId,
+    derivedRunId,
+    currentPageId,
+    pageData,
+    lastPageRef,
+    enterTsRef,
+    globals,
+  });
 
  const analyticsSync =
   derivedStoryId && derivedSessionId ? (
@@ -458,6 +464,20 @@ const derivedRunId = runId;
       ]),
     [unlockedFragments, flags]
   );
+
+  useStoryPagePreloads({
+    apiBase: API_BASE,
+    storySrc:
+      typeof globals?.storySrc === "string" ? globals.storySrc : undefined,
+    derivedStoryId,
+    sidePreloadPages: pageData?.audio?.sidePreloadPages,
+    preloadNextPages: pageData?.imageTiming?.preloadNextPages,
+    registerAbort,
+    normalizeSfxUrl,
+    unlockedPlus,
+    fragments,
+    globalFragments,
+  });
 
   // 🔹 LOGIC típusú oldalak automatikus futtatása (L3_route_switch, Route_E_result_logic, stb.)
   useEffect(() => {
@@ -577,53 +597,6 @@ const derivedRunId = runId;
     } catch {}
   }, [imagesByFlag]);
 
-// storySrc, start, title param
-useEffect(() => {
-  const src = params.get("src");
-  const start = params.get("start");
-  const title = params.get("title");
-  const rs = params.get("rs") || ""; // Restart / new-run marker
-
-  if (src) {
-    // ✅ fontos: használjuk a context helper-t, mert ez tölti be a meta-t és beállítja a storyId-t is
-    setStorySrc?.(src);
-  }
-
-  if (title) {
-    setGlobal?.("storyTitle", title);
-    try {
-      localStorage.setItem("storyTitle", title);
-    } catch {}
-  }
-
-  // ✅ fontos: startPageId + runKey átadás a contextnek
-  if (start) {
-    setGlobal?.("startPageId", start);
-    try {
-      localStorage.setItem("startPageId", start);
-    } catch {}
-  }
-
-  if (rs) {
-    setGlobal?.("runKey", rs);
-    try {
-      localStorage.setItem("runKey", rs);
-    } catch {}
-  }
-
-  if (start && start !== currentPageId) {
-    try {
-      localStorage.setItem("currentPageId", start);
-    } catch {}
-    goToNextPage(start);
-  }
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
-
-
-
   // page change reset
   useLayoutEffect(() => {
     if (pageData?.id !== localPageId) {
@@ -676,104 +649,6 @@ useEffect(() => {
     puzzleStartRef.current =
       isRiddle(pageData) || isRunes(pageData) ? Date.now() : null;
   }, [pageData?.id]);
-
-// analytics: page enter/exit
-useEffect(() => {
-  if (!derivedStoryId || !derivedSessionId) return;
-
-  const pageId = currentPageId || pageData?.id;
-  if (!pageId) return;
-
-  // --- END fallback: ha nincs pageData.type / endAlias, de az id "end_*"
-  const fallbackEndAlias =
-    typeof pageData?.id === "string" && pageData.id.startsWith("end_")
-      ? pageData.id.slice(4) // "end_espresso" -> "espresso"
-      : undefined;
-
-  const normalizedPageType =
-    pageData?.type || (fallbackEndAlias ? "end" : undefined);
-
-  const normalizedEndAlias =
-    (pageData as any)?.endAlias || fallbackEndAlias;
-
-  if (lastPageRef.current && enterTsRef.current != null) {
-    const dwell = Date.now() - enterTsRef.current;
-    try {
-      trackPageExit(
-        derivedStoryId,
-        derivedSessionId,
-        lastPageRef.current,
-        Math.max(0, dwell)
-      );
-    } catch {}
-  }
-
-  try {
-    trackPageEnter(
-      derivedStoryId,
-      derivedSessionId,
-      pageId,
-      lastPageRef.current ?? undefined,
-      {
-        runId: derivedRunId || undefined,
-        rawPageId: pageData?.id,          // a tényleges node id (ami nálad most "end_espresso" is lehet)
-        pageType: normalizedPageType,     // <- "end" lesz, ha end_* oldal
-        endAlias: normalizedEndAlias,     // <- "espresso" lesz, ha end_* oldal
-      }
-    );
-  } catch {}
-
-  enterTsRef.current = Date.now();
-  lastPageRef.current = pageId;
-
-  return () => {
-    if (!lastPageRef.current || enterTsRef.current == null) return;
-    const dwell = Date.now() - enterTsRef.current;
-    try {
-      trackPageExit(
-        derivedStoryId,
-        derivedSessionId,
-        lastPageRef.current,
-        Math.max(0, dwell)
-      );
-    } catch {}
-    enterTsRef.current = null;
-    lastPageRef.current = null;
-  };
-}, [
-  derivedStoryId,
-  derivedSessionId,
-  currentPageId,
-  derivedRunId,
-  pageData?.id,
-  pageData?.type,
-]);
-
-
-  // analytics: tab hide
-  useEffect(() => {
-    if (!derivedStoryId || !derivedSessionId) return;
-
-    const onHide = () => {
-      if (document.visibilityState !== "hidden") return;
-      if (!lastPageRef.current || enterTsRef.current == null) return;
-      const dwell = Date.now() - enterTsRef.current;
-      try {
-        trackPageExit(
-          derivedStoryId,
-          derivedSessionId,
-          lastPageRef.current,
-          Math.max(0, dwell)
-        );
-      } catch {}
-      enterTsRef.current = Date.now();
-    };
-
-    document.addEventListener("visibilitychange", onHide);
-    return () => {
-      document.removeEventListener("visibilitychange", onHide);
-    };
-  }, [derivedStoryId, derivedSessionId]);
 
   // unlockRunes on page enter
   useEffect(() => {
@@ -960,241 +835,6 @@ useEffect(() => {
     fragments,
     globalFragments,
     unlockedFragments,
-  ]);
-
-  useEffect(() => {
-  if (!derivedStoryId) return;
-
-  // próbáljuk megtalálni a betöltött sztori JSON-t a globals-ban
-  const storyJson =
-    (globals as any)?.loadedStory ??
-    (globals as any)?.storyJson ??
-    (globals as any)?.storyData ??
-    (globals as any)?.story;
-
-  if (!storyJson) return;
-
-  const terminals = inferTerminalPagesFromStory(storyJson);
-  if (terminals.length) {
-    setTerminalPages(derivedStoryId, terminals);
-  }
-}, [derivedStoryId, globals]);
-
-
-  // sidePreload voice/sfx/narration
-  useEffect(() => {
-    if (!globals?.storySrc) return;
-    if (!pageData?.audio?.sidePreloadPages?.length) return;
-
-    const controllers: AbortController[] = [];
-
-    const normalizeNarrUrl = (raw?: string): string | null => {
-      const s = String(raw ?? "").trim();
-      if (!s) return null;
-      if (/^https?:\/\//i.test(s) || s.startsWith("/")) return s;
-      if (s.startsWith("assets/"))
-        return "/" + s.replace(/^assets\//, "assets/");
-      if (s.startsWith("audio/")) return `/assets/${s}`;
-      return `/assets/audio/${s}`;
-    };
-
-    (pageData.audio.sidePreloadPages as string[]).forEach(
-      (pid: string) => {
-        const ac = new AbortController();
-        controllers.push(ac);
-        registerAbort(ac);
-
-        fetchPageJsonCached<any>(
-          `${API_BASE}/page/${pid}?src=${encodeURIComponent(
-            globals.storySrc!
-          )}`,
-          {
-            storyId: derivedStoryId,
-            pageId: pid,
-            ttlMs: 18 * 60_000,
-            signal: ac.signal,
-          }
-        )
-          .then((data) => {
-            if (Array.isArray(data?.sfx)) {
-              data.sfx.forEach((s: any) => {
-                const url = normalizeSfxUrl(s?.file);
-                if (!url) return;
-                try {
-                  preloadAudio(url);
-                } catch {}
-              });
-            }
-
-            if (data?.audio?.mainNarration) {
-              const url = normalizeNarrUrl(
-                data.audio.mainNarration
-              );
-              if (url) {
-                try {
-                  preloadAudio(url);
-                } catch {}
-              }
-            }
-
-            if (Array.isArray(data?.audio?.playlist)) {
-              data.audio.playlist.forEach((it: any) => {
-                const src =
-                  it?.src ??
-                  it?.path ??
-                  it?.narration ??
-                  it?.file;
-                const url = normalizeNarrUrl(src);
-                if (!url) return;
-                try {
-                  preloadAudio(url);
-                } catch {}
-              });
-            }
-
-            if (data?.audio?.background) {
-              const url = normalizeNarrUrl(
-                data.audio.background
-              );
-              if (url) {
-                try {
-                  preloadAudio(url);
-                } catch {}
-              }
-            }
-          })
-          .catch((err) => {
-            if (err?.name !== "AbortError") {
-              console.error(
-                `Side preload error for ${pid}`,
-                err
-              );
-            }
-          });
-      }
-    );
-
-    return () => {
-      controllers.forEach((c) => {
-        try {
-          c.abort();
-        } catch {}
-      });
-    };
-  }, [
-    globals?.storySrc,
-    pageData?.audio?.sidePreloadPages,
-    registerAbort,
-    derivedStoryId,
-  ]);
-  // preload images for preloadNextPages (FRAGMENT-RESOLVED)
-  useEffect(() => {
-    if (!globals?.storySrc) return;
-    const ids = pageData?.imageTiming?.preloadNextPages;
-    if (!ids?.length) return;
-
-    const controllers: AbortController[] = [];
-
-    ids.forEach(async (nextId: string) => {
-      const ac = new AbortController();
-      controllers.push(ac);
-      registerAbort(ac);
-
-      try {
-        const nextPageData = await fetchPageJsonCached<any>(
-          `${API_BASE}/page/${nextId}?src=${encodeURIComponent(
-            globals.storySrc!
-          )}`,
-          {
-            storyId: derivedStoryId,
-            pageId: nextId,
-            ttlMs: 18 * 60_000,
-            signal: ac.signal,
-          }
-        );
-
-        if (nextPageData?.imagePrompt) {
-          // 1) normalizáljuk az imagePrompt-ot
-          const raw = normalizeImagePrompt(
-            nextPageData.imagePrompt as any
-          );
-
-          // 2) fragmentek feloldása a JELENLEGI állapot szerint
-          const basePrompt = raw.prompt || "";
-          const baseNegative = raw.negative || "";
-
-          const resolvedPrompt = resolvePromptFragments(
-            basePrompt,
-            unlockedPlus,
-            fragments,
-            globalFragments
-          );
-          const resolvedNegative = resolvePromptFragments(
-            baseNegative,
-            unlockedPlus,
-            fragments,
-            globalFragments
-          );
-
-          // 3) paraméterek összeollózása (seed, negativePrompt stb.)
-          const mergedParams: any = {
-            ...(nextPageData.imageParams || {}),
-            negativePrompt:
-              resolvedNegative ||
-              (nextPageData.imageParams as any)?.negativePrompt,
-            seed:
-              typeof raw.seed === "number"
-                ? raw.seed
-                : (nextPageData.imageParams as any)?.seed,
-            styleProfile:
-              raw.styleProfile ??
-              (nextPageData.imageParams as any)?.styleProfile,
-          };
-
-          // 4) preload ugyanazzal a FELDOLGOZOTT prompttal, mint amit a render is használ
-          await preloadImage(
-            nextPageData.id,
-            {
-              // megtartjuk az objektum formát, csak a combinedPrompt/negativePrompt már feloldott
-              ...(typeof nextPageData.imagePrompt === "object"
-                ? nextPageData.imagePrompt
-                : {}),
-              combinedPrompt: resolvedPrompt,
-              negativePrompt:
-                resolvedNegative ??
-                (nextPageData.imagePrompt as any)?.negativePrompt ??
-                (nextPageData.imagePrompt as any)?.negative,
-            } as any,
-            mergedParams,
-            nextPageData.styleProfile || {},
-            "draft"
-          );
-        }
-      } catch (err: any) {
-        if (err?.name !== "AbortError") {
-          console.error(
-            `Preload fetch error for ${nextId}`,
-            err
-          );
-        }
-      }
-    });
-
-    return () => {
-      controllers.forEach((c) => {
-        try {
-          c.abort();
-        } catch {}
-      });
-    };
-  }, [
-    globals?.storySrc,
-    pageData?.imageTiming?.preloadNextPages,
-    registerAbort,
-    derivedStoryId,
-    unlockedPlus,        // 🔹 fontos: függjön az unlocked-tól is
-    fragments,
-    globalFragments,
   ]);
 
   // animateNext flag after choices appear
