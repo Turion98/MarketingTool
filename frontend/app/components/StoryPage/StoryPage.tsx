@@ -23,7 +23,15 @@ import {
 import { buildChoiceMutationPlan } from "./storyPageChoiceMutations";
 import { runChoiceTransition } from "./storyPageChoiceTransition";
 import { StoryPageDock } from "./StoryPageDock";
-import type { FragmentBank, FragmentData } from "./storyPageTypes";
+import type {
+  FragmentBank,
+  FragmentData,
+  PuzzleRiddle,
+  PuzzleRunesPage,
+  StoryPageData,
+  StoryPageGlobals,
+  TransitionVideoData,
+} from "./storyPageTypes";
 import { useStoryPageBootstrap } from "./useStoryPageBootstrap";
 import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
 import { useStoryPageEndState } from "./useStoryPageEndState";
@@ -55,6 +63,7 @@ import {
   useGameState,
   resolveNextFromPage, normalizeImagePrompt
 } from "../../lib/GameStateContext";
+import type { GameStateContextType } from "../../lib/gameStateTypes";
 
 import { getLastAudioPerfLog } from "../../lib/audioCache";
 import { useSfxScheduler } from "../../lib/useSfxScheduler";
@@ -89,80 +98,26 @@ const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
 
-/** ---------- Transition video típus ---------- */
-
-type TransitionVideoData = {
-  id: string;
-  type: "transition";
-  transition: {
-    kind: "video";
-    src: string;
-    srcWebm?: string;
-    poster?: string;
-    autoplay?: boolean;
-    muted?: boolean;
-    loop?: boolean;
-    fadeInMs?: number;
-    fadeOutMs?: number;
-    skipAfterMs?: number;
-    nextPageId: string;
-    duckToVol?: number;
-    attackMs?: number;
-    releaseMs?: number;
-    preloadNext?: boolean;
-  };
+type StoryPageContext = Omit<
+  GameStateContextType,
+  "currentPageData" | "globals" | "setGlobal"
+> & {
+  currentPageData?: StoryPageData | null;
+  currentPageId?: string;
+  globalError?: string | null;
+  globals: StoryPageGlobals;
+  setGlobal: (key: string, value: unknown) => void;
 };
 
-function isTransitionVideoPage(p: any): p is TransitionVideoData {
-  return !!p && p.type === "transition" && p.transition?.kind === "video";
+function isTransitionVideoPage(p: unknown): p is TransitionVideoData {
+  return !!p && typeof p === "object" && (p as TransitionVideoData).type === "transition" && (p as TransitionVideoData).transition?.kind === "video";
 }
 
-/** ---------- Puzzle típusok ---------- */
+const isRiddle = (p: unknown): p is PuzzleRiddle =>
+  !!p && typeof p === "object" && (p as PuzzleRiddle).type === "puzzle" && (p as PuzzleRiddle).kind === "riddle";
 
-type PuzzleRiddle = {
-  type: "puzzle";
-  kind: "riddle";
-  question: string;
-  options: string[];
-  correctIndex: number;
-  onAnswer?: {
-    setFlags?: string[] | Record<string, boolean>;
-    setGlobals?: Record<string, string>;
-    nextSwitch?: any;
-  };
-};
-
-type PuzzleRunesPage = {
-  type: "puzzle";
-  kind: "runes";
-  prompt?: string;
-  options: string[];
-
-  /** Klasszikus módhoz: helyes megoldáslista. Open módban elhagyható. */
-  answer?: string[];
-
-  maxAttempts?: number;
-
-  /** Open módhoz: hány runát választhat a user (pl. 2) */
-  maxPick?: number;
-
-  /** Open módhoz: flag prefix, pl. "L2_opt_" → L2_opt_1, L2_opt_2, ... */
-  optionFlagsBase?: string;
-
-  /** PuzzleRunes működési módjai – ha nincs, a komponens defaultot használ */
-  mode?: "ordered" | "set";
-  feedback?: "keep" | "reset";
-
-  onSuccess?: { goto: string; setFlags?: string[] | Record<string, boolean> };
-  onFail?: { goto: string; setFlags?: string[] | Record<string, boolean> };
-};
-
-
-const isRiddle = (p: any): p is PuzzleRiddle =>
-  p?.type === "puzzle" && p?.kind === "riddle";
-
-const isRunes = (p: any): p is PuzzleRunesPage =>
-  p?.type === "puzzle" && p?.kind === "runes";
+const isRunes = (p: unknown): p is PuzzleRunesPage =>
+  !!p && typeof p === "object" && (p as PuzzleRunesPage).type === "puzzle" && (p as PuzzleRunesPage).kind === "runes";
 
 /** ---------- SFX path normalizáló ---------- */
 
@@ -182,6 +137,34 @@ function normalizeSfxUrl(raw?: string): string | null {
 type Measure = {
   panel: { x: number; y: number; width: number; height: number };
   content: { x: number; y: number; width: number; height: number };
+};
+
+type StoryLogicRule = {
+  if?: string[];
+  goto?: string;
+  default?: string;
+};
+
+type StoryChoiceAction = {
+  id?: unknown;
+  unlockRune?: unknown;
+  setFlag?: unknown;
+};
+
+type StoryChoiceRecord = {
+  id?: unknown;
+  text?: unknown;
+  label?: unknown;
+  reward?: {
+    locks?: string[] | string;
+  };
+  actions?: StoryChoiceAction[];
+};
+
+type StoryPageStyleVars = React.CSSProperties & {
+  "--np-maxw"?: string;
+  "--mf-max-w"?: string;
+  "--wrapper-maxw"?: string;
 };
 
 /** ---------- Komponens ---------- */
@@ -302,39 +285,14 @@ const StoryPage: React.FC = () => {
     storyId,
     sessionId,
     runId,
-  } = useGameState() as any as {
-    currentPageData: any;
-    unlockedFragments: string[];
-    setUnlockedFragments: (x: string[]) => void;
-    goToNextPage: (id: string) => void;
-    isMuted: boolean;
-    setIsMuted: (m: boolean) => void;
-    triggerAudioRestart: () => void;
-    registerAbort: (ac: AbortController) => void;
-    registerTimeout: (id: number) => void;
-    isLoading: boolean;
-    currentPageId?: string;
-    globalError?: string | null;
-    fragments: FragmentBank;
-    addFragment: (id: string, data: FragmentData) => void;
-    globalFragments: FragmentBank;
-    flags: Set<string>;
-    setFlag: (f: string) => void;
-    globals: Record<string, any>;
-    setGlobal: (k: string, v: string) => void;
-    setStorySrc?: (src: string) => void;
-    progressDisplay: { value?: number; milestones?: Array<{ x: number; label?: string }> };
-    storyId?: string;
-    sessionId?: string;
-    runId?: string;
-  };
+  } = useGameState() as StoryPageContext;
 
   /** --- URL params / analytics --- */
   const params = useSearchParams();
 
 const skin = useMemo(() => {
-  return (globals as any)?.skin || params.get("skin") || "legacy-default";
-}, [(globals as any)?.skin, params]);
+  return globals?.skin || params.get("skin") || "legacy-default";
+}, [globals?.skin, params]);
 
   const showAnalytics = params.get("analytics") === "1";
 
@@ -363,6 +321,13 @@ const skin = useMemo(() => {
 
 const derivedSessionId = sessionId; // ennyi
 const derivedRunId = runId;
+const stringGlobals = useMemo<Record<string, string>>(
+  () =>
+    Object.fromEntries(
+      Object.entries(globals ?? {}).map(([key, value]) => [key, String(value ?? "")])
+    ),
+  [globals]
+);
 
   useStoryPageBootstrap({
     params,
@@ -389,12 +354,12 @@ const derivedRunId = runId;
   ) : null;
 
     const runePackForDisplay = useMemo(() => {
-    const rp: any = globals?.runePack;
+    const rp = globals?.runePack;
     if (!rp || typeof rp !== "object") return undefined;
 
     if (rp.mode === "triple") {
       const icons: string[] = Array.isArray(rp.icons)
-        ? rp.icons.filter((x: any) => typeof x === "string").slice(0, 3)
+        ? rp.icons.filter((x): x is string => typeof x === "string").slice(0, 3)
         : [];
       if (!icons.length) return undefined;
       return {
@@ -462,7 +427,9 @@ const derivedRunId = runId;
   useEffect(() => {
     if (!pageData || pageData.type !== "logic") return;
 
-    const rules = Array.isArray(pageData.logic) ? pageData.logic : [];
+    const rules: StoryLogicRule[] = Array.isArray(pageData.logic)
+      ? (pageData.logic as StoryLogicRule[])
+      : [];
     if (!rules.length) return;
 
     const chosen = (() => {
@@ -496,7 +463,7 @@ const derivedRunId = runId;
       }
 
       // default ág (pl. { "default": "Route_E_intro" })
-      const fallback = rules.find((r: any) => typeof r?.default === "string");
+      const fallback = rules.find((r) => typeof r?.default === "string");
       return fallback ? String(fallback.default) : null;
     })();
 
@@ -512,7 +479,7 @@ const derivedRunId = runId;
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      (window as any).runSecSmoke = () => {
+      (window as Window & { runSecSmoke?: () => unknown }).runSecSmoke = () => {
         const result = runSecuritySmokeTest();
         console.log("[SMOKE][FINAL]", result);
         return result;
@@ -635,10 +602,8 @@ const derivedRunId = runId;
     if (processedRunesForPage.current === pageData.id) return;
     processedRunesForPage.current = pageData.id;
 
-    const runeIds: string[] = Array.isArray(
-      (pageData as any)?.unlockRunes
-    )
-      ? (pageData as any).unlockRunes
+    const runeIds = Array.isArray(pageData?.unlockRunes)
+      ? pageData.unlockRunes
       : [];
     if (!runeIds.length) return;
 
@@ -652,19 +617,19 @@ const derivedRunId = runId;
 
     const choiceRuneIds = new Set<string>();
     if (Array.isArray(pageData?.choices)) {
-      for (const c of pageData.choices) {
+      for (const c of pageData.choices as StoryChoiceRecord[]) {
         const locks = Array.isArray(c?.reward?.locks)
           ? c.reward.locks
           : typeof c?.reward?.locks === "string"
           ? [c.reward.locks]
           : [];
-        locks.forEach((id: any) => {
+        locks.forEach((id) => {
           const s = String(id);
           if (isRuneId(s)) choiceRuneIds.add(s);
         });
 
         if (Array.isArray(c?.actions)) {
-          c.actions.forEach((a: any) => {
+          c.actions.forEach((a) => {
             const id = a?.id ?? a?.unlockRune ?? a?.setFlag;
             if (id && isRuneId(String(id)))
               choiceRuneIds.add(String(id));
@@ -678,7 +643,7 @@ const derivedRunId = runId;
     );
     if (!pageOnlyRunes.length) return;
 
-    const wantOverlay = !!(pageData as any)?.overlayRunesOnEnter;
+    const wantOverlay = !!pageData?.overlayRunesOnEnter;
 
     if (wantOverlay) {
       flushSync(() => {
@@ -749,15 +714,13 @@ const derivedRunId = runId;
 
   // HOTFIX: sync unlockFragments -> fragments bank
   useEffect(() => {
-    const ids = (pageData as any)?.unlockFragments as
-      | string[]
-      | undefined;
+    const ids = pageData?.unlockFragments;
     if (!ids?.length) return;
     if (!globalFragments) return;
 
     ids.forEach((id: string) => {
       if (!id) return;
-      const src = (globalFragments as any)[id];
+      const src = globalFragments?.[id];
       if (!src) return;
       if (
         !fragments?.[id]?.text &&
@@ -774,9 +737,11 @@ const derivedRunId = runId;
 
   // recall diag
   useEffect(() => {
-    const raw = (pageData as any)?.fragmentRecall;
+    const raw = pageData?.fragmentRecall;
     const recalls = Array.isArray(raw) ? raw : raw ? [raw] : [];
-    const recallIds = recalls.map((r) => r?.id).filter(Boolean);
+    const recallIds = recalls
+      .map((r) => r?.id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0);
 
     const missingInFragments = recallIds.filter(
       (id) => !(fragments?.[id]?.text)
@@ -836,10 +801,10 @@ const derivedRunId = runId;
 
   const resolvedNext = useMemo(() => {
     return (
-      resolveNextFromPage(pageData as any, globals) ||
+      resolveNextFromPage(pageData, stringGlobals) ||
       (typeof pageData?.next === "string" ? pageData.next : null)
     );
-  }, [pageData, globals]);
+  }, [pageData, stringGlobals]);
 
   const mediaMode = pageData?.layout?.mediaMode || "image";
   const isProfileCardPage = mediaMode === "profile-card";
@@ -868,18 +833,18 @@ const dockChoicesForThisPage = useMemo(() => {
 
   // recall szövegek
   const recallTexts: string[] = useMemo(() => {
-    const raw = (pageData as any)?.fragmentRecall;
+    const raw = pageData?.fragmentRecall;
     const toArr = Array.isArray(raw) ? raw : raw ? [raw] : [];
     const getTxt = (id?: string, fb?: string) => {
       if (!id) return fb || "";
       const tLocal = fragments?.[id]?.text?.trim();
       if (tLocal) return tLocal;
-      const tGlobal = (globalFragments as any)?.[id]?.text?.trim();
+      const tGlobal = globalFragments?.[id]?.text?.trim();
       if (tGlobal) return tGlobal;
       return fb || "";
     };
     return toArr
-      .map((r: any) => getTxt(r?.id, r?.textFallback))
+      .map((r) => getTxt(r?.id, r?.textFallback))
       .filter((s: string) => !!s);
   }, [pageData?.fragmentRecall, fragments, globalFragments]);
 
@@ -916,13 +881,13 @@ const dockChoicesForThisPage = useMemo(() => {
 
   const riddleCorrectLabel = useMemo(() => {
     const fromPage =
-      (pageData as any)?.correctLabel ||
-      (pageData as any)?.riddle?.correctLabel;
+      pageData?.correctLabel ||
+      pageData?.riddle?.correctLabel;
     if (fromPage) return String(fromPage);
 
     const fromGlobals =
-      (globals as any)?.riddleCorrectLabel ||
-      (globals as any)?.quiz?.labels?.correct;
+      globals?.riddleCorrectLabel ||
+      globals?.quiz?.labels?.correct;
     if (fromGlobals) return String(fromGlobals);
 
     return "Helyes!";
@@ -1050,7 +1015,7 @@ const dockChoicesForThisPage = useMemo(() => {
   );
 
     const imgPrompt = useMemo(
-  () => normalizeImagePrompt(pageData?.imagePrompt as any),
+  () => normalizeImagePrompt(pageData?.imagePrompt),
   [pageData?.imagePrompt]
 );
 
@@ -1064,18 +1029,18 @@ const resolvedImgPrompt = useMemo(() => {
 }, [imgPrompt, unlockedPlus, fragments, globalFragments]);
 
   const effectiveImageParams = useMemo(() => {
-    const base: any = {
+    const base: Record<string, unknown> = {
       ...stableParams,
       negativePrompt:
         resolvedImgPrompt.negative ??
-        (stableParams as any)?.negativePrompt,
+        stableParams?.negativePrompt,
       seed:
         typeof resolvedImgPrompt.seed === "number"
           ? resolvedImgPrompt.seed
-          : (stableParams as any)?.seed,
+          : stableParams?.seed,
       styleProfile:
         resolvedImgPrompt.styleProfile ??
-        (stableParams as any)?.styleProfile,
+        stableParams?.styleProfile,
     };
 
     // 🔹 profilkártya eset: 1:1-es kép + négyzetes méret
@@ -1120,9 +1085,9 @@ const showFrame = useMemo(() => {
 
   // 🔹 Statikus / meglévő kép CSAK akkor számít, ha van konkrét ID / flag
   const hasStaticImage = Boolean(
-    (timing as any).staticImage ||
-      (timing as any).existingImageId ||
-      (timing as any).imageId
+    timing.staticImage ||
+      timing.existingImageId ||
+      timing.imageId
   );
 
   // 🔹 Hero-oldal: csak ch4_pg1 marad, de ott se erőből – kell media
@@ -1195,10 +1160,11 @@ const showFrame = useMemo(() => {
 
   const handleRiddleAnswer = useCallback(
     (choiceIdx: number) => {
-      const p = pageData as any as PuzzleRiddle;
+      if (!isRiddle(pageData)) return;
+      const p = pageData;
       const isCorrect = choiceIdx === p.correctIndex;
 
-      const prevRaw = (globals as any)?.score;
+      const prevRaw = globals?.score;
       const prevScore =
         typeof prevRaw === "number"
           ? prevRaw
@@ -1233,12 +1199,13 @@ const showFrame = useMemo(() => {
           ? p.onAnswer.nextSwitch
           : resolveNextFromPage(
               {
+                id: pageData?.id ?? "riddle",
                 next:
                   p.onAnswer?.nextSwitch ?? {
                     switch: "__isCorrect",
-                    cases: { true: null, false: null },
+                    cases: { true: "", false: "" },
                   },
-              } as any,
+              },
               {
                 __isCorrect: isCorrect
                   ? "true"
@@ -1261,19 +1228,24 @@ const showFrame = useMemo(() => {
   );
 
   const handleChoice = useCallback(
-    (next: string, reward?: any, choiceObj?: any) => {
+    (next: string, reward?: unknown, choiceObj?: unknown) => {
       // simple double-click guard
       if (isFadingOut) {
         return;
       }
 
+      const choice =
+        choiceObj && typeof choiceObj === "object"
+          ? (choiceObj as StoryChoiceRecord)
+          : undefined;
+
       try {
         const pageId =
           pageData?.id || currentPageId || "unknown";
         const label =
-          choiceObj?.text ??
-          choiceObj?.label ??
-          choiceObj?.id ??
+          choice?.text ??
+          choice?.label ??
+          choice?.id ??
           "unknown";
         const latencyMs =
           typeof enterTsRef.current === "number"
@@ -1281,7 +1253,7 @@ const showFrame = useMemo(() => {
               enterTsRef.current
             : undefined;
 
-            const choiceId = String(choiceObj?.id ?? (next ? `to:${next}` : "unknown_choice"));
+            const choiceId = String(choice?.id ?? (next ? `to:${next}` : "unknown_choice"));
                  if (derivedStoryId && derivedSessionId && pageId) {
           trackChoice(
             derivedStoryId,
@@ -1317,8 +1289,8 @@ const showFrame = useMemo(() => {
       } catch {}
 
       const mutationPlan = buildChoiceMutationPlan({
-        reward,
-        choiceObj,
+        reward: reward as Parameters<typeof buildChoiceMutationPlan>[0]["reward"],
+        choiceObj: choice as Parameters<typeof buildChoiceMutationPlan>[0]["choiceObj"],
         pageData,
         unlockedFragments,
         flags,
@@ -1529,7 +1501,7 @@ const showFrame = useMemo(() => {
   });
   console.groupEnd();
 
-  const _mustBeFn = (n: string, v: any) => {
+  const _mustBeFn = (n: string, v: unknown) => {
     const t = typeof v;
     if (t !== "function") {
       if (process.env.NODE_ENV !== "production") {
@@ -1617,11 +1589,12 @@ const showFrame = useMemo(() => {
   if (pageData.id === "tower_reveal_video") {
     const nextAfter =
       resolveNextFromPage(
-        pageData as any,
-        globals
+        pageData,
+        stringGlobals
       ) ||
-      ((pageData as any)
-        ?.next as string) ||
+      (typeof pageData?.next === "string"
+        ? pageData.next
+        : null) ||
       "ch4_pg1";
     return (
       <div className={style.storyPage}>
@@ -1670,6 +1643,12 @@ const showFrame = useMemo(() => {
     );
   }
 
+  const canvasStyleVars: StoryPageStyleVars = {
+    "--np-maxw": "1400px",
+    "--mf-max-w": "1400px",
+    "--wrapper-maxw": "1400px",
+  };
+
 
 
   // normal page
@@ -1694,14 +1673,7 @@ const showFrame = useMemo(() => {
           <DecorBackground preset="subtle" />
         }
         /* szélesebb tartalmi sáv a runtime-ban */
-        style={{
-          // narrációs panel max szélesség
-          ["--np-maxw" as any]: "1400px",
-          // MediaFrame max szélesség (szinkron a narrációval)
-          ["--mf-max-w" as any]: "1400px",
-          // InteractionDock wrapper max szélesség
-          ["--wrapper-maxw" as any]: "1400px",
-        }}
+        style={canvasStyleVars}
         topbar={
           <>
             <HeaderBar
@@ -1812,7 +1784,7 @@ const showFrame = useMemo(() => {
         setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
         firstLockTimerRef={firstLockTimer}
         pageId={pageData.id}
-        title={(pageData as any)?.title}
+        title={pageData?.title}
         exiting={isFadingOut}              // ha már bekötötted, maradjon
         exitMs={600}
         backdrop={
@@ -1820,12 +1792,12 @@ const showFrame = useMemo(() => {
             <>
               <BrickBottomOverlay
                 usePortal
-                anchor={anchorPortal as any}
+                anchor={anchorPortal}
                 position="bottom"
               />
               <BrickBottomOverlay
                 usePortal
-                anchor={anchorPortal as any}
+                anchor={anchorPortal}
                 src="/ui/brick.png"
                 position="top"
               />
