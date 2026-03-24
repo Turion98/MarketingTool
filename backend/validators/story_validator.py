@@ -5,13 +5,12 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
 
 from jsonschema import Draft7Validator, RefResolver, exceptions as js_exceptions
+from services.contracts import StoryDocument, StoryValidationIssue
 
 
-class ValidationErrorDict(Dict[str, Any]):
-    pass
+ValidationErrorDict = StoryValidationIssue
 
 
 @lru_cache(maxsize=1)
@@ -27,7 +26,7 @@ def _schema_base_dir() -> Path:
 
 
 @lru_cache(maxsize=1)
-def _load_core_schema() -> Dict[str, Any]:
+def _load_core_schema() -> StoryDocument:
     base = _schema_base_dir()
     for p in [base / "CoreSchema.json", (base / "schemas" / "CoreSchema.json")]:
         if p.exists():
@@ -45,8 +44,8 @@ def _validator() -> Draft7Validator:
     return Draft7Validator(schema, resolver=resolver)
 
 
-def _format_path(err_path) -> str:
-    parts: List[str] = []
+def _format_path(err_path: object) -> str:
+    parts: list[str] = []
     for p in err_path:
         if isinstance(p, int):
             parts[-1:] = [f"{parts[-1]}[{p}]"] if parts else [f"[{p}]"]
@@ -68,11 +67,11 @@ def _semver_ok(s: str) -> bool:
     return bool(re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", s or ""))
 
 
-def _semantic_checks(data: Dict[str, Any]) -> List[ValidationErrorDict]:
+def _semantic_checks(data: StoryDocument) -> list[ValidationErrorDict]:
     """
     Sémán túli referenciacheckek, duplikációk, whitelist, stb.
     """
-    errs: List[ValidationErrorDict] = []
+    errs: list[ValidationErrorDict] = []
 
     # --- schemaVersion whitelist
     allowed = set(
@@ -100,7 +99,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[ValidationErrorDict]:
         return errs
 
     # pageId gyűjtés + duplikáció
-    page_ids: List[str] = []
+    page_ids: list[str] = []
     for i, p in enumerate(pages):
         if not isinstance(p, dict):
             continue
@@ -160,7 +159,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[ValidationErrorDict]:
                 frag_ids.add(fid)
 
     # bejárás: next/choices/fragment hivatkozások
-    def _check_next(next_val: Any, base_path: str):
+    def _check_next(next_val: object, base_path: str) -> None:
         if isinstance(next_val, str):
             if next_val not in page_set:
                 errs.append(
@@ -222,7 +221,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[ValidationErrorDict]:
                 if not isinstance(ch, dict):
                     continue
 
-                np: Any = None
+                np: object | None = None
                 key_used = "nextPageId"
                 if isinstance(ch.get("next"), str):
                     np = ch.get("next")
@@ -285,10 +284,10 @@ def _semantic_checks(data: Dict[str, Any]) -> List[ValidationErrorDict]:
 
 
 def validate_story_dict(
-    data: Dict[str, Any],
-) -> Tuple[bool, List[ValidationErrorDict], List[str]]:
+    data: StoryDocument,
+) -> tuple[bool, list[ValidationErrorDict], list[str]]:
     v = _validator()
-    errors: List[ValidationErrorDict] = []
+    errors: list[ValidationErrorDict] = []
 
     if not isinstance(data, dict):
         errors.append(
@@ -334,5 +333,5 @@ def validate_story_dict(
         errors.extend(sem_errs)
 
     ok = len(errors) == 0
-    warnings: List[str] = []  # ide tehetünk később "soft" szabályokat
+    warnings: list[str] = []  # ide tehetünk később "soft" szabályokat
     return ok, errors, warnings

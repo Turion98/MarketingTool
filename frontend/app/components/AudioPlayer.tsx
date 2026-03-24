@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useGameState } from "../lib/GameStateContext";
-import { useVoice } from "../lib/useVoice";
 import { getAudioFromCache } from "../lib/audioCache";
 import { audioDucking } from "../lib/audioDucking";
 import { trackMediaStart, trackMediaStop } from "../lib/analytics";
@@ -164,8 +163,6 @@ const AudioPlayer: React.FC<Props> = ({
     if (!storyId || !sessionId || !pageForAnalytics) return;
     try { trackMediaStop(storyId, sessionId, pageForAnalytics, mediaId, kind); } catch {}
   };
-
-  const { generateVoice } = useVoice();
 
   const [narrationSource, setNarrationSource] = useState<string>("(none)");
   const [autoplayFailed, setAutoplayFailed] = useState(false);
@@ -639,9 +636,7 @@ const AudioPlayer: React.FC<Props> = ({
       const id = window.setTimeout(() => startFixedNarration(effectiveNarrationPath), 300);
       registerTimeout(id);
     } else if (voicePrompt && voicePrompt.prompt) {
-      setNarrationSource("AI: Generating...");
-      const id = window.setTimeout(() => startVoice(), 300);
-      registerTimeout(id);
+      setNarrationSource("AI voice disabled");
     } else {
       setNarrationSource("None");
     }
@@ -701,77 +696,6 @@ const AudioPlayer: React.FC<Props> = ({
         currentVoiceIdRef.current = null;
       }
     }
-  };
-
-  // AI-generált narráció + duck (single fallback) – ANALITIKÁVAL
-  const startVoice = () => {
-    const voiceEl = voiceAudioRef.current;
-    if (!pageId || !voicePrompt?.prompt || !voiceEl) return;
-
-    generateVoice({
-      pageId,
-      promptOverride: voicePrompt.prompt,
-      voice: voicePrompt.voice,
-      style: voicePrompt.style,
-      format: "mp3",
-      reuseExisting: true,
-    })
-      .then(async (res) => {
-        if (!res?.ok || !res.url || !voiceEl) return;
-        const fullUrl = res.url.startsWith("http") ? res.url : `http://127.0.0.1:8000${res.url}`;
-        try {
-          voiceEl.src = fullUrl;
-          voiceEl.currentTime = 0;
-          voiceEl.muted = isMuted;
-
-          const duckId = `narrAI-${pageId}-${Date.now()}`;
-          narrationDuckIdRef.current = duckId;
-          audioDucking.startDuck(duckId, { duckTo: NARR_DUCK_TO, attackMs: 220, releaseMs: 650 });
-          updateNativeSafety(NARR_DUCK_TO);
-
-          // ANALITIKA – voice START
-          const mediaId = `voice:${fullUrl}`;
-          currentVoiceIdRef.current = mediaId;
-          safeStart("voice", mediaId);
-
-          const endDuckIfAny = () => {
-            if (narrationDuckIdRef.current) {
-              audioDucking.endDuck(narrationDuckIdRef.current);
-              narrationDuckIdRef.current = null;
-            }
-            updateNativeSafety(1);
-            // ANALITIKA – voice STOP
-            if (currentVoiceIdRef.current) {
-              safeStop("voice", currentVoiceIdRef.current);
-              currentVoiceIdRef.current = null;
-            }
-          };
-          voiceEl.onended = endDuckIfAny;
-          voiceEl.onpause = () => {
-            if (voiceEl.ended || voiceEl.currentTime === 0) endDuckIfAny();
-          };
-
-          await voiceEl.play();
-          setNarrationSource(`AI: ${fullUrl}`);
-
-          if (!t0FiredRef.current) {
-            t0FiredRef.current = true;
-            onNarrationStart?.(performance.now());
-          }
-        } catch {
-          if (narrationDuckIdRef.current) {
-            audioDucking.endDuck(narrationDuckIdRef.current);
-            narrationDuckIdRef.current = null;
-          }
-          updateNativeSafety(1);
-          // ANALITIKA – fail safe STOP
-          if (currentVoiceIdRef.current) {
-            safeStop("voice", currentVoiceIdRef.current);
-            currentVoiceIdRef.current = null;
-          }
-        }
-      })
-      .catch(() => {});
   };
 
   // Háttérzene csak audioPath változásnál

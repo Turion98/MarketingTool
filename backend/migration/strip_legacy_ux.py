@@ -1,9 +1,10 @@
 # backend/migration/strip_legacy_ux.py
 from __future__ import annotations
-from typing import Any, Dict, Set
 
-LEGACY_KEYS_EXACT: Set[str] = {"layout", "globalUI"}
-LEGACY_PREFIXES:  Set[str] = {"ux", "ux_", "ux-"}
+from services.contracts import JSONValue
+
+LEGACY_KEYS_EXACT: set[str] = {"layout", "globalUI"}
+LEGACY_PREFIXES: set[str] = {"ux", "ux_", "ux-"}
 
 def _should_drop(key: str) -> bool:
     if key in LEGACY_KEYS_EXACT:
@@ -11,9 +12,9 @@ def _should_drop(key: str) -> bool:
     low = key.lower()
     return any(low.startswith(p) for p in LEGACY_PREFIXES)
 
-def strip_legacy_ux(obj: Any) -> Any:
+def strip_legacy_ux(obj: JSONValue) -> JSONValue:
     if isinstance(obj, dict):
-        out = {}
+        out: dict[str, JSONValue] = {}
         for k, v in obj.items():
             if _should_drop(k):
                 continue

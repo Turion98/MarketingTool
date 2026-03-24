@@ -1,30 +1,38 @@
 # report_scheduler.py
-import os, json, threading, time, datetime as dt
-from zoneinfo import ZoneInfo
-from typing import Dict, Any, Optional, Callable
+import datetime as dt
+import json
+import os
+import threading
+import time
 from pathlib import Path
+from typing import Callable
+from zoneinfo import ZoneInfo
+
 from email_utils import send_mail_with_pdf
+from services.contracts import JSONObject
 
 SETTINGS_FILE = Path("analytics/_schedules.json")
 REPORT_DIR = Path("analytics/reports")
 
-_generate_cb: Optional[Callable[..., tuple[bytes, str, str]]] = None
+GenerateReportCallback = Callable[[str, str, str | None, str | None, str | None], tuple[bytes, str, str]]
 
-def set_generate_cb(cb: Callable[..., tuple[bytes, str, str]]):
+_generate_cb: GenerateReportCallback | None = None
+
+def set_generate_cb(cb: GenerateReportCallback) -> None:
     """Main állítja be: export_report_html_pdf(storyId, rangeSpec, _from, _to, terminal) -> (bytes, from, to)"""
     global _generate_cb
     _generate_cb = cb
 
-def load_settings() -> Dict[str, Any]:
+def load_settings() -> JSONObject:
     if SETTINGS_FILE.exists():
         return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
     return {}
 
-def save_settings(data: Dict[str, Any]):
+def save_settings(data: JSONObject) -> None:
     SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
-def should_run(now: dt.datetime, last_run_iso: Optional[str], freq: str, time_of_day: str, tz: str) -> bool:
+def should_run(now: dt.datetime, last_run_iso: str | None, freq: str, time_of_day: str, tz: str) -> bool:
     # egyszerű ellenőrzés: adott napon/órában még nem futott
     zoned_now = now.astimezone(ZoneInfo(tz))
     hh, mm = map(int, time_of_day.split(":"))
@@ -41,7 +49,7 @@ def should_run(now: dt.datetime, last_run_iso: Optional[str], freq: str, time_of
         return (zoned_now.year, zoned_now.month) != (last.year, last.month)
     return False
 
-def scheduler_loop():
+def scheduler_loop() -> None:
     state = load_settings()
     while True:
         try:
@@ -80,6 +88,6 @@ def scheduler_loop():
             print("[scheduler] error:", e)
         time.sleep(60)
 
-def start_scheduler(app=None):
+def start_scheduler(app=None) -> None:
     t = threading.Thread(target=scheduler_loop, daemon=True)
     t.start()

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
-import os, re
+import os
+import re
 
 # ✅ TTL-based suggestion cache + HIT/MISS lekérdezés
 from cache import get_wl_suggest_cached, was_last_wl_hit
@@ -26,9 +26,9 @@ class WLRequest(BaseModel):
     campaignId: str
     mode: str = "managed"          # "managed" | "cname"
     # ⬇️ opcionális paraméterek csak továbbadásra a front felé (itt NEM használjuk)
-    skin: Optional[str] = None
-    runes: Optional[str] = None
-    runemode: Optional[str] = None # "single" | "triple"
+    skin: str | None = None
+    runes: str | None = None
+    runemode: str | None = None # "single" | "triple"
 
 class WLResponse(BaseModel):
     status: str
@@ -107,9 +107,9 @@ def suggest_white_label_get(
     clientDomain: str = Query(...),
     campaignId: str = Query(...),
     mode: str = Query("managed"),
-    skin: Optional[str] = Query(None),
-    runes: Optional[str] = Query(None),
-    runemode: Optional[str] = Query(None),
+    skin: str | None = Query(None),
+    runes: str | None = Query(None),
+    runemode: str | None = Query(None),
 ):
     body = WLRequest(
         clientDomain=clientDomain,

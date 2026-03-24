@@ -1,9 +1,13 @@
 # backend/cache.py
 from __future__ import annotations
-import os, json
-from typing import Any, Dict, Tuple, Callable, Optional
+import json
+import os
+from typing import Callable, TypeVar, cast
+
 from cachetools import TTLCache
 from threading import RLock, local
+
+from services.contracts import JSONValue, StoryDocument
 
 # ---- Env + alapok ----
 MAX_ITEMS = int(os.getenv("CACHE_MAX_ITEMS", "512"))
@@ -11,9 +15,13 @@ STORY_TTL = int(os.getenv("CACHE_STORY_TTL", "300"))
 PAGE_TTL  = int(os.getenv("CACHE_PAGE_TTL",  "120"))
 WL_TTL    = int(os.getenv("CACHE_WL_SUGGEST_TTL", "300"))
 
-_story_cache = TTLCache(maxsize=MAX_ITEMS,     ttl=STORY_TTL)
-_page_cache  = TTLCache(maxsize=MAX_ITEMS * 2, ttl=PAGE_TTL)
-_wl_cache    = TTLCache(maxsize=MAX_ITEMS,     ttl=WL_TTL)
+PagePayload = dict[str, JSONValue]
+WhiteLabelPayload = dict[str, JSONValue]
+CacheValueT = TypeVar("CacheValueT")
+
+_story_cache: TTLCache[str, StoryDocument] = TTLCache(maxsize=MAX_ITEMS, ttl=STORY_TTL)
+_page_cache: TTLCache[str, PagePayload] = TTLCache(maxsize=MAX_ITEMS * 2, ttl=PAGE_TTL)
+_wl_cache: TTLCache[str, WhiteLabelPayload] = TTLCache(maxsize=MAX_ITEMS, ttl=WL_TTL)
 
 _story_lock = RLock()
 _page_lock  = RLock()
@@ -22,28 +30,28 @@ _wl_lock    = RLock()
 # ---- Thread-local: legutóbbi cache státusz (HIT/MISS) ----
 _tls = local()
 
-def _set_last(kind: str, hit: Optional[bool]) -> None:
+def _set_last(kind: str, hit: bool | None) -> None:
     """kind ∈ {'story','page','wl'}; hit ∈ {True, False}."""
     if not hasattr(_tls, "last"):
         _tls.last = {}
     _tls.last[kind] = hit
 
-def _get_last(kind: str) -> Optional[bool]:
+def _get_last(kind: str) -> bool | None:
     return getattr(_tls, "last", {}).get(kind)
 
-def was_last_story_hit() -> Optional[bool]:
+def was_last_story_hit() -> bool | None:
     """True → HIT, False → MISS, None → még nem történt lekérdezés ezen a szálon."""
     return _get_last("story")
 
-def was_last_page_hit() -> Optional[bool]:
+def was_last_page_hit() -> bool | None:
     return _get_last("page")
 
-def was_last_wl_hit() -> Optional[bool]:
+def was_last_wl_hit() -> bool | None:
     return _get_last("wl")
 
 # (Opcionális) Alternatív API: azonnali státusz-visszaadás
 # Így: data, hit = load_story_cached_with_status(path)
-def _with_status(ret: Any, hit: bool) -> Tuple[Any, bool]:
+def _with_status(ret: CacheValueT, hit: bool) -> tuple[CacheValueT, bool]:
     return ret, hit
 
 # ---- Kulcsgenerátorok ----
@@ -57,12 +65,12 @@ def wl_key(client_domain: str, campaign_id: str, mode: str) -> str:
     return f"{client_domain.strip().lower()}|{campaign_id.strip()}|{mode.strip()}"
 
 # ---- Story JSON cache (nyers, még nem injektált) ----
-def get_story_from_disk(path: str) -> Dict[str, Any]:
+def get_story_from_disk(path: str) -> StoryDocument:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    return data if isinstance(data, dict) else {}
+    return cast(StoryDocument, data if isinstance(data, dict) else {})
 
-def load_story_cached(path: str) -> Dict[str, Any]:
+def load_story_cached(path: str) -> StoryDocument:
     """
     Visszafelé kompatibilis API.
     A legutóbbi státuszt thread-localban állítja: was_last_story_hit().
@@ -78,7 +86,7 @@ def load_story_cached(path: str) -> Dict[str, Any]:
             _set_last("story", True)   # HIT
         return data
 
-def load_story_cached_with_status(path: str) -> Tuple[Dict[str, Any], bool]:
+def load_story_cached_with_status(path: str) -> tuple[StoryDocument, bool]:
     """
     Új, kényelmi API: közvetlenül visszaadja a (data, hit) párost.
     """
@@ -95,7 +103,7 @@ def load_story_cached_with_status(path: str) -> Tuple[Dict[str, Any], bool]:
             return _with_status(data, True)
 
 # ---- Oldal cache (már SFX-normalizált + fragmentsGlobal injektált) ----
-def get_page_cached(path: str, page_id: str, build_fn: Callable[[], Dict[str, Any]]) -> Dict[str, Any]:
+def get_page_cached(path: str, page_id: str, build_fn: Callable[[], PagePayload]) -> PagePayload:
     """
     Visszafelé kompatibilis API.
     A legutóbbi státuszt thread-localban állítja: was_last_page_hit().
@@ -111,7 +119,9 @@ def get_page_cached(path: str, page_id: str, build_fn: Callable[[], Dict[str, An
             _set_last("page", True)   # HIT
         return data
 
-def get_page_cached_with_status(path: str, page_id: str, build_fn: Callable[[], Dict[str, Any]]) -> Tuple[Dict[str, Any], bool]:
+def get_page_cached_with_status(
+    path: str, page_id: str, build_fn: Callable[[], PagePayload]
+) -> tuple[PagePayload, bool]:
     """
     Új, kényelmi API: (data, hit)
     """
@@ -128,7 +138,9 @@ def get_page_cached_with_status(path: str, page_id: str, build_fn: Callable[[], 
             return _with_status(data, True)
 
 # ---- White-label javaslat cache ----
-def get_wl_suggest_cached(client_domain: str, campaign_id: str, mode: str, build_fn: Callable[[], Dict[str, Any]]) -> Dict[str, Any]:
+def get_wl_suggest_cached(
+    client_domain: str, campaign_id: str, mode: str, build_fn: Callable[[], WhiteLabelPayload]
+) -> WhiteLabelPayload:
     """
     Visszafelé kompatibilis API.
     A legutóbbi státuszt thread-localban állítja: was_last_wl_hit().
@@ -144,7 +156,9 @@ def get_wl_suggest_cached(client_domain: str, campaign_id: str, mode: str, build
             _set_last("wl", True)   # HIT
         return data
 
-def get_wl_suggest_cached_with_status(client_domain: str, campaign_id: str, mode: str, build_fn: Callable[[], Dict[str, Any]]) -> Tuple[Dict[str, Any], bool]:
+def get_wl_suggest_cached_with_status(
+    client_domain: str, campaign_id: str, mode: str, build_fn: Callable[[], WhiteLabelPayload]
+) -> tuple[WhiteLabelPayload, bool]:
     """
     Új, kényelmi API: (data, hit)
     """

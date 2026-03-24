@@ -4,7 +4,6 @@ import time
 import json
 import hashlib
 import tempfile
-from typing import Optional, Dict, Any
 
 import requests
 
@@ -26,7 +25,9 @@ def _estimate_duration_ms(text: str, wpm: int = 140) -> int:
     minutes = words / max(60, wpm)
     return int(minutes * 60_000)
 
-def _pick_voice_id(cfg: Dict[str, Any], prompt_data: Dict[str, Any], override_voice: Optional[str] = None) -> str:
+def _pick_voice_id(
+    cfg: dict[str, object], prompt_data: dict[str, object], override_voice: str | None = None
+) -> str:
     """
     Eldönti, melyik voice ID-t használjuk.
     - Elsőbbség: override_voice paraméter
@@ -54,7 +55,9 @@ def _pick_voice_id(cfg: Dict[str, Any], prompt_data: Dict[str, Any], override_vo
 
     return "EXAVITQu4vr4xnSDxMaL"  # fallback ID
 
-def _build_voice_settings(cfg: Dict[str, Any], prompt_data: Dict[str, Any], override_style: Optional[str] = None) -> Dict[str, Any]:
+def _build_voice_settings(
+    cfg: dict[str, object], prompt_data: dict[str, object], override_style: str | None = None
+) -> dict[str, object]:
     """
     Összeállítja a voice_settings-et.
     - default_vs → cfg.elevenlabs_voice_settings → prompt_data.voice_settings → override_style
@@ -78,8 +81,8 @@ def call_elevenlabs_tts(
     text: str,
     voice_id: str,
     *,
-    model_id: Optional[str] = None,
-    voice_settings: Optional[Dict[str, Any]] = None,
+    model_id: str | None = None,
+    voice_settings: dict[str, object] | None = None,
     fmt: str = "mp3",
     timeout: int = 45,
 ) -> bytes:
@@ -102,7 +105,7 @@ def call_elevenlabs_tts(
         "Content-Type": "application/json",
         "Accept": accept_header,
     }
-    payload: Dict[str, Any] = {"text": text}
+    payload: dict[str, object] = {"text": text}
     if model_id:
         payload["model_id"] = model_id
     if voice_settings:
@@ -127,14 +130,14 @@ def call_elevenlabs_tts(
 # --- FŐ FÜGGVÉNY ---
 def generate_voice_asset(
     page_id: str,
-    api_key: Optional[str] = None,
+    api_key: str | None = None,
     reuse_existing: bool = True,
     *,
-    prompt_override: Optional[str] = None,
-    voice: Optional[str] = None,
-    style: Optional[str] = None,
+    prompt_override: str | None = None,
+    voice: str | None = None,
+    style: str | None = None,
     fmt: str = "mp3"
-) -> Dict[str, Any]:
+) -> dict[str, object]:
     """
     Legenerálja (vagy cache-ből visszaadja) a narrációt az adott page-hez.
     - Cache kulcs: (page_id + prompt + voice_id + model_id + fmt) -> rövid hash

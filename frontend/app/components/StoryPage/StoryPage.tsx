@@ -1211,8 +1211,6 @@ useEffect(() => {
     if (!globals?.storySrc) return;
     if (!pageData?.audio?.sidePreloadPages?.length) return;
 
-    const voiceApiKey =
-      localStorage.getItem("voiceApiKey") || "";
     const controllers: AbortController[] = [];
 
     const normalizeNarrUrl = (raw?: string): string | null => {
@@ -1243,39 +1241,6 @@ useEffect(() => {
           }
         )
           .then((data) => {
-            if (data?.voicePrompt) {
-              const ac2 = new AbortController();
-              controllers.push(ac2);
-              registerAbort(ac2);
-
-              fetch(`${API_BASE}/voice`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  pageId: pid,
-                  promptOverride: data.voicePrompt.prompt,
-                  voice: data.voicePrompt.voice,
-                  style: data.voicePrompt.style,
-                  format: "mp3",
-                  reuseExisting: true,
-                  apiKey: voiceApiKey || undefined,
-                }),
-                signal: ac2.signal,
-              })
-                .then((res) => res.json())
-                .then((json) => {
-                  if (json?.url) {
-                    const fullUrl = json.url.startsWith("http")
-                      ? json.url
-                      : `${API_BASE}${json.url}`;
-                    try {
-                      preloadAudio(fullUrl);
-                    } catch {}
-                  }
-                })
-                .catch(() => {});
-            }
-
             if (Array.isArray(data?.sfx)) {
               data.sfx.forEach((s: any) => {
                 const url = normalizeSfxUrl(s?.file);

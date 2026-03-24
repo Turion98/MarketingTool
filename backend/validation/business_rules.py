@@ -1,18 +1,19 @@
 # backend/validation/business_rules.py
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple
 import os
 
-ValidationError = Dict[str, Any]
+from services.contracts import StoryDocument, StoryValidationIssue
 
-def _err(path: str, msg: str, key="ref", sch="Core/Semantic"):
+ValidationError = StoryValidationIssue
+
+def _err(path: str, msg: str, key: str = "ref", sch: str = "Core/Semantic") -> ValidationError:
     return {"path": path, "message": msg, "keyword": key, "schemaPath": sch}
 
-def _allowed_vendor_prefixes() -> List[str]:
+def _allowed_vendor_prefixes() -> list[str]:
     raw = os.getenv("ALLOWED_VENDOR_PREFIXES", "x-")
     return [p.strip() for p in raw.split(",") if p.strip()]
 
-def _check_vendor_keys(node: Any, path: str, errs: List[ValidationError]):
+def _check_vendor_keys(node: object, path: str, errs: list[ValidationError]) -> None:
     """Csak engedélyezett prefixű 'vendor' kulcsokat (pl. x-*) toleráljuk."""
     allow = _allowed_vendor_prefixes()
     if isinstance(node, dict):
@@ -27,15 +28,15 @@ def _check_vendor_keys(node: Any, path: str, errs: List[ValidationError]):
         for i, it in enumerate(node):
             _check_vendor_keys(it, f"{path}[{i}]" if path else f"[{i}]", errs)
 
-def cross_field_checks(data: Dict[str, Any]) -> List[ValidationError]:
-    errs: List[ValidationError] = []
+def cross_field_checks(data: StoryDocument) -> list[ValidationError]:
+    errs: list[ValidationError] = []
     # Vendor prefix ellenőrzés (opcionális – alapból engedélyezzük "x-")
     _check_vendor_keys(data, "", errs)
 
     pages = data.get("pages") or []
     if not isinstance(pages, list):
         return errs
-    page_ids: List[str] = []
+    page_ids: list[str] = []
     for i, p in enumerate(pages):
         pid = str(p.get("id") or "")
         if not pid: 
@@ -56,7 +57,7 @@ def cross_field_checks(data: Dict[str, Any]) -> List[ValidationError]:
                 frag_ids.add(fid)
 
     # next + NextSwitch
-    def _check_next(next_val: Any, base_path: str):
+    def _check_next(next_val: object, base_path: str) -> None:
         if isinstance(next_val, str):
             if next_val and next_val not in page_set:
                 errs.append(_err(base_path, f"Ismeretlen next pageId: '{next_val}'", "ref", "Core/Semantic/nextRef"))

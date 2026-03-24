@@ -4,14 +4,20 @@ import os
 import json
 import time
 import hashlib
-from typing import Optional, Dict, Any
 from datetime import datetime
-from pathlib import Path
 
 import requests
 from io import BytesIO
 from PIL import Image
 import pytesseract
+
+from services.contracts import (
+    ImageGenerationAssetResult,
+    ImagePromptObject,
+    ImageSafetyResult,
+    MediaParams,
+    MediaStyleProfile,
+)
 # Állítsd be a Tesseract elérési útját Windows alatt
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -36,7 +42,7 @@ REPLICATE_DEFAULT_VERSION = os.getenv(
 # KONFIG
 # =========================
 
-def get_config():
+def get_config() -> dict[str, object]:
     if os.path.exists("userConfig.json"):
         with open("userConfig.json", "r", encoding="utf-8") as f:
             return json.load(f)
@@ -58,7 +64,7 @@ LOG_FILE = os.path.join(LOG_DIR, "image_gen.jsonl")
 # =========================
 # HELPER-ek
 # =========================
-def _log(event: Dict[str, Any]) -> None:
+def _log(event: dict[str, object]) -> None:
     event["ts"] = datetime.utcnow().isoformat() + "Z"
     line = json.dumps(event, ensure_ascii=False)
     # konzolra
@@ -71,7 +77,7 @@ def _log(event: Dict[str, Any]) -> None:
         pass
 
 
-def _slugify(value: Optional[str]) -> str:
+def _slugify(value: str | None) -> str:
     s = (value or "").strip().lower()
     if not s:
         return "default"
@@ -93,10 +99,10 @@ def _slugify(value: Optional[str]) -> str:
 
 
 def _compute_prompt_key(
-    prompt: Optional[str],
-    params: Dict[str, Any],
-    style_profile: Dict[str, Any],
-    existing_key: Optional[str] = None,
+    prompt: str | None,
+    params: MediaParams,
+    style_profile: MediaStyleProfile,
+    existing_key: str | None = None,
 ) -> str:
     if existing_key:
         return existing_key
@@ -114,9 +120,9 @@ def _compute_prompt_key(
 def _build_filename(
     page_id: str,
     prompt_key: str,
-    seed: Optional[int],
+    seed: int | None,
     fmt: str,
-    story_slug: Optional[str] = None,
+    story_slug: str | None = None,
 ) -> str:
     safe_story = _slugify(story_slug)
     base_dir = os.path.join("generated", "images", safe_story)
@@ -128,7 +134,7 @@ def _build_filename(
     return os.path.join(base_dir, filename)
 
 
-def _write_sidecar_meta(image_path: str, meta: Dict[str, Any]) -> None:
+def _write_sidecar_meta(image_path: str, meta: dict[str, object]) -> None:
     try:
         with open(image_path + ".json", "w", encoding="utf-8") as mf:
             json.dump(meta, mf, ensure_ascii=False, indent=2)
@@ -142,7 +148,7 @@ def _run_image_safety(
     page_id: str,
     story_slug: str,
     prompt: str,
-) -> Dict[str, Any]:
+) -> ImageSafetyResult:
     """
     Lokális OCR alapú safety:
       - ha ENABLE_OCR_TEXT_CHECK = false → 'skipped'
@@ -227,7 +233,7 @@ def _generate_safe_placeholder_image(
     img.save(image_path)
 
 
-def _normalize_prompt(prompt: Any) -> str:
+def _normalize_prompt(prompt: str | ImagePromptObject | object | None) -> str:
     """
     A story motor küldhet összetett prompt-objektumot:
     {
@@ -272,20 +278,20 @@ def _normalize_prompt(prompt: Any) -> str:
 
 def generate_image_asset(
     *,
-    prompt: Optional[str],
+    prompt: str | ImagePromptObject | None,
     page_id: str,
-    seed: Optional[int] = None,
-    prompt_key: Optional[str] = None,
-    params: Optional[Dict[str, Any]] = None,
-    style_profile: Optional[Dict[str, Any]] = None,
+    seed: int | None = None,
+    prompt_key: str | None = None,
+    params: MediaParams | None = None,
+    style_profile: MediaStyleProfile | None = None,
     cache: bool = True,
     fmt: str = "png",
     reuse_existing: bool = True,
-    api_key: Optional[str] = None,
+    api_key: str | None = None,
     mode: str = "draft",
-    story_slug: Optional[str] = None,
-    story_src: Optional[str] = None,
-) -> Dict[str, Any]:
+    story_slug: str | None = None,
+    story_src: str | None = None,
+) -> ImageGenerationAssetResult:
     started = time.perf_counter()
     params = params or {}
     style_profile = style_profile or {}
@@ -378,7 +384,7 @@ def generate_image_asset(
             try:
                 REPLICATE_VERSION = REPLICATE_DEFAULT_VERSION
 
-                replicate_input: Dict[str, Any] = {
+                replicate_input: dict[str, object] = {
                     "prompt": norm_prompt or "",
                 }
 

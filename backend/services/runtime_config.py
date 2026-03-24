@@ -61,14 +61,9 @@ except Exception:
     HAS_IMAGE_BACKEND = False
     traceback.print_exc()
 
-try:
-    from generate_voice import generate_voice_asset
-
-    HAS_VOICE_BACKEND = True
-except Exception:
-    generate_voice_asset = None
-    HAS_VOICE_BACKEND = False
-    traceback.print_exc()
+# Generated voice is intentionally disabled in this product slice.
+generate_voice_asset = None
+HAS_VOICE_BACKEND = False
 
 
 def get_logo_url() -> str | None:

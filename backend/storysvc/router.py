@@ -14,10 +14,11 @@ from __future__ import annotations
 import os
 import json
 import logging
-from typing import Any, Dict, List, Optional, Callable, Tuple
+from typing import Callable, cast
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
 from jsonschema import Draft7Validator, FormatChecker
+from services.contracts import JSONObject, JSONValue, StoryDocument, StoryListItem, StorySaveResult, StoryValidationIssue
 
 router = APIRouter()
 
@@ -46,12 +47,12 @@ def _get_stories_dir() -> str:
 # ---------- Optional hooks (degrade gracefully if missing) ----------
 try:
     # If available, use your project's cache clearer
-    from cache import clear_caches as _clear_story_cache  # type: ignore
+    from cache import clear_caches as _clear_story_cache
 except Exception:
-    _clear_story_cache = None  # type: ignore[assignment]
+    _clear_story_cache = None
 
 # You may wire a meta collector elsewhere in your project
-_collect_meta: Optional[Callable[[str], Dict[str, Any]]] = None
+_collect_meta: Callable[[str], JSONObject] | None = None
 
 # ---------- Schema load ----------
 try:
@@ -66,9 +67,9 @@ except Exception as e:
 
 # ---------- Utilities ----------
 async def _read_json_with_limit(
-    file: Optional[UploadFile],
-    body: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
+    file: UploadFile | None,
+    body: dict[str, object] | None,
+) -> StoryDocument:
     """
     Reads JSON either from multipart file or JSON body, with size limit,
     és közben **print**-el debugol.
@@ -98,7 +99,7 @@ async def _read_json_with_limit(
             )
         else:
             print("[storysvc] Upload via file but JSON root is not an object:", type(data).__name__)
-        return data
+        return cast(StoryDocument, data)
 
     if body is not None:
         if not isinstance(body, dict):
@@ -118,7 +119,7 @@ async def _read_json_with_limit(
     raise HTTPException(status_code=400, detail="No file or body provided")
 
 
-def _slug(txt: Optional[str]) -> str:
+def _slug(txt: str | None) -> str:
     import re
 
     if not txt:
@@ -135,7 +136,7 @@ def _ensure_stories_dir() -> None:
 
 
 # ---------- Canonicalizer ----------
-def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
+def _canonicalize_story(data: StoryDocument) -> StoryDocument:
     """
     Canonical form is CoreSchema-compatible:
       - root.pages must exist
@@ -151,17 +152,17 @@ def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
     # (A) If pages is an object {id: page}, convert to array and inject id if missing
     pages = data.get("pages")
     if isinstance(pages, dict):
-        pages_arr: List[Dict[str, Any]] = []
+        pages_arr: list[StoryDocument] = []
         for pid, page in pages.items():
             if isinstance(page, dict):
                 if "id" not in page:
                     page["id"] = pid
-                pages_arr.append(page)
+                pages_arr.append(cast(StoryDocument, page))
         data["pages"] = pages_arr
         pages = pages_arr
 
     # (B) Normalize per-page fields
-    def fix_page(p: Dict[str, Any]) -> None:
+    def fix_page(p: StoryDocument) -> None:
         if "nextPageId" in p and "next" not in p:
             p["next"] = p.pop("nextPageId")
         if isinstance(p.get("choices"), list):
@@ -183,38 +184,39 @@ def _canonicalize_story(data: Dict[str, Any]) -> Dict[str, Any]:
                 continue
             ch_pages = ch.get("pages")
             if isinstance(ch_pages, dict):
-                arr: List[Dict[str, Any]] = []
+                arr: list[StoryDocument] = []
                 for pid, page in ch_pages.items():
                     if isinstance(page, dict) and "id" not in page:
                         page["id"] = pid
                     if isinstance(page, dict):
-                        fix_page(page)
-                        arr.append(page)
+                        typed_page = cast(StoryDocument, page)
+                        fix_page(typed_page)
+                        arr.append(typed_page)
                 ch["pages"] = arr
                 ch_pages = arr
             if isinstance(ch_pages, list):
                 for p in ch_pages:
                     if isinstance(p, dict):
-                        fix_page(p)
+                        fix_page(cast(StoryDocument, p))
 
     return data
 
 @router.post("/stories/validate")
 async def validate_story(
     mode: str = Query(default="strict", regex="^(strict|warnOnly)$"),
-    file: Optional[UploadFile] = File(default=None),
-    body: Optional[Dict[str, Any]] = Body(default=None),
+    file: UploadFile | None = File(default=None),
+    body: dict[str, object] | None = Body(default=None),
 ):
     data = await _read_json_with_limit(file, body)
     return _process_story_validate_only(data, mode=mode)
 
 
 # ---------- Validator ----------
-def _validate_against_core_schema(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _validate_against_core_schema(data: StoryDocument) -> list[StoryValidationIssue]:
     if SCHEMA_VALIDATOR is None:
         return [{"path": "", "message": "Core schema not initialized"}]
 
-    errors: List[Dict[str, Any]] = []
+    errors: list[StoryValidationIssue] = []
     for err in SCHEMA_VALIDATOR.iter_errors(data):
         path = "/".join([str(p) for p in err.path]) or ""
         errors.append(
@@ -229,8 +231,8 @@ def _validate_against_core_schema(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # ---------- Optional semantic checks (graph, reachability, meta) ----------
-def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    problems: List[Dict[str, Any]] = []
+def _semantic_checks(data: StoryDocument) -> list[StoryValidationIssue]:
+    problems: list[StoryValidationIssue] = []
 
     # --- META semantics ---
     meta = data.get("meta") or {}
@@ -296,7 +298,7 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         )
 
     # --- next/choices target checks ---
-    targets: List[Tuple[Optional[str], str, str]] = []
+    targets: list[tuple[str | None, str, str]] = []
 
     if isinstance(pages, list):
         for p in pages:
@@ -344,9 +346,9 @@ def _semantic_checks(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return problems
 
 def _process_story_validate_only(
-    data: Dict[str, Any],
+    data: StoryDocument,
     mode: str = "strict",
-) -> Dict[str, Any]:
+) -> dict[str, JSONValue]:
     """
     Validálás ugyanazzal a pipeline-nal, mint az import,
     de mentés NÉLKÜL.
@@ -428,10 +430,10 @@ def _process_story_validate_only(
 
 # ---------- Core pipeline ----------
 def _process_and_save_story(
-    data: Dict[str, Any],
+    data: StoryDocument,
     overwrite: bool,
     mode: str = "strict",
-) -> Dict[str, Any]:
+) -> StorySaveResult:
     # 0) derive story_id (prefer explicit ids; fallback to meta.id then title slug)
     meta = data.get("meta") or {}
     if not isinstance(meta, dict):
@@ -546,13 +548,13 @@ def _process_and_save_story(
     # 5) Cache clear (if hook provided)
     try:
         if callable(_clear_story_cache):
-            _clear_story_cache()  # type: ignore[misc]
+            _clear_story_cache()
             print("[storysvc] Story caches cleared after save")
     except Exception as e:
         print("[storysvc] Error while clearing story caches for", repr(story_id), ":", e)
 
     # 6) Meta collect (if hook provided)
-    meta_info: Dict[str, Any] = {}
+    meta_info: JSONObject = {}
     try:
         if callable(_collect_meta):
             meta_info = _collect_meta(dst_path) or {}
@@ -576,8 +578,8 @@ def _process_and_save_story(
 async def upload_story(
     overwrite: bool = Query(default=False, description="Overwrite existing story with same id"),
     mode: str = Query(default="strict", regex="^(strict|warnOnly)$"),
-    file: Optional[UploadFile] = File(default=None),
-    body: Optional[Dict[str, Any]] = Body(default=None),
+    file: UploadFile | None = File(default=None),
+    body: dict[str, object] | None = Body(default=None),
 ):
     data = await _read_json_with_limit(file, body)
     return _process_and_save_story(data, overwrite=overwrite, mode=mode)
@@ -587,8 +589,8 @@ async def upload_story(
 async def import_story(
     overwrite: bool = Query(default=False),
     mode: str = Query(default="strict", regex="^(strict|warnOnly)$"),
-    file: Optional[UploadFile] = File(default=None),
-    body: Optional[Dict[str, Any]] = Body(default=None),
+    file: UploadFile | None = File(default=None),
+    body: dict[str, object] | None = Body(default=None),
 ):
     data = await _read_json_with_limit(file, body)
     return _process_and_save_story(data, overwrite=overwrite, mode=mode)
@@ -604,7 +606,7 @@ def list_stories():
     if not os.path.isdir(stories_dir):
         raise HTTPException(status_code=500, detail=f"Stories directory not found: {stories_dir}")
 
-    out: List[Dict[str, Any]] = []
+    out: list[StoryListItem] = []
     for fn in os.listdir(stories_dir):
         if not fn.lower().endswith(".json"):
             continue

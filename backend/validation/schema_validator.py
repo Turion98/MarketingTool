@@ -1,12 +1,14 @@
 # backend/validation/schema_validator.py
 from __future__ import annotations
-import json, os, re
+import json
+import os
+import re
 from pathlib import Path
 from functools import lru_cache
-from typing import Any, Dict, List, Tuple
 from jsonschema import Draft7Validator, RefResolver
+from services.contracts import StoryDocument, StoryValidationIssue
 
-ValidationError = Dict[str, Any]
+ValidationError = StoryValidationIssue
 
 @lru_cache(maxsize=1)
 def _schema_path() -> Path:
@@ -23,8 +25,8 @@ def _validator() -> Draft7Validator:
     base = _schema_path().parent.as_uri() + "/"
     return Draft7Validator(schema, resolver=RefResolver(base_uri=base, referrer=schema))
 
-def _fmt_path(path) -> str:
-    out: List[str] = []
+def _fmt_path(path: object) -> str:
+    out: list[str] = []
     for p in path:
         if isinstance(p, int):
             out[-1:] = [f"{out[-1]}[{p}]"] if out else [f"[{p}]"]
@@ -32,10 +34,10 @@ def _fmt_path(path) -> str:
             out.append(str(p))
     return ".".join(out)
 
-def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[ValidationError]]:
+def validate_schema(data: StoryDocument) -> tuple[bool, list[ValidationError]]:
     """Strict JSON Schema ellenőrzés."""
     v = _validator()
-    errs: List[ValidationError] = []
+    errs: list[ValidationError] = []
     if not isinstance(data, dict):
         return False, [{"path":"", "message":"Gyökér nem objektum.", "keyword":"type"}]
     for e in sorted(v.iter_errors(data), key=lambda e: e.path):
@@ -47,7 +49,7 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[ValidationError]]:
         })
     return len(errs) == 0, errs
 
-def version_whitelist_ok(data: Dict[str, Any]) -> Tuple[bool, str]:
+def version_whitelist_ok(data: StoryDocument) -> tuple[bool, str]:
     raw = os.getenv("ALLOWED_SCHEMA_VERSIONS", "1.0.0,1.2.0")
     allowed = {v.strip() for v in (raw or "").split(",") if v.strip()}
 

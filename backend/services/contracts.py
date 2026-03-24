@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import NotRequired, TypeAlias, TypedDict
+from typing import Literal, NotRequired, TypeAlias, TypedDict
+
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 JSONScalar: TypeAlias = None | bool | int | float | str
@@ -157,3 +159,92 @@ class PuzzleByKindCounters(TypedDict):
     riddle: dict[str, int]
     runes: dict[str, int]
     unknown: dict[str, int]
+
+
+MediaScalar: TypeAlias = None | bool | int | float | str
+MediaParams: TypeAlias = dict[str, MediaScalar]
+MediaStyleProfile: TypeAlias = dict[str, MediaScalar]
+
+
+class ImageGenerationRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    page_id: str = Field(default="page", validation_alias=AliasChoices("pageId", "page_id"))
+    prompt: str | ImagePromptObject | None = None
+    params: MediaParams = Field(default_factory=dict)
+    style_profile: MediaStyleProfile = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("styleProfile"),
+    )
+    mode: Literal["draft", "refine"] = "draft"
+    api_key: str | None = Field(default=None, validation_alias=AliasChoices("apiKey"))
+    story_slug: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("storySlug", "storyId"),
+    )
+    reuse_existing: bool = Field(default=True, validation_alias=AliasChoices("reuseExisting"))
+    format: Literal["png", "jpg", "jpeg", "webp"] = "png"
+    src: str | None = None
+    seed: int | None = None
+    prompt_key: str | None = Field(default=None, validation_alias=AliasChoices("promptKey"))
+    cache: bool = True
+
+
+class ImageGenerationResponse(BaseModel):
+    ok: bool = True
+    url: str | None = None
+    path: str | None = None
+
+
+class SimpleOkResponse(BaseModel):
+    ok: bool = True
+
+
+class CacheClearResponse(SimpleOkResponse):
+    message: str
+
+
+class StoryValidationIssue(TypedDict, total=False):
+    path: str
+    message: str
+    keyword: str
+    schemaPath: str
+
+
+class StoryListItem(TypedDict, total=False):
+    id: str
+    title: str
+    description: str
+    coverImage: str
+    jsonSrc: str
+    startPageId: str
+    createdAt: str
+    error: str
+
+
+class StorySaveResult(TypedDict):
+    ok: bool
+    id: str
+    jsonSrc: str
+    savedTo: str
+    overwritten: bool
+    meta: JSONObject
+    errors: list[StoryValidationIssue]
+
+
+class ImageSafetyResult(TypedDict):
+    status: Literal["skipped", "ok", "block", "error"]
+    scores: dict[str, int] | None
+    labels: list[str]
+
+
+class ImageGenerationAssetResult(TypedDict, total=False):
+    path: str
+    url: str
+    seed: int | None
+    cacheHit: bool
+    promptKey: str
+    mode: str
+    storySlug: str
+    source: str
+    placeholder: bool
