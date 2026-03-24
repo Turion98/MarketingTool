@@ -26,3 +26,15 @@ export function parseJSON<T>(raw: string | null, fallback: T): T {
     return fallback;
   }
 }
+
+export function writeStorageValue(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+export function writeStorageJSON(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}

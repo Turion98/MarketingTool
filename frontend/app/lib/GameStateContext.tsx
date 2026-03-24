@@ -44,6 +44,14 @@ import {
   mergeFragmentBanks,
 } from "./gameStateFragments";
 import {
+  nextFlagsState,
+  nextFragmentsState,
+  nextGlobalFragmentBankForUnlock,
+  nextRuneImagesState,
+  nextUnlockedFragmentsState,
+  resolveAnswerNextPage,
+} from "./gameStateMutators";
+import {
   clearAbortControllers,
   clearRegisteredAudioElements,
   clearRegisteredTimeouts,
@@ -54,7 +62,7 @@ import {
   normalizeFetchedPage,
   resolvePageRuntimeDecision,
 } from "./gameStatePageRuntime";
-import { LS_KEYS, parseJSON } from "./gameStateStorage";
+import { LS_KEYS, parseJSON, writeStorageJSON, writeStorageValue } from "./gameStateStorage";
 import type {
   FragmentBank,
   FragmentData,
@@ -90,9 +98,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     if (!key) return;
     setGlobals((prev) => {
       const next = { ...prev, [key]: value };
-      try {
-        localStorage.setItem(LS_KEYS.globals, JSON.stringify(next));
-      } catch {}
+      writeStorageJSON(LS_KEYS.globals, next);
       return next;
     });
   }, []);
@@ -199,9 +205,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       setCurrentPageIdState(p);
       setFlagsState(new Set(Array.isArray(fl) ? fl.filter(Boolean) : []));
 
-      try {
-        localStorage.setItem(LS_KEYS.page, p);
-      } catch {}
+      writeStorageValue(LS_KEYS.page, p);
     } catch {
       // swallow
     }
@@ -423,41 +427,26 @@ useEffect(() => {
   const addFragment = useCallback((id: string, data: FragmentData) => {
     if (!id) return;
     setFragments((prev) => {
-      const next = {
-        ...prev,
-        [id]: {
-          ...(prev[id] ?? {}),
-          ...data,
-          createdAt: prev[id]?.createdAt ?? Date.now(),
-        },
-      };
-      try {
-        localStorage.setItem(LS_KEYS.fragments, JSON.stringify(next));
-      } catch {}
+      const next = nextFragmentsState(prev, id, data);
+      writeStorageJSON(LS_KEYS.fragments, next);
       return next;
     });
   }, []);
 
   const setVoiceApiKey = useCallback((key: string) => {
     setVoiceApiKeyState(key);
-    try {
-      localStorage.setItem(LS_KEYS.voice, key);
-    } catch {}
+    writeStorageValue(LS_KEYS.voice, key);
   }, []);
 
   const setImageApiKey = useCallback((key: string) => {
     setImageApiKeyState(key);
-    try {
-      localStorage.setItem(LS_KEYS.image, key);
-    } catch {}
+    writeStorageValue(LS_KEYS.image, key);
   }, []);
 
   const setUnlockedFragments = useCallback((tags: string[]) => {
     const arr = Array.isArray(tags) ? tags.filter(Boolean) : [];
     setUnlockedFragmentsState(arr);
-    try {
-      localStorage.setItem(LS_KEYS.unlocked, JSON.stringify(arr));
-    } catch {}
+    writeStorageJSON(LS_KEYS.unlocked, arr);
   }, []);
 
   
@@ -467,24 +456,14 @@ useEffect(() => {
     if (!ids.length) return;
 
     setUnlockedFragmentsState((prev) => {
-      const next = Array.from(new Set([...(prev ?? []), ...ids]));
-      try {
-        localStorage.setItem(LS_KEYS.unlocked, JSON.stringify(next));
-      } catch {}
+      const next = nextUnlockedFragmentsState(prev, ids);
+      writeStorageJSON(LS_KEYS.unlocked, next);
       return next;
     });
 
     setGlobalFragments((prev) => {
-      const merged: FragmentBank = { ...prev };
-      ids.forEach((id) => {
-        if (!id) return;
-        if (!merged[id]) {
-          merged[id] = { createdAt: Date.now() };
-        }
-      });
-      try {
-        localStorage.setItem(LS_KEYS.globalBank, JSON.stringify(merged));
-      } catch {}
+      const merged = nextGlobalFragmentBankForUnlock(prev, ids);
+      writeStorageJSON(LS_KEYS.globalBank, merged);
       return merged;
     });
   }, []);
@@ -496,17 +475,14 @@ useEffect(() => {
 
   /** FLAGS API */
   const persistFlags = useCallback((s: Set<string>) => {
-    try {
-      localStorage.setItem(LS_KEYS.flags, JSON.stringify(Array.from(s)));
-    } catch {}
+    writeStorageJSON(LS_KEYS.flags, Array.from(s));
   }, []);
 
   const setFlag = useCallback(
     (id: string) => {
       if (!id) return;
       setFlagsState((prev) => {
-        const next = new Set(prev);
-        next.add(id);
+        const next = nextFlagsState(prev, id, "set");
         persistFlags(next);
         return next;
       });
@@ -518,8 +494,7 @@ useEffect(() => {
     (id: string) => {
       if (!id) return;
       setFlagsState((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
+        const next = nextFlagsState(prev, id, "clear");
         persistFlags(next);
         return next;
       });
@@ -537,7 +512,7 @@ useEffect(() => {
       if (!src) return;
 
       // forrás elmentése
-      try { localStorage.setItem(LS_KEYS.storySrc, src); } catch {}
+      writeStorageValue(LS_KEYS.storySrc, src);
       setGlobal("storySrc", src);
 
       // ✅ Meta-prefetch
@@ -649,10 +624,8 @@ useEffect(() => {
   const setRuneImage = useCallback((flagId: string, url: string) => {
     if (!flagId || !url) return;
     setImagesByFlag((prev) => {
-      const next = { ...prev, [flagId]: url };
-      try {
-        localStorage.setItem(LS_KEYS.runeImgs, JSON.stringify(next));
-      } catch {}
+      const next = nextRuneImagesState(prev, { flagId, url, mode: "set" });
+      writeStorageJSON(LS_KEYS.runeImgs, next);
       return next;
     });
   }, []);
@@ -660,13 +633,10 @@ useEffect(() => {
   const clearRuneImage = useCallback((flagId: string) => {
     if (!flagId) return;
     setImagesByFlag((prev) => {
-      if (!prev || !prev[flagId]) return prev;
-      const rest = { ...prev };
-      delete rest[flagId];
-      try {
-        localStorage.setItem(LS_KEYS.runeImgs, JSON.stringify(rest));
-      } catch {}
-      return rest;
+      const next = nextRuneImagesState(prev, { flagId, mode: "clear" });
+      if (next === prev) return prev;
+      writeStorageJSON(LS_KEYS.runeImgs, next);
+      return next;
     });
   }, []);
 
@@ -675,9 +645,7 @@ useEffect(() => {
     const safe = sanitizePageId(id);
     setCurrentPageIdState((prev) => {
       if (prev === safe) return prev;
-      try {
-        localStorage.setItem(LS_KEYS.page, safe);
-      } catch {}
+      writeStorageValue(LS_KEYS.page, safe);
       return safe;
     });
   }, []);
@@ -702,24 +670,7 @@ useEffect(() => {
     setGlobal("score", newScore);
 
     // 2) onAnswer.nextSwitch feloldása
-    let nextId: string | null = null;
-    const ns = page?.onAnswer?.nextSwitch;
-    if (ns && typeof ns === "object") {
-      const key = ns.switch;
-      const probe =
-        key === "score"   ? String(newScore) :
-        key === "correct" ? String(res.correct) :
-        String(globals[key] ?? "");
-
-      nextId =
-        ns.cases?.[probe] ??
-        ns.cases?.__default ??
-        ns.default ??
-        (typeof page.next === "string" ? page.next : null) ??
-        null;
-    } else {
-      nextId = typeof page.next === "string" ? page.next : null;
-    }
+    const nextId = resolveAnswerNextPage(page, res, globals, newScore);
 
     // 3) Navigáció
     if (nextId) {
@@ -729,9 +680,7 @@ useEffect(() => {
 
   const setIsMuted = useCallback((value: boolean) => {
     setMuted(value);
-    try {
-      localStorage.setItem(LS_KEYS.muted, String(value));
-    } catch {}
+    writeStorageValue(LS_KEYS.muted, String(value));
   }, []);
 
   const triggerAudioRestart = useCallback(() => {
@@ -774,9 +723,7 @@ useEffect(() => {
     if (currentPageId === "feedback" || currentPageId === "__END__") {
       const safe = "landing";
       setCurrentPageIdState(safe);
-      try {
-        localStorage.setItem(LS_KEYS.page, safe);
-      } catch {}
+      writeStorageValue(LS_KEYS.page, safe);
       return;
     }
 
@@ -893,9 +840,7 @@ useEffect(() => {
     if (bank && typeof bank === "object") {
       setGlobalFragments((prev) => {
         const merged = mergeFragmentBanks(prev, bank);
-        try {
-          localStorage.setItem(LS_KEYS.globalBank, JSON.stringify(merged));
-        } catch {}
+        writeStorageJSON(LS_KEYS.globalBank, merged);
         return merged;
       });
     }
