@@ -1,14 +1,28 @@
 "use client";
-import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
-import { getAuth, type AuthAPI, type AuthUser } from "./client";
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+} from "react";
+import {
+  getAuth,
+  type AuthAPI,
+  type AuthUser,
+  type LoginCredentials,
+} from "./client";
 
 type Ctx = {
   ready: boolean;
   user: AuthUser | null;
-  login: () => Promise<void>;
+  login: (creds?: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
 };
+
 const AuthCtx = createContext<Ctx | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -16,15 +30,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  useEffect(() => { setUser(api.user()); setReady(true); }, [api]);
+  useEffect(() => {
+    setUser(api.user());
+    setReady(true);
+  }, [api]);
+
+  const login = useCallback(
+    async (creds?: LoginCredentials) => {
+      await api.login(creds);
+      setUser(api.user());
+    },
+    [api]
+  );
+
+  const logout = useCallback(async () => {
+    await api.logout();
+    setUser(api.user());
+  }, [api]);
 
   const value: Ctx = {
     ready,
     user,
-    login: async () => { await api.login(); setUser(api.user()); },
-    logout: async () => { await api.logout(); setUser(null); },
+    login,
+    logout,
     getToken: () => api.getToken(),
   };
+
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 

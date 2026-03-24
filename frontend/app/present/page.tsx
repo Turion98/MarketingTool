@@ -12,8 +12,8 @@ const PresentPage: React.FC = () => {
   };
 
   const handleViewDemosClick = () => {
-    // pl. vissza a játék / demó oldalra
-    window.location.href = "/";
+    // A gyökér (/) most a kezdő választó; demó / játék a landing útvonalon van
+    window.location.href = "/landing";
   };
 
   return (
