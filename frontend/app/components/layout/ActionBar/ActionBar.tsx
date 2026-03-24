@@ -6,6 +6,7 @@ import RestartGameButton from "../../RestartGameButton/RestartGameButton";
 import { useGameState } from "../../../lib/GameStateContext";
 import { useUiClickSound } from "../../../lib/useUiClickSound";
 import { trackUiClick } from "../../../lib/analytics";
+import type { GenericProps } from "../../../lib/analyticsSchema";
 
 type ActionBarProps = {
   canSkip: boolean;
@@ -39,17 +40,17 @@ const ActionBar: React.FC<ActionBarProps> = ({
     currentPageId,
   } = useGameState();
 
-  const isAdmin = !!(globals as any)?.isAdmin;
+  const isAdmin = globals?.isAdmin === true;
 
   // 🔊 Action bar hangok
   const playClick = useUiClickSound("/sounds/actionbar-click.wav");
   const playSlide = useUiClickSound("/sounds/actionbar-slide.mp3");
 
-  const logAction = (control: string, extra?: Record<string, unknown>) => {
+  const logAction = (control: string, extra?: GenericProps) => {
     try {
       if (!storyId || !sessionId) return;
       const page = String(currentPageId ?? "unknown");
-      trackUiClick(String(storyId), String(sessionId), page, control, extra as any);
+      trackUiClick(String(storyId), String(sessionId), page, control, extra);
     } catch {}
   };
 

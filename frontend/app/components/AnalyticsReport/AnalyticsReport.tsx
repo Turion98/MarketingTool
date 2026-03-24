@@ -149,6 +149,13 @@ export type AnalyticsReportProps = {
   defaultRange?: Range;
 };
 
+type DailyRollupRow = ReturnType<typeof rollupDaily>[number];
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  return "Unknown error while fetching range rollup.";
+}
+
 function msToHMS(ms: number) {
   const totalSec = Math.floor(ms / 1000);
   const h = Math.floor(totalSec / 3600);
@@ -246,10 +253,10 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
 });
 
         setRangeData(json);
-      } catch (e: any) {
-        if (e?.name !== "AbortError") {
+      } catch (e: unknown) {
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
           setRangeError(
-            e?.message || "Unknown error while fetching range rollup."
+            getErrorMessage(e)
           );
           
         }
@@ -859,7 +866,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
             </tr>
           </thead>
           <tbody>
-            {daily.map((d: any) => (
+            {daily.map((d: DailyRollupRow) => (
               <tr key={d.day}>
                 <td>{d.day}</td>
                 <td>{d.sessions}</td>

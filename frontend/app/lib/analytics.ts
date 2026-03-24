@@ -50,6 +50,19 @@ type DailyCounters = {
   ctaClicks: number;
 };
 
+type PageEnterExtraProps = GenericProps & {
+  runId?: string;
+  rawPageId?: string;
+  pageType?: string;
+  endAlias?: string;
+};
+
+type StoryPageSummary = {
+  id?: unknown;
+  type?: unknown;
+  logic?: unknown;
+};
+
 function now() {
   return Date.now();
 }
@@ -330,8 +343,7 @@ function baseEvent(
 
   // ha a caller már adott runId-t, azt tiszteletben tartjuk,
   // különben próbáljuk sessionStorage-ból felvenni
-  const runIdFromProps =
-    props && typeof (props as any).runId === "string" ? (props as any).runId : undefined;
+  const runIdFromProps = getProp<string>(props, "runId", "string");
 
   const runId = runIdFromProps || getRunIdFromSessionStorage(storyId);
 
@@ -360,7 +372,7 @@ export function trackPageEnter(
   sessionId: string,
   pageId: string,
   refPageId?: string,
-  extra?: GenericProps
+  extra?: PageEnterExtraProps
 ) {
   // 1️⃣ page_enter event
   pushEvent(
@@ -371,15 +383,9 @@ export function trackPageEnter(
   const terminals = terminalPagesByStory.get(storyId);
 
   // 3️⃣ valódi node id (ha StoryPage átadja)
-  const rawPageId =
-    extra && typeof (extra as any).rawPageId === "string"
-      ? (extra as any).rawPageId
-      : undefined;
+  const rawPageId = getProp<string>(extra, "rawPageId", "string");
 
-  const pageType =
-    extra && typeof (extra as any).pageType === "string"
-      ? (extra as any).pageType
-      : undefined;
+  const pageType = getProp<string>(extra, "pageType", "string");
 
   // 4️⃣ univerzális terminal felismerés
   const isTerminal =
@@ -396,14 +402,15 @@ export function trackPageEnter(
 
       // mindig a valódi end node id menjen be
       const endAlias =
-  (extra as any)?.endAlias || (extra as any)?.rawPageId || pageId;
+        getProp<string>(extra, "endAlias", "string") ||
+        rawPageId ||
+        pageId;
 
       // ✅ nagyon fontos: a backend run-alapú riportjaihoz a game:complete eventnek
       // ugyanahhoz a runId-hoz kell tartoznia, mint a page_enter-nek.
       const runId =
-        extra && typeof (extra as any).runId === "string"
-          ? (extra as any).runId
-          : getRunIdFromSessionStorage(storyId);
+        getProp<string>(extra, "runId", "string") ||
+        getRunIdFromSessionStorage(storyId);
 
       trackGameComplete(storyId, sessionId, endAlias, {
         reason: "terminal_page",
@@ -850,7 +857,8 @@ const envBatch = cleanBase
   : undefined;
 
 const prodApi =
-  (process as any)?.env?.NEXT_PUBLIC_ANALYTICS_FALLBACK as string | undefined;
+  (process as unknown as { env?: Record<string, string | undefined> })?.env
+    ?.NEXT_PUBLIC_ANALYTICS_FALLBACK;
 const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
 
 const endpoints = [
@@ -929,16 +937,22 @@ const endpoints = [
   };
 }
 
-export function inferTerminalPagesFromStory(story: any): string[] {
-  const pagesArr = Array.isArray(story?.pages)
-    ? story.pages
-    : story?.pages && typeof story.pages === "object"
-      ? Object.values(story.pages)
-      : [];
+function getStoryPages(story: unknown): StoryPageSummary[] {
+  if (!story || typeof story !== "object") return [];
+  const record = story as Record<string, unknown>;
+  if (Array.isArray(record.pages)) return record.pages as StoryPageSummary[];
+  if (record.pages && typeof record.pages === "object") {
+    return Object.values(record.pages) as StoryPageSummary[];
+  }
+  return [];
+}
+
+export function inferTerminalPagesFromStory(story: unknown): string[] {
+  const pagesArr = getStoryPages(story);
 
   const out: string[] = [];
 
-  for (const p of pagesArr as any[]) {
+  for (const p of pagesArr) {
     const id = String(p?.id || "");
     if (!id) continue;
 

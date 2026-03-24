@@ -5,6 +5,15 @@
 
 import { getCache, setCache } from "@/app/lib/cache/frontendCache";
 
+type NextFetchOptions = {
+  revalidate?: number;
+  tags?: string[];
+};
+
+type StoryFetchInit = RequestInit & {
+  next?: NextFetchOptions;
+};
+
 export type FetchPageOpts = {
   storyId?: string;
   pageId?: string;
@@ -16,7 +25,7 @@ export type FetchPageOpts = {
   revalidateSeconds?: number;
   signal?: AbortSignal | null;
   /** Extra init (headers, stb.). Ne adj meg ide cache: "no-store"-t, mert kiveszi a Next cache-ből. */
-  fetchInit?: RequestInit & { next?: any };
+  fetchInit?: StoryFetchInit;
 };
 
 function getSrcFromUrl(url: string): string | undefined {
@@ -29,7 +38,7 @@ function getSrcFromUrl(url: string): string | undefined {
   }
 }
 
-export async function fetchPageJsonCached<T = any>(
+export async function fetchPageJsonCached<T = unknown>(
   url: string,
   {
     storyId,
@@ -58,8 +67,8 @@ export async function fetchPageJsonCached<T = any>(
   const isServer = typeof window === "undefined";
 
   // Lazább típus a Next saját `next` mezője miatt
-  const init: RequestInit & { next?: any } = {
-    ...(fetchInit as any),
+  const init: StoryFetchInit = {
+    ...(fetchInit ?? {}),
     signal,
   };
 
@@ -73,13 +82,13 @@ export async function fetchPageJsonCached<T = any>(
     init.next = nextInit;
 
     // Ne használjunk "no-store"-t, mert kiiktatja a Next cache-t
-    if ((init as any).cache === "no-store") delete (init as any).cache;
+    if (init.cache === "no-store") delete init.cache;
   } else {
     // Kliensen sincs szükség no-store-ra, mert saját FE cache van fölötte
-    if ((init as any).cache === "no-store") delete (init as any).cache;
+    if (init.cache === "no-store") delete init.cache;
   }
 
-  const res = await fetch(cleanUrl, init as any);
+  const res = await fetch(cleanUrl, init);
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`HTTP ${res.status} @ ${cleanUrl} ${t ? `– ${t}` : ""}`);
