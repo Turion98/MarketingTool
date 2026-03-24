@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, NotRequired, TypeAlias, TypedDict
+from typing import Literal, NotRequired, TypeAlias
+
+# Pydantic 2.12+ on Python < 3.12: must use typing_extensions.TypedDict
+from typing_extensions import TypedDict
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
