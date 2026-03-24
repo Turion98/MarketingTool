@@ -53,8 +53,9 @@ export type PageData = {
     | null;
   styleProfile?: Record<string, unknown>;
   sfx?: { file: string; time: number }[];
-  fragmentsGlobal?: Record<string, unknown>;
+  fragmentsGlobal?: FragmentBank;
   unlockFragments?: string[];
+  unlockEnterFragments?: string[];
   fragmentRefs?: Array<{ id: string; prefix?: string; suffix?: string }>;
   fragmentRecall?:
     | { id?: string; textFallback?: string }

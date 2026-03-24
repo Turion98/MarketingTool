@@ -37,6 +37,16 @@ import {
   normalizeProgressMilestones,
   resolveInitialRuneChoice,
 } from "./gameStateProgress";
+import {
+  collectRehydrationFragments,
+  getUnlockEnterFragmentIds,
+  mergeFragmentBanks,
+} from "./gameStateFragments";
+import {
+  buildPageRequestUrl,
+  normalizeFetchedPage,
+  resolvePageRuntimeDecision,
+} from "./gameStatePageRuntime";
 import { LS_KEYS, parseJSON } from "./gameStateStorage";
 import type {
   FragmentBank,
@@ -803,11 +813,7 @@ useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
-
-        const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/,"");
-        const base = API_BASE || ""; // üres = same-origin
-
-        const url = `${base}/page/${encodeURIComponent(currentPageId)}?src=${encodeURIComponent(storySrc)}`;
+        const url = buildPageRequestUrl(currentPageId, storySrc);
 
         const response = await fetch(url, { signal: ac.signal });
         if (!response.ok) {
@@ -817,102 +823,18 @@ useEffect(() => {
         }
 
         const raw = await response.json();
-
-        
- // 🔹 LOGIC + FRAGMENT feltételek kezelése (redirect még normalizálás előtt)
-
-// 1) belépéskori logic.ifHasFragment / elseGoTo
-const conds = Array.isArray(raw?.logic?.ifHasFragment)
-  ? (raw.logic.ifHasFragment as { fragment: string; goTo: string }[])
-  : [];
-
-if (conds.length || raw?.logic?.elseGoTo) {
-  for (const cond of conds) {
-    if (
-      cond?.fragment &&
-      cond?.goTo &&
-      Array.isArray(unlockedFragments) &&
-      unlockedFragments.includes(cond.fragment)
-    ) {
-      console.log(`[Logic] ${raw.id} → ${cond.goTo} (ifHasFragment hit)`);
-      setCurrentPageId(cond.goTo);
-      return;
-    }
-  }
-
-  if (raw?.logic?.elseGoTo) {
-    console.log(`[Logic] ${raw.id} → ${raw.logic.elseGoTo} (elseGoTo)`);
-    setCurrentPageId(raw.logic.elseGoTo);
-    return;
-  }
-}
-
-// 2) oldal-elérhetőség: needsFragment / needsFragmentAny
-const needsAll: string[] = Array.isArray(raw?.needsFragment)
-  ? (raw.needsFragment as string[]).filter(Boolean)
-  : [];
-const needsAny: string[] = Array.isArray(raw?.needsFragmentAny)
-  ? (raw.needsFragmentAny as string[]).filter(Boolean)
-  : [];
-
-let blocked = false;
-
-if (needsAll.length) {
-  const missing = needsAll.filter((f) => !unlockedFragments.includes(f));
-  if (missing.length) {
-    console.warn(`[Logic] Page ${raw.id} blocked, missing all-of:`, missing);
-    blocked = true;
-  }
-}
-
-if (!blocked && needsAny.length) {
-  const hasAny = needsAny.some((f) => unlockedFragments.includes(f));
-  if (!hasAny) {
-    console.warn(`[Logic] Page ${raw.id} blocked, needs any-of:`, needsAny);
-    blocked = true;
-  }
-}
-
-if (blocked) {
-  // ide később tehetsz okosabb fallbacket
-  setCurrentPageId("landing");
-  return;
-}
-
-// Forrás kiválasztás és laposítás
-const srcBank: any =
-  (raw && typeof raw === "object" && raw.fragmentsGlobal) ??
-  (raw && typeof raw === "object" && raw.fragments) ??
-  undefined;
-
-const flatFragments: Record<string, any> =
-  srcBank && typeof srcBank === "object"
-    ? srcBank.recall || srcBank.saved || srcBank.fragments
-      ? {
-          ...(srcBank.recall ?? {}),
-          ...(srcBank.saved ?? {}),
-          ...(srcBank.fragments ?? {}),
-          ...(srcBank ?? {}),
+        const runtimeDecision = resolvePageRuntimeDecision(raw, unlockedFragments);
+        if (runtimeDecision.kind === "redirect") {
+          setCurrentPageId(runtimeDecision.pageId);
+          return;
         }
-      : srcBank
-    : {};
+        if (runtimeDecision.kind === "blocked") {
+          setCurrentPageId("landing");
+          return;
+        }
 
-
-const normalized: PageData = {
-  ...raw,
-  audio: {
-    ...raw?.audio,
-    text: typeof raw?.text === "string" ? raw.text : "",
-    background: raw?.audio?.background ?? raw?.audio?.bg ?? null,
-    mainNarration: raw?.audio?.mainNarration ?? raw?.audio?.main ?? null,
-    sidePreloadPages: raw?.audio?.sidePreloadPages ?? [],
-  },
-  voicePrompt: raw?.voicePrompt ?? raw?.tts ?? null,
-  fragmentsGlobal:
-    flatFragments && Object.keys(flatFragments).length ? flatFragments : undefined,
-};
-
-setCurrentPageData(normalized);
+        const normalized = normalizeFetchedPage(raw);
+        setCurrentPageData(normalized);
 
         // Meta refresh (mindig)
         try {
@@ -941,8 +863,8 @@ setCurrentPageData(normalized);
         } catch {}
 
         setGlobalError(null);
-      } catch (err: any) {
-        if (err?.name !== "AbortError") {
+      } catch (err: unknown) {
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
           console.error("Page fetch error:", err);
           setGlobalError("Nem sikerült lekérni az oldalt a backendről.");
           setCurrentPageData(null);
@@ -973,18 +895,10 @@ setCurrentPageData(normalized);
   /** Merge a globál bankba + persist (additív) */
   useEffect(() => {
     if (!hydrated) return;
-    const bank = (currentPageData as any)?.fragmentsGlobal;
+    const bank = currentPageData?.fragmentsGlobal;
     if (bank && typeof bank === "object") {
-      const casted: FragmentBank = {};
-      Object.keys(bank).forEach((k) => {
-        const o = bank[k] || {};
-        casted[k] = {
-          text: typeof o.text === "string" ? o.text : undefined,
-          replayImageId: typeof o.replayImageId === "string" ? o.replayImageId : undefined,
-        };
-      });
       setGlobalFragments((prev) => {
-        const merged = { ...prev, ...casted };
+        const merged = mergeFragmentBanks(prev, bank);
         try {
           localStorage.setItem(LS_KEYS.globalBank, JSON.stringify(merged));
         } catch {}
@@ -996,22 +910,21 @@ setCurrentPageData(normalized);
   /** Rehidratálás: oldalszintű fragmentek visszatöltése */
   useEffect(() => {
     if (!hydrated) return;
-    if (!unlockedFragments?.length) return;
-    unlockedFragments.forEach((id) => {
-      if (!fragments[id] && globalFragments[id]) {
-        addFragment(id, {
-          text: globalFragments[id].text,
-          replayImageId: globalFragments[id].replayImageId,
-        });
-      }
+    const pendingFragments = collectRehydrationFragments({
+      unlockedFragments,
+      fragments,
+      globalFragments,
+    });
+    pendingFragments.forEach(({ id, data }) => {
+      addFragment(id, data);
     });
   }, [hydrated, unlockedFragments, fragments, globalFragments, addFragment, currentPageId]);
 
   /** Oldal-szintű unlockFragments auto */
   useEffect(() => {
     if (!hydrated) return;
-    const ids = (currentPageData as any)?.unlockEnterFragments;
-    if (Array.isArray(ids) && ids.length) {
+    const ids = getUnlockEnterFragmentIds(currentPageData);
+    if (ids.length) {
       unlockFragment(ids);
     }
   }, [hydrated, currentPageId, currentPageData, unlockFragment]);
