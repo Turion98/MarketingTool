@@ -1,6 +1,7 @@
 "use client";
 
 import type { FragmentBank, PageData } from "./gameStateTypes";
+import { getPublicApiBase } from "./publicApiBase";
 
 type PageRuntimeDecision =
   | { kind: "ok" }
@@ -44,8 +45,7 @@ function flattenFragmentBank(value: unknown): FragmentBank {
 }
 
 export function buildPageRequestUrl(pageId: string, storySrc: string): string {
-  const apiBase = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
-  const base = apiBase || "";
+  const base = getPublicApiBase();
   return `${base}/page/${encodeURIComponent(pageId)}?src=${encodeURIComponent(storySrc)}`;
 }
 

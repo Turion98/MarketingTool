@@ -1,6 +1,7 @@
 "use client";
 
 import { normalizeProgressMilestones } from "./gameStateProgress";
+import { getPublicApiBase } from "./publicApiBase";
 import type { ProgressDisplay } from "./gameStateTypes";
 
 type StoryMetaRecord = Record<string, unknown>;
@@ -14,7 +15,7 @@ export function buildStoryMetaUrl(storySrc: string): string {
   const normalizedSrc = storySrc.replace(/^\/?stories\//, "/stories/");
   const base = normalizedSrc.startsWith("http")
     ? normalizedSrc
-    : `${process.env.NEXT_PUBLIC_API_BASE || ""}${normalizedSrc}`;
+    : `${getPublicApiBase()}${normalizedSrc.startsWith("/") ? normalizedSrc : `/${normalizedSrc}`}`;
   const cacheBust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
   return `${base}${cacheBust}`;
 }

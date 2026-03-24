@@ -19,18 +19,27 @@ from services.runtime_config import STORIES_DIR
 from storysvc.router import router as stories_router
 
 
+def _cors_allow_origins() -> list[str]:
+    """Comma-separated extra origins via CORS_EXTRA_ORIGINS (e.g. Vercel preview URL)."""
+    origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://thequestell.com",
+        "https://www.thequestell.com",
+    ]
+    extra = os.getenv("CORS_EXTRA_ORIGINS", "")
+    if extra.strip():
+        origins.extend(o.strip() for o in extra.split(",") if o.strip())
+    return origins
+
+
 app = FastAPI()
 
 app.add_middleware(NoCacheStoriesMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://thequestell.com",
-        "https://www.thequestell.com",
-    ],
+    allow_origins=_cors_allow_origins(),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
