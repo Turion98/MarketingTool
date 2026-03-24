@@ -13,23 +13,35 @@ import React, {
 
 import {
   initAnalyticsForStory,
-  getOrCreateSessionId,
-  startNewRunSession,
   setStoryMeta,
   getOrCreateUserId,
 } from "./analytics";
 import {
+  getRunKey,
+  getScopeKey,
+  getStartPageId,
+  getStringGlobal,
+  initAnalyticsSessionState,
+  startNewRunId,
+} from "./gameStateAnalytics";
+import {
   DEFAULT_RUNE_SINGLE,
-  PROGRESS_TAIL_BUFFER,
   deriveStoryId,
   normalizeRuneChoice,
   parseRuneChoiceFromQuery,
   sanitizePageId,
 } from "./gameStateHelpers";
+import {
+  calculateProgressState,
+  createEmptyProgressDisplay,
+  normalizeProgressMilestones,
+  resolveInitialRuneChoice,
+} from "./gameStateProgress";
 import { LS_KEYS, parseJSON } from "./gameStateStorage";
 import type {
   FragmentBank,
   FragmentData,
+  GameStateGlobals,
   GameStateContextType,
   PageData,
   ProgressDisplay,
@@ -55,7 +67,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [unlockedFragments, setUnlockedFragmentsState] = useState<string[]>([]);
   const [fragments, setFragments] = useState<Record<string, FragmentData>>({});
   const [globalFragments, setGlobalFragments] = useState<FragmentBank>({});
-  const [globals, setGlobals] = useState<Record<string, any>>({});
+  const [globals, setGlobals] = useState<GameStateGlobals>({});
     /** GLOBALS API — HOISTED (a használatok elé helyezve) */
   const setGlobal = useCallback((key: string, value: any) => {
     if (!key) return;
@@ -90,45 +102,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [runId, setRunId] = useState<string | undefined>(undefined);
   const lastStartRunAtRef = useRef<number>(0);
-  function runStorageKey(storyId: string, scopeKey?: string) {
-  const scope = String(scopeKey || "default").trim() || "default";
-  return `q_an:${storyId}:${scope}:runId_v1`;
-}
-
-function newRunId() {
-  return "run_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function getOrCreateRunId(storyId: string, scopeKey?: string) {
-  const key = runStorageKey(storyId, scopeKey);
-  try {
-    const existing = sessionStorage.getItem(key);
-    if (existing) return existing;
-  } catch {}
-  const rid = newRunId();
-  try {
-    sessionStorage.setItem(key, rid);
-  } catch {}
-  return rid;
-}
-
-function startNewRunId(storyId: string, scopeKey?: string) {
-  const key = runStorageKey(storyId, scopeKey);
-  const rid = newRunId();
-  try {
-    sessionStorage.setItem(key, rid);
-  } catch {}
-  return rid;
-}
-
-
   /** 🔹 PROGRESS state */
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
   const [progressValue, setProgressValue] = useState<number>(0);
-  const [progressDisplay, setProgressDisplay] = useState<ProgressDisplay>({
-    value: 0,
-    milestones: [],
-  });
+  const [progressDisplay, setProgressDisplay] = useState<ProgressDisplay>(createEmptyProgressDisplay());
 
   
   /** HYDRATION utáni visszatöltés */
@@ -142,7 +119,7 @@ function startNewRunId(storyId: string, scopeKey?: string) {
       const f = parseJSON<Record<string, FragmentData>>(localStorage.getItem(LS_KEYS.fragments), {});
       const g = parseJSON<FragmentBank>(localStorage.getItem(LS_KEYS.globalBank), {});
       const fl = parseJSON<string[]>(localStorage.getItem(LS_KEYS.flags), []);
-      const gl = parseJSON<Record<string, any>>(localStorage.getItem(LS_KEYS.globals), {});
+      const gl = parseJSON<GameStateGlobals>(localStorage.getItem(LS_KEYS.globals), {});
       const rb = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.runeImgs), {});
       const stSrc = localStorage.getItem(LS_KEYS.storySrc) ?? undefined;
       const stTitle = localStorage.getItem(LS_KEYS.storyTitle) ?? undefined;
@@ -282,7 +259,7 @@ function startNewRunId(storyId: string, scopeKey?: string) {
   const ensureRunOnStart = useCallback(() => {
   if (!storyId) return undefined;
 
-  const startId = (globals as any)?.startPageId;
+  const startId = getStartPageId(globals);
   if (!startId) return runId;
 
   // csak akkor csinál újat, ha épp a start oldalon vagyunk
@@ -293,12 +270,7 @@ function startNewRunId(storyId: string, scopeKey?: string) {
   if (now - (lastStartRunAtRef.current || 0) < 250) return runId;
   lastStartRunAtRef.current = now;
 
-  const scopeKey =
-    (globals as any)?.accountId ||
-    (globals as any)?.tenantId ||
-    (globals as any)?.embedKey ||
-    (typeof window !== "undefined" ? window.location.host : "default");
-
+  const scopeKey = getScopeKey(globals);
   const rid = startNewRunId(storyId, scopeKey);
   console.log("[GameState] ensureRunOnStart → new runId", { storyId, scopeKey, rid });
   setRunId(rid);
@@ -320,54 +292,25 @@ useEffect(() => {
 
   try {
     initAnalyticsForStory(sid);
-
-    const scopeKey =
-  (globals as any)?.accountId ||
-  (globals as any)?.tenantId ||
-  (globals as any)?.embedKey ||
-  (typeof window !== "undefined" ? window.location.host : "default");
-
-    const rk = (globals as any)?.runKey;
-    let sess: string;
-    let rid: string | undefined;
-    if (rk) {
-      // Restart: a RestartButton már beírta az új sessionId + runId-t; ne hívjunk újat (dupla runId elkerülés)
-      try {
-        const scope = String(scopeKey || "default").trim() || "default";
-        const bucket = `q_an:${sid}:${scope}`;
-        sess = localStorage.getItem(`${bucket}:sessionId_v2`) || "";
-        rid = sessionStorage.getItem(runStorageKey(sid, scopeKey)) || undefined;
-      } catch {
-        sess = "";
-        rid = undefined;
-      }
-      if (!sess) sess = startNewRunSession(sid, scopeKey);
-      if (!rid) rid = startNewRunId(sid, scopeKey);
-    } else {
-      sess = getOrCreateSessionId(sid, scopeKey);
-      try {
-        rid = sessionStorage.getItem(runStorageKey(sid, scopeKey)) || undefined;
-      } catch {
-        rid = undefined;
-      }
-    }
-    setSessionId(sess);
-    setRunId(rid);
+    const { scopeKey, runKey, sessionId: nextSessionId, runId: nextRunId } =
+      initAnalyticsSessionState(sid, globals);
+    setSessionId(nextSessionId);
+    setRunId(nextRunId);
     console.log("[GameState] initAnalyticsForStory/useEffect runId", {
       storyId: sid,
       scopeKey,
-      hasRunKey: !!rk,
-      runId: rid,
+      hasRunKey: !!runKey,
+      runId: nextRunId,
     });
 
     
     // opcionális: hogy a "startPageId-re visszajöttünk" logika ne duplázzon
-    if (rk) prevPageIdRef.current = null;
+    if (runKey) prevPageIdRef.current = null;
 
     const uid = getOrCreateUserId();
     setStoryMeta(sid, {
-      title: globals?.storyTitle || undefined,
-      src: globals?.storySrc || undefined,
+      title: getStringGlobal(globals, "storyTitle"),
+      src: getStringGlobal(globals, "storySrc"),
       userId: uid,
       domain: typeof window !== "undefined" ? window.location.hostname : undefined
     });
@@ -391,12 +334,12 @@ useEffect(() => {
   if (!storyId) return;
 
   // runKey-s restart külön logika esetén skip (ha akarod)
-  if ((globals as any)?.runKey) {
+  if (getRunKey(globals)) {
     prevPageIdRef.current = currentPageId || null;
     return;
   }
 
-  const startId = (globals as any)?.startPageId;
+  const startId = getStartPageId(globals);
   if (!startId) {
     prevPageIdRef.current = currentPageId || null;
     return;
@@ -405,7 +348,6 @@ useEffect(() => {
   const prev = prevPageIdRef.current; // lehet null
   const curr = currentPageId || null;
 
-  const firstMountAtStart = curr === startId && prev == null;
   const arrivedToStart = curr === startId && prev !== startId;
 
   if (arrivedToStart) {
@@ -413,12 +355,7 @@ useEffect(() => {
     if (now - (lastStartRunAtRef.current || 0) > 250) {
       lastStartRunAtRef.current = now;
 
-      const scopeKey =
-        (globals as any)?.accountId ||
-        (globals as any)?.tenantId ||
-        (globals as any)?.embedKey ||
-        (typeof window !== "undefined" ? window.location.host : "default");
-
+      const scopeKey = getScopeKey(globals);
       // ✅ csak RUN-t váltunk (session maradhat)
       const newRun = startNewRunId(storyId, scopeKey);
       setRunId(newRun);
@@ -575,17 +512,9 @@ useEffect(() => {
               try { localStorage.setItem("storyMetaCache", JSON.stringify(story.meta)); } catch {}
 
               // progress milestones a meta-ból (ha van)
-              const raw = (story.meta as any)?.progress?.milestones;
-              const metaMilestones =
-                raw && Array.isArray(raw)
-                  ? raw
-                      .map((m: any) => (typeof m === "number" ? { x: m } : m))
-                      .filter((m: any) => typeof m.x === "number")
-                      .map((m: any) => ({
-                        x: Math.max(0, Math.min(1, m.x)),
-                        label: typeof m.label === "string" ? m.label : undefined,
-                      }))
-                  : [];
+              const metaMilestones = normalizeProgressMilestones(
+                story.meta?.progress?.milestones
+              );
               setProgressDisplay({ value: 0, milestones: metaMilestones });
 
               console.log("[GameState] Meta loaded:", story.meta);
@@ -599,7 +528,7 @@ useEffect(() => {
       // 🔄 új sztori: progress reset (milestones a meta betöltésekor kerülnek be)
       setVisitedPages(new Set());
       setProgressValue(0);
-      setProgressDisplay({ value: 0, milestones: [] });
+      setProgressDisplay(createEmptyProgressDisplay());
 
       // 🔹 Analytics re-init
       const newGlobals = { ...globals, storySrc: src };
@@ -609,29 +538,16 @@ useEffect(() => {
       if (newStoryId) {
         try {
           initAnalyticsForStory(newStoryId);
-          const scopeKey =
-          (globals as any)?.accountId ||
-          (globals as any)?.tenantId ||
-          (globals as any)?.embedKey ||
-          (typeof window !== "undefined" ? window.location.host : "default");
+          const { sessionId: nextSessionId, runId: nextRunId } =
+            initAnalyticsSessionState(newStoryId, globals);
 
-        const rk = (globals as any)?.runKey;
-        const sess = rk
-          ? startNewRunSession(newStoryId, scopeKey)
-          : getOrCreateSessionId(newStoryId, scopeKey);
-
-        setSessionId(sess);
-
-        const rid = rk
-        ? startNewRunId(newStoryId, scopeKey)
-        : getOrCreateRunId(newStoryId, scopeKey);
-
-      setRunId(rid);
+          setSessionId(nextSessionId);
+          setRunId(nextRunId);
 
           setStoryMeta(newStoryId, {
-            title: localStorage.getItem(LS_KEYS.storyTitle) || globals?.storyTitle || undefined,
+            title: localStorage.getItem(LS_KEYS.storyTitle) || getStringGlobal(globals, "storyTitle"),
             src,
-            campaign: globals?.campaign || localStorage.getItem("campaign") || undefined,
+            campaign: getStringGlobal(globals, "campaign") || localStorage.getItem("campaign") || undefined,
             userId: getOrCreateUserId(),
           });
         } catch (e) {
@@ -641,24 +557,14 @@ useEffect(() => {
 
       // ⬇️ ÚJ: runePack azonnali visszaállítás (query → LS → default)
       try {
-        // 1) query elsőbbség
-        const fromQuery = parseRuneChoiceFromQuery();
-        if (fromQuery) {
-          setGlobal("runePack", normalizeRuneChoice(fromQuery));
-        } else {
-          // 2) LS per-kampány
-          const map = parseJSON<Record<string, RuneChoice>>(
-            localStorage.getItem(LS_KEYS.runePackMap),
-            {}
-          );
-          const sid = newStoryId || deriveStoryId({ storySrc: src }) || "";
-          const saved = sid ? map?.[sid] : undefined;
-          if (saved) {
-            setGlobal("runePack", normalizeRuneChoice(saved));
-          } else {
-            setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-          }
-        }
+        const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
+        const storyKey = newStoryId || deriveStoryId({ storySrc: src }) || undefined;
+        const runeChoice = resolveInitialRuneChoice({
+          storyId: storyKey,
+          queryChoice: parseRuneChoiceFromQuery(),
+          savedChoices: map,
+        });
+        setGlobal("runePack", runeChoice);
       } catch {
         setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
       }
@@ -670,29 +576,18 @@ useEffect(() => {
   useEffect(() => {
     if (!hydrated) return;
     // ha már van runePack a globals-ban, nem írjuk felül
-    if ((globals as any)?.runePack) return;
-
-    const fromQuery = parseRuneChoiceFromQuery();
-    if (fromQuery) {
-      setGlobal("runePack", normalizeRuneChoice(fromQuery));
-      return;
-    }
+    if (typeof globals.runePack !== "undefined") return;
 
     // ha nincs query, jöhet LS per-kampány
     const sid = deriveStoryId(globals);
-    if (!sid) {
-      // nincs story azonosító → default single
-      setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-      return;
-    }
     try {
       const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
-      const saved = map?.[sid];
-      if (saved) {
-        setGlobal("runePack", normalizeRuneChoice(saved));
-      } else {
-        setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
-      }
+      const runeChoice = resolveInitialRuneChoice({
+        storyId: sid,
+        queryChoice: parseRuneChoiceFromQuery(),
+        savedChoices: map,
+      });
+      setGlobal("runePack", runeChoice);
     } catch {
       setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
     }
@@ -847,7 +742,7 @@ useEffect(() => {
     // 🔄 progress reset
     setVisitedPages(new Set());
     setProgressValue(0);
-    setProgressDisplay({ value: 0, milestones: [] });
+    setProgressDisplay(createEmptyProgressDisplay());
 
     try {
       localStorage.removeItem(LS_KEYS.unlocked);
@@ -883,12 +778,12 @@ useEffect(() => {
 
       setVisitedPages(new Set());
       setProgressValue(0);
-      setProgressDisplay({ value: 0, milestones: [] });
+      setProgressDisplay(createEmptyProgressDisplay());
       return;
     }
 
     // Story forrás
-    const storySrcFromGlobals = globals?.storySrc;
+    const storySrcFromGlobals = getStringGlobal(globals, "storySrc");
     const storySrcFromLS =
       typeof window !== "undefined" ? localStorage.getItem(LS_KEYS.storySrc) : null;
     const storySrc = storySrcFromGlobals || storySrcFromLS || "";
@@ -1021,7 +916,7 @@ setCurrentPageData(normalized);
 
         // Meta refresh (mindig)
         try {
-          const metaSrc = (globals?.storySrc || localStorage.getItem(LS_KEYS.storySrc) || "")
+          const metaSrc = (getStringGlobal(globals, "storySrc") || localStorage.getItem(LS_KEYS.storySrc) || "")
             .replace(/^\/?stories\//, "/stories/");
           if (metaSrc) {
             const base = metaSrc.startsWith("http") ? metaSrc : `${(process.env.NEXT_PUBLIC_API_BASE || "")}${metaSrc}`;
@@ -1137,30 +1032,13 @@ setCurrentPageData(normalized);
   /** 🔹 PROGRESS: érték és display frissítése (JSON nélküli becslés) */
   useEffect(() => {
     if (!hydrated) return;
-
-    const steps = visitedPages.size;
-    const hasChoices = Array.isArray(currentPageData?.choices) && (currentPageData?.choices?.length ?? 0) > 0;
-    const nextId = resolveNextFromPage(currentPageData, globals);
-    const isTerminal = !!currentPageData && !hasChoices && !nextId;
-
-    let value = 0;
-
-    if (isTerminal) {
-      value = 1;
-    } else if (steps <= 1) {
-      value = 0;
-    } else {
-      const effectiveSteps = steps - 1;
-      const denom = effectiveSteps + PROGRESS_TAIL_BUFFER;
-      value = Math.min(1, effectiveSteps / denom);
-    }
-
-    setProgressValue(value);
-    setProgressDisplay({
-      value,
-      milestones: [],
-      label: undefined,
+    const nextProgress = calculateProgressState({
+      visitedPages,
+      currentPageData,
+      globals,
     });
+    setProgressValue(nextProgress.value);
+    setProgressDisplay(nextProgress.display);
   }, [hydrated, visitedPages, currentPageData, globals]);
 
   return (

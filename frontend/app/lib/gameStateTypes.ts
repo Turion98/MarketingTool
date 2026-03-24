@@ -91,6 +91,7 @@ export type ProgressDisplay = {
 };
 
 export type RuneChoice = { mode: "single" | "triple"; icons: string[] };
+export type GameStateGlobals = Record<string, unknown>;
 
 export type GameStateContextType = {
   voiceApiKey?: string;
@@ -111,7 +112,7 @@ export type GameStateContextType = {
   setFlag: (id: string) => void;
   clearFlag: (id: string) => void;
   hasFlag: (id: string) => boolean;
-  globals: Record<string, unknown>;
+  globals: GameStateGlobals;
   setGlobal: (key: string, value: unknown) => void;
   setStorySrc?: (src: string) => void;
   imagesByFlag: Record<string, string>;
