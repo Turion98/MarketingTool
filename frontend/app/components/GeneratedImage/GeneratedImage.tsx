@@ -4,83 +4,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./GeneratedImage.module.scss";
 import { useGameState } from "../../lib/GameStateContext";
-import { useImageCache } from "../../lib/useImageCache";
+import {
+  normalizeImagePromptInput,
+  useImageCache,
+} from "../../lib/useImageCache";
+import type {
+  ImageCacheResult,
+  ImagePromptInput,
+  ImageRequestParams,
+  ImageRootVars,
+} from "../../lib/imageTypes";
 
 type GeneratedImageProps = {
   pageId: string;
-  prompt?: string | null;
-  params?: Record<string, any>;
+  prompt?: ImagePromptInput;
+  params?: ImageRequestParams;
   imageTiming?: { generate?: boolean; delayMs?: number };
   mode?: "draft" | "refine";
   pageIsFadingOut?: boolean;
 };
 
 const FALLBACK_SRC = "/assets/FallBack_image.png";
-
-/**
- * prompt normalizálás – elfogadja az objektumos promptot is
- */
-function normalizePrompt(p: any): string {
-  if (!p) return "";
-  if (typeof p === "string") return p.trim();
-  if (typeof p === "object") {
-    if (p.combinedPrompt) {
-      const base = String(p.combinedPrompt).trim();
-      return p.negativePrompt
-        ? `${base}, Negative: ${String(p.negativePrompt).trim()}`
-        : base;
-    }
-    const parts: string[] = [];
-    if (p.global) parts.push(String(p.global).trim());
-    if (p.chapter) parts.push(String(p.chapter).trim());
-    if (p.page) parts.push(String(p.page).trim());
-    let base = parts.join(", ");
-    if (p.negativePrompt) {
-      base = `${base}, Negative: ${String(p.negativePrompt).trim()}`;
-    }
-    return base.trim();
-  }
-  return String(p).trim();
-}
-
-/**
- * a useImageCache többféle formában adhat vissza adatot
- */
-function adaptCacheResult(cache: any) {
-  if (Array.isArray(cache)) {
-    const [state, actions] = cache ?? [];
-    return {
-      imageUrl:
-        state?.url ??
-        state?.src ??
-        state?.imageUrl ??
-        state?.data?.url ??
-        state?.data?.src ??
-        undefined,
-      loading:
-        !!state?.loading || !!state?.isLoading || state?.status === "loading",
-      error: state?.error ?? state?.err ?? state?.data?.error ?? null,
-      retry:
-        actions?.retry ??
-        actions?.refetch ??
-        actions?.reload ??
-        actions?.refresh,
-    };
-  }
-  return {
-    imageUrl:
-      cache?.url ??
-      cache?.src ??
-      cache?.imageUrl ??
-      cache?.data?.url ??
-      cache?.data?.src ??
-      undefined,
-    loading:
-      !!cache?.loading || !!cache?.isLoading || cache?.status === "loading",
-    error: cache?.error ?? cache?.err ?? cache?.data?.error ?? null,
-    retry: cache?.retry ?? cache?.refetch ?? cache?.reload ?? cache?.refresh,
-  };
-}
 
 function isTerminalError(err: unknown): boolean {
   const msg = String(err || "").toLowerCase();
@@ -115,10 +59,12 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     typeof params?.objectFit === "string" ? params.objectFit : "contain";
 
   const shouldGenerate = imageTiming?.generate !== false && !terminalError;
-  const normalizedPrompt = shouldGenerate ? normalizePrompt(prompt) : "";
+  const normalizedPrompt = shouldGenerate
+    ? normalizeImagePromptInput(prompt)
+    : "";
 
   // kép betöltés / cache
-  const cache = useImageCache({
+  const cache: ImageCacheResult = useImageCache({
     enabled: shouldGenerate,
     pageId,
     prompt: normalizedPrompt,
@@ -127,7 +73,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     apiKey: imageApiKey,
   });
 
-  const { imageUrl, loading, error } = adaptCacheResult(cache);
+  const { imageUrl, loading, error } = cache;
 
   /** OLDALVÁLTÁS – csak a “Kép előkészítése…” jelzést reseteljük */
   useEffect(() => {
@@ -213,8 +159,8 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
           .join(" ")
       : styles.generatedImage;
 
-  const rootVars = useMemo(
-    () => ({ ["--gi-fit" as any]: imgFit }),
+  const rootVars = useMemo<ImageRootVars>(
+    () => ({ "--gi-fit": imgFit }),
     [imgFit]
   );
 

@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { getSeedForPage } from "./sessionSeeds";
+import type {
+  ImageCacheResult,
+  ImageGenerateResponse,
+  ImagePerfLog,
+  ImagePromptInput,
+  ImageRequestParams,
+  ImageStyleProfile,
+} from "./imageTypes";
 
 const toHash = (s: string) => {
   let h = 0;
@@ -7,23 +15,37 @@ const toHash = (s: string) => {
   return `${h >>> 0}`;
 };
 
-function normalizePrompt(p: any): string {
+type PromptObjectWithFields = {
+  combinedPrompt?: unknown;
+  negativePrompt?: unknown;
+  global?: unknown;
+  chapter?: unknown;
+  page?: unknown;
+};
+
+function asPromptObject(value: ImagePromptInput): PromptObjectWithFields | null {
+  if (!value || typeof value !== "object") return null;
+  return value as PromptObjectWithFields;
+}
+
+export function normalizeImagePromptInput(p: ImagePromptInput): string {
   if (!p) return "";
   if (typeof p === "string") return p.trim();
-  if (typeof p === "object") {
-    // 1. ha van combinedPrompt → ez az első
-    if (p.combinedPrompt) {
-      const base = String(p.combinedPrompt).trim();
-      return p.negativePrompt ? `${base}, Negative: ${String(p.negativePrompt).trim()}` : base;
+  const prompt = asPromptObject(p);
+  if (prompt) {
+    if (prompt.combinedPrompt) {
+      const base = String(prompt.combinedPrompt).trim();
+      return prompt.negativePrompt
+        ? `${base}, Negative: ${String(prompt.negativePrompt).trim()}`
+        : base;
     }
-    // 2. külön mezőkből
     const parts: string[] = [];
-    if (p.global) parts.push(String(p.global).trim());
-    if (p.chapter) parts.push(String(p.chapter).trim());
-    if (p.page) parts.push(String(p.page).trim());
+    if (prompt.global) parts.push(String(prompt.global).trim());
+    if (prompt.chapter) parts.push(String(prompt.chapter).trim());
+    if (prompt.page) parts.push(String(prompt.page).trim());
     let base = parts.join(", ");
-    if (p.negativePrompt) {
-      base = `${base}, Negative: ${String(p.negativePrompt).trim()}`;
+    if (prompt.negativePrompt) {
+      base = `${base}, Negative: ${String(prompt.negativePrompt).trim()}`;
     }
     return base.trim();
   }
@@ -33,9 +55,9 @@ function normalizePrompt(p: any): string {
 type UseImageCacheArgs = {
   enabled?: boolean;
   pageId: string;
-  prompt: any; // lehet string vagy object is
-  params?: Record<string, any>;
-  styleProfile?: Record<string, any>;
+  prompt: ImagePromptInput;
+  params?: ImageRequestParams;
+  styleProfile?: ImageStyleProfile;
   mode?: "draft" | "refine";
   maxRetries?: number;
   retryDelayMs?: number;
@@ -46,16 +68,20 @@ type UseImageCacheArgs = {
   storySlug?: string;
 };
 
-type UseImageCacheResult = {
-  imageUrl?: string;
-  loading: boolean;
-  error: string | null;
-};
-
 // ⬇️ Dev perf log (StoryPage dev-sorhoz)
-let lastImagePerfLog: { key: string; url?: string; hit: boolean; ms: number } | null = null;
-export function getLastImagePerfLog() {
+let lastImagePerfLog: ImagePerfLog | null = null;
+export function getLastImagePerfLog(): ImagePerfLog | null {
   return lastImagePerfLog;
+}
+
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  return "Image request failed";
+}
+
+function asGeneratedResponse(value: unknown): ImageGenerateResponse | null {
+  if (!value || typeof value !== "object") return null;
+  return value as ImageGenerateResponse;
 }
 
 export function useImageCache({
@@ -98,7 +124,7 @@ export function useImageCache({
     if (hasFailedRef.current && retryTrigger === 0) return;
 
     // 🔽 itt laposítjuk a promptot, hogy a fetch-nek már mindig string menjen
-    const normalizedPrompt = normalizePrompt(prompt);
+    const normalizedPrompt = normalizeImagePromptInput(prompt);
 
     let isMounted = true;
     const controller = new AbortController();
@@ -189,18 +215,23 @@ export function useImageCache({
               signal: controller.signal,
             });
 
-            const res: any = (await Promise.race([fetchPromise, timeoutPromise])) as Response;
+            const res = (await Promise.race([fetchPromise, timeoutPromise])) as Response;
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            const data = await res.json();
+            const data = asGeneratedResponse(await res.json());
             if (!isMounted) return;
 
             // === VÁLASZ FELDOLGOZÁSA ===
-            const rawUrl: string | undefined = data?.url || data?.path;
+            const rawUrl =
+              typeof data?.url === "string"
+                ? data.url
+                : typeof data?.path === "string"
+                ? data.path
+                : undefined;
 
             if (rawUrl) {
-              let finalUrl = rawUrl as string;
+              let finalUrl = rawUrl;
 
               // ha a backend lokális fájlt ad vissza → rakjuk elé az API_BASE-et
               if (finalUrl.startsWith("/generated/")) {
@@ -231,7 +262,7 @@ export function useImageCache({
             }
 
             throw new Error("Invalid response");
-          } catch (err: any) {
+          } catch (err: unknown) {
             if (controller.signal.aborted) return;
             if (attempt === maxRetries) {
               throw err;
@@ -240,10 +271,10 @@ export function useImageCache({
             attempt++;
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isMounted) return;
         setLoading(false);
-        setError(err?.message || "Image request failed");
+        setError(getErrorMessage(err));
         setImageUrl(undefined);
         hasFailedRef.current = true; // ⬅️ mark: fail állapot
       }

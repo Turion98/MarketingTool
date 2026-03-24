@@ -2,6 +2,11 @@
 
 import { useEffect } from "react";
 
+import type {
+  ImagePromptInput,
+  ImageRequestParams,
+  ImageStyleProfile,
+} from "../../lib/imageTypes";
 import { preloadAudio } from "../../lib/audioCache";
 import { normalizeImagePrompt } from "../../lib/gameStateHelpers";
 import type { ImagePromptObj } from "../../lib/gameStateTypes";
@@ -48,7 +53,7 @@ function normalizeNarrUrl(raw?: string): string | null {
 
 function asImagePrompt(
   value: FetchedPageData["imagePrompt"]
-): string | ImagePromptObj | null | undefined {
+): string | ImagePromptObj | undefined {
   if (typeof value === "string") return value;
   if (value && typeof value === "object") return value as ImagePromptObj;
   return undefined;
@@ -200,7 +205,7 @@ export function useStoryPagePreloads(params: {
             globalFragments
           );
 
-          const mergedParams: Record<string, unknown> = {
+          const mergedParams: ImageRequestParams = {
             ...(nextPageData.imageParams || {}),
             negativePrompt:
               resolvedNegative || nextPageData.imageParams?.negativePrompt,
@@ -214,21 +219,25 @@ export function useStoryPagePreloads(params: {
 
           const objectPrompt =
             imagePrompt && typeof imagePrompt === "object" ? imagePrompt : {};
-          const promptForPreload = {
+          const promptForPreload: ImagePromptInput = {
             ...objectPrompt,
             combinedPrompt: resolvedPrompt,
             negativePrompt:
               resolvedNegative ??
               (typeof imagePrompt === "object"
-                ? imagePrompt.negativePrompt ?? (imagePrompt as { negative?: string }).negative
+                ? imagePrompt.negativePrompt ??
+                  ("negative" in imagePrompt &&
+                  typeof imagePrompt.negative === "string"
+                    ? imagePrompt.negative
+                    : undefined)
                 : undefined),
-          } as unknown as Parameters<typeof preloadImage>[1];
+          };
 
           await preloadImage(
             nextPageData.id,
             promptForPreload,
             mergedParams,
-            nextPageData.styleProfile || {},
+            (nextPageData.styleProfile || {}) as ImageStyleProfile,
             "draft"
           );
         }
