@@ -7,13 +7,25 @@ import shutil
 import traceback
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import cast
 
 from fastapi import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from cache import clear_caches as clear_all_caches
 from cache import get_page_cached, load_story_cached, was_last_page_hit
+from services.contracts import (
+    FragmentGlobalEntry,
+    ImagePromptMerge,
+    ImagePromptObject,
+    ImagePromptParts,
+    JSONValue,
+    SfxItem,
+    StoryDocument,
+    StoryLogic,
+    StoryPage,
+    TextBlock,
+)
 from services.runtime_config import (
     DEFAULT_IMAGE_STYLE,
     DEFAULT_NEGATIVE_BLOCK,
@@ -23,7 +35,7 @@ from services.runtime_config import (
 )
 
 SFX_OVERRIDES_FILE = "sfxOverrides.json"
-SFX_OVERRIDES: Dict[str, List[Dict[str, Any]]] = {}
+SFX_OVERRIDES: dict[str, list[SfxItem]] = {}
 if os.path.exists(SFX_OVERRIDES_FILE):
     try:
         with open(SFX_OVERRIDES_FILE, "r", encoding="utf-8") as f:
@@ -55,14 +67,14 @@ def normalize_src_to_path(src: str | None) -> str:
     return path
 
 
-def load_story(path: str) -> Dict[str, Any]:
-    return load_story_cached(path)
+def load_story(path: str) -> StoryDocument:
+    return cast(StoryDocument, load_story_cached(path))
 
 
-def normalize_sfx_list(items: Any) -> List[Dict[str, Any]]:
+def normalize_sfx_list(items: object) -> list[SfxItem]:
     if not isinstance(items, list):
         return []
-    out: List[Dict[str, Any]] = []
+    out: list[SfxItem] = []
     for s in items:
         if not isinstance(s, dict):
             continue
@@ -84,7 +96,7 @@ def normalize_sfx_list(items: Any) -> List[Dict[str, Any]]:
     return out
 
 
-def apply_sfx_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
+def apply_sfx_overrides(page: StoryPage) -> StoryPage:
     page_out = deepcopy(page)
     pid = page_out.get("id")
     page_sfx = page_out.get("sfx")
@@ -96,7 +108,7 @@ def apply_sfx_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
     return page_out
 
 
-def ensure_str_list(val: Any) -> list[str]:
+def ensure_str_list(val: object) -> list[str]:
     if val is None:
         return []
     if isinstance(val, str):
@@ -110,7 +122,7 @@ def ensure_str_list(val: Any) -> list[str]:
     return []
 
 
-def normalize_page_logic_fields(page: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_page_logic_fields(page: StoryPage) -> StoryPage:
     out = deepcopy(page)
     out["needsFragment"] = ensure_str_list(out.get("needsFragment"))
     out["needsFragmentAny"] = ensure_str_list(out.get("needsFragmentAny"))
@@ -119,7 +131,8 @@ def normalize_page_logic_fields(page: Dict[str, Any]) -> Dict[str, Any]:
 
     logic = out.get("logic")
     if isinstance(logic, dict):
-        conds = logic.get("ifHasFragment")
+        logic_typed = cast(StoryLogic, logic)
+        conds = logic_typed.get("ifHasFragment")
         if isinstance(conds, dict):
             conds = [conds]
         if isinstance(conds, list):
@@ -131,7 +144,7 @@ def normalize_page_logic_fields(page: Dict[str, Any]) -> Dict[str, Any]:
                 go_to = c.get("goTo")
                 if isinstance(frag, str) and isinstance(go_to, str):
                     norm_list.append({"fragment": frag.strip(), "goTo": go_to.strip()})
-            logic["ifHasFragment"] = norm_list
+            logic_typed["ifHasFragment"] = norm_list
 
     choices = out.get("choices")
     if isinstance(choices, list):
@@ -144,7 +157,7 @@ def normalize_page_logic_fields(page: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
-def normalize_prompt_incoming(p: Any) -> str:
+def normalize_prompt_incoming(p: object) -> str:
     if p is None:
         return ""
     if isinstance(p, str):
@@ -167,7 +180,7 @@ def normalize_prompt_incoming(p: Any) -> str:
     return str(p).strip()
 
 
-def collect_fragment_ids_from_text(text: Any) -> set[str]:
+def collect_fragment_ids_from_text(text: TextBlock | object) -> set[str]:
     ids: set[str] = set()
     if isinstance(text, list):
         for it in text:
@@ -183,7 +196,7 @@ def collect_fragment_ids_from_text(text: Any) -> set[str]:
     return ids
 
 
-def collect_fragment_ids(page: Dict[str, Any]) -> set[str]:
+def collect_fragment_ids(page: StoryPage) -> set[str]:
     ids: set[str] = set()
     refs = page.get("fragments") or page.get("fragmentRefs")
     if isinstance(refs, list):
@@ -194,20 +207,23 @@ def collect_fragment_ids(page: Dict[str, Any]) -> set[str]:
     return ids
 
 
-def inject_fragments_global_for(story: Dict[str, Any], page: Dict[str, Any]) -> Dict[str, Any]:
+def inject_fragments_global_for(story: StoryDocument, page: StoryPage) -> StoryPage:
     out = deepcopy(page)
     fr_all = story.get("fragments", {})
     if isinstance(fr_all, dict) and fr_all:
         need = collect_fragment_ids(page)
         if need:
-            out["fragmentsGlobal"] = {fid: fr_all[fid] for fid in need if fid in fr_all}
+            out["fragmentsGlobal"] = cast(
+                dict[str, FragmentGlobalEntry],
+                {fid: fr_all[fid] for fid in need if fid in fr_all},
+            )
     return out
 
 
 def assemble_image_prompt_from_fragments(
-    story: Dict[str, Any], page: Dict[str, Any]
-) -> tuple[Dict[str, str], str]:
-    def push(dst_list: list[str], val: Any):
+    story: StoryDocument, page: StoryPage
+) -> tuple[ImagePromptObject, str]:
+    def push(dst_list: list[str], val: object):
         if not val:
             return
         if isinstance(val, str):
@@ -237,7 +253,7 @@ def assemble_image_prompt_from_fragments(
     fr_global = page.get("fragmentsGlobal") or {}
     include_ids = collect_fragment_ids(page)
 
-    merge_ctl = page.get("imagePromptMerge") or {}
+    merge_ctl = cast(ImagePromptMerge, page.get("imagePromptMerge") or {})
     only_include = set(merge_ctl.get("include") or [])
     exclude = set(merge_ctl.get("exclude") or [])
 
@@ -250,27 +266,29 @@ def assemble_image_prompt_from_fragments(
         fr = fr_global.get(fid)
         if not isinstance(fr, dict):
             continue
-        ipp = fr.get("imagePromptParts")
+        typed_fragment = cast(FragmentGlobalEntry, fr)
+        ipp = typed_fragment.get("imagePromptParts")
         if not ipp:
             continue
         if isinstance(ipp, str):
             push(page_parts, ipp)
         elif isinstance(ipp, dict):
-            push(global_parts, ipp.get("global"))
-            push(chapter_parts, ipp.get("chapter"))
-            push(page_parts, ipp.get("page") or ipp.get("combinedPrompt"))
-            push(negative_parts, ipp.get("negative") or ipp.get("negativePrompt"))
+            typed_parts = cast(ImagePromptParts, ipp)
+            push(global_parts, typed_parts.get("global"))
+            push(chapter_parts, typed_parts.get("chapter"))
+            push(page_parts, typed_parts.get("page") or typed_parts.get("combinedPrompt"))
+            push(negative_parts, typed_parts.get("negative") or typed_parts.get("negativePrompt"))
 
     push(global_parts, DEFAULT_IMAGE_STYLE)
     push(negative_parts, DEFAULT_NEGATIVE_BLOCK)
 
-    obj = {
+    obj: ImagePromptObject = {
         "global": ", ".join(global_parts) if global_parts else None,
         "chapter": ", ".join(chapter_parts) if chapter_parts else None,
         "page": ", ".join(page_parts) if page_parts else None,
         "negativePrompt": ", ".join(negative_parts) if negative_parts else None,
     }
-    obj = {k: v for k, v in obj.items() if v}
+    obj = cast(ImagePromptObject, {k: v for k, v in obj.items() if v})
 
     flat = normalize_prompt_incoming(obj)
 
@@ -294,11 +312,11 @@ def assemble_image_prompt_from_fragments(
     return obj, flat
 
 
-def find_page_recursive(node: Any, page_id: str) -> Dict[str, Any] | None:
+def find_page_recursive(node: JSONValue, page_id: str) -> StoryPage | None:
     if isinstance(node, dict):
         if node.get("id") == page_id:
             if any(k in node for k in ("type", "text", "choices", "imagePrompt", "audio", "transition")):
-                return node
+                return cast(StoryPage, node)
 
         pages = node.get("pages")
         if isinstance(pages, list):
@@ -322,7 +340,7 @@ def find_page_recursive(node: Any, page_id: str) -> Dict[str, Any] | None:
     return None
 
 
-def build_page_response_for(page: Dict[str, Any], story: Dict[str, Any]) -> Dict[str, Any]:
+def build_page_response_for(page: StoryPage, story: StoryDocument) -> StoryPage:
     p = deepcopy(page or {})
     try:
         p = apply_sfx_overrides(p)
@@ -351,41 +369,41 @@ def build_page_response_for(page: Dict[str, Any], story: Dict[str, Any]) -> Dict
     return p
 
 
-def get_story_payload(src: str | None) -> Dict[str, Any]:
+def get_story_payload(src: str | None) -> StoryDocument:
     story_path = normalize_src_to_path(src)
     return load_story(story_path)
 
 
-def get_landing_payload(src: str | None) -> Dict[str, Any]:
+def get_landing_payload(src: str | None) -> StoryPage:
     if src:
         story_path = normalize_src_to_path(src)
         data = load_story(story_path)
         if isinstance(data, dict) and "landing" in data:
-            return data["landing"]
+            return cast(StoryPage, data["landing"])
 
     default_path = normalize_src_to_path(DEFAULT_STORY)
     default = load_story(default_path)
     if isinstance(default, dict) and "landing" in default:
-        return default["landing"]
+        return cast(StoryPage, default["landing"])
 
     raise HTTPException(status_code=404, detail="Landing not found in default story")
 
 
-def get_fragments_payload(src: str | None) -> Dict[str, Any]:
+def get_fragments_payload(src: str | None) -> dict[str, JSONValue]:
     story_path = normalize_src_to_path(src)
     story = load_story(story_path)
     fr = story.get("fragments", {})
     if not isinstance(fr, dict):
         return {}
-    return fr
+    return cast(dict[str, JSONValue], fr)
 
 
-def get_public_landing_payload(src: str | None) -> Dict[str, Any]:
+def get_public_landing_payload(src: str | None) -> StoryPage:
     story_path = normalize_src_to_path(src)
     story = load_story(story_path)
     if "landing" not in story:
         raise HTTPException(status_code=404, detail="Landing not found")
-    return inject_fragments_global_for(story, story["landing"])
+    return inject_fragments_global_for(story, cast(StoryPage, story["landing"]))
 
 
 def get_page_payload(page_id: str, src: str | None):
@@ -432,7 +450,7 @@ def get_generated_image_response(story_slug: str, image_name: str) -> FileRespon
     return resp
 
 
-def clear_cache_payload() -> Dict[str, Any]:
+def clear_cache_payload() -> dict[str, str | bool]:
     try:
         for subdir in ["generated/images", "generated/audio"]:
             if os.path.isdir(subdir):

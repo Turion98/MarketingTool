@@ -7,7 +7,6 @@ import json
 import os
 import time
 from datetime import datetime, timedelta
-from typing import Any, Optional
 from urllib.parse import quote
 
 from fastapi import HTTPException
@@ -16,6 +15,7 @@ from email_utils import send_mail_with_pdf
 from models.report_settings import ReportSettings
 from report_scheduler import load_settings, save_settings, set_generate_cb, start_scheduler
 from services.analytics import rollup_range
+from services.contracts import JSONValue
 from services.runtime_config import get_logo_url
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
@@ -58,7 +58,7 @@ def verify_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail=str(e))
 
 
-def get_export_token_payload(story_id: str, days: int, secret: str) -> Dict[str, Any]:
+def get_export_token_payload(story_id: str, days: int, secret: str) -> dict[str, JSONValue]:
     if secret != os.getenv("DEV_CLEAR_SECRET", "KAB1T05Z3r!25"):
         raise HTTPException(status_code=401, detail="Invalid secret")
     ttl = max(1, min(int(days), 90)) * 24 * 3600
@@ -104,7 +104,7 @@ def _ms_to_hms(ms: int) -> str:
     return " ".join(out)
 
 
-def build_html_report(roll: dict, logo_url: str | None = None) -> str:
+def build_html_report(roll: dict[str, JSONValue], logo_url: str | None = None) -> str:
     dau_labels = [d["day"] for d in roll.get("dau", [])]
     dau_users = [d["users"] for d in roll.get("dau", [])]
     dau_sessions = [d["sessions"] for d in roll.get("dau", [])]
@@ -236,12 +236,12 @@ def export_report_html_pdf(
 
 def export_report_payload(
     token: str,
-    storyId: Optional[str],
-    range_value: Optional[str],
-    _from: Optional[str],
-    _to: Optional[str],
+    storyId: str | None,
+    range_value: str | None,
+    _from: str | None,
+    _to: str | None,
     fmt: str,
-    terminal: Optional[str],
+    terminal: str | None,
 ):
     payload = verify_token(token)
     sid_from_token = payload.get("storyId")

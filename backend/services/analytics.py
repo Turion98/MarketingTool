@@ -5,11 +5,12 @@ import os
 import re
 import traceback
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import cast
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
 
+from services.contracts import AnalyticsBatchHeader, AnalyticsEvent, AnalyticsProps, JSONValue
 from services.runtime_config import ANALYTICS_DIR
 
 
@@ -21,35 +22,35 @@ def story_analytics_dir(story_id: str) -> str:
 
 
 class AnalyticsEventModel(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     t: str
-    ts: Optional[int] = None
-    storyId: Optional[str] = None
+    ts: int | None = None
+    storyId: str | None = None
     sessionId: str
-    runId: Optional[str] = None
-    pageId: Optional[str] = None
-    refPageId: Optional[str] = None
-    props: Optional[Dict[str, Any]] = None
+    runId: str | None = None
+    pageId: str | None = None
+    refPageId: str | None = None
+    props: AnalyticsProps | None = None
 
 
 class AnalyticsBatch(BaseModel):
     storyId: str
-    userId: Optional[str] = None
-    device: Optional[Dict[str, Any]] = None
-    events: List[AnalyticsEventModel]
-    domain: Optional[str] = None
+    userId: str | None = None
+    device: dict[str, object] | None = None
+    events: list[AnalyticsEventModel]
+    domain: str | None = None
 
 
-def ingest_batch(batch: AnalyticsBatch, request: Request) -> Dict[str, Any]:
+def ingest_batch(batch: AnalyticsBatch, request: Request) -> dict[str, JSONValue]:
     try:
         now_ms = int(datetime.utcnow().timestamp() * 1000)
         host = request.headers.get("host") or ""
         host_domain = host.split(":")[0] if host else None
         batch_domain = batch.domain or host_domain or "unknown"
 
-        norm_events = []
+        norm_events: list[AnalyticsEvent] = []
         for e in batch.events:
-            d = e.dict()
+            d = cast(AnalyticsEvent, e.model_dump())
 
             if not d.get("storyId"):
                 d["storyId"] = batch.storyId
@@ -61,10 +62,10 @@ def ingest_batch(batch: AnalyticsBatch, request: Request) -> Dict[str, Any]:
             props = d.get("props") or {}
             rid = d.get("runId") or d.get("rid") or props.get("runId") or props.get("rid")
             if rid:
-                d["runId"] = rid
-                props["runId"] = rid
+                d["runId"] = str(rid)
+                props["runId"] = str(rid)
             if d.get("runId") and not props.get("runId"):
-                props["runId"] = d["runId"]
+                props["runId"] = str(d["runId"])
             d["props"] = props
 
             if not isinstance(props, dict):
@@ -75,17 +76,17 @@ def ingest_batch(batch: AnalyticsBatch, request: Request) -> Dict[str, Any]:
             norm_events.append(d)
 
         output_dir = story_analytics_dir(batch.storyId)
-        by_day: Dict[str, List[Dict[str, Any]]] = {}
+        by_day: dict[str, list[AnalyticsEvent]] = {}
         for obj in norm_events:
             day = datetime.utcfromtimestamp(obj["ts"] / 1000.0).strftime("%Y-%m-%d")
             by_day.setdefault(day, []).append(obj)
 
         written_total = 0
-        written_files: List[str] = []
+        written_files: list[str] = []
         for day, events in by_day.items():
             out_path = os.path.join(output_dir, f"{day}.jsonl")
             with open(out_path, "a", encoding="utf-8") as f:
-                header = {
+                header: AnalyticsBatchHeader = {
                     "_type": "batch_header",
                     "ts": datetime.utcnow().isoformat() + "Z",
                     "storyId": batch.storyId,
@@ -107,14 +108,14 @@ def ingest_batch(batch: AnalyticsBatch, request: Request) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def list_days(story_id: str) -> Dict[str, Any]:
+def list_days(story_id: str) -> dict[str, JSONValue]:
     d = story_analytics_dir(story_id)
     files = sorted([f for f in os.listdir(d) if f.endswith(".jsonl")])
     days = [f[:-6] for f in files]
     return {"storyId": story_id, "days": days}
 
 
-def get_day(story_id: str, day: str) -> Dict[str, Any]:
+def get_day(story_id: str, day: str) -> dict[str, JSONValue]:
     d = story_analytics_dir(story_id)
     path = os.path.join(d, f"{day}.jsonl")
     if not os.path.exists(path):
@@ -123,7 +124,7 @@ def get_day(story_id: str, day: str) -> Dict[str, Any]:
         return {"storyId": story_id, "day": day, "lines": f.read().splitlines()}
 
 
-def rollup_day(story_id: str, day: str) -> Dict[str, Any]:
+def rollup_day(story_id: str, day: str) -> dict[str, JSONValue]:
     d = story_analytics_dir(story_id)
     path = os.path.join(d, f"{day}.jsonl")
     if not os.path.exists(path):
@@ -133,7 +134,7 @@ def rollup_day(story_id: str, day: str) -> Dict[str, Any]:
     users: set[str] = set()
     pages: set[str] = set()
 
-    def _puzzle_by_kind() -> Dict[str, Dict[str, int]]:
+    def _puzzle_by_kind() -> dict[str, dict[str, int]]:
         return {
             "riddle": {"tries": 0, "solved": 0},
             "runes": {"tries": 0, "solved": 0},
@@ -149,10 +150,10 @@ def rollup_day(story_id: str, day: str) -> Dict[str, Any]:
         "mediaStops": 0,
         "completions": 0,
     }
-    page_views: Dict[str, int] = {}
-    domains: Dict[str, Dict[str, Any]] = {}
+    page_views: dict[str, int] = {}
+    domains: dict[str, dict[str, object]] = {}
 
-    def ensure_domain(dom: str) -> Dict[str, Any]:
+    def ensure_domain(dom: str) -> dict[str, object]:
         existing = domains.get(dom)
         if existing:
             return existing
@@ -180,7 +181,7 @@ def rollup_day(story_id: str, day: str) -> Dict[str, Any]:
             if not line:
                 continue
 
-            obj = json.loads(line)
+            obj = cast(dict[str, JSONValue], json.loads(line))
             if obj.get("_type") == "batch_header":
                 uid_hdr = obj.get("userId")
                 if uid_hdr:
@@ -290,7 +291,7 @@ def _daterange(start_date: datetime, end_date: datetime):
         cur = cur + timedelta(days=1)
 
 
-def _safe_parse_jsonl_line(line: str) -> Optional[Dict[str, Any]]:
+def _safe_parse_jsonl_line(line: str) -> dict[str, JSONValue] | None:
     line = (line or "").strip()
     if not line:
         return None
@@ -304,8 +305,8 @@ def rollup_range(
     story_id: str,
     _from: str,
     _to: str,
-    terminal: Optional[str] = None,
-) -> Dict[str, Any]:
+    terminal: str | None = None,
+) -> dict[str, JSONValue]:
     d = story_analytics_dir(story_id)
     try:
         start = datetime.strptime(_from, "%Y-%m-%d")
@@ -319,7 +320,7 @@ def rollup_range(
     if terminal:
         terminal_pages = {p.strip() for p in terminal.split(",") if p.strip()}
 
-    def _is_end_page_id(pid: str, end_flags_for_run: Dict[str, bool]) -> bool:
+    def _is_end_page_id(pid: str, end_flags_for_run: dict[str, bool]) -> bool:
         if not pid:
             return False
         s = str(pid)
@@ -335,22 +336,22 @@ def rollup_range(
             return True
         return False
 
-    per_session_events: Dict[str, List[Dict[str, Any]]] = {}
-    per_run_events: Dict[str, List[Dict[str, Any]]] = {}
-    session_user: Dict[str, str] = {}
-    run_user: Dict[str, str] = {}
-    run_session: Dict[str, str] = {}
+    per_session_events: dict[str, list[dict[str, object]]] = {}
+    per_run_events: dict[str, list[dict[str, object]]] = {}
+    session_user: dict[str, str] = {}
+    run_user: dict[str, str] = {}
+    run_session: dict[str, str] = {}
     sessions_all: set[str] = set()
     users_all: set[str] = set()
     runs_all: set[str] = set()
-    dau: Dict[str, Dict[str, set]] = {}
-    page_views: Dict[str, int] = {}
-    page_sessions: Dict[str, set] = {}
-    choice_counts: Dict[str, Dict[str, int]] = {}
-    exits_after_page: Dict[str, int] = {}
-    drop_offs: Dict[str, Dict[str, Any]] = {}
+    dau: dict[str, dict[str, set[str]]] = {}
+    page_views: dict[str, int] = {}
+    page_sessions: dict[str, set[str]] = {}
+    choice_counts: dict[str, dict[str, int]] = {}
+    exits_after_page: dict[str, int] = {}
+    drop_offs: dict[str, dict[str, object]] = {}
 
-    def _puzzles_totals() -> Dict[str, Any]:
+    def _puzzles_totals() -> dict[str, object]:
         return {
             "tries": 0,
             "solved": 0,
@@ -373,16 +374,16 @@ def rollup_range(
         "completions": 0,
     }
 
-    end_pages: Dict[str, Dict[str, Any]] = {}
-    outcomes: Dict[str, Dict[str, Any]] = {}
-    paths: Dict[str, Dict[str, Any]] = {}
-    step_transitions: Dict[str, Dict[str, set[str]]] = {}
+    end_pages: dict[str, dict[str, object]] = {}
+    outcomes: dict[str, dict[str, object]] = {}
+    paths: dict[str, dict[str, object]] = {}
+    step_transitions: dict[str, dict[str, set[str]]] = {}
     completed_sessions = 0
     total_session_duration = 0
     completed_runs = 0
-    domains: Dict[str, Dict[str, Any]] = {}
+    domains: dict[str, dict[str, object]] = {}
 
-    def ensure_domain(dom: str) -> Dict[str, Any]:
+    def ensure_domain(dom: str) -> dict[str, object]:
         existing = domains.get(dom)
         if existing:
             return existing
@@ -406,11 +407,11 @@ def rollup_range(
         domains[dom] = agg
         return agg
 
-    runes_option_counts: Dict[str, int] = {}
-    runes_solved_attempts: List[int] = []
-    runes_solved_by_attempt: Dict[int, int] = {}
-    riddle_retries_per_run: List[float] = []
-    riddle_wrong_by_page: Dict[str, int] = {}
+    runes_option_counts: dict[str, int] = {}
+    runes_solved_attempts: list[int] = []
+    runes_solved_by_attempt: dict[int, int] = {}
+    riddle_retries_per_run: list[float] = []
+    riddle_wrong_by_page: dict[str, int] = {}
     riddle_run_tries: int = 0
     riddle_run_solved: int = 0
 
@@ -436,7 +437,7 @@ def rollup_range(
 
                 t = obj.get("t")
                 ts = obj.get("ts")
-                props = obj.get("props") or {}
+                props = cast(AnalyticsProps, obj.get("props") or {})
                 if not isinstance(props, dict):
                     props = {}
 
@@ -598,13 +599,13 @@ def rollup_range(
         if last_page_enter:
             exits_after_page[str(last_page_enter)] = exits_after_page.get(str(last_page_enter), 0) + 1
 
-    session_run_counts: Dict[str, int] = {}
+    session_run_counts: dict[str, int] = {}
     for rid_key, sid_val in run_session.items():
         if sid_val:
             sk = str(sid_val)
             session_run_counts[sk] = session_run_counts.get(sk, 0) + 1
 
-    session_restart_ts: Dict[str, List[int]] = {}
+    session_restart_ts: dict[str, list[int]] = {}
     for sid_s, sess_evs in per_session_events.items():
         for e in sess_evs:
             if e.get("t") != "ui_click":
@@ -626,8 +627,8 @@ def rollup_range(
     restart_runs_with = 0
     restart_completed_with = 0
     restart_completed_without = 0
-    path_conv: Dict[str, Dict[str, Any]] = {}
-    end_type_dist: Dict[str, Dict[str, Any]] = {}
+    path_conv: dict[str, dict[str, object]] = {}
+    end_type_dist: dict[str, dict[str, object]] = {}
 
     for rid, evs in per_run_events.items():
         if not evs:
@@ -640,7 +641,7 @@ def rollup_range(
             if e.get("t") == "puzzle_result" and (e.get("props") or {}).get("kind") == "riddle"
         ]
         if riddle_evs:
-            by_page: Dict[str, Dict[str, Any]] = {}
+            by_page: dict[str, dict[str, object]] = {}
             for e in riddle_evs:
                 pid = e.get("pageId") or (e.get("props") or {}).get("puzzleId")
                 if pid is None or pid == "":
@@ -666,8 +667,8 @@ def rollup_range(
         sid_run = run_session.get(rid)
         restart_total_runs += 1
 
-        seq: List[str] = []
-        end_flags_for_run: Dict[str, bool] = {}
+        seq: list[str] = []
+        end_flags_for_run: dict[str, bool] = {}
         for e in evs:
             t_e = e.get("t")
             if t_e == "page_enter" and e.get("pageId"):
@@ -680,7 +681,7 @@ def rollup_range(
 
         completed = False
         end_alias = None
-        end_props: Optional[Dict[str, Any]] = None
+        end_props: dict[str, object] | None = None
         for e in evs:
             if e.get("t") in ("game_complete", "game:complete"):
                 completed = True
@@ -758,7 +759,7 @@ def rollup_range(
             oc["ctaClicks"] += int(cta_click_run)
 
             if final_is_end and seq:
-                end_type_val: Optional[str] = None
+                end_type_val: str | None = None
                 if end_props and isinstance(end_props, dict):
                     et = end_props.get("endType")
                     if isinstance(et, str) and et.strip():
@@ -965,13 +966,13 @@ def rollup_range(
         end_dist_out.append({"id": et_id, "count": cnt, "share": round(share, 4)})
     end_dist_out.sort(key=lambda x: x["count"], reverse=True)
 
-    puzzle_runes_top_options: List[Dict[str, Any]] = []
+    puzzle_runes_top_options: list[dict[str, object]] = []
     for label, cnt in sorted(runes_option_counts.items(), key=lambda kv: kv[1], reverse=True)[:2]:
         puzzle_runes_top_options.append({"label": label, "count": cnt})
     runes_avg_attempt_when_solved = (
         sum(runes_solved_attempts) / len(runes_solved_attempts) if runes_solved_attempts else None
     )
-    runes_solved_by_attempt_out: List[Dict[str, Any]] = []
+    runes_solved_by_attempt_out: list[dict[str, object]] = []
     for a in sorted(runes_solved_by_attempt.keys()):
         runes_solved_by_attempt_out.append({"attempt": a, "count": runes_solved_by_attempt[a]})
 
@@ -980,7 +981,7 @@ def rollup_range(
         sum(riddle_retries_per_run) / len(riddle_retries_per_run) if riddle_retries_per_run else 0.0
     )
     total_wrong = sum(riddle_wrong_by_page.values())
-    riddle_wrong_by_question_out: List[Dict[str, Any]] = []
+    riddle_wrong_by_question_out: list[dict[str, object]] = []
     for pid, cnt in sorted(riddle_wrong_by_page.items(), key=lambda kv: kv[1], reverse=True):
         pct = (cnt / total_wrong) if total_wrong else 0.0
         riddle_wrong_by_question_out.append({"pageId": pid, "count": cnt, "pct": round(pct, 4)})
