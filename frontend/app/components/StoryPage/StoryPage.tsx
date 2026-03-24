@@ -15,12 +15,17 @@ import style from "./StoryPage.module.scss";
 import {
   composeBlocks,
   explodeTextToBlocks,
-  normalizeAssetUrl,
   resolvePromptFragments,
 } from "./storyPageText";
+import {
+  buildDockChoices,
+  resolveDockSelection,
+} from "./storyPageChoices";
+import { buildChoiceMutationPlan } from "./storyPageChoiceMutations";
 import type { FragmentBank, FragmentData } from "./storyPageTypes";
 import { useStoryPageBootstrap } from "./useStoryPageBootstrap";
 import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
+import { useStoryPageEndState } from "./useStoryPageEndState";
 import { useStoryPagePreloads } from "./useStoryPagePreloads";
 import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss";
@@ -74,9 +79,6 @@ import {
 
 
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
-
-import { resolveCta } from "../../core/cta/ctaResolver";
-import type { CtaContext, CampaignConfig } from "../../core/cta/ctaTypes";
 
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 
@@ -479,6 +481,21 @@ const derivedRunId = runId;
     globalFragments,
   });
 
+  const {
+    endCtaContext,
+    resolvedEndCta,
+    meta,
+    titleText,
+    logoUrl,
+  } = useStoryPageEndState({
+    derivedStoryId,
+    derivedSessionId,
+    currentPageId,
+    pageData,
+    globals,
+    endTrackedRef,
+  });
+
   // 🔹 LOGIC típusú oldalak automatikus futtatása (L3_route_switch, Route_E_result_logic, stb.)
   useEffect(() => {
     if (!pageData || pageData.type !== "logic") return;
@@ -872,90 +889,13 @@ const derivedRunId = runId;
     !isEndNode;
 
 const dockChoicesForThisPage = useMemo(() => {
-  if (!canInteractHere || !pageData) return [];
-
-  const allChoices: any[] = Array.isArray(pageData.choices)
-    ? pageData.choices
-    : [];
-
-  if (allChoices.length > 0) {
-    const unlockedSet = new Set(unlockedFragments || []);
-
-    const normalized = allChoices.map((c: any, idx: number) => {
-      const choiceId = String(c?.id ?? idx);
-
-      const showList: string[] = Array.isArray(c.showIfHasFragment)
-        ? c.showIfHasFragment.map((x: any) => String(x))
-        : [];
-      const hideList: string[] = Array.isArray(c.hideIfHasFragment)
-        ? c.hideIfHasFragment.map((x: any) => String(x))
-        : [];
-
-      let visible = true;
-
-      // ha van showIfHasFragment, csak akkor látszik, ha legalább 1 fragment megvan
-      if (showList.length > 0) {
-        visible = showList.some((frag) => unlockedSet.has(frag));
-      }
-
-      // ha van hideIfHasFragment, és bármelyik megvan, akkor elrejtjük
-      if (visible && hideList.length > 0) {
-        const hasHide = hideList.some((frag) => unlockedSet.has(frag));
-        if (hasHide) visible = false;
-      }
-
-      return {
-        raw: c,
-        id: choiceId,
-        visible,
-      };
-    });
-
-    const visibleChoices = normalized.filter((it) => it.visible);
-
-    if (visibleChoices.length > 0) {
-      return visibleChoices.map((it) => ({
-        id: it.id,
-        label: String(
-          it.raw?.text ??
-            it.raw?.label ??
-            it.raw?.id ??
-            `choice_${it.id}`
-        ),
-        disabled: !!it.raw?.disabled,
-      }));
-    }
-
-    // ha minden choice eltűnt a szűrés miatt, de van resolvedNext → mutassunk egy sima "Next"-et
-    if (resolvedNext && resolvedNext !== pageData.id) {
-      return [
-        {
-          id: "__NEXT__",
-          label: "Next",
-          disabled: false,
-        },
-      ];
-    }
-
-    return [];
-  }
-
-  if (
-    (!Array.isArray(pageData.choices) ||
-      pageData.choices.length === 0) &&
-    resolvedNext &&
-    resolvedNext !== pageData.id
-  ) {
-    return [
-      {
-        id: "__NEXT__",
-        label: "Next",
-        disabled: false,
-      },
-    ];
-  }
-
-  return [];
+  return buildDockChoices({
+    canInteractHere,
+    pageId: pageData?.id,
+    choices: pageData?.choices,
+    resolvedNext,
+    unlockedFragments,
+  });
 }, [
   canInteractHere,
   pageData ? pageData.choices : undefined,
@@ -963,133 +903,6 @@ const dockChoicesForThisPage = useMemo(() => {
   pageData ? pageData.id : undefined,
   unlockedFragments, // 🔹 ÚJ dependency
 ]);
-
-useEffect(() => {
-  if (!derivedStoryId || !derivedSessionId) return;
-
-  const isEnd =
-    pageData?.type === "end" ||
-    (typeof pageData?.id === "string" && pageData.id.startsWith("end_"));
-
-  if (!isEnd) {
-    endTrackedRef.current = false;
-    return;
-  }
-
-  if (endTrackedRef.current) return;
-  endTrackedRef.current = true;
-
-  // itt NEM kell külön trackGameComplete, ha a trackPageEnter már pageType:"end"-et kap
-}, [derivedStoryId, derivedSessionId, pageData?.id, pageData?.type]);
-
-  // CTA
-  const endCtaContext: CtaContext = useMemo(
-    () => ({
-      campaignId: derivedStoryId || "unknown_campaign",
-      nodeId: pageData?.id || currentPageId || "unknown_node",
-      sessionId: derivedSessionId || undefined,
-      endId: pageData?.id,
-      endAlias: (pageData as any)?.endAlias,
-      lang: (globals as any)?.lang ?? undefined,
-      abVariant: (globals as any)?.abVariant ?? null,
-      path:
-        typeof window !== "undefined"
-          ? window.location.pathname
-          : undefined,
-    }),
-    [
-      derivedStoryId,
-      pageData?.id,
-      currentPageId,
-      derivedSessionId,
-      (globals as any)?.lang,
-      (globals as any)?.abVariant,
-    ]
-  );
-
-  const nodeEndMeta = useMemo(() => {
-    const em = (pageData as any)?.endMeta;
-    if (em) return em;
-    const legacy =
-      (pageData as any)?.endCta || (pageData as any)?.cta;
-    return legacy ? { cta: legacy } : undefined;
-  }, [pageData]);
-
-  const campaignCfg: CampaignConfig | undefined = useMemo(() => {
-    const g: any = globals || {};
-
-    const metaCandidates = [
-      (pageData as any)?.meta,
-      g.meta,
-      g.campaign?.meta,
-      g.story?.meta,
-      (g as any).storyMeta,
-      g.source?.meta,
-      g.storyConfig?.meta,
-      g.loadedStory?.meta,
-      g.storyData?.meta,
-      g.storyJson?.meta,
-    ].filter(Boolean) as Array<Record<string, any>>;
-
-    const metaWithPresets = metaCandidates.find(
-      (m) => m?.ctaPresets
-    );
-    const metaFromSources =
-      metaWithPresets ?? metaCandidates[0] ?? null;
-
-    if (metaFromSources && !g.meta) {
-      try {
-        (globals as any).meta = metaFromSources;
-      } catch {}
-    }
-
-    const presets =
-      metaFromSources?.ctaPresets ??
-      g.ctaPresets ??
-      g.campaignCtaPresets ??
-      g.story?.ctaPresets ??
-      undefined;
-
-    const endDefaultCta =
-      metaFromSources?.endDefaultCta ??
-      g.endDefaultCta ??
-      g.campaignEndDefaultCta ??
-      g.story?.endDefaultCta ??
-      undefined;
-
-    const campaignId =
-      metaFromSources?.campaignId ??
-      g.campaignId ??
-      g.story?.campaignId ??
-      derivedStoryId ??
-      "unknown_campaign";
-
-    if (!campaignId && !presets && !endDefaultCta) return undefined;
-
-    if (!presets) {
-      console.warn(
-        "[CTA] No ctaPresets found. Using engine default."
-      );
-    }
-
-    return { campaignId, ctaPresets: presets, endDefaultCta };
-  }, [pageData, globals, derivedStoryId]);
-
-  const engineDefaultEndCta = useMemo(
-    () => ({ kind: "restart", label: "Play again" } as const),
-    []
-  );
-
-  const resolvedEndCta = useMemo(
-    () =>
-      resolveCta(
-        nodeEndMeta,
-        campaignCfg,
-        engineDefaultEndCta,
-        endCtaContext
-      ),
-    [nodeEndMeta, campaignCfg, engineDefaultEndCta, endCtaContext]
-  );
 
   // recall szövegek
   const recallTexts: string[] = useMemo(() => {
@@ -1152,44 +965,6 @@ useEffect(() => {
 
     return "Helyes!";
   }, [pageData, globals]);
-
-  // meta/title/logo
-  const meta = useMemo(() => {
-    return (
-      (pageData as any)?.meta ??
-      (globals as any)?.meta ??
-      (globals as any)?.campaign?.meta ??
-      null
-    );
-  }, [pageData, globals]);
-
-  const titleText = useMemo(() => {
-    return (
-      meta?.title ??
-      (globals as any)?.storyTitle ??
-      (pageData as any)?.title ??
-      derivedStoryId
-    );
-  }, [
-    meta?.title,
-    (globals as any)?.storyTitle,
-    (pageData as any)?.title,
-    derivedStoryId,
-  ]);
-
-  const logoUrl = useMemo(() => {
-    const raw =
-      (meta?.logo as string | undefined) ??
-      ((globals as any)?.logo as string | undefined) ??
-      null;
-    const url = normalizeAssetUrl(raw);
-    if (!url && process.env.NODE_ENV !== "production") {
-      console.warn(
-        "No logo in meta/globals. Using default_logo.png"
-      );
-    }
-    return url ?? "/assets/default_logo.png";
-  }, [meta?.logo, (globals as any)?.logo]);
 
   // debug logs
   useEffect(() => {
@@ -1584,24 +1359,6 @@ const mediaNode = useMemo(() => {
     [pageData, globals, setGlobal, setFlag, goToNextPage]
   );
 
-  const normalizeIdList = (v: unknown): string[] => {
-    if (Array.isArray(v)) {
-      return v
-        .flatMap((x) =>
-          String(x).split(/[,\s]+/g)
-        )
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-    if (typeof v === "string") {
-      return v
-        .split(/[,\s]+/g)
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-    return [];
-  };
-
   const handleChoice = useCallback(
     (next: string, reward?: any, choiceObj?: any) => {
       // simple double-click guard
@@ -1658,153 +1415,37 @@ const mediaNode = useMemo(() => {
         }
       } catch {}
 
-      // reward.setGlobal
-      if (
-        reward?.setGlobal &&
-        typeof reward.setGlobal === "object"
-      ) {
+      const mutationPlan = buildChoiceMutationPlan({
+        reward,
+        choiceObj,
+        pageData,
+        unlockedFragments,
+        flags,
+        globalFragments,
+        fragments,
+      });
+
+      if (mutationPlan.globalUpdates.length > 0) {
         flushSync(() => {
-          Object.entries(
-            reward.setGlobal
-          ).forEach(([k, v]) => {
-            setGlobal(k, String(v));
+          mutationPlan.globalUpdates.forEach(({ key, value }) => {
+            setGlobal(key, value);
           });
         });
       }
 
-      // reward unlocks
-      let unlocks: string[] = [];
-      if (Array.isArray(reward?.unlocks)) {
-        unlocks = reward.unlocks.filter(Boolean);
-      } else if (
-        typeof reward?.unlocks === "string"
-      ) {
-        unlocks = [reward.unlocks];
-      }
-
-      const rewardLocks = normalizeIdList(
-        reward?.locks
-      );
-
-      // reward.unlockFragments
-      let rewardExtra: string[] = [];
-      if (
-        Array.isArray(reward?.unlockFragments)
-      ) {
-        rewardExtra =
-          reward.unlockFragments.filter(Boolean);
-      }
-
-      // saveFragment(s)
-      const toSave: string[] = [];
-      if (typeof reward?.saveFragment === "string")
-        toSave.push(reward.saveFragment);
-      if (Array.isArray(reward?.saveFragments))
-        toSave.push(...reward.saveFragments);
-
-      const savedAndFound: string[] = [];
-      if (toSave.length) {
-        toSave.forEach((id) => {
-          const src =
-            (globalFragments as any)?.[id] ||
-            (pageData as any)
-              ?.fragmentsGlobal?.[id] ||
-            (pageData as any)?.fragments?.[id] ||
-            (fragments as any)?.[id];
-          if (
-            src &&
-            (src.text || src.replayImageId)
-          ) {
-            addFragment(id, {
-              text: src.text,
-              replayImageId: src.replayImageId,
-            });
-            savedAndFound.push(id);
-          }
-        });
-      }
-
-      const autoUnlockSaved = false;
-      if (autoUnlockSaved && savedAndFound.length) {
-        rewardExtra = [
-          ...rewardExtra,
-          ...savedAndFound.filter(
-            (id) => !isFlagId(id)
-          ),
-        ];
-      }
-
-      // choice.actions
-      let actionExtra: string[] = [];
-      let actionFlags: string[] = [...rewardLocks];
-      if (Array.isArray(choiceObj?.actions)) {
-        choiceObj.actions.forEach((a: any) => {
-          if (a?.unlockFragment)
-            actionExtra.push(a.unlockFragment);
-          if (
-            a?.type === "unlockFragment" &&
-            a?.id
-          )
-            actionExtra.push(a.id);
-
-          if (
-            a?.type === "setFlag" &&
-            a?.id
-          )
-            actionFlags.push(a.id);
-          if (
-            a?.type === "unlockRune" &&
-            a?.id
-          )
-            actionFlags.push(a.id);
-        });
-      }
-
-      // choice.fragmentId
-      const choiceFragId: string | undefined =
-        choiceObj?.fragmentId;
-      let choiceExtra: string[] = [];
-      if (choiceFragId) {
-        choiceExtra = [choiceFragId];
-      }
-
-      // merge fragment unlocks
-      const toUnlockFragments = Array.from(
-        new Set([
-          ...unlocks,
-          ...rewardExtra,
-          ...actionExtra,
-          ...choiceExtra,
-        ])
-      ).filter((id) => !isFlagId(id));
-
-      if (toUnlockFragments.length > 0) {
+      if (mutationPlan.savedFragments.length > 0) {
         flushSync(() => {
-          const merged = Array.from(
-            new Set([
-              ...unlockedFragments,
-              ...toUnlockFragments,
-            ])
-          );
-          setUnlockedFragments(merged);
+          mutationPlan.savedFragments.forEach(({ id, data }) => {
+            addFragment(id, data);
+          });
+        });
+      }
 
-          // add unlocked frags to bank
-          toUnlockFragments.forEach((id) => {
-            const src =
-              (globalFragments as any)?.[id] ||
-              (pageData as any)
-                ?.fragmentsGlobal?.[id] ||
-              (pageData as any)?.fragments?.[id] ||
-              (fragments as any)?.[id];
-            if (
-              src &&
-              (src.text || src.replayImageId)
-            ) {
-              addFragment(id, {
-                text: src.text,
-                replayImageId: src.replayImageId,
-              });
-            }
+      if (mutationPlan.mergedUnlockedFragments.length > 0) {
+        flushSync(() => {
+          setUnlockedFragments(mutationPlan.mergedUnlockedFragments);
+          mutationPlan.unlockedFragmentWrites.forEach(({ id, data }) => {
+            addFragment(id, data);
           });
 
          /* setShowReward(true); */
@@ -1817,27 +1458,12 @@ const mediaNode = useMemo(() => {
         registerTimeout(tid); */
       }
 
-      // flags incl rune_*
-      if (actionFlags.length > 0) {
-        const uniqueFlags = Array.from(
-          new Set(actionFlags)
-        );
-
-        const prevRunes = new Set(
-          Array.from(
-            flags ?? new Set<string>()
-          ).filter(isRuneId)
-        );
-        const newRunes = uniqueFlags.filter(
-          (f) => isRuneId(f) && !prevRunes.has(f)
-        );
-
+      if (mutationPlan.flagsToSet.length > 0) {
         flushSync(() => {
-          uniqueFlags.forEach((f) => setFlag(f));
+          mutationPlan.flagsToSet.forEach((flagId) => setFlag(flagId));
         });
 
-        // rune tracking
-        if (newRunes.length) {
+        if (mutationPlan.newRunes.length > 0) {
           try {
             const pageId =
               pageData?.id ||
@@ -1848,7 +1474,7 @@ const mediaNode = useMemo(() => {
               derivedSessionId &&
               pageId
             ) {
-              newRunes.forEach((rid) => {
+              mutationPlan.newRunes.forEach((rid) => {
                 if (!rid) return;
                 trackRuneUnlock(
                   derivedStoryId,
@@ -1858,10 +1484,7 @@ const mediaNode = useMemo(() => {
                   {
                     source: "choice",
                     mode: "inline-nooverlay",
-                    hasCustomImage: !!(
-                      reward?.runeImageUrl ||
-                      choiceObj?.runeImageUrl
-                    ),
+                    hasCustomImage: mutationPlan.hasCustomImage,
                   }
                 );
               });
@@ -1968,7 +1591,6 @@ window.setTimeout(() => {
       setUnlockedFragments,
       pageData?.id,
       goToNextPage,
-      registerTimeout,
       addFragment,
       globalFragments,
       setFlag,
@@ -2341,7 +1963,11 @@ window.setTimeout(() => {
               left={
                 <img
                   src={logoUrl}
-                  alt={meta?.title || titleText || "Logo"}
+                  alt={
+                    typeof meta?.title === "string"
+                      ? meta.title
+                      : titleText || "Logo"
+                  }
                   data-logo
                 />
               }
@@ -2654,59 +2280,20 @@ window.setTimeout(() => {
                         onSelect={(
                           choiceId: string
                         ) => {
-                          const realChoice =
-                            Array.isArray(
-                              pageData.choices
-                            )
-                              ? (
-                                  pageData.choices as any[]
-                                ).find(
-                                  (
-                                    c: any,
-                                    i: number
-                                  ) =>
-                                    String(
-                                      c?.id ??
-                                        i
-                                    ) ===
-                                    String(
-                                      choiceId
-                                    )
-                                )
-                              : null;
+                          const selection =
+                            resolveDockSelection({
+                              choiceId,
+                              pageId: pageData?.id,
+                              choices:
+                                pageData?.choices,
+                              resolvedNext,
+                            });
 
-                          if (realChoice) {
+                          if (selection) {
                             handleChoice(
-                              String(
-                                realChoice.next ??
-                                  ""
-                              ),
-                              (realChoice as any)
-                                .reward,
-                              realChoice as any
-                            );
-                            return;
-                          }
-
-                          if (
-                            choiceId ===
-                              "__NEXT__" &&
-                            resolvedNext &&
-                            resolvedNext !==
-                              pageData.id
-                          ) {
-                            handleChoice(
-                              String(
-                                resolvedNext
-                              ),
-                              undefined,
-                              {
-                                id: "__NEXT__",
-                                text: "Next",
-                                next: String(
-                                  resolvedNext
-                                ),
-                              } as any
+                              selection.next,
+                              selection.reward,
+                              selection.choice
                             );
                           }
                         }}
@@ -2841,9 +2428,5 @@ window.setTimeout(() => {
     </div>
   );
 };
-
-function isFlagId(id: string) {
-  return /^block_|^flag_|^rune_/.test(id);
-}
 
 export default StoryPage;
