@@ -1,0 +1,136 @@
+.root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #1a2744 0%, #0b0f18 55%, #06080d 100%);
+  color: #e8ecf4;
+  font-family: var(--font-heading-present), system-ui, sans-serif;
+}
+
+.panel {
+  width: min(100%, 26rem);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+.title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  opacity: 0.82;
+}
+
+.inlineLink {
+  color: #a8c4ff;
+  text-decoration: none;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-top: 0.35rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  color: #e8ecf4;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(168, 196, 255, 0.5);
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #ff9a9a;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  margin-top: 0.75rem;
+  border-radius: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btnPrimary {
+  background: linear-gradient(145deg, #3d5a9e 0%, #2a3f72 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(45, 74, 130, 0.45);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(45, 74, 130, 0.55);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footer {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.footer a {
+  color: #a8c4ff;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
