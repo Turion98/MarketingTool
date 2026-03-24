@@ -27,11 +27,11 @@ import type { FragmentBank, FragmentData } from "./storyPageTypes";
 import { useStoryPageBootstrap } from "./useStoryPageBootstrap";
 import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
 import { useStoryPageEndState } from "./useStoryPageEndState";
+import { useStoryPageMediaAudio } from "./useStoryPageMediaAudio";
 import { useStoryPagePreloads } from "./useStoryPagePreloads";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
-import GeneratedImage_with_fadein from "../GeneratedImage/GeneratedImage";
 import AudioPlayer from "../AudioPlayer";
 import RewardOverlay from "../labs/RewardOverlay/RewardOverlay";
 import FragmentReplayOverlay from "../labs/FragmentReplayOverlay/FragmentReplayOverlay";
@@ -47,7 +47,6 @@ import RuneDockDisplay from "../runes/RuneDockDisplay";
 import BrickBottomOverlay from "../labs/BrickBottomOverlay/BrickBottomOverlay";
 import AnalyticsReport from "../AnalyticsReport/AnalyticsReport";
 import AnalyticsSync from "../AnalyticsSync/AnalyticsSync";
-import MediaFrame from "../layout/MediaFrame/MediaFrame";
 import ActionBar from "../layout/ActionBar/ActionBar";
 import Canvas from "../layout/Canvas/Canvas";
 import HeaderBar from "../layout/HeaderBar/HeaderBar";
@@ -77,7 +76,6 @@ import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
 import { RUNE_ICON, isRuneId } from "../../lib/runeIcons";
 
 import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
-import ProfileCardFrame from "../layout/ProfileCardFrame/ProfileCardFrame";
 
 
 
@@ -165,36 +163,6 @@ const isRiddle = (p: any): p is PuzzleRiddle =>
 
 const isRunes = (p: any): p is PuzzleRunesPage =>
   p?.type === "puzzle" && p?.kind === "runes";
-
-/** ---------- Replay vizuál választó ---------- */
-
-function pickReplayVisual(
-  page: any,
-  unlocked: string[] | Set<string>,
-  bank: FragmentBank | undefined
-): { imageId: string | null; durationMs: number } {
-  const unlockedSet = Array.isArray(unlocked) ? new Set(unlocked) : unlocked;
-  const list = Array.isArray(page?.replayOverlay) ? page.replayOverlay : [];
-
-  for (const r of list) {
-    const { fragmentId, imageId, durationMs } = r || {};
-    if (!fragmentId) continue;
-    if (!unlockedSet.has(fragmentId)) continue;
-    const chosenImage =
-      imageId || bank?.[fragmentId]?.replayImageId || null;
-    if (chosenImage) {
-      return {
-        imageId: chosenImage,
-        durationMs: Number(durationMs ?? 1800),
-      };
-    }
-  }
-  for (const id of unlockedSet) {
-    const rid = bank?.[id as string]?.replayImageId;
-    if (rid) return { imageId: rid, durationMs: 1800 };
-  }
-  return { imageId: null, durationMs: 1800 };
-}
 
 /** ---------- SFX path normalizáló ---------- */
 
@@ -1179,67 +1147,6 @@ const showFrame = useMemo(() => {
   shouldGenerate,
 ]);
 
-const mediaNode = useMemo(() => {
-  if (!showFrame) return null;
-  if (!pageData?.id) return null; // extra védelem
-
-  const pageId = pageData.id;
-
-  if (isProfileCardPage) {
-    return (
-      <ProfileCardFrame
-        pageId={pageId}
-        pageIsFadingOut={isFadingOut}
-        logoSrc={logoUrl}
-      >
-        <GeneratedImage_with_fadein
-          pageId={pageId}
-          prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
-          params={effectiveImageParams}
-          imageTiming={{
-            ...stableImageTiming,
-            generate: shouldGenerate,
-          }}
-          mode={pageData.imageTiming?.mode || "draft"}
-          pageIsFadingOut={isFadingOut}
-        />
-      </ProfileCardFrame>
-    );
-  }
-
-  return (
-    <MediaFrame
-      mode="image"
-      pageId={pageId}
-      pageIsFadingOut={isFadingOut}
-      logoSrc={logoUrl}
-    >
-      <GeneratedImage_with_fadein
-        pageId={pageId}
-        prompt={shouldGenerate ? resolvedImgPrompt.prompt : undefined}
-        params={effectiveImageParams}
-        imageTiming={{
-          ...stableImageTiming,
-          generate: shouldGenerate,
-        }}
-        mode={pageData.imageTiming?.mode || "draft"}
-        pageIsFadingOut={isFadingOut}
-      />
-    </MediaFrame>
-  );
-}, [
-  showFrame,
-  isProfileCardPage,
-  pageData?.id,                  // 🔹 itt is optional chain
-  isFadingOut,
-  logoUrl,
-  shouldGenerate,
-  resolvedImgPrompt.prompt,
-  effectiveImageParams,
-  stableImageTiming,
-  pageData?.imageTiming?.mode,   // 🔹 és itt is
-]);
-
   // timeout scheduler for sfx hook
   const scheduleTimeout = useCallback(
     (cb: () => void, ms: number) => {
@@ -1528,100 +1435,33 @@ const mediaNode = useMemo(() => {
     ]
   );
 
-  /** --- audio derived props --- */
-
-  const toLinearFromDb = (db?: number) =>
-    typeof db === "number"
-      ? Math.pow(10, db / 20)
-      : undefined;
-
-  const narrationPlaylistMemo = useMemo(() => {
-    const raw = Array.isArray(
-      pageData?.audio?.playlist
-    )
-      ? pageData.audio.playlist
-      : [];
-    const passes = (it: any) => {
-      const cond =
-        it?.when?.unlocked ??
-        it?.unlocked ??
-        it?.ifUnlocked;
-      if (!cond) return true;
-      if (Array.isArray(cond))
-        return cond.every((c: any) =>
-          unlockedPlus.has(String(c))
-        );
-      return unlockedPlus.has(String(cond));
-    };
-    const pickSrc = (it: any) =>
-      it?.src ?? it?.path ?? it?.narration ?? it?.file;
-
-    return raw
-      .filter(passes)
-      .map((it: any) => ({
-        src: pickSrc(it),
-        gapAfterMs:
-          typeof it?.gapAfterMs === "number"
-            ? it.gapAfterMs
-            : typeof it?.gapMs === "number"
-            ? it.gapMs
-            : 0,
-        label: it?.label,
-      }))
-      .filter((it: any) => !!it.src);
-  }, [pageData?.audio?.playlist, unlockedPlus]);
-
-  const playModeMemo = useMemo<"single" | "playlist">(() => {
-    const pm = pageData?.audio?.playMode;
-    if (
-      pm === "playlist" &&
-      narrationPlaylistMemo.length > 0
-    )
-        return "playlist";
-    return "single";
-  }, [
-    pageData?.audio?.playMode,
-    narrationPlaylistMemo.length,
-  ]);
-
-  const duckingMemo = useMemo(() => {
-    const d = pageData?.audio?.ducking || {};
-    const duckTo =
-      typeof d.duckTo === "number"
-        ? Math.min(1, Math.max(0, d.duckTo))
-        : toLinearFromDb(d.db);
-    const attackMs = d.attackMs ?? d.fadeMs;
-    const releaseMs = d.releaseMs ?? d.fadeMs;
-    return { duckTo, attackMs, releaseMs };
-  }, [pageData?.audio?.ducking]);
-
-  // replay vizuál
-  const selectedReplay = useMemo(
-    () =>
-      pickReplayVisual(
-        pageData,
-        unlockedFragments,
-        fragments
-      ),
-    [pageData, unlockedFragments, fragments]
-  );
-
-  // rune dock
-  const unlockedRunes = useMemo(
-    () =>
-      Array.from(flags ?? new Set<string>()).filter(isRuneId),
-    [flags]
-  );
-
-  // Rune dock csak akkor jelenjen meg, ha
-  // - van legalább egy aktuálisan feloldott rúna, ÉS
-  // - az adott kampányhoz tartozik runePack konfiguráció (runePackForDisplay)
-  const showRuneDock = useMemo(
-    () =>
-      !!runePackForDisplay &&
-      (unlockedRunes?.length ?? 0) > 0,
-    [runePackForDisplay, unlockedRunes]
-  );
+  const {
+    mediaNode,
+    narrationPlaylistMemo,
+    playModeMemo,
+    duckingMemo,
+    selectedReplay,
+    unlockedRunes,
+    showRuneDock,
+    anchorPortal,
+  } = useStoryPageMediaAudio({
+    pageData,
+    showFrame,
+    isProfileCardPage,
+    isFadingOut,
+    logoUrl,
+    shouldGenerate,
+    resolvedPrompt: resolvedImgPrompt.prompt,
+    effectiveImageParams,
+    stableImageTiming,
+    unlockedPlus,
+    unlockedFragments,
+    fragments,
+    flags,
+    runePackForDisplay,
+    measure,
+    anchorPortalRef,
+  });
 
   // prefetch sound toggle icons
   useEffect(() => {
@@ -1632,16 +1472,6 @@ const mediaNode = useMemo(() => {
     off.src =
       "/icons/rune_sound_off_128_transparent.png";
   }, []);
-
-  // anchorPortal
-  const anchorPortal = useMemo(
-    () => measure?.content ?? null,
-    [measure]
-  );
-  useEffect(() => {
-    anchorPortalRef.current =
-      measure?.content ?? null;
-  }, [measure]);
 
   if (!globals?.storySrc) {
     return (
@@ -1713,10 +1543,6 @@ const mediaNode = useMemo(() => {
   _mustBeFn("BrickBottomOverlay", BrickBottomOverlay);
   _mustBeFn("RuneDockDisplay", RuneDockDisplay);
   _mustBeFn("NineSlicePanel", NineSlicePanel);
-  _mustBeFn(
-    "GeneratedImage_with_fadein",
-    GeneratedImage_with_fadein
-  );
   _mustBeFn("AudioPlayer", AudioPlayer);
   _mustBeFn("TransitionVideo", TransitionVideo);
   _mustBeFn("FeedbackOverlay", FeedbackOverlay);
