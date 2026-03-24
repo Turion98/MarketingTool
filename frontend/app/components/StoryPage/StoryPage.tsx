@@ -19,15 +19,15 @@ import {
 } from "./storyPageText";
 import {
   buildDockChoices,
-  resolveDockSelection,
 } from "./storyPageChoices";
 import { buildChoiceMutationPlan } from "./storyPageChoiceMutations";
+import { runChoiceTransition } from "./storyPageChoiceTransition";
+import { StoryPageDock } from "./StoryPageDock";
 import type { FragmentBank, FragmentData } from "./storyPageTypes";
 import { useStoryPageBootstrap } from "./useStoryPageBootstrap";
 import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
 import { useStoryPageEndState } from "./useStoryPageEndState";
 import { useStoryPagePreloads } from "./useStoryPagePreloads";
-import dockStyles from "../layout/InteractionDock/InteractionDock.module.scss";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
@@ -45,16 +45,12 @@ import ProgressStrip from "../layout/ProgressStrip/ProgressStrip";
 import NarrativePanel from "../layout/NarrativePanel/NarrativePanel";
 import RuneDockDisplay from "../runes/RuneDockDisplay";
 import BrickBottomOverlay from "../labs/BrickBottomOverlay/BrickBottomOverlay";
-import PuzzleRunes from "../labs/PuzzleRunes/PuzzleRunes";
-import RiddleQuiz from "../labs/RiddleQuiz/RiddleQuiz";
 import AnalyticsReport from "../AnalyticsReport/AnalyticsReport";
 import AnalyticsSync from "../AnalyticsSync/AnalyticsSync";
 import MediaFrame from "../layout/MediaFrame/MediaFrame";
-import InteractionDock from "../layout/InteractionDock/InteractionDock";
 import ActionBar from "../layout/ActionBar/ActionBar";
 import Canvas from "../layout/Canvas/Canvas";
 import HeaderBar from "../layout/HeaderBar/HeaderBar";
-import CampaignCta from "../CampaignCta/CampaignCta";
 
 import {
   useGameState,
@@ -72,8 +68,6 @@ import {
   trackChoice,
   trackRuneUnlock,
   trackUiClick,
-  trackPuzzleTry,
-  trackPuzzleResult,
   startNewRunSession ,
 } from "../../lib/analytics";
 
@@ -1495,94 +1489,22 @@ const mediaNode = useMemo(() => {
 
       prevWasChoiceRef.current = true;
 
-      // page transition
       if (next && next !== pageData?.id) {
-        // lock layout first
-        lockHeightsForTransition();
-
-        setIsFadingOut(true);
-
-        const FADE_MS = 600;
-        const SCROLL_MS = FADE_MS * 2;
-
-        let fadeDone = false;
-        let scrollDone = false;
-
-        const tryProceed = () => {
-          if (!(fadeDone && scrollDone)) return;
-
-          const nx = next;
-          if (!nx || nx === pageData?.id) return;
-
-          try {
-            localStorage.setItem(
-              "currentPageId",
-              nx
-            );
-          } catch {}
-
-          flushSync(() => {
-            setShowChoices(false);
-            setChoicePageId(null);
-            setPageUnlockedForInteraction(null);
-            setSkipRequested(false);
-          });
-
-          goToNextPage(nx);
-
-          requestAnimationFrame(() => {
-            unlockHeightsAfterTransition();
-
-            flushSync(() => {
-              setIsFadingOut(false);
-              setDockJustAppeared(false);
-            });
-          });
-        };
-
-     // fade timer
-window.setTimeout(() => {
-  fadeDone = true;
-
-  // 🔹 Amint a kifelé animáció LEFUTOTT, szedd ki a narrációt a DOM-ból
-  flushSync(() => {
-    setHideNarration(true);
-  });
-
-  tryProceed();
-}, FADE_MS);
-
-        // scroll anim
-        const el = scrollContainerRef.current;
-        if (el) {
-          requestAnimationFrame(() => {
-            const startTop = el.scrollTop;
-            const startTime = performance.now();
-
-            const step = (now: number) => {
-              const t = Math.min(
-                1,
-                (now - startTime) / SCROLL_MS
-              );
-              const eased =
-                1 - (1 - t) * (1 - t);
-              el.scrollTop =
-                startTop * (1 - eased);
-
-              if (t < 1) {
-                requestAnimationFrame(step);
-              } else {
-                scrollDone = true;
-                tryProceed();
-              }
-            };
-
-            requestAnimationFrame(step);
-          });
-        } else {
-          scrollDone = true;
-          tryProceed();
-        }
+        runChoiceTransition({
+          next,
+          currentPageId: pageData?.id,
+          scrollContainer: scrollContainerRef.current,
+          lockHeightsForTransition,
+          unlockHeightsAfterTransition,
+          setIsFadingOut,
+          setShowChoices,
+          setChoicePageId,
+          setPageUnlockedForInteraction,
+          setSkipRequested,
+          setDockJustAppeared,
+          setHideNarration,
+          goToNextPage,
+        });
       }
     },
     [
@@ -2090,219 +2012,29 @@ window.setTimeout(() => {
 }
 
         dock={
-          showChoices &&
-          choicePageId ===
-            pageData.id &&
-          pageUnlockedForInteraction ===
-            pageData.id ? (
-            <div
-              ref={dockFreezeRef}
-              className={[
-                dockStyles.fadeWrapper,
-                dockJustAppeared
-                  ? dockStyles.appearing
-                  : "",
-                isFadingOut
-                  ? dockStyles.fadingOut
-                  : "",
-              ].join(" ")}
-            >
-              {isEndNode ? (
-                resolvedEndCta ? (
-                  <div
-                    className={
-                      dockStyles.grid
-                    }
-                  >
-                    <div
-                      className={
-                        style.endCtaCard
-                      }
-                    >
-                      <div
-                        className={
-                          style.endCtaTitle
-                        }
-                      >
-                        Köszönjük,
-                        végigjátszottad
-                        a kampányt!
-                      </div>
-                      <div
-                        className={
-                          style.endCtaActions
-                        }
-                      >
-                        <CampaignCta
-                          cta={
-                            resolvedEndCta
-                          }
-                          context={
-                            endCtaContext
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : null
-              ) : (
-                <>
-                  {isRiddlePage && (() => {
-                    const r =
-                      pageData as unknown as PuzzleRiddle;
-                    return (
-                      <div
-                        className={
-                          dockStyles.grid
-                        }
-                      >
-                        <RiddleQuiz
-                          page={pageData}
-                          question={
-                            r.question
-                          }
-                          options={
-                            r.options
-                          }
-                          correctIndex={
-                            r.correctIndex
-                          }
-                          correctLabel={
-                            riddleCorrectLabel
-                          }
-                          showCorrectLabel="above"
-                          onPlaySfx={() => {
-                            // opcionális SFX trigger
-                          }}
-                          onResult={(result) => {
-                            const pageId = pageData?.id;
-                            const puzzleId = (r as any)?.id ?? pageId ?? "riddle";
-                            if (derivedStoryId && derivedSessionId && pageId) {
-                              try {
-                                trackPuzzleTry(
-                                  derivedStoryId,
-                                  derivedSessionId,
-                                  pageId,
-                                  puzzleId,
-                                  1,
-                                  { kind: "riddle" }
-                                );
-                                trackPuzzleResult(
-                                  derivedStoryId,
-                                  derivedSessionId,
-                                  pageId,
-                                  puzzleId,
-                                  result.correct,
-                                  1,
-                                  result.elapsedMs ?? 0,
-                                  { kind: "riddle" }
-                                );
-                              } catch (_) {}
-                            }
-                            handleRiddleAnswer(result.choiceIdx);
-                          }}
-                        />
-                      </div>
-                    );
-                  })()}
-
-                  {!isRiddlePage &&
-  isRunesPage &&
-  (() => {
-    const p = pageData as any as PuzzleRunesPage;
-    const answer = Array.isArray(p.answer) ? p.answer : [];
-
-    return (
-      <PuzzleRunes
-        options={p.options}
-        answer={answer}                         // opcionális, open módban üres lehet
-        maxAttempts={p.maxAttempts ?? 3}
-        maxPick={p.maxPick}                    // L2_care_puzzle: 2
-        mode={p.mode ?? "ordered"}
-        feedback={p.feedback ?? "reset"}
-        className={dockStyles.grid}
-        buttonClassName={dockStyles.choice}
-        storyId={derivedStoryId || "default_story"}
-        sessionId={derivedSessionId || "sess_unknown"}
-        pageId={pageData.id}
-        puzzleId={(p as any).id ?? `runes-${pageData.id}`}
-        onResult={(ok, pickedIds) => {
-          // 🔹 OPEN mód (nincs answer): választásokból flag-ek generálása
-          const isOpenPuzzle = !answer.length;
-
-          if (
-            isOpenPuzzle &&
-            typeof p.optionFlagsBase === "string" &&
-            Array.isArray(p.options)
-          ) {
-            pickedIds.forEach((label) => {
-              const idx = p.options.indexOf(label);
-              if (idx >= 0) {
-                const flagId = `${p.optionFlagsBase}${idx + 1}`;
-                setFlag(flagId);
-              }
-            });
-          }
-
-          const branch = ok ? p.onSuccess : p.onFail;
-          if (!branch) return;
-
-          const fl = branch.setFlags;
-          if (Array.isArray(fl)) {
-            fl.forEach((f) => setFlag(f));
-          } else if (fl && typeof fl === "object") {
-            Object.entries(fl).forEach(([k, v]) => {
-              if (v) setFlag(k);
-            });
-          }
-
-          const nx = branch.goto;
-          if (nx && nx !== pageData?.id) {
-            try {
-              localStorage.setItem("currentPageId", nx);
-            } catch {}
-            goToNextPage(nx);
-          }
-        }}
-      />
-    );
-  })()}
-
-                  {!isRiddlePage &&
-                    !isRunesPage &&
-                    dockChoicesForThisPage.length >
-                      0 && (
-                      <InteractionDock
-                        mode="default"
-                        choices={
-                          dockChoicesForThisPage
-                        }
-                        onSelect={(
-                          choiceId: string
-                        ) => {
-                          const selection =
-                            resolveDockSelection({
-                              choiceId,
-                              pageId: pageData?.id,
-                              choices:
-                                pageData?.choices,
-                              resolvedNext,
-                            });
-
-                          if (selection) {
-                            handleChoice(
-                              selection.next,
-                              selection.reward,
-                              selection.choice
-                            );
-                          }
-                        }}
-                      />
-                    )}
-                </>
-              )}
-            </div>
-          ) : null
+          <StoryPageDock
+            showChoices={showChoices}
+            choicePageId={choicePageId}
+            pageUnlockedForInteraction={pageUnlockedForInteraction}
+            dockRef={dockFreezeRef}
+            dockJustAppeared={dockJustAppeared}
+            isFadingOut={isFadingOut}
+            isEndNode={isEndNode}
+            resolvedEndCta={resolvedEndCta}
+            endCtaContext={endCtaContext}
+            isRiddlePage={isRiddlePage}
+            isRunesPage={isRunesPage}
+            pageData={pageData}
+            riddleCorrectLabel={riddleCorrectLabel}
+            derivedStoryId={derivedStoryId}
+            derivedSessionId={derivedSessionId}
+            dockChoicesForThisPage={dockChoicesForThisPage}
+            resolvedNext={resolvedNext}
+            handleRiddleAnswer={handleRiddleAnswer}
+            handleChoice={handleChoice}
+            setFlag={setFlag}
+            goToNextPage={goToNextPage}
+          />
         }
 
         action={
