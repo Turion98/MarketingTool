@@ -83,7 +83,7 @@ const ChoiceButtons: React.FC<Props> = ({
   const rootRef = useRef<HTMLElement | null>(null);
 
   // Analytics context
-  const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
+  const { storyId, sessionId, currentPageId } = useGameState();
 
   // figyeljük a show flag-et (belépés)
   useEffect(() => {

@@ -973,4 +973,4 @@ useEffect(() => {
   );
 };
 
-export const useGameState = () => useContext(GameStateContext);
+export const useGameState = (): GameStateContextType => useContext(GameStateContext);

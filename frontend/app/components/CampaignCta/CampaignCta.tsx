@@ -2,7 +2,7 @@
 
 import React from "react";
 import s from "./CampaignCta.module.scss";
-import { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
+import type { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { dispatchCta } from "../../core/cta/ctaDispatcher";
 import { useUiClickSound } from "./../../lib/useUiClickSound";
 import { trackCtaShown, trackCtaClick } from "../../lib/analytics";
@@ -19,10 +19,14 @@ const isExternal = (url: string) => {
   }
 };
 
-const openDownload = (url: string, filename?: string, rel?: string) => {
+const openDownload = (
+  url: string,
+  filename?: string | true,
+  rel?: string
+) => {
   const a = document.createElement("a");
   a.href = url;
-  if (filename === (true as any)) a.setAttribute("download", "");
+  if (filename === true) a.setAttribute("download", "");
   else if (typeof filename === "string") a.setAttribute("download", filename);
   if (rel) a.setAttribute("rel", rel);
   a.style.display = "none";
@@ -36,21 +40,13 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
   const playCtaAppear = useUiClickSound("/sounds/cta.wav");
 
   // ⛳ analytics context (kampányfüggő pageId oké — csak legyen meg)
-  const storyId =
-    ((context as any)?.storyId ?? (context as any)?.campaignId) as
-      | string
-      | undefined;
-
-  const sessionId = (context as any)?.sessionId as string | undefined;
-
-  const pageId =
-    ((context as any)?.pageId ?? (context as any)?.nodeId) as
-      | string
-      | undefined;
+  const storyId = context.storyId ?? context.campaignId;
+  const sessionId = context.sessionId;
+  const pageId = context.pageId ?? context.nodeId;
 
   // end kötés (ha van)
-  const endId = (context as any)?.endId as string | undefined;
-  const endAlias = (context as any)?.endAlias as string | undefined;
+  const endId = context.endId;
+  const endAlias = context.endAlias;
 
   // StrictMode / rerender dedup
   const shownOnce = React.useRef(false);
@@ -105,13 +101,12 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
 
     // LINK + opcionális letöltés
     if (cta.kind === "link") {
-      const url = (cta as any).urlTemplate as string;
-      const explicitTarget = (cta as any).target as string | undefined;
-      const rel = (cta as any).rel as string | undefined;
-      const download = (cta as any).download as boolean | string | undefined;
-
-      if (download) {
-        openDownload(url, download as any, rel);
+      if (cta.download) {
+        openDownload(
+          cta.urlTemplate,
+          cta.download === true ? true : cta.download,
+          cta.rel
+        );
         // Analitika/mellékhatások aszinkron (popup-blocker kerülése miatt a megnyitás marad szinkron)
         setTimeout(() => {
           try {
@@ -122,10 +117,10 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
       }
 
       // ha nincs explicit target ⇒ külső: _blank, belső: _self
-      const target = explicitTarget ?? (isExternal(url) ? "_blank" : "_self");
+      const target = cta.target ?? (isExternal(cta.urlTemplate) ? "_blank" : "_self");
 
       // szinkron megnyitás user gesture-ből
-      window.open(url, target);
+      window.open(cta.urlTemplate, target);
 
       // analitika késleltetve
       setTimeout(() => {
@@ -138,10 +133,7 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
 
     // DEDIKÁLT LETÖLTÉS CTA
     if (cta.kind === "download") {
-      const url = (cta as any).urlTemplate as string;
-      const filename = (cta as any).filename as string | undefined;
-      const rel = (cta as any).rel as string | undefined;
-      openDownload(url, filename, rel);
+      openDownload(cta.urlTemplate, cta.filename, cta.rel);
       setTimeout(() => {
         try {
           dispatchCta(cta, context);

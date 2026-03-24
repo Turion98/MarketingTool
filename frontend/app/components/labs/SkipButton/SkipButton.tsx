@@ -12,7 +12,7 @@ interface SkipButtonProps {
 export default function SkipButton({ active, onSkip }: SkipButtonProps) {
   const [animate, setAnimate] = useState(false);
 
-  const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
+  const { storyId, sessionId, currentPageId } = useGameState();
 
   useEffect(() => {
     if (active) {

@@ -44,7 +44,7 @@ export default function FeedbackOverlay({
   onRestart,
 }: Props) {
   const router = useRouter();
-  const { currentPageData } = useGameState() as any;
+  const { currentPageData } = useGameState();
 
   const pageId: string | null =
     currentPageData?.id ||

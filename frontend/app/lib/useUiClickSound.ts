@@ -7,7 +7,7 @@ import { useGameState } from "./GameStateContext";
 export function useUiClickSound(
   src: string = "/sounds/questell-click.wav"
 ) {
-  const { isMuted } = useGameState() as any;
+  const { isMuted } = useGameState();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const ensureAudio = () => {

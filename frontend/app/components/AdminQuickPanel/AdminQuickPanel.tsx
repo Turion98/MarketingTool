@@ -25,7 +25,7 @@ const AdminQuickPanel: React.FC<Props> = ({ apiBase, className }) => {
   const [pass, setPass] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
-  const { setGlobal } = (useGameState() as any) ?? {};
+  const { setGlobal } = useGameState();
 
   // --- helpers
   const markOn = useCallback(

@@ -40,8 +40,8 @@ const TransitionVideo: React.FC<Props> = ({
   releaseMs = 600,
   preloadNext = true,
 }) => {
-  const game = useGameState() as any;
-  const { goToNextPage, setCurrentPageId, isMuted, setUiLocked, preloadNextPages } = game || {};
+  const { goToNextPage, setCurrentPageId, isMuted, setUiLocked, preloadNextPages } =
+    useGameState();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const skipTimerRef = useRef<number | null>(null);

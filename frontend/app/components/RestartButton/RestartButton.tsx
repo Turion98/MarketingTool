@@ -26,7 +26,7 @@ const RestartButton: React.FC<RestartButtonProps> = ({
 }) => {
   const router = useRouter();
   const { resetGame, setCurrentPageId, storyId, sessionId, currentPageId } =
-    (useGameState() as any) ?? {};
+    useGameState();
 
   // --- kliens oldali admin-detektálás (ugyanazt a logikát használjuk, amit a UI-ban is fogsz)
   const isAdminClient = (): boolean => {

@@ -147,7 +147,7 @@ const AudioPlayer: React.FC<Props> = ({
 
   // 🔎 ANALITIKA – kontextus
   const { storyId, sessionId, currentPageId, registerAudio, registerTimeout, isMuted, audioRestartToken } =
-    useGameState() as any;
+    useGameState();
   const pageForAnalytics = useMemo(() => currentPageId || pageId || "unknown", [currentPageId, pageId]);
 
   // 🔎 ANALITIKA – duplikációt kerülő start/stop segédek

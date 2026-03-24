@@ -6,12 +6,21 @@ import { useRouter } from "next/navigation";
 import { useGameState } from "@/app/lib/GameStateContext";
 import { clearAllCache } from "@/app/lib/clearAllCache";
 import { createSessionSeeds } from "@/app/lib/sessionSeeds";
+import type { GameStateGlobals, PageData } from "@/app/lib/gameStateTypes";
 type Props = {
   className?: string;
 };
 
 // Univerzális startPageId feloldás MINDEN kampányra
-function resolveStartPageId(pageData: any, globals: any): string {
+type RestartGameGlobals = GameStateGlobals & {
+  meta?: { startPageId?: string };
+  story?: { startPageId?: string };
+};
+
+function resolveStartPageId(
+  pageData?: PageData | null,
+  globals?: RestartGameGlobals
+): string {
   const candidates = [
     globals?.meta?.startPageId,     // story meta-ból (preferált)
     globals?.startPageId,           // esetleges globál kulcs
@@ -41,7 +50,7 @@ const RestartGameButton: React.FC<Props> = ({ className }) => {
     resetGame,
     setStorySrc,
     storyId,
-  } = useGameState() as any;
+  } = useGameState();
 
   const handleRestart = () => {
     if (typeof window === "undefined") return;

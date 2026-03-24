@@ -1,4 +1,4 @@
-import { CtaConfig, CtaContext } from "./ctaTypes";
+import type { CtaConfig, CtaContext } from "./ctaTypes";
 import { trackUiClick } from "../../lib/analytics";
 
 function isExternal(url: string): boolean {
@@ -10,10 +10,10 @@ function isExternal(url: string): boolean {
   }
 }
 
-function triggerDownload(url: string, filename?: string, rel?: string) {
+function triggerDownload(url: string, filename?: string | true, rel?: string) {
   const a = document.createElement("a");
   a.href = url;
-  if (filename === true as any) a.setAttribute("download", "");
+  if (filename === true) a.setAttribute("download", "");
   else if (typeof filename === "string") a.setAttribute("download", filename);
   if (rel) a.setAttribute("rel", rel);
   a.style.display = "none";
@@ -40,29 +40,23 @@ export async function dispatchCta(cfg: CtaConfig, ctx: CtaContext) {
         ctx.campaignId ?? "unknown_campaign",
         ctx.sessionId ?? "sess_unknown",
         ctx.nodeId ?? "unknown_node",
-        `cta:${(cfg as any).presetKey ?? cfg.kind}`,
+        `cta:${cfg.presetKey ?? cfg.kind}`,
         { kind: cfg.kind }
       );
     } catch {}
 
     switch (cfg.kind) {
       case "link": {
-        const url = (cfg as any).urlTemplate as string;
-        const explicitTarget = (cfg as any).target as string | undefined;
-
         // Dispatcherben konzervatív default: ha nincs target,
         // belsőnél _self, külsőnél _blank (mint a gombban).
-        const target = explicitTarget ?? (isExternal(url) ? "_blank" : "_self");
+        const target = cfg.target ?? (isExternal(cfg.urlTemplate) ? "_blank" : "_self");
 
-        window.open(url, target);
+        window.open(cfg.urlTemplate, target);
         return;
       }
 
       case "download": {
-        const url = (cfg as any).urlTemplate as string;
-        const filename = (cfg as any).filename as string | undefined;
-        const rel = (cfg as any).rel as string | undefined;
-        triggerDownload(url, filename, rel);
+        triggerDownload(cfg.urlTemplate, cfg.filename, cfg.rel);
         return;
       }
 
@@ -73,9 +67,8 @@ export async function dispatchCta(cfg: CtaConfig, ctx: CtaContext) {
         return;
       }
 
-      default: {
-        // custom CTA-k
-        const id = (cfg as any).id || (cfg as any).presetKey || cfg.kind;
+      case "custom": {
+        const id = cfg.actionId || cfg.id || cfg.presetKey || cfg.kind;
         const fn = customRegistry[id];
         if (fn) {
           await fn(cfg, ctx);
@@ -84,6 +77,10 @@ export async function dispatchCta(cfg: CtaConfig, ctx: CtaContext) {
         console.warn("[CTA] Unknown kind and no custom handler:", cfg);
         return;
       }
+
+      default:
+        console.warn("[CTA] Unsupported CTA kind in dispatcher:", cfg);
+        return;
     }
   } catch (err) {
     console.error("[CTA] dispatch error:", err);

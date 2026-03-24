@@ -42,7 +42,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
   pageIsFadingOut = false,
 }) => {
   const { registerRewardFrame, currentPageData, setRewardImageReady } =
-    useGameState() as any;
+    useGameState();
 
   const [opened, setOpened] = React.useState(false);
   const [openAnimDone, setOpenAnimDone] = React.useState(false);
@@ -122,7 +122,7 @@ const ProfileCardFrame: React.FC<ProfileCardFrameProps> = ({
     };
   }, [opened]);
 
-  const profile = (currentPageData as any)?.profile || {};
+  const profile = currentPageData?.profile || {};
   const name: string | undefined = profile.name ?? profile.title;
   const subtitle: string | undefined =
     profile.subtitle ?? profile.tagline ?? profile.role;

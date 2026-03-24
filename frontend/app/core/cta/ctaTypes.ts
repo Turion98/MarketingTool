@@ -1,7 +1,24 @@
 export type CtaKind = "link" | "download" | "webhook" | "share" | "restart" | "custom";
 
+export type CtaTemplateValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined;
+
+export type CtaTemplateContext = Record<string, CtaTemplateValue>;
+export type CtaPayloadValue =
+  | string
+  | number
+  | boolean
+  | null
+  | CtaPayloadValue[]
+  | { [key: string]: CtaPayloadValue };
+
 export type CtaBase = {
-  label: string;
+  id?: string;
+  label?: string;
   kind: CtaKind;
   presetKey?: string;         // ha presetből jön
 };
@@ -10,19 +27,22 @@ export type LinkCta = CtaBase & {
   kind: "link";
   urlTemplate: string;        // pl. https://...{{campaignId}}...
   target?: "_self" | "_blank" | "_top";
+  rel?: string;
+  download?: boolean | string;
 };
 
 export type DownloadCta = CtaBase & {
   kind: "download";
   urlTemplate: string;
-  filename?: string;
+  filename?: string | true;
+  rel?: string;
 };
 
 export type WebhookCta = CtaBase & {
   kind: "webhook";
   endpoint: string;           // relatív vagy whitelistelt abszolút
   method?: "POST" | "GET";
-  payloadTemplate?: Record<string, any>;
+  payloadTemplate?: Record<string, CtaPayloadValue>;
 };
 
 export type ShareCta = CtaBase & {
@@ -36,14 +56,18 @@ export type RestartCta = CtaBase & { kind: "restart" };
 export type CustomCta = CtaBase & {
   kind: "custom";
   actionId: string;           // registry kulcs
-  params?: Record<string, any>;
+  params?: Record<string, CtaPayloadValue>;
 };
 
 export type CtaConfig = LinkCta | DownloadCta | WebhookCta | ShareCta | RestartCta | CustomCta;
 
-export type CtaContext = {
+export type CtaContext = CtaTemplateContext & {
   campaignId: string;
   nodeId: string;
+  storyId?: string;
+  pageId?: string;
+  endId?: string;
+  endAlias?: string;
   abVariant?: string | null;
   lang?: string;
   sessionId?: string;

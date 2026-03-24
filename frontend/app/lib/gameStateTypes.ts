@@ -18,6 +18,15 @@ export type PageData = {
   id: string;
   type?: string;
   startPageId?: string;
+  profile?: {
+    name?: string;
+    title?: string;
+    subtitle?: string;
+    tagline?: string;
+    role?: string;
+    extra?: string;
+    meta?: string;
+  };
   text?: string | unknown[];
   next?: NextSwitch;
   choices?: unknown[];
@@ -141,6 +150,8 @@ export type GameStateContextType = {
   registerTimeout: (id: number) => void;
   clearAllTimeouts?: () => void;
   registerAudio: (el: HTMLAudioElement) => void;
+  setUiLocked?: (value: boolean) => void;
+  preloadNextPages?: (pageIds: string[]) => void;
   visitedPages: Set<string>;
   progressValue: number;
   progressDisplay: ProgressDisplay;

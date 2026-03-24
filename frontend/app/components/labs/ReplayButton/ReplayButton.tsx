@@ -16,7 +16,7 @@ export default function ReplayButton({
   onReplay,
   title = "Replay / Újra",
 }: Props) {
-  const { storyId, sessionId, currentPageId } = (useGameState() as any) ?? {};
+  const { storyId, sessionId, currentPageId } = useGameState();
 
   const handleClick = useCallback(() => {
     if (!active) return;
