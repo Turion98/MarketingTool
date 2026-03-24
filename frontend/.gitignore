@@ -1,9 +1,11 @@
-﻿# .gitignore
+# .gitignore
 node_modules/
 .next/
 dist/
 build/
 out/
 .env
+.env.local
+env.local
 .DS_Store
 Thumbs.db

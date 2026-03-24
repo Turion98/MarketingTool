@@ -1,4 +1,16 @@
-export type AuthUser = { id: string; email?: string | null };
+/**
+ * Dev belépés (sessionStorage):
+ * - NEXT_PUBLIC_DEV_LOGIN_PASSWORD – opcionális közös jelszó
+ * - NEXT_PUBLIC_DEV_ADMIN_EMAILS – vesszővel: admin szint (te)
+ * - NEXT_PUBLIC_DEV_PAID_EMAILS – vesszővel: fizetős; nincs listán → ingyenes
+ */
+import { resolveTierFromEmail, type AccountTier } from "./tier";
+
+export type AuthUser = {
+  id: string;
+  email?: string | null;
+  tier: AccountTier;
+};
 
 export type LoginCredentials = {
   email: string;
@@ -29,11 +41,24 @@ function readSession(): StoredSession | null {
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") return null;
     const o = parsed as Record<string, unknown>;
-    const user = o.user as AuthUser | undefined;
+    const stored = o.user as Partial<AuthUser> | undefined;
     const token = o.token;
-    if (!user || typeof user.id !== "string" || typeof token !== "string") {
+    if (!stored || typeof stored.id !== "string" || typeof token !== "string") {
       return null;
     }
+    const tier: AccountTier =
+      stored.tier === "free" ||
+      stored.tier === "paid" ||
+      stored.tier === "admin"
+        ? stored.tier
+        : typeof stored.email === "string" && stored.email
+          ? resolveTierFromEmail(stored.email)
+          : "free";
+    const user: AuthUser = {
+      id: stored.id,
+      email: stored.email ?? null,
+      tier,
+    };
     return { user, token };
   } catch {
     return null;
@@ -92,6 +117,7 @@ function sessionAuth(): AuthAPI {
       const user: AuthUser = {
         id: stableUserIdFromEmail(email),
         email,
+        tier: resolveTierFromEmail(email),
       };
       const token =
         typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -113,7 +139,11 @@ function mockAuth(): AuthAPI {
     isAuthenticated: () => !!mockMemory.user,
     user: () => mockMemory.user,
     login: async () => {
-      mockMemory.user = { id: "dev-user", email: "dev@example.com" };
+      mockMemory.user = {
+        id: "dev-user",
+        email: "dev@example.com",
+        tier: "admin",
+      };
       mockMemory.token = "dev-token";
     },
     logout: async () => {

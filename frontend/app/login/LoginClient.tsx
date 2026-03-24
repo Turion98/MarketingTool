@@ -40,12 +40,21 @@ export default function LoginClient() {
       <div className={s.panel}>
         <h1 className={s.title}>Belépés</h1>
         <p className={s.lead}>
-          Add meg az adataidat a szerkesztő megnyitásához. A játék / demó
-          továbbra is a{" "}
+          Add meg az adataidat a szerkesztő megnyitásához. A{" "}
+          <strong>fiók szint</strong> (ingyenes / fizetős / admin) dev módban az
+          e-mail alapján dől el:{" "}
+          <code style={{ fontSize: "0.8em", opacity: 0.9 }}>
+            NEXT_PUBLIC_DEV_ADMIN_EMAILS
+          </code>{" "}
+          és{" "}
+          <code style={{ fontSize: "0.8em", opacity: 0.9 }}>
+            NEXT_PUBLIC_DEV_PAID_EMAILS
+          </code>{" "}
+          (Vercel / .env.local). A játék / demó a{" "}
           <Link href="/landing" className={s.inlineLink}>
             demó indítóról
           </Link>{" "}
-          érhető el belépés nélkül.
+          továbbra is belépés nélkül elérhető.
         </p>
 
         <form className={s.form} onSubmit={(e) => void onSubmit(e)}>

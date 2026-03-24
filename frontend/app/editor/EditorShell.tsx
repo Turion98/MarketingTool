@@ -7,7 +7,8 @@ import { useAuth } from "@/app/lib/auth/useAuth";
 
 export default function EditorShell() {
   const router = useRouter();
-  const { user, ready, logout } = useAuth();
+  const { user, ready, logout, tierLabel, canUsePaidFeatures, isAdmin } =
+    useAuth();
 
   useEffect(() => {
     if (!ready) return;
@@ -89,11 +90,54 @@ export default function EditorShell() {
       </div>
       <p style={{ margin: "0 0 0.35rem", opacity: 0.75, fontSize: "0.9rem" }}>
         Bejelentkezve: <strong>{user.email ?? user.id}</strong>
+        {tierLabel ? (
+          <>
+            {" "}
+            ·{" "}
+            <span
+              style={{
+                opacity: 0.95,
+                color: isAdmin ? "#c4b5fd" : canUsePaidFeatures ? "#7dd3fc" : "#94a3b8",
+              }}
+            >
+              {tierLabel}
+            </span>
+          </>
+        ) : null}
       </p>
+      <ul
+        style={{
+          margin: "0 0 1rem",
+          paddingLeft: "1.25rem",
+          opacity: 0.88,
+          fontSize: "0.88rem",
+          maxWidth: "38rem",
+          lineHeight: 1.55,
+        }}
+      >
+        <li>
+          <strong>Ingyenes:</strong> alap szerkesztő / limitált funkciók (a
+          konkrét szabályokat később kötjük modulokhoz).
+        </li>
+        <li style={{ marginTop: "0.35rem" }}>
+          <strong>Fizetős funkciók:</strong>{" "}
+          {isAdmin
+            ? "admin fiók — mind elérhető."
+            : canUsePaidFeatures
+              ? "fizetős csomag aktív (e-mail a DEV_PAID listán)."
+              : "ingyenes csomag; devben add a címed a NEXT_PUBLIC_DEV_PAID_EMAILS-hez."}
+        </li>
+        <li style={{ marginTop: "0.35rem" }}>
+          <strong>Admin:</strong>{" "}
+          {isAdmin
+            ? "aktív (NEXT_PUBLIC_DEV_ADMIN_EMAILS)."
+            : "csak a listára tett e-mail; te állítsd be a sajátodat."}
+        </li>
+      </ul>
       <p style={{ margin: "0 0 1.25rem", opacity: 0.85, maxWidth: "36rem" }}>
         Ez az üres szerkesztő kezdőlap. A vizuális szerkesztő funkciók ide
-        kerülnek. Később ide köthető a külső auth szolgáltató (Clerk, Auth0,
-        stb.) a mostani sessionStorage helyett.
+        kerülnek. A belépés most sessionStorage + dev env; élesben jön a
+        szolgáltató (Clerk, Auth0, Supabase, stb.) és a szerveroldali ellenőrzés.
       </p>
       <Link
         href="/"

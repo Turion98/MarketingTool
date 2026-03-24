@@ -14,10 +14,21 @@ import {
   type AuthUser,
   type LoginCredentials,
 } from "./client";
+import {
+  canAccessPaidFeatures,
+  isAdminTier,
+  tierLabelHu,
+  type AccountTier,
+} from "./tier";
 
 type Ctx = {
   ready: boolean;
   user: AuthUser | null;
+  /** Bejelentkezett user szintje; null ha nincs user */
+  accountTier: AccountTier | null;
+  tierLabel: string | null;
+  canUsePaidFeatures: boolean;
+  isAdmin: boolean;
   login: (creds?: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
@@ -48,9 +59,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(api.user());
   }, [api]);
 
+  const tier = user?.tier ?? null;
   const value: Ctx = {
     ready,
     user,
+    accountTier: tier,
+    tierLabel: tier ? tierLabelHu(tier) : null,
+    canUsePaidFeatures: tier ? canAccessPaidFeatures(tier) : false,
+    isAdmin: tier ? isAdminTier(tier) : false,
     login,
     logout,
     getToken: () => api.getToken(),

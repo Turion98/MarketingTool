@@ -13,7 +13,7 @@ import "@/styles/skins/legacy-contract-overlay.css";
 
 
 
-// ✅ Auth (biztonsági keret, későbbi Auth0/Supabase/Clerk plug-inhoz)
+// Auth: session + tier (free/paid/admin); később IdP
 import { AuthProvider } from "./lib/auth/useAuth";
 
 const cormorant = Cormorant_Garamond({
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${cormorant.variable} ${plusJakarta.variable}`}
     >
       <body>
-        {/* ✅ Globális Auth-keret (mock auth most, később bővíthető) */}
+        {/* Globális auth (AuthProvider) */}
         <AuthProvider>
           {/* ✅ Játékmenet- és stíluskontextus */}
           <GameStateProvider>
