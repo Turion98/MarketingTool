@@ -18,7 +18,7 @@ const PresentPage: React.FC = () => {
 
   return (
     <LandingPage
-      logoSrc="/logo-questell.svg"
+      logoSrc="/assets/my_logo.png"
       logoAlt="Questell logo"
       onRequestQuoteClick={handleRequestQuoteClick}
       onViewDemosClick={handleViewDemosClick}
