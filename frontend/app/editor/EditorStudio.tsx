@@ -19,6 +19,7 @@ import { collectStoryPageIds } from "@/app/lib/editor/findPageInStory";
 import { validateStoryPages as validateEditorPages } from "@/app/lib/editor/pageInspectorValidation";
 import type { EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
 import { getClientFetchApiBase } from "@/app/lib/publicApiBase";
+import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import PageInspector from "./PageInspector";
@@ -360,13 +361,16 @@ export default function EditorStudio({
       })
       .then((data: unknown) => {
         if (cancelled) return;
-        const text = JSON.stringify(data, null, 2);
-        setJsonText(text);
         if (data && typeof data === "object" && !Array.isArray(data)) {
+          const normalized = normalizeLegacyMilestoneFragmentIdsInStory(
+            data as Record<string, unknown>
+          );
+          const text = JSON.stringify(normalized, null, 2);
+          setJsonText(text);
           setParseError(null);
-          setDraftStory(data as Record<string, unknown>);
+          setDraftStory(normalized);
           setRevision((r) => r + 1);
-          const v = validateStory(data, "warnOnly", false);
+          const v = validateStory(normalized, "warnOnly", false);
           if (v.ok) {
             setSchemaHint(
               v.warnings.length
@@ -406,9 +410,11 @@ export default function EditorStudio({
       }
       setParseError(null);
       const rec = data as Record<string, unknown>;
-      setDraftStory(rec);
+      const normalized = normalizeLegacyMilestoneFragmentIdsInStory(rec);
+      setDraftStory(normalized);
+      setJsonText(JSON.stringify(normalized, null, 2));
       setRevision((r) => r + 1);
-      const v = validateStory(data, "warnOnly", false);
+      const v = validateStory(normalized, "warnOnly", false);
       if (v.ok) {
         setSchemaHint(
           v.warnings.length
@@ -479,12 +485,13 @@ export default function EditorStudio({
 
   const onStoryChangeFromCanvas = useCallback(
     (next: Record<string, unknown>) => {
-      const json = JSON.stringify(next, null, 2);
+      const normalized = normalizeLegacyMilestoneFragmentIdsInStory(next);
+      const json = JSON.stringify(normalized, null, 2);
       setJsonText(json);
       setParseError(null);
-      setDraftStory(next);
+      setDraftStory(normalized);
       setRevision((r) => r + 1);
-      const v = validateStory(next, "warnOnly", false);
+      const v = validateStory(normalized, "warnOnly", false);
       if (v.ok) {
         setSchemaHint(
           v.warnings.length
@@ -501,12 +508,14 @@ export default function EditorStudio({
   );
 
   const onStoryReplaced = useCallback(
-    (nextStory: Record<string, unknown>, json: string) => {
+    (nextStory: Record<string, unknown>, _json: string) => {
+      const normalized = normalizeLegacyMilestoneFragmentIdsInStory(nextStory);
+      const json = JSON.stringify(normalized, null, 2);
       setJsonText(json);
       setParseError(null);
-      setDraftStory(nextStory);
+      setDraftStory(normalized);
       setRevision((r) => r + 1);
-      const v = validateStory(nextStory, "warnOnly", false);
+      const v = validateStory(normalized, "warnOnly", false);
       if (v.ok) {
         setSchemaHint(
           v.warnings.length

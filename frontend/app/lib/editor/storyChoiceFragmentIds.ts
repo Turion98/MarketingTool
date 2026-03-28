@@ -1,5 +1,7 @@
 "use client";
 
+import { canonicalMilestoneFragmentId } from "../milestoneFragmentId";
+
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
   return v as Record<string, unknown>;
@@ -26,7 +28,9 @@ export function collectUnlockFragmentIdsFromStory(
     const r = asRecord(c?.reward);
     const uf = Array.isArray(r?.unlockFragments) ? r.unlockFragments : [];
     for (const x of uf) {
-      if (typeof x === "string" && x.trim()) set.add(x.trim());
+      if (typeof x === "string" && x.trim()) {
+        set.add(canonicalMilestoneFragmentId(x.trim()));
+      }
     }
   };
   const visitPage = (p: unknown) => {
@@ -41,16 +45,81 @@ export function collectUnlockFragmentIdsFromStory(
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
+function visitAllPages(
+  story: Record<string, unknown>,
+  visitor: (page: Record<string, unknown>) => void
+): void {
+  const pages = story.pages;
+  const run = (p: unknown) => {
+    const o = asRecord(p);
+    if (o) visitor(o);
+  };
+  if (Array.isArray(pages)) pages.forEach(run);
+  else if (pages && typeof pages === "object") Object.values(pages).forEach(run);
+}
+
+/** Milestone: `saveMilestone` + `{id}_DONE`, plusz bankbeli milestone-szerű kulcsok (`*_done` → kanonikus `_DONE`). */
+export function collectMilestoneDoneIdsFromStory(
+  story: Record<string, unknown>
+): string[] {
+  const set = new Set<string>();
+  visitAllPages(story, (o) => {
+    const id = typeof o.id === "string" ? o.id.trim() : "";
+    if (id && o.saveMilestone === true) set.add(`${id}_DONE`);
+  });
+  const bank = asRecord(story.fragments);
+  if (bank) {
+    for (const k of Object.keys(bank)) {
+      const c = canonicalMilestoneFragmentId(k);
+      if (c.endsWith("_DONE")) set.add(c);
+    }
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
+export type FragmentPicklistSections = {
+  milestones: string[];
+  others: string[];
+};
+
+export function buildFragmentPicklistSections(
+  story: Record<string, unknown>,
+  choiceUnlockFields: string[]
+): FragmentPicklistSections {
+  const milestones = collectMilestoneDoneIdsFromStory(story);
+  const milestoneSet = new Set(milestones);
+
+  const set = new Set(collectUnlockFragmentIdsFromStory(story));
+  for (const field of choiceUnlockFields) {
+    for (const id of parseUnlockIdsField(field)) {
+      set.add(canonicalMilestoneFragmentId(id));
+    }
+  }
+  const bank = asRecord(story.fragments);
+  if (bank) {
+    for (const k of Object.keys(bank)) {
+      if (k.trim()) set.add(canonicalMilestoneFragmentId(k));
+    }
+  }
+  for (const m of milestones) set.add(m);
+
+  const others: string[] = [];
+  for (const id of set) {
+    if (!milestoneSet.has(id)) others.push(id);
+  }
+  others.sort((a, b) => a.localeCompare(b));
+
+  return { milestones, others };
+}
+
 /** Jegyzék: mentett story + az aktuális opció űrlap jutalom mezői (még nem mentett id-k). */
 export function buildFragmentPicklist(
   story: Record<string, unknown>,
   choiceUnlockFields: string[]
 ): string[] {
-  const set = new Set(collectUnlockFragmentIdsFromStory(story));
-  for (const field of choiceUnlockFields) {
-    for (const id of parseUnlockIdsField(field)) {
-      set.add(id);
-    }
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
+  const { milestones, others } = buildFragmentPicklistSections(
+    story,
+    choiceUnlockFields
+  );
+  return [...milestones, ...others];
 }

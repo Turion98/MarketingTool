@@ -51,6 +51,11 @@ export function classifyEditorPage(
   return "other";
 }
 
+/** Szerkesztő: logic kártya (milestone UI nincs). */
+export function isEditorLogicPage(page: Record<string, unknown>): boolean {
+  return classifyEditorPage(page) === "logic";
+}
+
 /** `pages` tömb vagy objektum — gyökér `chapters` legacy nélkül (első körben). */
 export function flattenStoryPages(story: Record<string, unknown>): FlatStoryPage[] {
   const out: FlatStoryPage[] = [];
