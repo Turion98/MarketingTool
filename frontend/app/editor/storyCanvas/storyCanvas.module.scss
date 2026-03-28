@@ -1,0 +1,504 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.wrapEmbedded {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  /* Ne nyúljon feleslegesen a panel aljáig — a vászon magassága a canvasH + sáv */
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+}
+
+.toolbar button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8ecf4;
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.viewport {
+  position: relative;
+  /* Ne nyelje el a szabad helyet: a magasság a canvasH + alul húzható sáv */
+  flex: 0 0 auto;
+  /* Minimum = StoryCanvas.tsx MIN_CANVAS_VIEWPORT_PX */
+  min-height: 520px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.viewportPanning {
+  cursor: grabbing;
+}
+
+.world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 24, 36, 0.95);
+  color: #e8ecf4;
+  font-size: 0.72rem;
+  user-select: none;
+}
+
+.cardSelected {
+  border-color: rgba(139, 168, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(139, 168, 255, 0.35);
+}
+
+.cardInvalid {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+/* storyCanvasGeometry: HEADER_H */
+.cardDragStrip {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 7px;
+  cursor: grab;
+  touch-action: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.cardDragStrip:active {
+  cursor: grabbing;
+}
+
+/* Felső padding nincs — a port Y egyezik a HEADER_H + ROW2_H + n*ROW_H számítással */
+.cardBody {
+  flex: 1;
+  min-height: 0;
+  padding: 0 6px 6px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardDragStrip .cardRow1 {
+  margin-bottom: 0;
+}
+
+.cardRow1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+
+.cardId {
+  font-weight: 700;
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.cardCat {
+  font-size: 0.62rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+  max-width: 42%;
+  text-align: right;
+}
+
+.cardRow2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  min-height: 1rem;
+  margin-bottom: 0.1rem;
+}
+
+.cardTag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fbbf24;
+}
+
+.cardFragOn {
+  font-size: 0.62rem;
+  color: #86efac;
+}
+
+.cardFragOff {
+  font-size: 0.62rem;
+  opacity: 0.45;
+}
+
+/* storyCanvasGeometry: RIDDLE_BODY_H */
+.cardRiddleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 0.35rem 0.5rem;
+  align-items: start;
+  height: 76px;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.cardRiddleCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.cardRiddleColTitle {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+.cardIdTight {
+  font-weight: 700;
+  font-size: 0.68rem;
+  line-height: 1.15;
+  word-break: break-all;
+}
+
+.cardTagRiddle {
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #a78bfa;
+  text-transform: uppercase;
+}
+
+.cardFragOnTight {
+  font-size: 0.6rem;
+  color: #86efac;
+}
+
+.cardFragOffTight {
+  font-size: 0.6rem;
+  opacity: 0.4;
+}
+
+.cardRiddleQ {
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.25;
+  opacity: 0.92;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardRiddleMeta {
+  font-size: 0.58rem;
+  opacity: 0.65;
+}
+
+.cardRiddleTarget {
+  font-size: 0.6rem;
+  line-height: 1.2;
+  word-break: break-all;
+  opacity: 0.88;
+}
+
+.cardRow3 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+/* storyCanvasGeometry: ROW_H — nincs gap, hogy a port Y egyezzen */
+.cardOptStripStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.cardOptStrip {
+  flex-shrink: 0;
+  height: 22px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.cardOptStripLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.95);
+  flex-shrink: 0;
+}
+
+.cardOptStripSpacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardOptStripMain {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cardOptStripGoto {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #a5b4fc;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cardLogicIfMark {
+  font-size: 0.52rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.cardLogicElseMark {
+  font-size: 0.54rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.cardLogicFragTight {
+  font-size: 0.58rem;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+  color: #fde68a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cardCondPin {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #fbbf24;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.4);
+}
+
+.cardPuzzleBranchOk {
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6ee7b7;
+}
+
+.cardPuzzleBranchFail {
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fca5a5;
+}
+
+.cardOptRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-height: 1.05rem;
+}
+
+.cardOptLabel {
+  flex: 1;
+  min-width: 0;
+  opacity: 0.88;
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.cardOptMuted {
+  opacity: 0.5;
+  font-size: 0.65rem;
+}
+
+.cardFragDotOn,
+.cardFragDotOff {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cardFragDotOn {
+  background: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.25);
+}
+
+.cardFragDotOff {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cardVisDotOn,
+.cardVisDotOff {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cardVisDotOn {
+  background: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.28);
+}
+
+.cardVisDotOff {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cardStartInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0.25rem;
+}
+
+.cardStartLabel {
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.cardStartSub {
+  font-size: 0.65rem;
+  opacity: 0.65;
+}
+
+.cardInPorts {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  pointer-events: none;
+}
+
+.cardOutPorts {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  pointer-events: none;
+}
+
+.portDot,
+.portDotOut {
+  position: absolute;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.9);
+}
+
+.portDotOut {
+  left: auto;
+  right: 2px;
+}
+
+.cardIssueBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.resizeHandle {
+  flex-shrink: 0;
+  height: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(0, 0, 0, 0.25)
+  );
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.resizeHandle:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(139, 168, 255, 0.12),
+    rgba(0, 0, 0, 0.28)
+  );
+}
