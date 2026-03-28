@@ -1,5 +1,6 @@
 "use client";
 
+import { canonicalMilestoneFragmentId } from "./milestoneFragmentId";
 import type { FragmentBank, FragmentData, PageData } from "./gameStateTypes";
 
 export function mergeFragmentBanks(
@@ -31,7 +32,21 @@ export function collectRehydrationFragments(params: {
 }
 
 export function getUnlockEnterFragmentIds(page?: PageData | null): string[] {
-  return Array.isArray(page?.unlockEnterFragments)
-    ? page.unlockEnterFragments.filter(Boolean)
+  const fromEnter = Array.isArray(page?.unlockEnterFragments)
+    ? page.unlockEnterFragments
+        .filter((x): x is string => typeof x === "string" && Boolean(x.trim()))
+        .map((x) => canonicalMilestoneFragmentId(x.trim()))
     : [];
+  const pid = typeof page?.id === "string" ? page.id.trim() : "";
+  const done =
+    page?.saveMilestone === true && pid ? [`${pid}_DONE`] : [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of [...fromEnter, ...done]) {
+    const t = canonicalMilestoneFragmentId(raw.trim());
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+  }
+  return out;
 }

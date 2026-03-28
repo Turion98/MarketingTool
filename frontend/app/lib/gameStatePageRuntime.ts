@@ -1,5 +1,6 @@
 "use client";
 
+import { canonicalMilestoneFragmentId } from "./milestoneFragmentId";
 import type { FragmentBank, PageData } from "./gameStateTypes";
 import { getClientFetchApiBase } from "./publicApiBase";
 
@@ -41,6 +42,12 @@ function flattenFragmentBank(value: unknown): FragmentBank {
       createdAt: typeof record.createdAt === "number" ? record.createdAt : undefined,
     };
   });
+  for (const key of Object.keys(result)) {
+    const c = canonicalMilestoneFragmentId(key);
+    if (c !== key && result[c] === undefined) {
+      result[c] = result[key];
+    }
+  }
   return result;
 }
 
@@ -62,7 +69,8 @@ export function resolvePageRuntimeDecision(
     const cond = asRecord(entry);
     const fragment = typeof cond?.fragment === "string" ? cond.fragment : undefined;
     const goTo = typeof cond?.goTo === "string" ? cond.goTo : undefined;
-    if (fragment && goTo && unlockedFragments.includes(fragment)) {
+    const fragCanon = fragment ? canonicalMilestoneFragmentId(fragment) : "";
+    if (fragCanon && goTo && unlockedFragments.includes(fragCanon)) {
       return { kind: "redirect", pageId: goTo };
     }
   }
@@ -75,11 +83,20 @@ export function resolvePageRuntimeDecision(
   const needsAll = readStringArray(page.needsFragment);
   const needsAny = readStringArray(page.needsFragmentAny);
 
-  if (needsAll.some((fragment) => !unlockedFragments.includes(fragment))) {
+  if (
+    needsAll.some(
+      (fragment) => !unlockedFragments.includes(canonicalMilestoneFragmentId(fragment))
+    )
+  ) {
     return { kind: "blocked" };
   }
 
-  if (needsAny.length && !needsAny.some((fragment) => unlockedFragments.includes(fragment))) {
+  if (
+    needsAny.length &&
+    !needsAny.some((fragment) =>
+      unlockedFragments.includes(canonicalMilestoneFragmentId(fragment))
+    )
+  ) {
     return { kind: "blocked" };
   }
 
@@ -102,6 +119,8 @@ export function normalizeFetchedPage(raw: unknown): PageData {
     },
     voicePrompt: asRecord(page.voicePrompt ?? page.tts) as PageData["voicePrompt"],
     fragmentsGlobal: Object.keys(flatFragments).length ? flatFragments : undefined,
-    unlockEnterFragments: readStringArray(page.unlockEnterFragments),
+    unlockEnterFragments: readStringArray(page.unlockEnterFragments).map(
+      canonicalMilestoneFragmentId
+    ),
   };
 }

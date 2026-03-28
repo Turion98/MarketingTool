@@ -1,5 +1,6 @@
 "use client";
 
+import { canonicalMilestoneFragmentId } from "../../lib/milestoneFragmentId";
 import type { FragmentData } from "../../lib/gameStateTypes";
 
 type FragmentSource = {
@@ -179,12 +180,14 @@ export function buildChoiceMutationPlan(
   const choiceExtra =
     typeof choiceObj?.fragmentId === "string" ? [choiceObj.fragmentId] : [];
 
-  const toUnlockFragments = uniqueStrings([
-    ...unlocks,
-    ...rewardExtra,
-    ...actionExtra,
-    ...choiceExtra,
-  ]).filter((id) => !isFlagId(id));
+  const toUnlockFragments = uniqueStrings(
+    [
+      ...unlocks,
+      ...rewardExtra,
+      ...actionExtra,
+      ...choiceExtra,
+    ].map((id) => canonicalMilestoneFragmentId(id))
+  ).filter((id) => !isFlagId(id));
 
   const mergedUnlockedFragments =
     toUnlockFragments.length > 0

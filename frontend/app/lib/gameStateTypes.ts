@@ -65,6 +65,8 @@ export type PageData = {
   fragmentsGlobal?: FragmentBank;
   unlockFragments?: string[];
   unlockEnterFragments?: string[];
+  /** Bekapcsolva: belépéskor feloldódik a `{id}_DONE` milestone fragment. */
+  saveMilestone?: boolean;
   fragmentRefs?: Array<{ id: string; prefix?: string; suffix?: string }>;
   fragmentRecall?:
     | { id?: string; textFallback?: string }
