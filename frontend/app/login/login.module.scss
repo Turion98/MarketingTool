@@ -9,6 +9,129 @@
   font-family: var(--font-heading-present), system-ui, sans-serif;
 }
 
+.split {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vw, 2.75rem);
+  width: 100%;
+  max-width: 1080px;
+}
+
+/* Előnézet nyitva: bal oldal a form, jobb oldal a telefon konténer */
+.splitWithPreview {
+  justify-content: space-between;
+  max-width: min(1180px, 100%);
+}
+
+@media (max-width: 900px) {
+  .split {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .splitWithPreview {
+    justify-content: flex-start;
+  }
+}
+
+.panelCol {
+  flex: 0 1 26rem;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.previewAside {
+  flex: 0 0 auto;
+  width: min(100%, 400px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+@media (min-width: 901px) {
+  .splitWithPreview .previewAside {
+    margin-left: auto;
+  }
+}
+
+.previewHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.previewTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.previewToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.previewSelect {
+  flex: 1 1 auto;
+  min-width: 10rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e8ecf4;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.previewSelect:focus {
+  outline: none;
+  border-color: rgba(168, 196, 255, 0.5);
+}
+
+.previewClose {
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  color: #e8ecf4;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.previewClose:hover {
+  border-color: rgba(168, 196, 255, 0.45);
+}
+
+.phoneChrome {
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  height: min(78vh, 760px);
+  border-radius: 2.25rem;
+  border: 10px solid rgba(12, 16, 28, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 28px 64px rgba(0, 0, 0, 0.55);
+  background: #05070d;
+  overflow: hidden;
+}
+
+.phoneIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #0b0f18;
+}
+
 .panel {
   width: min(100%, 26rem);
   padding: clamp(1.5rem, 4vw, 2.25rem);
@@ -116,6 +239,29 @@
 .btnPrimary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8ecf4;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+  margin-top: 0;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(168, 196, 255, 0.35);
+}
+
+.sidePanelBlock {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidePanelBtn {
+  margin-top: 0;
 }
 
 .footer {

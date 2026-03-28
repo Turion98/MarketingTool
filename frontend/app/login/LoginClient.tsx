@@ -37,71 +37,62 @@ export default function LoginClient() {
 
   return (
     <div className={s.root}>
-      <div className={s.panel}>
-        <h1 className={s.title}>Belépés</h1>
-        <p className={s.lead}>
-          Add meg az adataidat a szerkesztő megnyitásához. A{" "}
-          <strong>fiók szint</strong> (ingyenes / fizetős / admin) dev módban az
-          e-mail alapján dől el:{" "}
-          <code style={{ fontSize: "0.8em", opacity: 0.9 }}>
-            NEXT_PUBLIC_DEV_ADMIN_EMAILS
-          </code>{" "}
-          és{" "}
-          <code style={{ fontSize: "0.8em", opacity: 0.9 }}>
-            NEXT_PUBLIC_DEV_PAID_EMAILS
-          </code>{" "}
-          (Vercel / .env.local). A játék / demó a{" "}
-          <Link href="/landing" className={s.inlineLink}>
-            demó indítóról
-          </Link>{" "}
-          továbbra is belépés nélkül elérhető.
-        </p>
+      <div className={s.split}>
+        <div className={s.panelCol}>
+          <div className={s.panel}>
+            <h1 className={s.title}>Belépés</h1>
+            <p className={s.lead}>
+              A szerkesztő fejlesztés alatt van. Csak admin belépés engedélyezett.
+              Nyitás hamarosan.
+            </p>
 
-        <form className={s.form} onSubmit={(e) => void onSubmit(e)}>
-          <label className={s.label} htmlFor="login-email">
-            E-mail
-          </label>
-          <input
-            id="login-email"
-            name="email"
-            type="email"
-            autoComplete="username"
-            className={s.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={!ready || busy}
-            required
-          />
+            <form className={s.form} onSubmit={(e) => void onSubmit(e)}>
+              <label className={s.label} htmlFor="login-email">
+                E-mail
+              </label>
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="username"
+                className={s.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!ready || busy}
+                required
+              />
 
-          <label className={s.label} htmlFor="login-password">
-            Jelszó
-          </label>
-          <input
-            id="login-password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            className={s.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={!ready || busy}
-            required
-          />
+              <label className={s.label} htmlFor="login-password">
+                Jelszó
+              </label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                className={s.input}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={!ready || busy}
+                required
+              />
 
-          {error ? <p className={s.error}>{error}</p> : null}
+              {error ? <p className={s.error}>{error}</p> : null}
 
-          <button
-            type="submit"
-            className={`${s.btn} ${s.btnPrimary}`}
-            disabled={!ready || busy}
-          >
-            {busy ? "Belépés…" : "Belépés"}
-          </button>
-        </form>
+              <button
+                type="submit"
+                className={`${s.btn} ${s.btnPrimary}`}
+                disabled={!ready || busy}
+              >
+                {busy ? "Belépés…" : "Belépés"}
+              </button>
+            </form>
 
-        <p className={s.footer}>
-          <Link href="/">← Vissza a kezdőlapra</Link>
-        </p>
+            <p className={s.footer}>
+              <Link href="/">← Vissza a kezdőlapra</Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

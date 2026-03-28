@@ -1,16 +1,243 @@
+/* Egy közös oldalgörgetés: bal (logo + keret) és login együtt görget; jobb demo továbbra is fix overlay. */
 .root {
+  position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: clamp(0.85rem, 3vw, 1.35rem) clamp(1rem, 4vw, 1.5rem);
+  padding-bottom: clamp(1.5rem, 5vh, 2.5rem);
   background: radial-gradient(ellipse 120% 80% at 50% 0%, #1a2744 0%, #0b0f18 55%, #06080d 100%);
   color: #e8ecf4;
   font-family: var(--font-heading-present), system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+.mainRow {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 0 auto;
+  gap: clamp(1rem, 3vw, 1.5rem);
+  align-items: stretch;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.65rem, 2vh, 1.1rem);
+  width: 100%;
+  max-width: min(34rem, 100%);
+  margin-inline: auto;
+  flex-shrink: 0;
+}
+
+.centerWrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: 100px;
+}
+
+/* Logo sáv (≤1023px: flow; ≥1024px: fix bal zóna) */
+.brandDockShell {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(0.35rem, 1.5vh, 0.85rem) 0 clamp(0.5rem, 2vh, 0.75rem);
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.brandDock {
+  width: 100%;
+  max-width: min(34rem, 100%);
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.brandLogo {
+  width: auto;
+  height: auto;
+  max-width: min(300px, 88vw);
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* Keret: logo alatt a flow-ban — nem takarja a logót; min. magasság 750px (szélesség változatlan) */
+.leftMainFrame {
+  display: block;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: min(34rem, 100%);
+  min-height: 550px;
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0.75rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.previewDockShell {
+  position: relative;
+  z-index: 40;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vh, 1rem) 0 clamp(1rem, 4vh, 2rem);
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* Tablet/mobil: demo alul, finom felcsúszás */
+.previewDock {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: min(400px, 100%);
+  max-height: none;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.32s ease,
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.previewDockVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ≥1024px: bal oszlop + login gridben, együtt görget; csak a jobb demo marad fix */
+@media (min-width: 1024px) {
+  .root {
+    padding: clamp(1rem, 3.5vw, 2.5rem) clamp(1rem, 3vw, 2.5rem);
+    padding-bottom: clamp(2rem, 6vh, 3rem);
+  }
+
+  .mainRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.95fr);
+    align-items: start;
+    gap: clamp(1rem, 2.5vw, 2rem);
+    max-width: min(1680px, 100%);
+    margin-inline: auto;
+  }
+
+  .leftColumn {
+    grid-column: 1;
+    justify-self: end;
+    width: 100%;
+    max-width: min(34rem, 100%);
+    margin-inline: 0;
+  }
+
+  .brandDockShell {
+    position: relative;
+    width: 100%;
+    padding: clamp(0.35rem, 1.5vh, 1rem) 0 0;
+  }
+
+  .brandDock {
+    width: 100%;
+    max-width: none;
+  }
+
+  .brandLogo {
+    max-width: min(360px, 100%);
+  }
+
+  .leftMainFrame {
+    width: 100%;
+    max-width: min(34rem, 100%);
+    min-height: 550px;
+  }
+
+  .centerWrap {
+    grid-column: 2;
+    width: auto;
+  }
+
+  .previewDockShell {
+    position: fixed;
+    inset: 0 0 0 67.5%;
+    width: auto;
+    align-items: center;
+    padding: clamp(10px, 2.5vh, 28px) clamp(14px, 3.5vw, 44px) clamp(10px, 2.5vh, 28px)
+      clamp(8px, 1.5vw, 20px);
+  }
+
+  .previewDock {
+    max-height: min(88vh, 820px);
+    opacity: 1;
+    transform: translateX(calc(100% + 28px));
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .previewDockVisible {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .previewDockShell {
+    inset: 0 0 0 68%;
+  }
+}
+
+.previewDockInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .panel {
-  width: min(100%, 28rem);
+  width: min(100%, 34rem);
   padding: clamp(1.5rem, 4vw, 2.25rem);
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.04);
@@ -32,6 +259,26 @@
   line-height: 1.5;
   opacity: 0.82;
   font-weight: 400;
+}
+
+.panelColWide {
+  flex: 0 1 34rem;
+  max-width: 34rem;
+}
+
+.block {
+  margin: 0 0 1.35rem;
+}
+
+section.block:last-of-type {
+  margin-bottom: 0;
+}
+
+.blurb {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  opacity: 0.84;
 }
 
 .actions {
@@ -79,6 +326,17 @@
 
 .btnSecondary:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.btnOutline {
+  background: transparent;
+  color: #c8d4f0;
+  border: 1px solid rgba(168, 196, 255, 0.45);
+}
+
+.btnOutline:hover {
+  background: rgba(168, 196, 255, 0.08);
+  border-color: rgba(168, 196, 255, 0.65);
 }
 
 .footer {
