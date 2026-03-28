@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorPageCategory } from "./storyPagesFlatten";
-import { classifyEditorPage } from "./storyPagesFlatten";
+import { classifyEditorPage, isEditorLogicPage } from "./storyPagesFlatten";
 import { getStartPageIdFromStory } from "./findPageInStory";
 
 export const STORY_GRAPH_START_NODE_ID = "__editor_start__";
@@ -27,7 +27,7 @@ export type StoryGraphNode = {
   pageId: string;
   category: EditorPageCategory;
   raw: Record<string, unknown>;
-  /** True when page has logic object with branches */
+  /** `classifyEditorPage === "logic"` (egyezik az `isEditorLogicPage` szemantikával). */
   isLogicPage: boolean;
   isPuzzlePage: boolean;
   /** `puzzle` oldal `kind` mezője (riddle, runes, …) */
@@ -57,8 +57,7 @@ function collectPages(story: Record<string, unknown>): StoryGraphNode[] {
     if (cls === "end") return;
 
     const choices = Array.isArray(rec.choices) ? rec.choices : [];
-    const logic = asRecord(rec.logic);
-    const isLogicPage = Boolean(logic);
+    const isLogicPage = isEditorLogicPage(rec);
     const isPuzzlePage = rec.type === "puzzle";
     const puzzleKind =
       typeof rec.kind === "string" ? rec.kind : undefined;
@@ -93,8 +92,11 @@ function puzzleGoto(branch: unknown): string | undefined {
   return readString(b?.goto);
 }
 
-/** Egyedi céloldalak a riddle `onAnswer.nextSwitch` ágakból (sorrend megőrzése). */
-export function collectRiddleNextTargets(
+/**
+ * Riddle `onAnswer.nextSwitch`: string → egy elem; objektum → `cases` értékek kulcssorrendben
+ * (duplikátum megmarad — külön vászni ág).
+ */
+export function collectRiddleBranchTargetsOrdered(
   page: Record<string, unknown>
 ): string[] {
   const onAnswer = asRecord(page.onAnswer);
@@ -105,11 +107,56 @@ export function collectRiddleNextTargets(
   if (!sw) return [];
   const cases = asRecord(sw.cases);
   if (!cases) return [];
+  const keys = Object.keys(cases).sort((a, b) => {
+    const na = Number(a);
+    const nb = Number(b);
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+    return String(a).localeCompare(String(b));
+  });
+  const out: string[] = [];
+  for (const k of keys) {
+    const v = cases[k];
+    if (typeof v === "string" && v.trim()) out.push(v.trim());
+  }
+  return out;
+}
+
+/**
+ * Vászon / kártya: annyi cél-slot, ahány opciósor kell (több él ugyanarra az oldalra is).
+ */
+export function collectRiddleNextTargetsInOrder(
+  page: Record<string, unknown>
+): string[] {
+  const branches = collectRiddleBranchTargetsOrdered(page);
+  if (branches.length === 0) return [];
+
+  const opts = Array.isArray(page.options)
+    ? page.options.filter((x): x is string => typeof x === "string" && !!x)
+    : [];
+  const nOpt = opts.length;
+  const onAnswer = asRecord(page.onAnswer);
+  const nsRaw = onAnswer?.nextSwitch;
+
+  if (typeof nsRaw === "string" && nsRaw.trim() && nOpt >= 1) {
+    const t = nsRaw.trim();
+    return Array.from({ length: nOpt }, () => t);
+  }
+
+  const nBranch = branches.length;
+  const slots = Math.max(nOpt, nBranch, 1);
+  return Array.from({ length: slots }, (_, i) =>
+    i < nBranch ? branches[i]! : branches[nBranch - 1]!
+  );
+}
+
+/** Egyedi céloldalak (validáció). */
+export function collectRiddleNextTargets(
+  page: Record<string, unknown>
+): string[] {
+  const ordered = collectRiddleNextTargetsInOrder(page);
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const v of Object.values(cases)) {
-    if (typeof v !== "string" || !v.trim()) continue;
-    const t = v.trim();
+  for (const t of ordered) {
     if (seen.has(t)) continue;
     seen.add(t);
     out.push(t);
@@ -177,7 +224,7 @@ export function buildStoryGraph(story: Record<string, unknown>): {
 
     if (rec.type === "puzzle") {
       if (rec.kind === "riddle") {
-        const targets = collectRiddleNextTargets(rec);
+        const targets = collectRiddleNextTargetsInOrder(rec);
         targets.forEach((t, idx) => {
           add(n.pageId, t, "puzzleSuccess", String(idx));
         });

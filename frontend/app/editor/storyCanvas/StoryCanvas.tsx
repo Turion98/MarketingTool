@@ -15,14 +15,24 @@ import {
   type StoryGraphEdge,
   type StoryGraphNode,
 } from "@/app/lib/editor/storyGraph";
-import { ensureLayout, type EditorLayoutState } from "@/app/lib/editor/storyGraphLayout";
+import {
+  clusterMemberIdsToDrag,
+  getEditorCanvasClustersEffective,
+} from "@/app/lib/editor/editorCanvasCluster";
+import {
+  ensureLayout,
+  type EditorLayoutNode,
+  type EditorLayoutState,
+} from "@/app/lib/editor/storyGraphLayout";
 import { applyEditorLayout } from "@/app/lib/editor/storyPagePatch";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
   cardDimensions,
   inputPortYs,
+  isRiddleNode,
   orderedOutgoingEdges,
   outPortY,
+  slotCount,
 } from "./storyCanvasGeometry";
 import StoryCard from "./StoryCard";
 import StoryEdges, { buildEdgeDrawOps } from "./StoryEdges";
@@ -85,6 +95,11 @@ export default function StoryCanvas({
 
   const pageIds = useMemo(() => nodes.map((n) => n.pageId), [nodes]);
 
+  const canvasClusters = useMemo(
+    () => getEditorCanvasClustersEffective(draftStory),
+    [draftStory]
+  );
+
   const layout = useMemo(
     () => ensureLayout(draftStory, pageIds, edges, startPageId),
     [draftStory, pageIds, edges, startPageId]
@@ -104,11 +119,10 @@ export default function StoryCanvas({
   );
   const [panning, setPanning] = useState(false);
   const dragRef = useRef<{
-    id: string;
+    ids: string[];
     sx: number;
     sy: number;
-    ox: number;
-    oy: number;
+    startPositions: Record<string, EditorLayoutNode>;
   } | null>(null);
   const panRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(
     null
@@ -193,17 +207,23 @@ export default function StoryCanvas({
       const { w, h } = cardDimensions(n, ord);
 
       const outSlotY = new Map<string, number>();
+      const riddlePortRows =
+        n.pageId !== STORY_GRAPH_START_NODE_ID && isRiddleNode(n)
+          ? slotCount(n, ord)
+          : 0;
       ord.forEach((e, slotIndex) => {
+        let slot = slotIndex;
+        if (riddlePortRows > 0) {
+          slot = Math.min(slotIndex, riddlePortRows - 1);
+        }
         const py =
-          n.pageId === STORY_GRAPH_START_NODE_ID
-            ? h / 2
-            : outPortY(n, slotIndex);
+          n.pageId === STORY_GRAPH_START_NODE_ID ? h / 2 : outPortY(slot);
         outSlotY.set(e.id, py);
       });
 
       const incAll = incomingEdgesByTarget.get(n.pageId) ?? [];
       const bundles = bundleIncomingEdgesForTarget(incAll);
-      const inYs = inputPortYs(bundles.length, h, n);
+      const inYs = inputPortYs(bundles.length, h);
       const inSlotY = new Map<string, number>();
       bundles.forEach((bundle, i) => {
         const py = inYs[i] ?? h / 2;
@@ -226,8 +246,13 @@ export default function StoryCanvas({
   }, [nodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
 
   const edgeOps = useMemo(
-    () => buildEdgeDrawOps({ edges, world: worldMetrics }),
-    [edges, worldMetrics]
+    () =>
+      buildEdgeDrawOps({
+        edges,
+        world: worldMetrics,
+        clusters: canvasClusters,
+      }),
+    [edges, worldMetrics, canvasClusters]
   );
 
   const bbox = useMemo(() => {
@@ -248,28 +273,32 @@ export default function StoryCanvas({
     (pageId: string, e: ReactPointerEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      const pos = localLayout.nodes[pageId];
-      if (!pos) return;
-      const start = {
-        id: pageId,
+      const idsToMove = clusterMemberIdsToDrag(canvasClusters, pageId);
+      const startPositions: Record<string, EditorLayoutNode> = {};
+      for (const id of idsToMove) {
+        const p = localLayout.nodes[id];
+        if (p) startPositions[id] = { ...p };
+      }
+      if (!startPositions[pageId]) return;
+      dragRef.current = {
+        ids: idsToMove,
         sx: e.clientX,
         sy: e.clientY,
-        ox: pos.x,
-        oy: pos.y,
+        startPositions,
       };
-      dragRef.current = start;
       const move = (ev: PointerEvent) => {
         const d = dragRef.current;
         if (!d) return;
         const dx = (ev.clientX - d.sx) / zoom;
         const dy = (ev.clientY - d.sy) / zoom;
-        setLocalLayout((prev) => ({
-          ...prev,
-          nodes: {
-            ...prev.nodes,
-            [d.id]: { x: d.ox + dx, y: d.oy + dy },
-          },
-        }));
+        setLocalLayout((prev) => {
+          const nodes = { ...prev.nodes };
+          for (const id of d.ids) {
+            const p0 = d.startPositions[id];
+            if (p0) nodes[id] = { x: p0.x + dx, y: p0.y + dy };
+          }
+          return { ...prev, nodes };
+        });
       };
       const up = () => {
         window.removeEventListener("pointermove", move);
@@ -282,7 +311,7 @@ export default function StoryCanvas({
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", up);
     },
-    [localLayout.nodes, zoom, commitLayout]
+    [localLayout.nodes, zoom, commitLayout, canvasClusters]
   );
 
   const onViewportPointerDown = useCallback((e: ReactPointerEvent) => {

@@ -89,6 +89,45 @@
   border-color: rgba(248, 113, 113, 0.55);
 }
 
+.milestoneOrb {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 32% 28%,
+    #f3e8ff,
+    #a855f7 45%,
+    #6b21a8 100%
+  );
+  box-shadow:
+    0 0 8px rgba(168, 85, 247, 0.95),
+    0 0 16px rgba(147, 51, 234, 0.55);
+  animation: milestoneOrbPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes milestoneOrbPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 8px rgba(168, 85, 247, 0.95),
+      0 0 16px rgba(147, 51, 234, 0.55);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.12);
+    box-shadow:
+      0 0 11px rgba(192, 132, 252, 0.95),
+      0 0 22px rgba(147, 51, 234, 0.65);
+  }
+}
+
 /* storyCanvasGeometry: HEADER_H */
 .cardDragStrip {
   flex-shrink: 0;
@@ -169,81 +208,6 @@
 .cardFragOff {
   font-size: 0.62rem;
   opacity: 0.45;
-}
-
-/* storyCanvasGeometry: RIDDLE_BODY_H */
-.cardRiddleGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 0.35rem 0.5rem;
-  align-items: start;
-  height: 76px;
-  box-sizing: border-box;
-  overflow: hidden;
-  padding-top: 0.1rem;
-  flex-shrink: 0;
-}
-
-.cardRiddleCol {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.cardRiddleColTitle {
-  font-size: 0.58rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.55;
-}
-
-.cardIdTight {
-  font-weight: 700;
-  font-size: 0.68rem;
-  line-height: 1.15;
-  word-break: break-all;
-}
-
-.cardTagRiddle {
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: #a78bfa;
-  text-transform: uppercase;
-}
-
-.cardFragOnTight {
-  font-size: 0.6rem;
-  color: #86efac;
-}
-
-.cardFragOffTight {
-  font-size: 0.6rem;
-  opacity: 0.4;
-}
-
-.cardRiddleQ {
-  margin: 0;
-  font-size: 0.62rem;
-  line-height: 1.25;
-  opacity: 0.92;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardRiddleMeta {
-  font-size: 0.58rem;
-  opacity: 0.65;
-}
-
-.cardRiddleTarget {
-  font-size: 0.6rem;
-  line-height: 1.2;
-  word-break: break-all;
-  opacity: 0.88;
 }
 
 .cardRow3 {

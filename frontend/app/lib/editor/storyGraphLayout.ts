@@ -2,6 +2,7 @@
 
 import type { StoryGraphEdge } from "./storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
+import { getEditorCanvasClustersEffective } from "./editorCanvasCluster";
 
 export type EditorLayoutNode = { x: number; y: number };
 export type EditorLayoutState = {
@@ -14,6 +15,14 @@ const DEFAULT_CARD_W = 200;
 const DEFAULT_CARD_H = 112;
 const COL_GAP = 56;
 const ROW_GAP = 32;
+/** Egyeznie kell a vászon `CARD_W`-val (200). */
+const CLUSTER_CARD_W = 200;
+/** Riddle-csoport: kártyák között a vásznon. */
+const CLUSTER_PACK_GAP = 28;
+/** Retry kártya becsült magasság (pack); egyeztetve a vászon kártya becsléssel. */
+const CLUSTER_RETRY_EST_H = 112;
+/** Retry és a riddle-sor közötti függőleges rés. */
+const CLUSTER_GAP_ABOVE_RETRY = 28;
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -139,6 +148,73 @@ export function computeDefaultLayout(input: {
   return { version: LAYOUT_VERSION, nodes };
 }
 
+function applyClusterHorizontalPacks(
+  story: Record<string, unknown>,
+  nodes: Record<string, EditorLayoutNode>,
+  pageIds: string[]
+): Record<string, EditorLayoutNode> {
+  const clusters = getEditorCanvasClustersEffective(story);
+  if (!clusters.length) return nodes;
+  let next = { ...nodes };
+  for (const cl of clusters) {
+    if (!cl.packHorizontal) continue;
+    const row = (cl.riddleRowPageIds ?? []).filter((id) =>
+      pageIds.includes(id)
+    );
+    const retryId =
+      cl.retryPageId && pageIds.includes(cl.retryPageId)
+        ? cl.retryPageId
+        : "";
+
+    if (row.length >= 2 && !retryId) {
+      const first = row[0]!;
+      const base = next[first];
+      if (!base) continue;
+      let x = base.x;
+      const y = base.y;
+      for (const id of row) {
+        next[id] = { x, y };
+        x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
+      }
+      continue;
+    }
+
+    if (row.length >= 2 && retryId) {
+      const first = row[0]!;
+      const base = next[first];
+      if (!base) continue;
+      let x = base.x;
+      const y = base.y;
+      for (const id of row) {
+        next[id] = { x, y };
+        x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
+      }
+      const n = row.length;
+      const rowLeft = next[row[0]!]!.x;
+      const rowRight = next[row[n - 1]!]!.x + CLUSTER_CARD_W;
+      const midX = (rowLeft + rowRight) / 2;
+      next[retryId] = {
+        x: midX - CLUSTER_CARD_W / 2,
+        y: y - CLUSTER_GAP_ABOVE_RETRY - CLUSTER_RETRY_EST_H,
+      };
+      continue;
+    }
+
+    const members = cl.members.filter((id) => pageIds.includes(id));
+    if (members.length < 2) continue;
+    const firstM = members[0]!;
+    const baseM = next[firstM];
+    if (!baseM) continue;
+    let xm = baseM.x;
+    const ym = baseM.y;
+    for (const id of members) {
+      next[id] = { x: xm, y: ym };
+      xm += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
+    }
+  }
+  return next;
+}
+
 export function ensureLayout(
   story: Record<string, unknown>,
   pageIds: string[],
@@ -147,7 +223,10 @@ export function ensureLayout(
 ): EditorLayoutState {
   const computed = computeDefaultLayout({ pageIds, edges, startPageId });
   const saved = readEditorLayoutFromStory(story);
-  if (!saved) return computed;
+  if (!saved) {
+    const nodes = applyClusterHorizontalPacks(story, { ...computed.nodes }, pageIds);
+    return { version: LAYOUT_VERSION, nodes };
+  }
   const nodes = { ...computed.nodes };
   for (const id of pageIds) {
     if (saved.nodes[id]) nodes[id] = { ...saved.nodes[id] };
@@ -157,5 +236,6 @@ export function ensureLayout(
       ...saved.nodes[STORY_GRAPH_START_NODE_ID],
     };
   }
-  return { version: LAYOUT_VERSION, nodes };
+  const packed = applyClusterHorizontalPacks(story, nodes, pageIds);
+  return { version: LAYOUT_VERSION, nodes: packed };
 }

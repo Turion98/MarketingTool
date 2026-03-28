@@ -1,5 +1,11 @@
 "use client";
 
+import type { EditorCanvasCluster } from "@/app/lib/editor/editorCanvasCluster";
+import {
+  clusterTopIngressPoint,
+  filterOutClusterInternalEdges,
+  findClusterForTopIngress,
+} from "@/app/lib/editor/editorCanvasCluster";
 import type { StoryGraphEdge, StoryGraphEdgeKind } from "@/app/lib/editor/storyGraph";
 
 export type EdgeDrawOp =
@@ -125,8 +131,14 @@ type WorldNode = {
 export function buildEdgeDrawOps(input: {
   edges: StoryGraphEdge[];
   world: Map<string, WorldNode>;
+  clusters?: EditorCanvasCluster[];
 }): EdgeDrawOp[] {
-  const { edges, world } = input;
+  const clusters = input.clusters ?? [];
+  const edges =
+    clusters.length > 0
+      ? filterOutClusterInternalEdges(input.edges, clusters)
+      : input.edges;
+  const { world } = input;
   const groups = new Map<string, StoryGraphEdge[]>();
   for (const e of edges) {
     const k = `${e.from}\0${e.to}`;
@@ -153,8 +165,14 @@ export function buildEdgeDrawOps(input: {
       const e = e0;
       const y1 = a.y + (a.outSlotY.get(e.id) ?? a.h / 2);
       const x1 = a.x + a.w;
-      const y2 = b.y + (b.inSlotY.get(e.id) ?? b.h / 2);
-      const x2 = b.x;
+      const topCluster = findClusterForTopIngress(clusters, e);
+      const ingress = topCluster
+        ? clusterTopIngressPoint(world, topCluster)
+        : null;
+      const y2 = ingress
+        ? ingress.top
+        : b.y + (b.inSlotY.get(e.id) ?? b.h / 2);
+      const x2 = ingress ? ingress.cx : b.x;
       out.push({
         type: "line",
         key: e.id,

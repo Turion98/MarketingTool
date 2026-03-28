@@ -2,7 +2,11 @@
 
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
-import { CATEGORY_LABELS, type EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
+import {
+  CATEGORY_LABELS,
+  type EditorPageCategory,
+  isEditorLogicPage,
+} from "@/app/lib/editor/storyPagesFlatten";
 import {
   choiceFragmentVisibilityTitle,
   choiceHasConditionalDisplay,
@@ -56,17 +60,21 @@ export default function StoryCard({
   const choices = Array.isArray(raw.choices) ? raw.choices : [];
 
   const riddle = isRiddleNode(node);
-  const question =
-    typeof raw.question === "string" ? raw.question : "";
-  const riddleOptions = Array.isArray(raw.options) ? raw.options : [];
-  const optCount = riddleOptions.length;
-  const correctIdx =
-    typeof raw.correctIndex === "number" ? raw.correctIndex : null;
-  const riddleTargets = ord
-    .filter((e) => e.kind === "puzzleSuccess")
-    .map((e) => e.to);
+  const riddleOptLabels = Array.isArray(raw.options)
+    ? raw.options.filter((x): x is string => typeof x === "string" && !!x)
+    : [];
+  const riddleStripCount = riddle
+    ? riddleOptLabels.length >= 1
+      ? riddleOptLabels.length
+      : Math.max(ord.length, 1)
+    : 0;
 
-  const inYs = inputPortYs(incomingPortCount, h, node);
+  const inYs = inputPortYs(incomingPortCount, h);
+
+  const showMilestoneOrb =
+    !isStart &&
+    !isEditorLogicPage(raw) &&
+    raw.saveMilestone === true;
 
   return (
     <div
@@ -81,6 +89,13 @@ export default function StoryCard({
         }
       }}
     >
+      {showMilestoneOrb ? (
+        <span
+          className={s.milestoneOrb}
+          aria-hidden
+          title="Save milestone"
+        />
+      ) : null}
       {!isStart && incomingPortCount > 0 ? (
         <div className={s.cardInPorts} aria-hidden>
           {inYs.map((py, i) => (
@@ -109,9 +124,7 @@ export default function StoryCard({
         ) : (
           <div className={s.cardRow1}>
             <span className={s.cardId}>{node.pageId}</span>
-            <span className={s.cardCat}>
-              {riddle ? "riddle" : catLabel}
-            </span>
+            <span className={s.cardCat}>{catLabel}</span>
           </div>
         )}
       </div>
@@ -125,46 +138,12 @@ export default function StoryCard({
       >
         {isStart ? (
           <span className={s.cardStartSub}>start →</span>
-        ) : riddle ? (
-          <div className={s.cardRiddleGrid}>
-            <div className={s.cardRiddleCol}>
-              <span className={s.cardRiddleColTitle}>Azonosító</span>
-              <span className={s.cardIdTight}>{node.pageId}</span>
-              <span className={s.cardTagRiddle}>riddle</span>
-              <span className={hasRes ? s.cardFragOnTight : s.cardFragOffTight}>
-                {hasRes ? "fragment" : "—"}
-              </span>
-            </div>
-            <div className={s.cardRiddleCol}>
-              <span className={s.cardRiddleColTitle}>Kérdés / opciók</span>
-              <p className={s.cardRiddleQ}>
-                {question ? question.slice(0, 120) : "—"}
-                {question.length > 120 ? "…" : ""}
-              </p>
-              <span className={s.cardRiddleMeta}>
-                {optCount} opció
-                {correctIdx != null ? ` · helyes: #${correctIdx + 1}` : ""}
-              </span>
-            </div>
-            <div className={s.cardRiddleCol}>
-              <span className={s.cardRiddleColTitle}>Kimenetek</span>
-              {riddleTargets.length ? (
-                riddleTargets.map((tid, i) => (
-                  <span key={i} className={s.cardRiddleTarget}>
-                    → {tid}
-                  </span>
-                ))
-              ) : (
-                <span className={s.cardOptMuted}>nincs ág</span>
-              )}
-            </div>
-          </div>
         ) : (
           <>
             <div className={s.cardRow2}>
               {node.isLogicPage ? (
                 <span className={s.cardTag}>logic</span>
-              ) : node.isPuzzlePage ? (
+              ) : node.isPuzzlePage && !riddle ? (
                 <span className={s.cardTag}>
                   {node.puzzleKind === "runes" ? "runes" : "puzzle"}
                 </span>
@@ -173,7 +152,35 @@ export default function StoryCard({
                 {hasRes ? "Feloldható fragment" : "Nincs fragment a szövegben"}
               </span>
             </div>
-            {!node.isLogicPage && !node.isPuzzlePage ? (
+            {riddle ? (
+              <div className={s.cardOptStripStack}>
+                {riddleOptLabels.length === 0 && ord.length === 0 ? (
+                  <span className={s.cardOptMuted}>nincs opció</span>
+                ) : (
+                  Array.from({ length: riddleStripCount }, (_, idx) => (
+                    <div
+                      key={ord[idx]?.id ?? `${node.pageId}-riddle-${idx}`}
+                      className={s.cardOptStrip}
+                    >
+                      <span className={s.cardOptStripLabel}>
+                        Opció {idx + 1}
+                      </span>
+                      <span className={s.cardOptStripSpacer} />
+                      <span
+                        className={s.cardVisDotOff}
+                        title="Nincs fragmenthez kötött láthatóság"
+                        aria-hidden
+                      />
+                      <span
+                        className={s.cardFragDotOff}
+                        title="Nincs mentett fragment az opciónál (jutalom)"
+                        aria-hidden
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : !node.isLogicPage && !node.isPuzzlePage ? (
               <div className={s.cardOptStripStack}>
                 {choices.length === 0 ? (
                   <span className={s.cardOptMuted}>nincs opció</span>
@@ -265,7 +272,7 @@ export default function StoryCard({
               key={slotIndex}
               className={s.portDotOut}
               style={{
-                top: outPortY(node, slotIndex) - 4,
+                top: outPortY(slotIndex) - 4,
               }}
             />
           ))}
