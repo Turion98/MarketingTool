@@ -36,6 +36,32 @@
   gap: 0.65rem;
 }
 
+.saveMilestoneRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e8ecf4;
+}
+
+.saveMilestoneRow input[type="checkbox"] {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.saveMilestoneHint {
+  font-weight: 500;
+  opacity: 0.8;
+  font-size: 0.72rem;
+}
+
+.saveMilestoneHint code {
+  font-size: 0.7rem;
+}
+
 .issueList {
   margin: 0;
   padding-left: 1.1rem;
@@ -232,4 +258,108 @@
 
 .runesOptBody textarea {
   min-height: 2.4rem;
+}
+
+.riddleOptPanel {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.riddleOptPanelSelected {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(22, 101, 52, 0.2);
+}
+
+.riddleOptSide {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.15rem;
+  width: 4.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 0.45rem;
+}
+
+.riddleOptRadio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #86efac;
+  cursor: pointer;
+  user-select: none;
+}
+
+.riddleOptSide input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #4ade80;
+  cursor: pointer;
+}
+
+.riddleOptBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.riddleOptHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.riddleOptTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-right: auto;
+}
+
+.riddleScoreCard {
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.5rem 0.55rem;
+  margin-bottom: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.riddleExitAccRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.riddleExitAccLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.riddleExitAccLabel input[type="radio"] {
+  width: 0.9rem;
+  height: 0.9rem;
+  accent-color: #93c5fd;
+  cursor: pointer;
 }

@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { findPageInStoryDocument } from "@/app/lib/editor/findPageInStory";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
-import { buildFragmentPicklist } from "@/app/lib/editor/storyChoiceFragmentIds";
+import {
+  buildFragmentPicklistSections,
+  type FragmentPicklistSections,
+} from "@/app/lib/editor/storyChoiceFragmentIds";
+import { findRiddleChainContext } from "@/app/lib/editor/editorCanvasCluster";
+import { isEditorLogicPage } from "@/app/lib/editor/storyPagesFlatten";
 import {
   readFragmentTextFromStory,
   replacePageInStory,
@@ -288,6 +293,126 @@ function loadRiddleSwitchKey(page: Record<string, unknown>): string {
   return typeof sw?.switch === "string" ? sw.switch : "correct";
 }
 
+type RiddleOptionPanelRow = { text: string };
+
+type RiddleScoreExitRow = {
+  scoreLevel: number;
+  accepted: boolean;
+  /** Elfogadott ág: bármely oldal vagy vég (end); üres = retry. */
+  destination: string;
+};
+
+function loadRiddleScoreExitRows(
+  story: Record<string, unknown>,
+  page: Record<string, unknown>,
+  numQuestions: number,
+  retryId: string
+): RiddleScoreExitRow[] {
+  const maxScore = numQuestions;
+  const onAnswer = asRecord(page.onAnswer);
+  const ns = onAnswer?.nextSwitch;
+  const sw = asRecord(ns);
+  const cases = asRecord(sw?.cases) ?? {};
+  const rows: RiddleScoreExitRow[] = [];
+  for (let score = 0; score <= maxScore; score++) {
+    const key = String(score);
+    const raw = cases[key];
+    let target = typeof raw === "string" ? raw.trim() : "";
+    if (!target) target = retryId;
+    const accepted = target !== retryId;
+    const destination = accepted && target ? target : "";
+    rows.push({ scoreLevel: score, accepted, destination });
+  }
+  return rows;
+}
+
+function RiddleScoreDestinationSelect({
+  label,
+  value,
+  onChange,
+  story,
+  knownPageIds,
+  idSet,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  story: Record<string, unknown>;
+  knownPageIds: string[];
+  idSet: Set<string>;
+}) {
+  const t = value.trim();
+  const sorted = [...knownPageIds].sort((a, b) => a.localeCompare(b));
+  const orphan = t !== "" && !idSet.has(t);
+  return (
+    <label className={s.field}>
+      <span>{label}</span>
+      <select
+        className={`${s.input} ${orphan ? s.inputWarn : ""}`}
+        value={orphan ? t : t || ""}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">— válassz cél oldalt —</option>
+        {orphan ? (
+          <option value={t}>
+            {t} (régi érték, nincs a jegyzékben)
+          </option>
+        ) : null}
+        {sorted.map((id) => {
+          const p = findPageInStoryDocument(story, id);
+          const end = p?.type === "end";
+          return (
+            <option key={id} value={id}>
+              {id}
+              {end ? " (vég)" : ""}
+            </option>
+          );
+        })}
+      </select>
+    </label>
+  );
+}
+
+function KnownPageSelect({
+  label,
+  value,
+  onChange,
+  knownPageIds,
+  emptyLabel = "—",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  knownPageIds: string[];
+  emptyLabel?: string;
+}) {
+  const t = value.trim();
+  const sorted = [...knownPageIds].sort((a, b) => a.localeCompare(b));
+  const orphan = t !== "" && !knownPageIds.includes(t);
+  return (
+    <label className={s.field}>
+      <span>{label}</span>
+      <select
+        className={s.input}
+        value={orphan ? t : t || ""}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">{emptyLabel}</option>
+        {orphan ? (
+          <option value={t}>
+            {t} (régi érték, nincs a jegyzékben)
+          </option>
+        ) : null}
+        {sorted.map((id) => (
+          <option key={id} value={id}>
+            {id}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function choiceVisibilityFoldLabel(ch: ChoiceForm): string {
   if (ch.visibilityMode === "none") return "mindig látszik";
   const id = ch.visibilityFragment.trim() || "…";
@@ -300,7 +425,7 @@ type FragmentIdSelectProps = {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: readonly string[];
+  sections: FragmentPicklistSections;
   disabled?: boolean;
   emptyLabel?: string;
 };
@@ -309,12 +434,13 @@ function FragmentIdSelect({
   label,
   value,
   onChange,
-  options,
+  sections,
   disabled,
   emptyLabel = "— válassz —",
 }: FragmentIdSelectProps) {
   const t = value.trim();
-  const inList = options.some((o) => o === t);
+  const all = [...sections.milestones, ...sections.others];
+  const inList = all.some((o) => o === t);
   const orphan = t !== "" && !inList;
   return (
     <label className={s.field}>
@@ -331,11 +457,24 @@ function FragmentIdSelect({
             {t} (régi érték, nincs a jegyzékben)
           </option>
         ) : null}
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
+        {sections.milestones.length > 0 ? (
+          <optgroup label="Milestone">
+            {sections.milestones.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </optgroup>
+        ) : null}
+        {sections.others.length > 0 ? (
+          <optgroup label="Fragment">
+            {sections.others.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </optgroup>
+        ) : null}
       </select>
     </label>
   );
@@ -370,11 +509,16 @@ export default function PageInspector({
   const [choices, setChoices] = useState<ChoiceForm[]>([]);
 
   const [riddleQuestion, setRiddleQuestion] = useState("");
-  const [riddleOptionsText, setRiddleOptionsText] = useState("");
+  const [riddleOptionRows, setRiddleOptionRows] = useState<
+    RiddleOptionPanelRow[]
+  >([{ text: "" }]);
   const [riddleCorrectIndex, setRiddleCorrectIndex] = useState("0");
   const [riddleCorrectLabel, setRiddleCorrectLabel] = useState("");
   const [riddleSwitchKey, setRiddleSwitchKey] = useState("correct");
   const [riddleCaseRows, setRiddleCaseRows] = useState<RiddleCaseRow[]>([]);
+  const [riddleScoreExitRows, setRiddleScoreExitRows] = useState<
+    RiddleScoreExitRow[]
+  >([]);
 
   const [runesText, setRunesText] = useState("");
   const [runesOptionRows, setRunesOptionRows] = useState<RunesOptionForm[]>([
@@ -389,15 +533,25 @@ export default function PageInspector({
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
+  const [saveMilestone, setSaveMilestone] = useState(false);
 
-  const fragmentPicklist = useMemo(
-    () =>
-      buildFragmentPicklist(
-        draftStory,
-        choices.map((c) => c.unlockIds)
-      ),
-    [draftStory, choices]
-  );
+  const fragmentPicklistSections = useMemo(() => {
+    const sections = buildFragmentPicklistSections(
+      draftStory,
+      choices.map((c) => c.unlockIds)
+    );
+    const extra =
+      saveMilestone && selectedPageId?.trim()
+        ? `${selectedPageId.trim()}_DONE`
+        : null;
+    if (!extra) return sections;
+    const ms = new Set(sections.milestones);
+    ms.add(extra);
+    const milestones = Array.from(ms).sort((a, b) => a.localeCompare(b));
+    const milestoneSet = new Set(milestones);
+    const others = sections.others.filter((o) => !milestoneSet.has(o));
+    return { milestones, others };
+  }, [draftStory, choices, saveMilestone, selectedPageId]);
 
   useEffect(() => {
     if (!page) {
@@ -408,11 +562,12 @@ export default function PageInspector({
       setLogicIfRows([]);
       setLogicElseGoTo("");
       setRiddleQuestion("");
-      setRiddleOptionsText("");
+      setRiddleOptionRows([{ text: "" }]);
       setRiddleCorrectIndex("0");
       setRiddleCorrectLabel("");
       setRiddleSwitchKey("correct");
       setRiddleCaseRows([]);
+      setRiddleScoreExitRows([]);
       setRunesText("");
       setRunesOptionRows([{ ...EMPTY_RUNES_OPTION }]);
       setRunesMaxAttempts("3");
@@ -421,6 +576,7 @@ export default function PageInspector({
       setRunesSuccessGoto("");
       setRunesFailGoto("");
       setRunesSuccessFlags("");
+      setSaveMilestone(false);
       return;
     }
 
@@ -428,6 +584,7 @@ export default function PageInspector({
     const isObjectLogic = Boolean(logicRec);
 
     setTitle(typeof page.title === "string" ? page.title : "");
+    setSaveMilestone(page.saveMilestone === true);
 
     if (isObjectLogic) {
       setLogicIfRows(loadLogicIfRows(page));
@@ -452,8 +609,11 @@ export default function PageInspector({
         typeof page.question === "string" ? page.question : ""
       );
       const opts = Array.isArray(page.options) ? page.options : [];
-      setRiddleOptionsText(
-        opts.map((x) => (typeof x === "string" ? x : String(x))).join("\n")
+      const strs = opts.map((x) =>
+        typeof x === "string" ? x : String(x)
+      );
+      setRiddleOptionRows(
+        strs.length ? strs.map((text) => ({ text })) : [{ text: "" }]
       );
       setRiddleCorrectIndex(
         String(
@@ -465,13 +625,30 @@ export default function PageInspector({
       );
       setRiddleSwitchKey(loadRiddleSwitchKey(page));
       setRiddleCaseRows(loadRiddleCaseRows(page));
+      const chain =
+        selectedPageId != null
+          ? findRiddleChainContext(draftStory, selectedPageId)
+          : null;
+      if (chain?.isLast) {
+        setRiddleScoreExitRows(
+          loadRiddleScoreExitRows(
+            draftStory,
+            page,
+            chain.rowIds.length,
+            chain.retryPageId
+          )
+        );
+      } else {
+        setRiddleScoreExitRows([]);
+      }
     } else {
       setRiddleQuestion("");
-      setRiddleOptionsText("");
+      setRiddleOptionRows([{ text: "" }]);
       setRiddleCorrectIndex("0");
       setRiddleCorrectLabel("");
       setRiddleSwitchKey("correct");
       setRiddleCaseRows([]);
+      setRiddleScoreExitRows([]);
     }
 
     if (page.type === "puzzle" && page.kind === "runes") {
@@ -510,12 +687,22 @@ export default function PageInspector({
       setRunesFailGoto("");
       setRunesSuccessFlags("");
     }
-  }, [page, selectedPageId]);
+  }, [page, selectedPageId, draftStory]);
 
   const applyPage = useCallback(
     (nextPage: Record<string, unknown>) => {
       if (!selectedPageId) return;
       let s = replacePageInStory(draftStory, selectedPageId, nextPage);
+      const pid =
+        (typeof nextPage.id === "string" && nextPage.id.trim()) ||
+        selectedPageId.trim();
+      if (nextPage.saveMilestone === true && pid) {
+        const done = `${pid}_DONE`;
+        const bank = asRecord(s.fragments);
+        if (!bank || !(done in bank)) {
+          s = upsertStoryFragmentText(s, done, "");
+        }
+      }
       for (const row of fragRows) {
         const id = row.ifUnlocked.trim();
         if (id && row.text.trim()) {
@@ -537,26 +724,54 @@ export default function PageInspector({
     let nextP: Record<string, unknown>;
 
     if (isRiddle) {
-      const options = riddleOptionsText
-        .split("\n")
-        .map((l) => l.trim())
+      const options = riddleOptionRows
+        .map((r) => r.text.trim())
         .filter(Boolean);
       const ci = Math.min(
         Math.max(0, Number.parseInt(riddleCorrectIndex, 10) || 0),
         Math.max(0, options.length - 1)
       );
-      const cases: Record<string, string> = {};
-      for (const row of riddleCaseRows) {
-        const k = row.key.trim();
-        const pid = row.pageId.trim();
-        if (k && pid) cases[k] = pid;
-      }
+      const chain = findRiddleChainContext(draftStory, selectedPageId);
       const prevOnAnswer = asRecord(page.onAnswer) ?? {};
-      const swKey = riddleSwitchKey.trim() || "correct";
-      const nextSw: unknown =
-        Object.keys(cases).length === 1 && typeof cases.next === "string"
-          ? cases.next
-          : { switch: swKey, cases };
+      let nextSw: unknown;
+
+      if (chain && !chain.isLast) {
+        const nextId = chain.rowIds[chain.pageIndex + 1]!;
+        nextSw = {
+          switch: "correct",
+          cases: {
+            true: nextId,
+            false: nextId,
+            __default: nextId,
+          },
+        };
+      } else if (chain && chain.isLast) {
+        const cases: Record<string, string> = {};
+        for (const row of riddleScoreExitRows) {
+          let dest: string;
+          if (!row.accepted) dest = chain.retryPageId;
+          else {
+            dest = row.destination.trim();
+            if (!dest) dest = chain.retryPageId;
+          }
+          cases[String(row.scoreLevel)] = dest;
+        }
+        cases.__default = chain.retryPageId;
+        nextSw = { switch: "score", cases };
+      } else {
+        const cases: Record<string, string> = {};
+        for (const row of riddleCaseRows) {
+          const k = row.key.trim();
+          const pid = row.pageId.trim();
+          if (k && pid) cases[k] = pid;
+        }
+        const swKey = riddleSwitchKey.trim() || "correct";
+        nextSw =
+          Object.keys(cases).length === 1 && typeof cases.next === "string"
+            ? cases.next
+            : { switch: swKey, cases };
+      }
+
       const textMerged = mergeFragRowsIntoPage(
         { ...page, title },
         fragRows,
@@ -648,21 +863,31 @@ export default function PageInspector({
       );
     }
 
+    if (page && isEditorLogicPage(page as Record<string, unknown>)) {
+      delete nextP.saveMilestone;
+    } else if (saveMilestone) {
+      nextP.saveMilestone = true;
+    } else {
+      delete nextP.saveMilestone;
+    }
+
     applyPage(nextP);
   }, [
     page,
     selectedPageId,
+    draftStory,
     title,
     primaryText,
     fragRows,
     choices,
     applyPage,
     riddleQuestion,
-    riddleOptionsText,
+    riddleOptionRows,
     riddleCorrectIndex,
     riddleCorrectLabel,
     riddleSwitchKey,
     riddleCaseRows,
+    riddleScoreExitRows,
     runesText,
     runesOptionRows,
     runesMaxAttempts,
@@ -673,6 +898,7 @@ export default function PageInspector({
     runesSuccessFlags,
     logicIfRows,
     logicElseGoTo,
+    saveMilestone,
   ]);
 
   const addFragRow = useCallback(() => {
@@ -699,6 +925,10 @@ export default function PageInspector({
     setRiddleCaseRows((r) => [...r, { key: "", pageId: "" }]);
   }, []);
 
+  const addRiddleOptionRow = useCallback(() => {
+    setRiddleOptionRows((r) => [...r, { text: "" }]);
+  }, []);
+
   const addLogicIfRow = useCallback(() => {
     setLogicIfRows((r) => [...r, { fragment: "", goTo: "" }]);
   }, []);
@@ -709,6 +939,16 @@ export default function PageInspector({
 
   const idSet = useMemo(() => new Set(knownPageIds), [knownPageIds]);
 
+  const isRiddlePageForChain = Boolean(
+    page?.type === "puzzle" && page?.kind === "riddle"
+  );
+  const riddleChainCtx = useMemo(
+    () =>
+      isRiddlePageForChain && selectedPageId
+        ? findRiddleChainContext(draftStory, selectedPageId)
+        : null,
+    [draftStory, selectedPageId, isRiddlePageForChain]
+  );
   if (!selectedPageId) {
     return (
       <div className={s.wrap}>
@@ -731,6 +971,7 @@ export default function PageInspector({
   const isOtherPuzzle =
     page.type === "puzzle" && !isRiddlePage && !isRunesPage;
   const isLogic = Boolean(logic);
+  const milestoneEligible = !isEditorLogicPage(page as Record<string, unknown>);
 
   return (
     <div className={s.details}>
@@ -744,6 +985,22 @@ export default function PageInspector({
               </li>
             ))}
           </ul>
+        ) : null}
+
+        {milestoneEligible ? (
+          <label className={s.saveMilestoneRow}>
+            <input
+              type="checkbox"
+              checked={saveMilestone}
+              onChange={(e) => setSaveMilestone(e.target.checked)}
+            />
+            <span>Save milestone</span>
+            {saveMilestone && selectedPageId ? (
+              <span className={s.saveMilestoneHint}>
+                → <code>{selectedPageId}_DONE</code> (belépéskor feloldódik)
+              </span>
+            ) : null}
+          </label>
         ) : null}
 
         <label className={s.field}>
@@ -794,7 +1051,7 @@ export default function PageInspector({
                       )
                     );
                   }}
-                  options={fragmentPicklist}
+                  sections={fragmentPicklistSections}
                   emptyLabel="— válassz fragmentet —"
                 />
                 <label className={s.field}>
@@ -895,7 +1152,7 @@ export default function PageInspector({
                   <input
                     className={s.input}
                     value={ch.unlockIds}
-                    placeholder="pl. A1_done, B_done"
+                    placeholder="pl. A1_DONE, B_DONE"
                     onChange={(e) => {
                       const v = e.target.value;
                       setChoices((c) =>
@@ -942,7 +1199,7 @@ export default function PageInspector({
                           )
                         );
                       }}
-                      options={fragmentPicklist}
+                      sections={fragmentPicklistSections}
                       disabled={ch.visibilityMode === "none"}
                       emptyLabel="— válassz —"
                     />
@@ -1005,7 +1262,7 @@ export default function PageInspector({
                       )
                     );
                   }}
-                  options={fragmentPicklist}
+                  sections={fragmentPicklistSections}
                   emptyLabel="— válassz fragmentet —"
                 />
                 <label className={s.field}>
@@ -1058,25 +1315,91 @@ export default function PageInspector({
                 rows={2}
               />
             </label>
-            <label className={s.field}>
-              <span>Válaszlehetőségek (soronként egy)</span>
-              <textarea
-                className={s.textarea}
-                value={riddleOptionsText}
-                onChange={(e) => setRiddleOptionsText(e.target.value)}
-                rows={5}
-              />
-            </label>
-            <label className={s.field}>
-              <span>Helyes válasz index (0-tól)</span>
-              <input
-                className={s.input}
-                type="number"
-                min={0}
-                value={riddleCorrectIndex}
-                onChange={(e) => setRiddleCorrectIndex(e.target.value)}
-              />
-            </label>
+            {riddleChainCtx && !riddleChainCtx.isLast ? (
+              <p className={s.hintSmall}>
+                Ez a lánc köztes kérdése: a kimeneteket nem lehet szétválasztani —
+                minden választás a következő lépésre visz:{" "}
+                <code>
+                  {riddleChainCtx.rowIds[riddleChainCtx.pageIndex + 1]}
+                </code>
+                .
+              </p>
+            ) : null}
+            <div className={s.blockHead}>
+              <span>Válaszlehetőségek (soronként, mint a több opciós oldal)</span>
+              <button
+                type="button"
+                className={s.btnSm}
+                onClick={addRiddleOptionRow}
+              >
+                + opció
+              </button>
+            </div>
+            {riddleOptionRows.map((row, idx) => {
+              const ci = Math.min(
+                Math.max(0, Number.parseInt(riddleCorrectIndex, 10) || 0),
+                Math.max(0, riddleOptionRows.length - 1)
+              );
+              const radioName = selectedPageId
+                ? `riddle-correct-${selectedPageId}`
+                : "riddle-correct";
+              return (
+                <div
+                  key={idx}
+                  className={`${s.choiceCard} ${ci === idx ? s.riddleOptPanelSelected : ""}`}
+                >
+                  <label className={s.field}>
+                    <span>Helyes válasz</span>
+                    <label className={s.riddleOptRadio}>
+                      <input
+                        type="radio"
+                        name={radioName}
+                        checked={ci === idx}
+                        onChange={() => setRiddleCorrectIndex(String(idx))}
+                      />
+                      <span>Opció {idx + 1}</span>
+                    </label>
+                  </label>
+                  <label className={s.field}>
+                    <span>Opció szöveg</span>
+                    <input
+                      className={s.input}
+                      value={row.text}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setRiddleOptionRows((r) =>
+                          r.map((x, j) =>
+                            j === idx ? { ...x, text: v } : x
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  {riddleOptionRows.length > 2 ? (
+                    <button
+                      type="button"
+                      className={s.btnGhost}
+                      onClick={() => {
+                        setRiddleOptionRows((r) => {
+                          const next = r.filter((_, j) => j !== idx);
+                          const nl = next.length;
+                          setRiddleCorrectIndex((prev) => {
+                            const p = Number.parseInt(prev, 10) || 0;
+                            if (idx < p) return String(Math.max(0, p - 1));
+                            if (idx === p)
+                              return String(Math.max(0, nl - 1));
+                            return String(Math.min(p, nl - 1));
+                          });
+                          return next;
+                        });
+                      }}
+                    >
+                      Opció törlése
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })}
             <label className={s.field}>
               <span>Helyes válasz címke (visszajelzés)</span>
               <input
@@ -1085,60 +1408,141 @@ export default function PageInspector({
                 onChange={(e) => setRiddleCorrectLabel(e.target.value)}
               />
             </label>
-            <label className={s.field}>
-              <span>nextSwitch változó (pl. correct, score)</span>
-              <input
-                className={s.input}
-                value={riddleSwitchKey}
-                onChange={(e) => setRiddleSwitchKey(e.target.value)}
-              />
-            </label>
-            <div className={s.blockHead}>
-              <span>Ágak → cél oldal (cases)</span>
-              <button type="button" className={s.btnSm} onClick={addRiddleCase}>
-                + ág
-              </button>
-            </div>
-            {riddleCaseRows.map((row, idx) => (
-              <div key={idx} className={s.choiceCard}>
+            {riddleChainCtx?.isLast ? (
+              <>
+                <p className={s.hintSmall}>
+                  Csak a lánc utolsó kérdésénél állítható a kimenet: összesített
+                  pont (score) szerint. „Nem elfogadva” mindig ide mutat:{" "}
+                  <code>{riddleChainCtx.retryPageId}</code>. Elfogadott ágnál egy
+                  listából választhatsz bármely oldalt vagy vég (end) oldalt.
+                </p>
+                {riddleScoreExitRows.map((row) => (
+                  <div key={row.scoreLevel} className={s.riddleScoreCard}>
+                    <div className={s.blockHead}>
+                      <span>Elért pont / siker: {row.scoreLevel}</span>
+                    </div>
+                    <div className={s.riddleExitAccRow}>
+                      <label className={s.riddleExitAccLabel}>
+                        <input
+                          type="radio"
+                          name={`riddle-exit-acc-${selectedPageId}-${row.scoreLevel}`}
+                          checked={row.accepted}
+                          onChange={() =>
+                            setRiddleScoreExitRows((rows) =>
+                              rows.map((r) =>
+                                r.scoreLevel === row.scoreLevel
+                                  ? { ...r, accepted: true }
+                                  : r
+                              )
+                            )
+                          }
+                        />
+                        Elfogadva
+                      </label>
+                      <label className={s.riddleExitAccLabel}>
+                        <input
+                          type="radio"
+                          name={`riddle-exit-acc-${selectedPageId}-${row.scoreLevel}`}
+                          checked={!row.accepted}
+                          onChange={() =>
+                            setRiddleScoreExitRows((rows) =>
+                              rows.map((r) =>
+                                r.scoreLevel === row.scoreLevel
+                                  ? { ...r, accepted: false, nextPage: "", endPage: "" }
+                                  : r
+                              )
+                            )
+                          }
+                        />
+                        Nem elfogadva → {riddleChainCtx.retryPageId}
+                      </label>
+                    </div>
+                    {row.accepted ? (
+                      <RiddleScoreDestinationSelect
+                        label="Cél oldal (normál vagy vég)"
+                        value={row.destination}
+                        story={draftStory}
+                        knownPageIds={knownPageIds}
+                        idSet={idSet}
+                        onChange={(v) =>
+                          setRiddleScoreExitRows((rows) =>
+                            rows.map((r) =>
+                              r.scoreLevel === row.scoreLevel
+                                ? { ...r, destination: v }
+                                : r
+                            )
+                          )
+                        }
+                      />
+                    ) : null}
+                  </div>
+                ))}
+              </>
+            ) : null}
+            {!riddleChainCtx ? (
+              <>
                 <label className={s.field}>
-                  <span>Case kulcs (pl. true, false, 3, __default)</span>
+                  <span>nextSwitch változó (pl. correct, score)</span>
                   <input
                     className={s.input}
-                    value={row.key}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setRiddleCaseRows((r) =>
-                        r.map((x, j) => (j === idx ? { ...x, key: v } : x))
-                      );
-                    }}
+                    value={riddleSwitchKey}
+                    onChange={(e) => setRiddleSwitchKey(e.target.value)}
                   />
                 </label>
-                <label className={s.field}>
-                  <span>Cél oldal id</span>
-                  <input
-                    className={`${s.input} ${row.pageId && !idSet.has(row.pageId) ? s.inputWarn : ""}`}
-                    value={row.pageId}
-                    list="editor-known-page-ids"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setRiddleCaseRows((r) =>
-                        r.map((x, j) => (j === idx ? { ...x, pageId: v } : x))
-                      );
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className={s.btnGhost}
-                  onClick={() =>
-                    setRiddleCaseRows((r) => r.filter((_, j) => j !== idx))
-                  }
-                >
-                  Ág törlése
-                </button>
-              </div>
-            ))}
+                <div className={s.blockHead}>
+                  <span>Ágak → cél oldal (cases)</span>
+                  <button
+                    type="button"
+                    className={s.btnSm}
+                    onClick={addRiddleCase}
+                  >
+                    + ág
+                  </button>
+                </div>
+                {riddleCaseRows.map((row, idx) => (
+                  <div key={idx} className={s.choiceCard}>
+                    <label className={s.field}>
+                      <span>Case kulcs (pl. true, false, 3, __default)</span>
+                      <input
+                        className={s.input}
+                        value={row.key}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setRiddleCaseRows((r) =>
+                            r.map((x, j) => (j === idx ? { ...x, key: v } : x))
+                          );
+                        }}
+                      />
+                    </label>
+                    <label className={s.field}>
+                      <span>Cél oldal id</span>
+                      <input
+                        className={`${s.input} ${row.pageId && !idSet.has(row.pageId) ? s.inputWarn : ""}`}
+                        value={row.pageId}
+                        list="editor-known-page-ids"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setRiddleCaseRows((r) =>
+                            r.map((x, j) =>
+                              j === idx ? { ...x, pageId: v } : x
+                            )
+                          );
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={s.btnGhost}
+                      onClick={() =>
+                        setRiddleCaseRows((r) => r.filter((_, j) => j !== idx))
+                      }
+                    >
+                      Ág törlése
+                    </button>
+                  </div>
+                ))}
+              </>
+            ) : null}
           </>
         ) : isRunesPage ? (
           <>
@@ -1308,7 +1712,7 @@ export default function PageInspector({
                         )
                       );
                     }}
-                    options={fragmentPicklist}
+                    sections={fragmentPicklistSections}
                     emptyLabel="— válassz fragmentet —"
                   />
                   <label className={s.field}>

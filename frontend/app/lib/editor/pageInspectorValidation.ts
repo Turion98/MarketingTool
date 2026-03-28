@@ -5,7 +5,12 @@ import {
   findPageInStoryDocument,
   getStartPageIdFromStory,
 } from "./findPageInStory";
-import { collectRiddleNextTargets } from "./storyGraph";
+import { findRiddleChainContext } from "./editorCanvasCluster";
+import {
+  collectRiddleNextTargets,
+  collectRiddleNextTargetsInOrder,
+} from "./storyGraph";
+import { isEditorLogicPage } from "./storyPagesFlatten";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -38,6 +43,24 @@ export function validatePage(
     issues.push({ path: "id", message: "Hiányzó oldalazonosító." });
   }
 
+  const pageRec = page as Record<string, unknown>;
+  if (
+    pageRec.saveMilestone === true &&
+    !isEditorLogicPage(pageRec)
+  ) {
+    const pid = readString(page.id);
+    if (pid) {
+      const doneId = `${pid}_DONE`;
+      const bank = asRecord(story.fragments);
+      if (!bank || !(doneId in bank)) {
+        issues.push({
+          path: "saveMilestone",
+          message: `${doneId}: még nincs a fragment bankban; mentéskor létrejön.`,
+        });
+      }
+    }
+  }
+
   if (isPuzzle && page.kind === "riddle") {
     const q = readString(page.question);
     if (!q) {
@@ -62,6 +85,49 @@ export function validatePage(
         message: "Riddle: érvénytelen helyes válasz index.",
       });
     }
+    const chainCtx = findRiddleChainContext(story, pageId);
+    if (chainCtx && !chainCtx.isLast) {
+      const expectNext = chainCtx.rowIds[chainCtx.pageIndex + 1];
+      const ordered = collectRiddleNextTargetsInOrder(page);
+      if (
+        ordered.length > 0 &&
+        ordered.some((t) => t !== expectNext)
+      ) {
+        issues.push({
+          path: "onAnswer.nextSwitch",
+          message: `Riddle lánc: minden válasz opciónak „${expectNext}” felé kell mutatnia.`,
+        });
+      }
+    }
+    if (chainCtx?.isLast) {
+      const onA = asRecord(page.onAnswer);
+      const sw = asRecord(onA?.nextSwitch);
+      if (sw?.switch !== "score") {
+        issues.push({
+          path: "onAnswer.nextSwitch.switch",
+          message:
+            'Riddle lánc (utolsó kérdés): a switch értéke "score" legyen.',
+        });
+      }
+      const cases = asRecord(sw?.cases);
+      const n = chainCtx.rowIds.length;
+      for (let i = 0; i <= n; i++) {
+        const dest = readString(cases?.[String(i)]);
+        if (!dest) {
+          issues.push({
+            path: `onAnswer.nextSwitch.cases.${i}`,
+            message: `Hiányzó cél a ${i} pontértékhez.`,
+          });
+        }
+      }
+      if (!readString(cases?.__default)) {
+        issues.push({
+          path: "onAnswer.nextSwitch.cases.__default",
+          message: "Hiányzó __default ág (pl. újrapróbálkozás).",
+        });
+      }
+    }
+
     const targets = collectRiddleNextTargets(page);
     if (targets.length === 0) {
       issues.push({
