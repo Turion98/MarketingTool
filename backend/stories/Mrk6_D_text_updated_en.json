@@ -26,7 +26,18 @@
         "urlTemplate": "https://www.google.com"
       }
     },
-    "endDefaultCta": "default"
+    "endDefaultCta": "default",
+    "editorCanvasClusters": [
+      {
+        "members": ["D2", "D3", "D4", "D_retry"],
+        "riddleRowPageIds": ["D2", "D3", "D4"],
+        "retryPageId": "D_retry",
+        "packHorizontal": true,
+        "hideEdgesBetweenMembers": true,
+        "mergeExternalIngressToTop": true,
+        "ingressTopFromPageIds": ["D_retry"]
+      }
+    ]
   },
   "pages": [
     {
@@ -92,7 +103,7 @@
       "logic": {
         "ifHasFragment": [
           {
-            "fragment": "A_done",
+            "fragment": "A_DONE",
             "goTo": "A5"
           }
         ],
@@ -104,7 +115,7 @@
       "id": "A1",
       "title": "Team meeting",
       "unlockEnterFragments": [
-        "A_done"
+        "A_DONE"
       ],
       "choices": [
         {
@@ -275,14 +286,14 @@
         {
           "next": "B1",
           "hideIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ],
           "text": "Let’s talk to the dev team"
         },
         {
           "next": "A5",
           "showIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ],
           "text": "Let’s share what the devs said"
         }
@@ -348,7 +359,7 @@
       "id": "B1",
       "title": "Dev meeting",
       "unlockEnterFragments": [
-        "B_done"
+        "B_DONE"
       ],
       "choices": [
         {
@@ -363,7 +374,7 @@
           "next": "BC1",
           "text": "You’ve already talked to the team and have a draft concept",
           "showIfHasFragment": [
-            "A_done"
+            "A_DONE"
           ]
         }
       ],
@@ -411,7 +422,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "You go back to the team to align"
@@ -454,7 +465,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "You go back to the team to align"
@@ -465,7 +476,7 @@
     {
       "id": "BC1",
       "needsFragment": [
-        "A_done"
+        "A_DONE"
       ],
       "title": "Dev meeting",
       "choices": [
@@ -474,7 +485,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "You return to your team to align"
@@ -490,14 +501,14 @@
           "next": "B1",
           "text": "You go back to the dev team to clarify",
           "hideIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ]
         },
         {
           "next": "A1",
           "text": "You return to the team to align",
           "hideIfHasFragment": [
-            "A_done"
+            "A_DONE"
           ]
         },
         {
@@ -769,12 +780,12 @@
       "id": "A3_ai_flow",
       "text": "The flow itself is the reward. When users feel their decisions matter, and the story responds to them, you gather insight without anyone complaining. It’s a rare win–win that makes a campaign meaningful in the long run."
     },
-    "A_done": {
-      "id": "A_done",
+    "A_DONE": {
+      "id": "A_DONE",
       "text": "Marketing has already said, “it’s all a matter of creative decisions.”"
     },
-    "B_done": {
-      "id": "B_done",
+    "B_DONE": {
+      "id": "B_DONE",
       "text": "The devs have already said, “this is technically impossible — maybe one day.”"
     },
     "B_final_solution": {

@@ -26,7 +26,18 @@
         "urlTemplate": "https://www.google.com"
       }
     },
-    "endDefaultCta": "default"
+    "endDefaultCta": "default",
+    "editorCanvasClusters": [
+      {
+        "members": ["D2", "D3", "D4", "D_retry"],
+        "riddleRowPageIds": ["D2", "D3", "D4"],
+        "retryPageId": "D_retry",
+        "packHorizontal": true,
+        "hideEdgesBetweenMembers": true,
+        "mergeExternalIngressToTop": true,
+        "ingressTopFromPageIds": ["D_retry"]
+      }
+    ]
   },
   "pages": [
     {
@@ -92,7 +103,7 @@
       "logic": {
         "ifHasFragment": [
           {
-            "fragment": "A_done",
+            "fragment": "A_DONE",
             "goTo": "A5"
           }
         ],
@@ -104,7 +115,7 @@
       "id": "A1",
       "title": "Csapatmeeting",
       "unlockEnterFragments": [
-        "A_done"
+        "A_DONE"
       ],
       "choices": [
         {
@@ -275,14 +286,14 @@
         {
           "next": "B1",
           "hideIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ],
           "text": "Beszéljünk a fejlesztőkkel"
         },
         {
           "next": "A5",
           "showIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ],
           "text": "Mondjuk el, mit mondtak a fejlesztők"
         }
@@ -348,7 +359,7 @@
       "id": "B1",
       "title": "Fejlesztői meeting",
       "unlockEnterFragments": [
-        "B_done"
+        "B_DONE"
       ],
       "choices": [
         {
@@ -363,7 +374,7 @@
           "next": "BC1",
           "text": "Már beszéltem a csapattal, megvan a kész koncepció",
           "showIfHasFragment": [
-            "A_done"
+            "A_DONE"
           ]
         }
       ],
@@ -411,7 +422,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "Visszamész a csapathoz egyeztetni"
@@ -454,7 +465,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "Visszamész a csapathoz egyeztetni"
@@ -465,7 +476,7 @@
     {
       "id": "BC1",
       "needsFragment": [
-        "A_done"
+        "A_DONE"
       ],
       "title": "Fejlesztői meeting",
       "choices": [
@@ -474,7 +485,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_done"
+              "B_DONE"
             ]
           },
           "text": "Visszamész a csapatodhoz egyeztetni"
@@ -490,14 +501,14 @@
           "next": "B1",
           "text": "Visszamész a fejlesztőkhöz tisztázni",
           "hideIfHasFragment": [
-            "B_done"
+            "B_DONE"
           ]
         },
         {
           "next": "A1",
           "text": "Visszamész a csapathoz egyeztetni",
           "hideIfHasFragment": [
-            "A_done"
+            "A_DONE"
           ]
         },
         {
@@ -768,12 +779,12 @@
       "id": "A3_ai_flow",
       "text": "Maga a flow-élmény a jutalom. Amikor a user érzi, hogy számítanak a döntései, és a sztori reagál rájuk, adatot gyűjtünk anélkül, hogy bárki panaszkodna. Ritka win–win helyzet, ami hosszú távon is értelmessé tesz egy kampányt."
     },
-    "A_done": {
-      "id": "A_done",
+    "A_DONE": {
+      "id": "A_DONE",
       "text": "A marketing már elmondta, hogy „minden csak kreatív döntés kérdése”."
     },
-    "B_done": {
-      "id": "B_done",
+    "B_DONE": {
+      "id": "B_DONE",
       "text": "A fejlesztők már elmondták, hogy „ez technikailag lehetetlen, de majd egyszer”."
     },
     "B_final_solution": {
