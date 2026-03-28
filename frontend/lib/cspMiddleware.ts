@@ -14,9 +14,34 @@ export function embedFrameAncestorsFromEnv(): string {
   return raw.split(/[\s,]+/).filter(Boolean).join(" ");
 }
 
+/** Dev: lokális API + WS + gyakori éles API (ha NEXT_PUBLIC_API_BASE külső). */
+function devConnectSrcDirective(): string {
+  const origins = new Set<string>([
+    "'self'",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://azenc.local:8000",
+    "ws://localhost:3000",
+    "ws://127.0.0.1:3000",
+    "ws://azenc.local:3000",
+    "https://api.thequestell.com",
+    "https://www.thequestell.com",
+  ]);
+  const raw = process.env.NEXT_PUBLIC_API_BASE?.trim();
+  if (raw) {
+    try {
+      const u = new URL(raw);
+      origins.add(`${u.protocol}//${u.host}`);
+    } catch {
+      /* ignore invalid */
+    }
+  }
+  return `connect-src ${[...origins].join(" ")}`;
+}
+
 function buildCsp(isDev: boolean, frameAncestors: string): string {
   const connect = isDev
-    ? "connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 http://azenc.local:8000 ws://localhost:3000 ws://127.0.0.1:3000 ws://azenc.local:3000"
+    ? devConnectSrcDirective()
     : "connect-src 'self' https: wss:";
   const script = isDev
     ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:"
