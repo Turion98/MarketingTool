@@ -17,6 +17,16 @@ export const LS_KEYS = Object.freeze({
   runePackMap: "runePackByCampaignId",
 });
 
+/** Beágyazott provider (pl. szerkesztő preview): külön localStorage kulcsok. */
+export function withStoragePrefix(prefix: string | undefined): typeof LS_KEYS {
+  if (!prefix) return LS_KEYS;
+  const out = { ...LS_KEYS } as Record<keyof typeof LS_KEYS, string>;
+  (Object.keys(LS_KEYS) as Array<keyof typeof LS_KEYS>).forEach((k) => {
+    out[k] = prefix + LS_KEYS[k];
+  });
+  return out as typeof LS_KEYS;
+}
+
 export function parseJSON<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
   try {

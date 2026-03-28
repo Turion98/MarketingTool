@@ -329,7 +329,6 @@ const stringGlobals = useMemo<Record<string, string>>(
 
   useStoryPageBootstrap({
     params,
-    currentPageId,
     goToNextPage,
     setGlobal,
     setStorySrc,

@@ -56,13 +56,20 @@ import {
   clearRegisteredAudioElements,
   clearRegisteredTimeouts,
   resetPersistedGameState,
+  resetPersistedGameStateForKeys,
 } from "./gameStateResources";
 import {
   buildPageRequestUrl,
   normalizeFetchedPage,
   resolvePageRuntimeDecision,
 } from "./gameStatePageRuntime";
-import { LS_KEYS, parseJSON, writeStorageJSON, writeStorageValue } from "./gameStateStorage";
+import { EDITOR_DRAFT_STORY_SRC } from "./editor/editorDraftStorySrc";
+import {
+  collectStoryPageIds,
+  findPageInStoryDocument,
+  getStartPageIdFromStory,
+} from "./editor/findPageInStory";
+import { parseJSON, withStoragePrefix, writeStorageJSON, writeStorageValue } from "./gameStateStorage";
 import type {
   FragmentBank,
   FragmentData,
@@ -78,12 +85,30 @@ export type { FragmentData } from "./gameStateTypes";
 
 const GameStateContext = createContext<GameStateContextType>({} as GameStateContextType);
 
-export const GameStateProvider = ({ children }: { children: ReactNode }) => {
+export type DraftStoryResolver = {
+  revision: number;
+  getStoryJson: () => unknown | null;
+};
+
+type GameStateProviderProps = {
+  children: ReactNode;
+  /** Beágyazott preview: elkülönített localStorage kulcsok. */
+  storagePrefix?: string;
+  /** Szerkesztő: oldalak a memóriában lévő JSON-ból, nem HTTP /page. */
+  draftStoryResolver?: DraftStoryResolver | null;
+};
+
+export const GameStateProvider = ({
+  children,
+  storagePrefix,
+  draftStoryResolver,
+}: GameStateProviderProps) => {
   /** HYDRATION-GATE */
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  
+  const ls = useMemo(() => withStoragePrefix(storagePrefix), [storagePrefix]);
+
   // SAFE DEFAULT state
   const [voiceApiKey, setVoiceApiKeyState] = useState<string | undefined>(undefined);
   const [imageApiKey, setImageApiKeyState] = useState<string | undefined>(undefined);
@@ -98,10 +123,10 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     if (!key) return;
     setGlobals((prev) => {
       const next = { ...prev, [key]: value };
-      writeStorageJSON(LS_KEYS.globals, next);
+      writeStorageJSON(ls.globals, next);
       return next;
     });
-  }, []);
+  }, [ls.globals]);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isMuted, setMuted] = useState<boolean>(false);
   const [currentPageId, setCurrentPageIdState] = useState<string>("landing");
@@ -170,20 +195,20 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      const v = localStorage.getItem(LS_KEYS.voice) ?? undefined;
-      const i = localStorage.getItem(LS_KEYS.image) ?? undefined;
+      const v = localStorage.getItem(ls.voice) ?? undefined;
+      const i = localStorage.getItem(ls.image) ?? undefined;
 
-      const u = parseJSON<string[]>(localStorage.getItem(LS_KEYS.unlocked), []);
-      const f = parseJSON<Record<string, FragmentData>>(localStorage.getItem(LS_KEYS.fragments), {});
-      const g = parseJSON<FragmentBank>(localStorage.getItem(LS_KEYS.globalBank), {});
-      const fl = parseJSON<string[]>(localStorage.getItem(LS_KEYS.flags), []);
-      const gl = parseJSON<GameStateGlobals>(localStorage.getItem(LS_KEYS.globals), {});
-      const rb = parseJSON<Record<string, string>>(localStorage.getItem(LS_KEYS.runeImgs), {});
-      const stSrc = localStorage.getItem(LS_KEYS.storySrc) ?? undefined;
-      const stTitle = localStorage.getItem(LS_KEYS.storyTitle) ?? undefined;
+      const u = parseJSON<string[]>(localStorage.getItem(ls.unlocked), []);
+      const f = parseJSON<Record<string, FragmentData>>(localStorage.getItem(ls.fragments), {});
+      const g = parseJSON<FragmentBank>(localStorage.getItem(ls.globalBank), {});
+      const fl = parseJSON<string[]>(localStorage.getItem(ls.flags), []);
+      const gl = parseJSON<GameStateGlobals>(localStorage.getItem(ls.globals), {});
+      const rb = parseJSON<Record<string, string>>(localStorage.getItem(ls.runeImgs), {});
+      const stSrc = localStorage.getItem(ls.storySrc) ?? undefined;
+      const stTitle = localStorage.getItem(ls.storyTitle) ?? undefined;
 
-      const m = localStorage.getItem(LS_KEYS.muted) === "true";
-      const rawP = localStorage.getItem(LS_KEYS.page) || "landing";
+      const m = localStorage.getItem(ls.muted) === "true";
+      const rawP = localStorage.getItem(ls.page) || "landing";
       const p = sanitizePageId(rawP);
 
       setVoiceApiKeyState(v);
@@ -205,11 +230,11 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       setCurrentPageIdState(p);
       setFlagsState(new Set(Array.isArray(fl) ? fl.filter(Boolean) : []));
 
-      writeStorageValue(LS_KEYS.page, p);
+      writeStorageValue(ls.page, p);
     } catch {
       // swallow
     }
-  }, [hydrated]);
+  }, [hydrated, ls]);
 
     const [rewardImageReady, setRewardImageReady] = useState(false);
   const rewardFrameRef = useRef<HTMLDivElement | null>(null);
@@ -428,26 +453,26 @@ useEffect(() => {
     if (!id) return;
     setFragments((prev) => {
       const next = nextFragmentsState(prev, id, data);
-      writeStorageJSON(LS_KEYS.fragments, next);
+      writeStorageJSON(ls.fragments, next);
       return next;
     });
-  }, []);
+  }, [ls.fragments]);
 
   const setVoiceApiKey = useCallback((key: string) => {
     setVoiceApiKeyState(key);
-    writeStorageValue(LS_KEYS.voice, key);
-  }, []);
+    writeStorageValue(ls.voice, key);
+  }, [ls.voice]);
 
   const setImageApiKey = useCallback((key: string) => {
     setImageApiKeyState(key);
-    writeStorageValue(LS_KEYS.image, key);
-  }, []);
+    writeStorageValue(ls.image, key);
+  }, [ls.image]);
 
   const setUnlockedFragments = useCallback((tags: string[]) => {
     const arr = Array.isArray(tags) ? tags.filter(Boolean) : [];
     setUnlockedFragmentsState(arr);
-    writeStorageJSON(LS_KEYS.unlocked, arr);
-  }, []);
+    writeStorageJSON(ls.unlocked, arr);
+  }, [ls.unlocked]);
 
   
   /** UNLOCK + write-through bank update */
@@ -457,16 +482,16 @@ useEffect(() => {
 
     setUnlockedFragmentsState((prev) => {
       const next = nextUnlockedFragmentsState(prev, ids);
-      writeStorageJSON(LS_KEYS.unlocked, next);
+      writeStorageJSON(ls.unlocked, next);
       return next;
     });
 
     setGlobalFragments((prev) => {
       const merged = nextGlobalFragmentBankForUnlock(prev, ids);
-      writeStorageJSON(LS_KEYS.globalBank, merged);
+      writeStorageJSON(ls.globalBank, merged);
       return merged;
     });
-  }, []);
+  }, [ls.unlocked, ls.globalBank]);
 
   const hasUnlocked = useCallback(
     (id: string) => !!id && Array.isArray(unlockedFragments) && unlockedFragments.includes(id),
@@ -475,8 +500,8 @@ useEffect(() => {
 
   /** FLAGS API */
   const persistFlags = useCallback((s: Set<string>) => {
-    writeStorageJSON(LS_KEYS.flags, Array.from(s));
-  }, []);
+    writeStorageJSON(ls.flags, Array.from(s));
+  }, [ls.flags]);
 
   const setFlag = useCallback(
     (id: string) => {
@@ -512,7 +537,7 @@ useEffect(() => {
       if (!src) return;
 
       // forrás elmentése
-      writeStorageValue(LS_KEYS.storySrc, src);
+      writeStorageValue(ls.storySrc, src);
       setGlobal("storySrc", src);
 
       // ✅ Meta-prefetch
@@ -555,7 +580,7 @@ useEffect(() => {
           setRunId(nextRunId);
 
           setStoryMeta(newStoryId, {
-            title: localStorage.getItem(LS_KEYS.storyTitle) || globalStoryTitle,
+            title: localStorage.getItem(ls.storyTitle) || globalStoryTitle,
             src,
             campaign: globalCampaign || localStorage.getItem("campaign") || undefined,
             userId: getOrCreateUserId(),
@@ -567,7 +592,7 @@ useEffect(() => {
 
       // ⬇️ ÚJ: runePack azonnali visszaállítás (query → LS → default)
       try {
-        const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
+        const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(ls.runePackMap), {});
         const storyKey = newStoryId || deriveStoryId({ storySrc: src }) || undefined;
         const runeChoice = resolveInitialRuneChoice({
           storyId: storyKey,
@@ -591,7 +616,7 @@ useEffect(() => {
     // ha nincs query, jöhet LS per-kampány
     const sid = deriveStoryId(analyticsGlobals);
     try {
-      const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(LS_KEYS.runePackMap), {});
+      const map = parseJSON<Record<string, RuneChoice>>(localStorage.getItem(ls.runePackMap), {});
       const runeChoice = resolveInitialRuneChoice({
         storyId: sid,
         queryChoice: parseRuneChoiceFromQuery(),
@@ -601,7 +626,7 @@ useEffect(() => {
     } catch {
       setGlobal("runePack", normalizeRuneChoice({ mode: "single", icons: DEFAULT_RUNE_SINGLE }));
     }
-  }, [hydrated, analyticsGlobals, globalRunePack, setGlobal]);
+  }, [hydrated, analyticsGlobals, globalRunePack, setGlobal, ls.runePackMap]);
 
   /** Helpers */
   const registerAbort = useCallback((ac: AbortController) => {
@@ -625,30 +650,30 @@ useEffect(() => {
     if (!flagId || !url) return;
     setImagesByFlag((prev) => {
       const next = nextRuneImagesState(prev, { flagId, url, mode: "set" });
-      writeStorageJSON(LS_KEYS.runeImgs, next);
+      writeStorageJSON(ls.runeImgs, next);
       return next;
     });
-  }, []);
+  }, [ls.runeImgs]);
 
   const clearRuneImage = useCallback((flagId: string) => {
     if (!flagId) return;
     setImagesByFlag((prev) => {
       const next = nextRuneImagesState(prev, { flagId, mode: "clear" });
       if (next === prev) return prev;
-      writeStorageJSON(LS_KEYS.runeImgs, next);
+      writeStorageJSON(ls.runeImgs, next);
       return next;
     });
-  }, []);
+  }, [ls.runeImgs]);
 
   /** Page ID setter */
   const setCurrentPageId = useCallback((id: string) => {
     const safe = sanitizePageId(id);
     setCurrentPageIdState((prev) => {
       if (prev === safe) return prev;
-      writeStorageValue(LS_KEYS.page, safe);
+      writeStorageValue(ls.page, safe);
       return safe;
     });
-  }, []);
+  }, [ls.page]);
 
   const goToNextPage = useCallback(
     (nextPageId: string) => {
@@ -678,10 +703,47 @@ useEffect(() => {
     }
   }, [globals, setGlobal, goToNextPage]);
 
+  /** Szerkesztő draft: meta + storySrc sentinel; érvényes oldal-ID-n maradunk, ha még létezik. */
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!draftStoryResolver) return;
+    const storyRaw = draftStoryResolver.getStoryJson();
+    if (!storyRaw || typeof storyRaw !== "object" || Array.isArray(storyRaw)) return;
+
+    const story = storyRaw as Record<string, unknown>;
+    if (typeof story.storyId === "string") setGlobal("storyId", story.storyId);
+    applyStoryMetaToState({
+      meta: story.meta,
+      setGlobal,
+      setProgressDisplay,
+      persistMetaCache: false,
+    });
+    setGlobal("storySrc", EDITOR_DRAFT_STORY_SRC);
+    writeStorageValue(ls.storySrc, EDITOR_DRAFT_STORY_SRC);
+
+    const ids = collectStoryPageIds(story);
+    const startId = getStartPageIdFromStory(story) || ids[0] || "landing";
+
+    setCurrentPageIdState((prev) => {
+      const safe = sanitizePageId(prev);
+      if (ids.includes(safe)) return safe;
+      const next = sanitizePageId(startId);
+      writeStorageValue(ls.page, next);
+      return next;
+    });
+  }, [
+    hydrated,
+    draftStoryResolver?.revision,
+    draftStoryResolver,
+    setGlobal,
+    ls.storySrc,
+    ls.page,
+  ]);
+
   const setIsMuted = useCallback((value: boolean) => {
     setMuted(value);
-    writeStorageValue(LS_KEYS.muted, String(value));
-  }, []);
+    writeStorageValue(ls.muted, String(value));
+  }, [ls.muted]);
 
   const triggerAudioRestart = useCallback(() => {
     setAudioRestartToken((t) => t + 1);
@@ -711,8 +773,8 @@ useEffect(() => {
     setProgressValue(0);
     setProgressDisplay(createEmptyProgressDisplay());
 
-    resetPersistedGameState();
-  }, [clearAllTimeouts]);
+    resetPersistedGameStateForKeys(ls);
+  }, [clearAllTimeouts, ls]);
 
   /** Oldal betöltése backendről + normalizálás */
   useEffect(() => {
@@ -723,7 +785,7 @@ useEffect(() => {
     if (currentPageId === "feedback" || currentPageId === "__END__") {
       const safe = "landing";
       setCurrentPageIdState(safe);
-      writeStorageValue(LS_KEYS.page, safe);
+      writeStorageValue(ls.page, safe);
       return;
     }
 
@@ -739,13 +801,54 @@ useEffect(() => {
       return;
     }
 
+    // Szerkesztő: teljes sztori a memóriában — nincs HTTP /page
+    if (draftStoryResolver) {
+      const storyRaw = draftStoryResolver.getStoryJson();
+      if (!storyRaw || typeof storyRaw !== "object" || Array.isArray(storyRaw)) {
+        setGlobalError("A draft sztori JSON érvénytelen vagy üres.");
+        setCurrentPageData(null);
+        setIsLoading(false);
+        return;
+      }
+      const story = storyRaw as Record<string, unknown>;
+      const rawPage = findPageInStoryDocument(story, currentPageId);
+      if (!rawPage) {
+        setGlobalError(`Nincs ilyen oldal a draftban: ${currentPageId}`);
+        setCurrentPageData(null);
+        setIsLoading(false);
+        return;
+      }
+      const runtimeDecision = resolvePageRuntimeDecision(rawPage, unlockedFragments);
+      if (runtimeDecision.kind === "redirect") {
+        setCurrentPageId(runtimeDecision.pageId);
+        return;
+      }
+      if (runtimeDecision.kind === "blocked") {
+        setCurrentPageId("landing");
+        return;
+      }
+      setIsLoading(true);
+      const normalized = normalizeFetchedPage(rawPage);
+      setCurrentPageData(normalized);
+      setGlobalError(null);
+      setIsLoading(false);
+      return;
+    }
+
     // Story forrás
     const storySrcFromLS =
-      typeof window !== "undefined" ? localStorage.getItem(LS_KEYS.storySrc) : null;
+      typeof window !== "undefined" ? localStorage.getItem(ls.storySrc) : null;
     const storySrc = globalStorySrc || storySrcFromLS || "";
 
     // ⛔ Ha nincs storySrc, ne fetch-eljünk
     if (!storySrc) {
+      setCurrentPageData(null);
+      setGlobalError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    if (storySrc === EDITOR_DRAFT_STORY_SRC) {
       setCurrentPageData(null);
       setGlobalError(null);
       setIsLoading(false);
@@ -784,7 +887,7 @@ useEffect(() => {
 
         // Meta refresh (mindig)
         try {
-          const metaSource = globalStorySrc || localStorage.getItem(LS_KEYS.storySrc) || "";
+          const metaSource = globalStorySrc || localStorage.getItem(ls.storySrc) || "";
           const metaSrc = metaSource.replace(/^\/?stories\//, "/stories/");
           if (metaSrc) {
             const full = buildStoryMetaUrl(metaSrc);
@@ -826,6 +929,8 @@ useEffect(() => {
     setGlobal,
     registerAbort,
     clearAllTimeouts,
+    draftStoryResolver?.revision,
+    draftStoryResolver,
   ]);
 
     useEffect(() => {
@@ -840,11 +945,11 @@ useEffect(() => {
     if (bank && typeof bank === "object") {
       setGlobalFragments((prev) => {
         const merged = mergeFragmentBanks(prev, bank);
-        writeStorageJSON(LS_KEYS.globalBank, merged);
+        writeStorageJSON(ls.globalBank, merged);
         return merged;
       });
     }
-  }, [hydrated, currentPageData?.fragmentsGlobal]);
+  }, [hydrated, currentPageData?.fragmentsGlobal, ls.globalBank]);
 
   /** Rehidratálás: oldalszintű fragmentek visszatöltése */
   useEffect(() => {

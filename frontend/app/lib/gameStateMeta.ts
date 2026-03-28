@@ -1,7 +1,7 @@
 "use client";
 
 import { normalizeProgressMilestones } from "./gameStateProgress";
-import { getPublicApiBase } from "./publicApiBase";
+import { getClientFetchApiBase } from "./publicApiBase";
 import type { ProgressDisplay } from "./gameStateTypes";
 
 type StoryMetaRecord = Record<string, unknown>;
@@ -15,7 +15,7 @@ export function buildStoryMetaUrl(storySrc: string): string {
   const normalizedSrc = storySrc.replace(/^\/?stories\//, "/stories/");
   const base = normalizedSrc.startsWith("http")
     ? normalizedSrc
-    : `${getPublicApiBase()}${normalizedSrc.startsWith("/") ? normalizedSrc : `/${normalizedSrc}`}`;
+    : `${getClientFetchApiBase()}${normalizedSrc.startsWith("/") ? normalizedSrc : `/${normalizedSrc}`}`;
   const cacheBust = base.includes("?") ? `&v=${Date.now()}` : `?v=${Date.now()}`;
   return `${base}${cacheBust}`;
 }
@@ -24,6 +24,8 @@ export function applyStoryMetaToState(params: {
   meta: unknown;
   setGlobal: (key: string, value: unknown) => void;
   setProgressDisplay?: (display: ProgressDisplay) => void;
+  /** false = ne írjon globális storyMetaCache-t (pl. szerkesztő draft preview). */
+  persistMetaCache?: boolean;
 }): boolean {
   const meta = asRecord(params.meta);
   if (!meta) return false;
@@ -35,10 +37,15 @@ export function applyStoryMetaToState(params: {
   }
   if (typeof meta.title === "string") params.setGlobal("storyTitle", meta.title);
   if (typeof meta.id === "string") params.setGlobal("storyId", meta.id);
+  if (typeof meta.startPageId === "string") {
+    params.setGlobal("startPageId", meta.startPageId);
+  }
 
-  try {
-    localStorage.setItem("storyMetaCache", JSON.stringify(meta));
-  } catch {}
+  if (params.persistMetaCache !== false) {
+    try {
+      localStorage.setItem("storyMetaCache", JSON.stringify(meta));
+    } catch {}
+  }
 
   if (params.setProgressDisplay) {
     params.setProgressDisplay({

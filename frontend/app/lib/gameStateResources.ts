@@ -39,13 +39,19 @@ export function clearRegisteredAudioElements(
 }
 
 export function resetPersistedGameState(): void {
+  resetPersistedGameStateForKeys(LS_KEYS);
+}
+
+export function resetPersistedGameStateForKeys(
+  keys: typeof LS_KEYS
+): void {
   try {
-    localStorage.removeItem(LS_KEYS.unlocked);
-    localStorage.removeItem(LS_KEYS.fragments);
-    localStorage.removeItem(LS_KEYS.globalBank);
-    localStorage.removeItem(LS_KEYS.flags);
-    localStorage.removeItem(LS_KEYS.globals);
-    localStorage.removeItem(LS_KEYS.runeImgs);
-    localStorage.setItem(LS_KEYS.page, "landing");
+    localStorage.removeItem(keys.unlocked);
+    localStorage.removeItem(keys.fragments);
+    localStorage.removeItem(keys.globalBank);
+    localStorage.removeItem(keys.flags);
+    localStorage.removeItem(keys.globals);
+    localStorage.removeItem(keys.runeImgs);
+    localStorage.setItem(keys.page, "landing");
   } catch {}
 }

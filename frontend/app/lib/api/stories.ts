@@ -1,6 +1,6 @@
 // app/lib/api/stories.ts
 
-import { getPublicApiBase } from "../publicApiBase";
+import { getClientFetchApiBase } from "../publicApiBase";
 
 // NEM használjuk itt a safeFetch-et, hogy biztosan átmenjen a body.
 // import { safeFetch, HttpError } from "../safeFetch";
@@ -41,7 +41,7 @@ export type ImportErrPayload = {
 
 // ---- Helperek ----
 function apiBase(): string {
-  return getPublicApiBase();
+  return getClientFetchApiBase();
 }
 
 function buildUrl(path: string, qs?: Query): string {

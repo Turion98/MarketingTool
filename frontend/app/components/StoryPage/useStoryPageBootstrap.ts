@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type SearchParamsLike = {
   get(name: string): string | null;
@@ -8,7 +8,6 @@ type SearchParamsLike = {
 
 type UseStoryPageBootstrapParams = {
   params: SearchParamsLike;
-  currentPageId?: string;
   goToNextPage: (id: string) => void;
   setGlobal?: (key: string, value: string) => void;
   setStorySrc?: (src: string) => void;
@@ -16,11 +15,16 @@ type UseStoryPageBootstrapParams = {
 
 export function useStoryPageBootstrap({
   params,
-  currentPageId,
   goToNextPage,
   setGlobal,
   setStorySrc,
 }: UseStoryPageBootstrapParams): void {
+  /**
+   * Utolsó alkalmazott (src + start) pár — játék közben ne fusson újra;
+   * más történet / más URL `start` esetén viszont igen (pl. két embed ugyanazzal a start id-vel).
+   */
+  const appliedBootstrapKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
     const src = params.get("src");
     const start = params.get("start");
@@ -52,11 +56,15 @@ export function useStoryPageBootstrap({
       } catch {}
     }
 
-    if (start && start !== currentPageId) {
-      try {
-        localStorage.setItem("currentPageId", start);
-      } catch {}
-      goToNextPage(start);
-    }
-  }, [params, currentPageId, goToNextPage, setGlobal, setStorySrc]);
+    if (!start) return;
+
+    const bootstrapKey = `${src ?? ""}\0${start}`;
+    if (appliedBootstrapKeyRef.current === bootstrapKey) return;
+
+    appliedBootstrapKeyRef.current = bootstrapKey;
+    try {
+      localStorage.setItem("currentPageId", start);
+    } catch {}
+    goToNextPage(start);
+  }, [params, goToNextPage, setGlobal, setStorySrc]);
 }
