@@ -45,6 +45,10 @@ type StoryCardProps = {
   onDragStart: (e: React.PointerEvent) => void;
   /** Vászon: kijelöléskor a kártya DOM-ja (láthatóság / pan). */
   domRef?: Ref<HTMLDivElement | null>;
+  /** Bemeneti kötegenként: false = csak távoli él, ne legyen szürke portpont. */
+  incomingPortDotVisible?: boolean[];
+  /** Kimenő él id-k, amikhez ne rajzoljunk jobb oldali portpontot (távoli bekötés). */
+  distantOutgoingEdgeIds?: Set<string>;
 };
 
 export default function StoryCard({
@@ -61,6 +65,8 @@ export default function StoryCard({
   onSelect,
   onDragStart,
   domRef,
+  incomingPortDotVisible,
+  distantOutgoingEdgeIds,
 }: StoryCardProps) {
   const ord = orderedOutgoingEdges(node.pageId, outgoing);
   const { w, h } = cardDimensions(node, ord);
@@ -82,7 +88,9 @@ export default function StoryCard({
       : Math.max(ord.length, 1)
     : 0;
 
-  const inYs = inputPortYs(incomingPortCount, h);
+  const inYs = inputPortYs(incomingPortCount, h, {
+    logicLayout: node.isLogicPage,
+  });
 
   const milestoneOn =
     milestoneActive ?? raw.saveMilestone === true;
@@ -120,13 +128,17 @@ export default function StoryCard({
       ) : null}
       {!isStart && incomingPortCount > 0 ? (
         <div className={s.cardInPorts} aria-hidden>
-          {inYs.map((py, i) => (
-            <span
-              key={i}
-              className={s.portDot}
-              style={{ top: py - 4 }}
-            />
-          ))}
+          {inYs.map((py, i) => {
+            const showDot = incomingPortDotVisible?.[i] !== false;
+            if (!showDot) return null;
+            return (
+              <span
+                key={i}
+                className={s.portDot}
+                style={{ top: py - 4 }}
+              />
+            );
+          })}
         </div>
       ) : null}
 
@@ -307,15 +319,24 @@ export default function StoryCard({
 
       {!isStart ? (
         <div className={s.cardOutPorts} aria-hidden>
-          {Array.from({ length: rows }, (_, slotIndex) => (
-            <span
-              key={slotIndex}
-              className={s.portDotOut}
-              style={{
-                top: outPortY(slotIndex) - 4,
-              }}
-            />
-          ))}
+          {Array.from({ length: rows }, (_, slotIndex) => {
+            const e = ord[slotIndex];
+            if (
+              e &&
+              distantOutgoingEdgeIds?.has(e.id)
+            ) {
+              return null;
+            }
+            return (
+              <span
+                key={slotIndex}
+                className={s.portDotOut}
+                style={{
+                  top: outPortY(slotIndex) - 4,
+                }}
+              />
+            );
+          })}
         </div>
       ) : (
         <div className={s.cardOutPorts} aria-hidden>

@@ -98,11 +98,35 @@ export function outPortY(slotIndex: number): number {
   return portYForSlot(slotIndex);
 }
 
-export function inputPortYs(inCount: number, cardH: number): number[] {
+export type InputPortYsOpts = {
+  /**
+   * Logic oldal: bemenetek egy sávban a fejléc alatti törzsben (nem a teljes kártyán),
+   * egységes elhelyezés a belső sorokhoz képest.
+   */
+  logicLayout?: boolean;
+};
+
+/**
+ * Bemeneti port Y a kártya bal szélén, egyenlő lépésközzel.
+ * Alap: teljes kártyamagasság; logicLayout: csak a törzs (HEADER+ROW2 alatt).
+ */
+export function inputPortYs(
+  inCount: number,
+  cardH: number,
+  opts?: InputPortYsOpts
+): number[] {
   if (inCount <= 0) return [];
-  const top = HEADER_H + ROW2_H;
-  const inner = cardH - top - 6;
-  return Array.from({ length: inCount }, (_, i) => {
-    return top + ((i + 1) / (inCount + 1)) * inner;
-  });
+  if (opts?.logicLayout) {
+    const top = HEADER_H + ROW2_H + 8;
+    const bottom = cardH - Math.max(CARD_BODY_BOTTOM_PAD, 8);
+    const span = Math.max(bottom - top, 1);
+    const step = span / (inCount + 1);
+    return Array.from({ length: inCount }, (_, i) => top + (i + 1) * step);
+  }
+  const pad = 10;
+  const top = pad;
+  const bottom = cardH - pad;
+  const span = Math.max(bottom - top, 1);
+  const step = span / (inCount + 1);
+  return Array.from({ length: inCount }, (_, i) => top + (i + 1) * step);
 }
