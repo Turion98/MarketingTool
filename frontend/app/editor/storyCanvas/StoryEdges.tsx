@@ -87,6 +87,7 @@ export default function StoryEdges({ ops }: { ops: EdgeDrawOp[] }) {
         height: "100%",
         pointerEvents: "none",
         overflow: "visible",
+        zIndex: 0,
       }}
     >
       {ops.map((op) =>

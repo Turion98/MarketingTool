@@ -34,6 +34,12 @@ type StoryCardProps = {
   incomingPortCount: number;
   selected: boolean;
   issues: PageValidationIssue[];
+  /** Ha meg van adva: milestone = flag VAGY fragment bank `{pageId}_DONE` */
+  milestoneActive?: boolean;
+  /** Nagyobb érték = felül (meta.editorLayout z). */
+  stackZ?: number;
+  /** Csak nem-kezdő kártyán; megerősítés a szülőben. */
+  onRequestDelete?: () => void;
   onSelect: () => void;
   onDragStart: (e: React.PointerEvent) => void;
 };
@@ -46,6 +52,9 @@ export default function StoryCard({
   incomingPortCount,
   selected,
   issues,
+  milestoneActive,
+  stackZ,
+  onRequestDelete,
   onSelect,
   onDragStart,
 }: StoryCardProps) {
@@ -71,15 +80,23 @@ export default function StoryCard({
 
   const inYs = inputPortYs(incomingPortCount, h);
 
+  const milestoneOn =
+    milestoneActive ?? raw.saveMilestone === true;
   const showMilestoneOrb =
-    !isStart &&
-    !isEditorLogicPage(raw) &&
-    raw.saveMilestone === true;
+    !isStart && !isEditorLogicPage(raw) && milestoneOn;
 
   return (
     <div
       className={`${s.card} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""}`}
-      style={{ left: x, top: y, width: w, height: h }}
+      style={{
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+        ...(typeof stackZ === "number" && Number.isFinite(stackZ)
+          ? { zIndex: stackZ }
+          : {}),
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -93,7 +110,7 @@ export default function StoryCard({
         <span
           className={s.milestoneOrb}
           aria-hidden
-          title="Save milestone"
+          title={`Milestone: ${node.pageId}_DONE`}
         />
       ) : null}
       {!isStart && incomingPortCount > 0 ? (
@@ -125,6 +142,24 @@ export default function StoryCard({
           <div className={s.cardRow1}>
             <span className={s.cardId}>{node.pageId}</span>
             <span className={s.cardCat}>{catLabel}</span>
+            {onRequestDelete ? (
+              <button
+                type="button"
+                className={s.cardDeleteBtn}
+                aria-label="Oldal törlése"
+                title="Oldal törlése"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRequestDelete();
+                }}
+              >
+                ×
+              </button>
+            ) : null}
           </div>
         )}
       </div>

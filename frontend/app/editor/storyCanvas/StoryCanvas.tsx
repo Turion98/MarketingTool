@@ -19,12 +19,24 @@ import {
   clusterMemberIdsToDrag,
   getEditorCanvasClustersEffective,
 } from "@/app/lib/editor/editorCanvasCluster";
+import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentIds";
 import {
   ensureLayout,
   type EditorLayoutNode,
   type EditorLayoutState,
 } from "@/app/lib/editor/storyGraphLayout";
+import {
+  CATEGORY_LABELS,
+  EDITOR_CATEGORY_ORDER,
+  type EditorPageCategory,
+  flattenStoryPages,
+  groupPagesByCategory,
+} from "@/app/lib/editor/storyPagesFlatten";
 import { applyEditorLayout } from "@/app/lib/editor/storyPagePatch";
+import {
+  appendPageToStory,
+  buildEmptyPageForCategory,
+} from "@/app/lib/editor/storyTemplateInsert";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
   cardDimensions,
@@ -42,10 +54,20 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
 }
 
+const ZOOM_MIN = 0.45;
+const ZOOM_MAX = 1.8;
+const ZOOM_STEP = 0.1;
+
 const CANVAS_VIEWPORT_HEIGHT_LS = "questell:editor:storyCanvasViewportPx";
 
 /** Egyeznie kell a `.viewport` `min-height` értékével a storyCanvas.module.scss-ben */
 const MIN_CANVAS_VIEWPORT_PX = 220;
+
+/** Új kártya a virtuális kezdő csomóponttól (world koordináta). */
+const NEAR_START_DX = 130;
+const NEAR_START_DY = -22;
+
+const CATEGORY_STRIP_SCROLL_STEP_PX = 260;
 
 function maxCanvasViewportPx() {
   if (typeof window === "undefined") return 920;
@@ -77,6 +99,8 @@ type StoryCanvasProps = {
   metaIssues: PageValidationIssue[];
   /** Panelben: nincs dupla keret */
   embedded?: boolean;
+  /** Kártya / inspektor törlés — megerősítés a hívóban. */
+  onDeletePage?: (pageId: string) => void;
 };
 
 export default function StoryCanvas({
@@ -87,6 +111,7 @@ export default function StoryCanvas({
   issuesByPage,
   metaIssues,
   embedded = false,
+  onDeletePage,
 }: StoryCanvasProps) {
   const { nodes, edges, startPageId } = useMemo(
     () => buildStoryGraph(draftStory),
@@ -131,6 +156,20 @@ export default function StoryCanvas({
   const canvasHRef = useRef(canvasH);
   canvasHRef.current = canvasH;
   const viewportRef = useRef<HTMLDivElement>(null);
+  const categoryStripRef = useRef<HTMLDivElement>(null);
+  const categoryStripScrollRef = useRef<HTMLDivElement>(null);
+  const [openCategory, setOpenCategory] = useState<EditorPageCategory | null>(
+    null
+  );
+  const [catStripNav, setCatStripNav] = useState({
+    canBack: false,
+    canFwd: false,
+  });
+
+  const pagesByCategory = useMemo(
+    () => groupPagesByCategory(flattenStoryPages(draftStory)),
+    [draftStory]
+  );
 
   useEffect(() => {
     try {
@@ -357,11 +396,87 @@ export default function StoryCanvas({
       if (!e.ctrlKey || !e.shiftKey) return;
       e.preventDefault();
       const dz = e.deltaY > 0 ? -0.08 : 0.08;
-      setZoom((z) => clamp(Number((z + dz).toFixed(2)), 0.45, 1.8));
+      setZoom((z) =>
+        clamp(Number((z + dz).toFixed(2)), ZOOM_MIN, ZOOM_MAX)
+      );
     };
     el.addEventListener("wheel", wheel, { passive: false });
     return () => el.removeEventListener("wheel", wheel);
   }, []);
+
+  const bumpZoom = useCallback((delta: number) => {
+    setZoom((z) =>
+      clamp(Number((z + delta).toFixed(2)), ZOOM_MIN, ZOOM_MAX)
+    );
+  }, []);
+
+  useEffect(() => {
+    if (openCategory === null) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (categoryStripRef.current?.contains(t)) return;
+      setOpenCategory(null);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [openCategory]);
+
+  const syncCategoryStripNav = useCallback(() => {
+    const el = categoryStripScrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const left = el.scrollLeft;
+    const eps = 2;
+    setCatStripNav({
+      canBack: left > eps,
+      canFwd: max > eps && left < max - eps,
+    });
+  }, []);
+
+  useEffect(() => {
+    syncCategoryStripNav();
+  }, [pagesByCategory, openCategory, syncCategoryStripNav]);
+
+  useEffect(() => {
+    const el = categoryStripScrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => syncCategoryStripNav());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [syncCategoryStripNav]);
+
+  const onAddPageForCategory = useCallback(
+    (category: EditorPageCategory) => {
+      const page = buildEmptyPageForCategory(category, draftStory);
+      const id = typeof page.id === "string" ? page.id : "";
+      if (!id) return;
+      const storyWithPage = appendPageToStory(draftStory, page);
+      const start =
+        layoutRef.current.nodes[STORY_GRAPH_START_NODE_ID] ?? {
+          x: -256,
+          y: 80,
+        };
+      let maxZ = 0;
+      for (const n of Object.values(layoutRef.current.nodes)) {
+        if (typeof n.z === "number" && Number.isFinite(n.z)) {
+          maxZ = Math.max(maxZ, n.z);
+        }
+      }
+      const z = Math.max(2, maxZ + 1);
+      const position: EditorLayoutNode = {
+        x: start.x + NEAR_START_DX,
+        y: start.y + NEAR_START_DY,
+        z,
+      };
+      const nextLayout: EditorLayoutState = {
+        version: 1,
+        nodes: { ...layoutRef.current.nodes, [id]: position },
+      };
+      onStoryChange(applyEditorLayout(storyWithPage, nextLayout));
+      onSelectPage(id);
+    },
+    [draftStory, onStoryChange, onSelectPage]
+  );
 
   const onResizeDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -404,6 +519,31 @@ export default function StoryCanvas({
   return (
     <div className={`${s.wrap} ${embedded ? s.wrapEmbedded : ""}`}>
       <div className={s.toolbar}>
+        <div className={s.toolbarZoomGroup} role="group" aria-label="Vászon nagyítás">
+          <button
+            type="button"
+            className={s.toolbarZoomBtn}
+            disabled={zoom <= ZOOM_MIN + 1e-4}
+            onClick={() => bumpZoom(-ZOOM_STEP)}
+            aria-label="Kicsinyítés"
+            title="Kicsinyítés"
+          >
+            −
+          </button>
+          <span className={s.toolbarZoomValue} aria-live="polite">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            className={s.toolbarZoomBtn}
+            disabled={zoom >= ZOOM_MAX - 1e-4}
+            onClick={() => bumpZoom(ZOOM_STEP)}
+            aria-label="Nagyítás"
+            title="Nagyítás"
+          >
+            +
+          </button>
+        </div>
         <span style={{ opacity: 0.75 }}>Ctrl+Shift+görgetés: vászon zoom</span>
         <button type="button" onClick={() => setZoom(1)}>
           Zoom 100%
@@ -423,6 +563,90 @@ export default function StoryCanvas({
           </span>
         ) : null}
       </div>
+
+      <div ref={categoryStripRef} className={s.categoryStripWrap}>
+        <div
+          ref={categoryStripScrollRef}
+          className={s.categoryStripScroll}
+          aria-label="Oldalak kategóriánként"
+        >
+          {EDITOR_CATEGORY_ORDER.map((cat) => {
+            const pages = pagesByCategory[cat];
+            const isOpen = openCategory === cat;
+            return (
+              <div key={cat} className={s.categoryStripGroup}>
+                <details className={s.categoryStripDetails} open={isOpen}>
+                  <summary
+                    className={s.categoryStripSummary}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setOpenCategory((o) => (o === cat ? null : cat));
+                    }}
+                  >
+                    <span className={s.categoryStripChevron} aria-hidden>
+                      {isOpen ? "▼" : "▶"}
+                    </span>
+                    <span
+                      className={s.categoryStripGroupTitle}
+                      title={CATEGORY_LABELS[cat]}
+                    >
+                      {CATEGORY_LABELS[cat]}
+                    </span>
+                    <span className={s.categoryStripCount}>({pages.length})</span>
+                  </summary>
+                  <div className={s.categoryStripPanel}>
+                    {pages.length === 0 ? (
+                      <span className={s.categoryStripEmpty}>
+                        Nincs ilyen típusú oldal.
+                      </span>
+                    ) : (
+                      pages.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`${s.categoryStripChip} ${selectedPageId === p.id ? s.categoryStripChipSelected : ""}`}
+                          title={p.id}
+                          onClick={() => {
+                            onSelectPage(p.id);
+                            setOpenCategory(null);
+                          }}
+                        >
+                          {p.id}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </details>
+                <button
+                  type="button"
+                  className={s.categoryStripAdd}
+                  title={`Új üres: ${CATEGORY_LABELS[cat]}`}
+                  aria-label={`Új oldal (${CATEGORY_LABELS[cat]})`}
+                  onClick={() => onAddPageForCategory(cat)}
+                >
+                  +
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          className={s.categoryStripNavBtn}
+          aria-label="Kategóriák görgetése jobbra"
+          title="Jobbra"
+          disabled={!catStripNav.canFwd}
+          onClick={() => {
+            categoryStripScrollRef.current?.scrollBy({
+              left: CATEGORY_STRIP_SCROLL_STEP_PX,
+              behavior: "smooth",
+            });
+          }}
+        >
+          ›
+        </button>
+      </div>
+
       <div
         ref={viewportRef}
         className={`${s.viewport} ${panning ? s.viewportPanning : ""}`}
@@ -452,6 +676,7 @@ export default function StoryCanvas({
               n.pageId === STORY_GRAPH_START_NODE_ID
                 ? []
                 : issuesByPage.get(n.pageId) ?? [];
+            const stackZ = localLayout.nodes[n.pageId]?.z;
             return (
               <div key={n.pageId} data-story-card="1">
                 <StoryCard
@@ -462,6 +687,16 @@ export default function StoryCanvas({
                   incomingPortCount={incomingPortCount}
                   selected={selectedPageId === n.pageId}
                   issues={issues}
+                  stackZ={
+                    typeof stackZ === "number" && Number.isFinite(stackZ)
+                      ? stackZ
+                      : undefined
+                  }
+                  milestoneActive={
+                    n.pageId === STORY_GRAPH_START_NODE_ID
+                      ? undefined
+                      : editorPageMilestoneActive(draftStory, n.pageId)
+                  }
                   onSelect={() =>
                     onSelectPage(
                       n.pageId === STORY_GRAPH_START_NODE_ID
@@ -470,6 +705,11 @@ export default function StoryCanvas({
                     )
                   }
                   onDragStart={(e) => onCardDragStart(n.pageId, e)}
+                  onRequestDelete={
+                    n.pageId === STORY_GRAPH_START_NODE_ID || !onDeletePage
+                      ? undefined
+                      : () => onDeletePage(n.pageId)
+                  }
                 />
               </div>
             );
