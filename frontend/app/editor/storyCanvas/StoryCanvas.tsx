@@ -22,7 +22,10 @@ import {
 } from "@/app/lib/editor/editorCanvasCluster";
 import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentIds";
 import {
+  EDITOR_LAYOUT_COL_STEP_PX,
   ensureLayout,
+  mergeEditorLayoutIntoStory,
+  recomputeEditorLayoutForStory,
   type EditorLayoutNode,
   type EditorLayoutState,
 } from "@/app/lib/editor/storyGraphLayout";
@@ -48,7 +51,12 @@ import {
   slotCount,
 } from "./storyCanvasGeometry";
 import StoryCard from "./StoryCard";
-import StoryEdges, { buildEdgeDrawOps } from "./StoryEdges";
+import { computeDistantInboundYByKey } from "./distantInboundLayout";
+import {
+  StoryDistantEdgeChips,
+  StoryDistantEdgeLines,
+} from "./StoryDistantEdgeDecor";
+import StoryEdges, { buildEdgeLayers } from "./StoryEdges";
 import s from "./storyCanvas.module.scss";
 
 function clamp(n: number, lo: number, hi: number) {
@@ -297,7 +305,9 @@ export default function StoryCanvas({
 
       const incAll = incomingEdgesByTarget.get(n.pageId) ?? [];
       const bundles = bundleIncomingEdgesForTarget(incAll);
-      const inYs = inputPortYs(bundles.length, h);
+      const inYs = inputPortYs(bundles.length, h, {
+        logicLayout: n.isLogicPage,
+      });
       const inSlotY = new Map<string, number>();
       bundles.forEach((bundle, i) => {
         const py = inYs[i] ?? h / 2;
@@ -319,15 +329,54 @@ export default function StoryCanvas({
     return world;
   }, [nodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
 
-  const edgeOps = useMemo(
+  const { localOps: edgeOps, distantBundles } = useMemo(
     () =>
-      buildEdgeDrawOps({
+      buildEdgeLayers({
         edges,
         world: worldMetrics,
         clusters: canvasClusters,
       }),
     [edges, worldMetrics, canvasClusters]
   );
+
+  const [hoveredDistantKey, setHoveredDistantKey] = useState<string | null>(
+    null
+  );
+
+  const distantEdgeIdSet = useMemo(
+    () => new Set(distantBundles.flatMap((b) => b.edgeIds)),
+    [distantBundles]
+  );
+
+  const distantInboundWorldBox = useMemo(() => {
+    const m = new Map<string, { y: number; h: number }>();
+    for (const [pageId, w] of worldMetrics) {
+      m.set(pageId, { y: w.y, h: w.h });
+    }
+    return m;
+  }, [worldMetrics]);
+
+  const distantInboundYByKey = useMemo(
+    () => computeDistantInboundYByKey(distantBundles, distantInboundWorldBox),
+    [distantBundles, distantInboundWorldBox]
+  );
+
+  const incomingPortDotVisibleByPageId = useMemo(() => {
+    const m = new Map<string, boolean[]>();
+    for (const n of nodesWithStart) {
+      const pid = n.pageId;
+      if (pid === STORY_GRAPH_START_NODE_ID) continue;
+      const inc = incomingEdgesByTarget.get(pid) ?? [];
+      const bundles = bundleIncomingEdgesForTarget(inc);
+      m.set(
+        pid,
+        bundles.map((bundle) =>
+          bundle.some((e) => !distantEdgeIdSet.has(e.id))
+        )
+      );
+    }
+    return m;
+  }, [nodesWithStart, incomingEdgesByTarget, distantEdgeIdSet]);
 
   const bbox = useMemo(() => {
     let maxX = 400;
@@ -342,6 +391,16 @@ export default function StoryCanvas({
   const commitLayout = useCallback(() => {
     onStoryChange(applyEditorLayout(draftStory, layoutRef.current));
   }, [draftStory, onStoryChange]);
+
+  const onAutoRelayout = useCallback(() => {
+    const layout = recomputeEditorLayoutForStory(
+      draftStory,
+      pageIds,
+      edges,
+      startPageId
+    );
+    onStoryChange(mergeEditorLayoutIntoStory(draftStory, layout));
+  }, [draftStory, pageIds, edges, startPageId, onStoryChange]);
 
   const onCardDragStart = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
@@ -390,6 +449,11 @@ export default function StoryCanvas({
 
   const onViewportPointerDown = useCallback((e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
+    try {
+      window.getSelection()?.removeAllRanges();
+    } catch {
+      /* ignore */
+    }
     panRef.current = {
       sx: e.clientX,
       sy: e.clientY,
@@ -523,7 +587,7 @@ export default function StoryCanvas({
       const storyWithPage = appendPageToStory(draftStory, page);
       const start =
         layoutRef.current.nodes[STORY_GRAPH_START_NODE_ID] ?? {
-          x: -256,
+          x: -EDITOR_LAYOUT_COL_STEP_PX,
           y: 80,
         };
       let maxZ = 0;
@@ -612,6 +676,12 @@ export default function StoryCanvas({
           }}
         >
           <StoryEdges ops={edgeOps} />
+          <StoryDistantEdgeLines
+            bundles={distantBundles}
+            selectedPageId={selectedPageId}
+            hoveredKey={hoveredDistantKey}
+            inboundYByKey={distantInboundYByKey}
+          />
           {nodesWithStart.map((n) => {
             const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
             const out = outgoingByPage.get(n.pageId) ?? [];
@@ -630,6 +700,10 @@ export default function StoryCanvas({
                   y={pos.y}
                   outgoing={out}
                   incomingPortCount={incomingPortCount}
+                  incomingPortDotVisible={incomingPortDotVisibleByPageId.get(
+                    n.pageId
+                  )}
+                  distantOutgoingEdgeIds={distantEdgeIdSet}
                   selected={selectedPageId === n.pageId}
                   domRef={getCardRootRef(n.pageId)}
                   issues={issues}
@@ -658,6 +732,11 @@ export default function StoryCanvas({
               </div>
             );
           })}
+          <StoryDistantEdgeChips
+            bundles={distantBundles}
+            onHoverKey={setHoveredDistantKey}
+            inboundYByKey={distantInboundYByKey}
+          />
         </div>
       </div>
       <div
@@ -722,6 +801,14 @@ export default function StoryCanvas({
           }}
         >
           Központ
+        </button>
+        <button
+          type="button"
+          onClick={onAutoRelayout}
+          title="Pozíciók újraszámolása a gráf szerint (felülírja a mentett elrendezést)"
+          aria-label="Automatikus elrendezés a gráf szerint"
+        >
+          Auto elrendezés
         </button>
         {metaIssues.length > 0 ? (
           <span style={{ color: "#fca5a5" }}>
