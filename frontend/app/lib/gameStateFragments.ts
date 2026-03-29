@@ -39,7 +39,9 @@ export function getUnlockEnterFragmentIds(page?: PageData | null): string[] {
     : [];
   const pid = typeof page?.id === "string" ? page.id.trim() : "";
   const done =
-    page?.saveMilestone === true && pid ? [`${pid}_DONE`] : [];
+    page?.saveMilestone === true && pid
+      ? [canonicalMilestoneFragmentId(`${pid}_DONE`)]
+      : [];
   const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of [...fromEnter, ...done]) {
