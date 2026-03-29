@@ -147,6 +147,8 @@ type StoryCanvasProps = {
   onPendingPageCreated?: () => void;
   /** Bal szél: teljes képernyő + admin stb. */
   visualBarLeading?: ReactNode;
+  /** Új sztori meta fázis: nincs szerkesztés a vásznon. */
+  interactionLocked?: boolean;
   /** Szülő szerinti teljes képernyő — nagyobb max vászon magasság. */
   canvasFullscreen?: boolean;
   /**
@@ -168,6 +170,7 @@ export default function StoryCanvas({
   onRenamePageId,
   onPendingPageCreated,
   visualBarLeading,
+  interactionLocked = false,
   canvasFullscreen = false,
   fullscreenSideSlot,
 }: StoryCanvasProps) {
@@ -435,10 +438,12 @@ export default function StoryCanvas({
   }, [worldMetrics]);
 
   const commitLayout = useCallback(() => {
+    if (interactionLocked) return;
     onStoryChange(applyEditorLayout(draftStory, layoutRef.current));
-  }, [draftStory, onStoryChange]);
+  }, [draftStory, onStoryChange, interactionLocked]);
 
   const onAutoRelayout = useCallback(() => {
+    if (interactionLocked) return;
     const layout = recomputeEditorLayoutForStory(
       draftStory,
       pageIds,
@@ -446,10 +451,18 @@ export default function StoryCanvas({
       startPageId
     );
     onStoryChange(mergeEditorLayoutIntoStory(draftStory, layout));
-  }, [draftStory, pageIds, edges, startPageId, onStoryChange]);
+  }, [
+    draftStory,
+    pageIds,
+    edges,
+    startPageId,
+    onStoryChange,
+    interactionLocked,
+  ]);
 
   const onCardDragStart = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
+      if (interactionLocked) return;
       e.stopPropagation();
       e.preventDefault();
       const idsToMove =
@@ -499,6 +512,7 @@ export default function StoryCanvas({
       commitLayout,
       canvasClusters,
       selectedPageIds,
+      interactionLocked,
     ]
   );
 
@@ -743,6 +757,7 @@ export default function StoryCanvas({
 
   const onAddPageForCategory = useCallback(
     (category: EditorPageCategory) => {
+      if (interactionLocked) return;
       let base = draftStory;
       for (const pid of collectStoryPageIds(base)) {
         if (isEditorPendingPageId(pid)) {
@@ -778,7 +793,13 @@ export default function StoryCanvas({
       onSelectPageIds([id]);
       onPendingPageCreated?.();
     },
-    [draftStory, onStoryChange, onSelectPageIds, onPendingPageCreated]
+    [
+      draftStory,
+      onStoryChange,
+      onSelectPageIds,
+      onPendingPageCreated,
+      interactionLocked,
+    ]
   );
 
   const onResizeDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
@@ -886,6 +907,10 @@ export default function StoryCanvas({
                       ? undefined
                       : editorPageMilestoneActive(draftStory, n.pageId)
                   }
+                  bootstrapStartHint={
+                    interactionLocked &&
+                    n.pageId === STORY_GRAPH_START_NODE_ID
+                  }
                   onBodyPointerDown={(e) =>
                     onCanvasCardBodyPointerDown(n.pageId, e)
                   }
@@ -896,12 +921,16 @@ export default function StoryCanvas({
                   }
                   onDragStart={(e) => onCardDragStart(n.pageId, e)}
                   onRequestDelete={
-                    n.pageId === STORY_GRAPH_START_NODE_ID || !onDeletePage
+                    interactionLocked ||
+                    n.pageId === STORY_GRAPH_START_NODE_ID ||
+                    !onDeletePage
                       ? undefined
                       : () => onDeletePage(n.pageId)
                   }
                   onRenamePageId={
-                    n.pageId === STORY_GRAPH_START_NODE_ID || !onRenamePageId
+                    interactionLocked ||
+                    n.pageId === STORY_GRAPH_START_NODE_ID ||
+                    !onRenamePageId
                       ? undefined
                       : onRenamePageId
                   }
@@ -994,6 +1023,7 @@ export default function StoryCanvas({
         </button>
         <button
           type="button"
+          disabled={interactionLocked}
           onClick={onAutoRelayout}
           title="Pozíciók újraszámolása a gráf szerint (felülírja a mentett elrendezést)"
           aria-label="Automatikus elrendezés a gráf szerint"

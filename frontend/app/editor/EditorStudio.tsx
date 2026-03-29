@@ -20,6 +20,12 @@ import {
 import { collectStoryPageIds } from "@/app/lib/editor/findPageInStory";
 import { validateStoryPages as validateEditorPages } from "@/app/lib/editor/pageInspectorValidation";
 import type { EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
+import { saveStoryDocumentJson } from "@/app/lib/api/stories";
+import {
+  NEW_STORY_SRC_SENTINEL,
+  createBootstrapShellDraft,
+  isNewStorySentinel,
+} from "@/app/lib/editor/newStoryBootstrap";
 import { getClientFetchApiBase } from "@/app/lib/publicApiBase";
 import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
 import {
@@ -29,6 +35,7 @@ import {
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
+import NewStoryMetaPanel from "./NewStoryMetaPanel";
 import PageInspector from "./PageInspector";
 import StoryCanvas from "./storyCanvas/StoryCanvas";
 import s from "./editor.module.scss";
@@ -108,6 +115,17 @@ function defaultPreviewBodyHeightPx() {
 }
 
 /** Backend `/api/story?src=` és listás `jsonSrc` egységes formára (`stories/foo.json`). */
+function draftHasPendingEditorPageIds(story: Record<string, unknown>): boolean {
+  const pages = story.pages;
+  if (!Array.isArray(pages)) return false;
+  for (const p of pages) {
+    if (!p || typeof p !== "object" || Array.isArray(p)) continue;
+    const id = (p as Record<string, unknown>).id;
+    if (typeof id === "string" && isEditorPendingPageId(id)) return true;
+  }
+  return false;
+}
+
 function normalizeEditorStorySrc(raw: string): string {
   const s = raw.trim().replace(/\\/g, "/");
   if (!s) return SEED_STORY_SRC;
@@ -480,6 +498,8 @@ function EditorStudioRightColumn({
   onStoryChange,
   onDeletePage,
   onRenamePageId,
+  bootstrapMode,
+  onBootstrapStoryCreated,
 }: {
   draftStory: Record<string, unknown>;
   revision: number;
@@ -492,7 +512,32 @@ function EditorStudioRightColumn({
   onStoryChange: (next: Record<string, unknown>) => void;
   onDeletePage: (pageId: string) => void;
   onRenamePageId?: (fromId: string, toId: string) => string | null;
+  bootstrapMode?: boolean;
+  onBootstrapStoryCreated?: (result: { jsonSrc: string; id: string }) => void;
 }) {
+  if (bootstrapMode && onBootstrapStoryCreated) {
+    return (
+      <div className={s.dockedRightStack}>
+        <div
+          className={`${s.panel} ${s.previewPanel} ${s.inspectorPanelRoot}`}
+        >
+          <div className={s.bootstrapPanelRoot}>
+            <h2 className={s.bootstrapPanelHead}>
+              Új sztori – kötelező adatok
+            </h2>
+            <div className={s.bootstrapPanelBody}>
+              <p className={s.bootstrapMetaLead}>
+                Az előnézet és az oldal szerkesztő a meta mentése után érhető el.
+                A vásznon addig csak a kezdőpont látható.
+              </p>
+              <NewStoryMetaPanel onCreated={onBootstrapStoryCreated} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={s.dockedRightStack}>
       <EditorPreviewColumn
@@ -603,12 +648,145 @@ export default function EditorStudio({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeStorySrc, setActiveStorySrc] =
     useState<string>(SEED_STORY_SRC);
+  const [isNewStoryBootstrap, setIsNewStoryBootstrap] = useState(false);
+  const previousActiveStorySrcRef = useRef<string>(SEED_STORY_SRC);
   const [adminStoryList, setAdminStoryList] = useState<ListedStory[]>([]);
   const [adminListLoading, setAdminListLoading] = useState(false);
   const [adminListError, setAdminListError] = useState<string | null>(null);
   const adminLsSyncedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const saveServerTimerRef = useRef<number | null>(null);
+  const [saveServerBusy, setSaveServerBusy] = useState(false);
+  const [saveServerHint, setSaveServerHint] = useState<string | null>(null);
+  const [saveServerTone, setSaveServerTone] = useState<"ok" | "err" | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (saveServerTimerRef.current) {
+        clearTimeout(saveServerTimerRef.current);
+      }
+    };
+  }, []);
+
+  const onSaveDraftToServer = useCallback(async () => {
+    if (saveServerTimerRef.current) {
+      clearTimeout(saveServerTimerRef.current);
+      saveServerTimerRef.current = null;
+    }
+    const cur = draftStoryRef.current;
+    if (!cur) return;
+    if (draftHasPendingEditorPageIds(cur)) {
+      setSaveServerTone("err");
+      setSaveServerHint(
+        "Mentés előtt nevezd meg vagy töröld a függő új oldalakat (editor vázlat-ID)."
+      );
+      return;
+    }
+    setSaveServerBusy(true);
+    setSaveServerTone(null);
+    setSaveServerHint(null);
+    try {
+      const payload =
+        typeof structuredClone === "function"
+          ? (structuredClone(cur) as Record<string, unknown>)
+          : (JSON.parse(JSON.stringify(cur)) as Record<string, unknown>);
+      const normalized = normalizeLegacyMilestoneFragmentIdsInStory(payload);
+      const result = await saveStoryDocumentJson(normalized, {
+        overwrite: true,
+        mode: "strict",
+      });
+      const jsonSrc =
+        typeof result.jsonSrc === "string"
+          ? result.jsonSrc
+          : typeof result.id === "string"
+            ? `stories/${result.id}.json`
+            : "";
+      setSaveServerTone("ok");
+      setSaveServerHint(
+        jsonSrc ? `Szerverre mentve (${jsonSrc}).` : "Szerverre mentve."
+      );
+      saveServerTimerRef.current = window.setTimeout(() => {
+        setSaveServerHint(null);
+        setSaveServerTone(null);
+        saveServerTimerRef.current = null;
+      }, 7000);
+    } catch (e) {
+      setSaveServerTone("err");
+      setSaveServerHint(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaveServerBusy(false);
+    }
+  }, [isNewStoryBootstrap]);
+
+  const beginNewStory = useCallback(() => {
+    previousActiveStorySrcRef.current = activeStorySrc;
+    setIsNewStoryBootstrap(true);
+    setActiveStorySrc(NEW_STORY_SRC_SENTINEL);
+    const shell = createBootstrapShellDraft();
+    setDraftStory(shell);
+    setJsonText(JSON.stringify(shell, null, 2));
+    setParseError(null);
+    setSchemaHint(
+      "Új sztori: töltsd ki a jobb oldali meta űrlapot, majd mentsd a szerverre."
+    );
+    setSelectedPageIds([]);
+    setRevision((r) => r + 1);
+    setInspectorOpen(true);
+  }, [activeStorySrc]);
+
+  const cancelNewStory = useCallback(() => {
+    const prev = previousActiveStorySrcRef.current;
+    setIsNewStoryBootstrap(false);
+    if (isNewStorySentinel(prev)) {
+      setActiveStorySrc(SEED_STORY_SRC);
+    } else {
+      setActiveStorySrc(normalizeEditorStorySrc(prev));
+    }
+  }, []);
+
+  const handleBootstrapStoryCreated = useCallback(
+    (result: { jsonSrc: string; id: string }) => {
+      setIsNewStoryBootstrap(false);
+      const path = result.jsonSrc.replace(/^\/+/, "");
+      const norm = normalizeEditorStorySrc(path);
+      setActiveStorySrc(norm);
+      setSelectedPageIds([]);
+      try {
+        localStorage.setItem(LS_ADMIN_STORY_SRC, norm);
+      } catch {
+        /* ignore */
+      }
+      if (isAdmin) {
+        fetch("/api/stories", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("list"))))
+          .then((data: unknown) => {
+            const arr = Array.isArray(data) ? data : [];
+            const normalized: ListedStory[] = [];
+            for (const item of arr) {
+              if (!item || typeof item !== "object" || Array.isArray(item)) {
+                continue;
+              }
+              const x = item as Record<string, unknown>;
+              const id = typeof x.id === "string" ? x.id : "";
+              const title = typeof x.title === "string" ? x.title : id || "—";
+              const jsonSrc = typeof x.jsonSrc === "string" ? x.jsonSrc : "";
+              if (!id || !jsonSrc) continue;
+              const row: ListedStory = { id, title, jsonSrc };
+              if (typeof x.startPageId === "string") {
+                row.startPageId = x.startPageId;
+              }
+              normalized.push(row);
+            }
+            setAdminStoryList(normalized);
+          })
+          .catch(() => {});
+      }
+    },
+    [isAdmin]
+  );
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -756,6 +934,7 @@ export default function EditorStudio({
 
   const onJsonChange = useCallback(
     (value: string) => {
+      if (isNewStoryBootstrap) return;
       setJsonText(value);
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
@@ -763,7 +942,7 @@ export default function EditorStudio({
         applyParsed(value);
       }, DEBOUNCE_MS);
     },
-    [applyParsed]
+    [applyParsed, isNewStoryBootstrap]
   );
 
   useEffect(() => {
@@ -957,11 +1136,18 @@ export default function EditorStudio({
 
   const adminStorySelectOptions = useMemo((): ReactNode[] => {
     const cur = normalizeEditorStorySrc(activeStorySrc);
+    const opts: ReactNode[] = [];
+    if (isNewStorySentinel(activeStorySrc)) {
+      opts.push(
+        <option key="__new_draft__" value={NEW_STORY_SRC_SENTINEL}>
+          Új sztori (meta vázlat)
+        </option>
+      );
+    }
     const inList = adminStoryList.some(
       (x) => normalizeEditorStorySrc(x.jsonSrc) === cur
     );
-    const opts: ReactNode[] = [];
-    if (!inList && cur) {
+    if (!inList && cur && !isNewStorySentinel(activeStorySrc)) {
       opts.push(
         <option key="__current__" value={cur}>
           Jelenlegi (nincs a listán): {cur.replace(/^stories\//, "")}
@@ -1024,6 +1210,7 @@ export default function EditorStudio({
                   embedded
                   onDeletePage={onDeletePage}
                   canvasFullscreen={isFullscreen}
+                  interactionLocked={isNewStoryBootstrap}
                   fullscreenSideSlot={
                     draftStory && isFullscreen ? (
                       <div className={s.fullscreenSideInner}>
@@ -1041,6 +1228,8 @@ export default function EditorStudio({
                           onStoryChange={onStoryChangeFromCanvas}
                           onDeletePage={onDeletePage}
                           onRenamePageId={onRenamePageFromCanvas}
+                          bootstrapMode={isNewStoryBootstrap}
+                          onBootstrapStoryCreated={handleBootstrapStoryCreated}
                         />
                       </div>
                     ) : undefined
@@ -1091,6 +1280,46 @@ export default function EditorStudio({
                           </svg>
                         )}
                       </button>
+                      <button
+                        type="button"
+                        className={s.newStoryBtn}
+                        onClick={beginNewStory}
+                        title="Új üres sztori: előbb kötelező meta a jobb panelen."
+                      >
+                        Új sztori
+                      </button>
+                      {isNewStoryBootstrap ? (
+                        <button
+                          type="button"
+                          className={s.cancelBootstrapBtn}
+                          onClick={cancelNewStory}
+                          title="Vissza az előző forráshoz"
+                        >
+                          Mégse
+                        </button>
+                      ) : null}
+                      <div className={s.visualBarSaveCluster}>
+                        <button
+                          type="button"
+                          className={s.saveToServerBtn}
+                          disabled={saveServerBusy || isNewStoryBootstrap}
+                          onClick={() => void onSaveDraftToServer()}
+                          title="A vázlat felülírja a szerveren a storyId szerinti JSON fájlt (strict validáció)."
+                        >
+                          {saveServerBusy ? "Mentés…" : "Változások mentése"}
+                        </button>
+                        {saveServerHint ? (
+                          <span
+                            className={
+                              saveServerTone === "ok"
+                                ? s.saveServerHintOk
+                                : s.saveServerHintErr
+                            }
+                          >
+                            {saveServerHint}
+                          </span>
+                        ) : null}
+                      </div>
                       {isAdmin ? (
                         <div className={s.adminInline}>
                           <span
@@ -1103,6 +1332,7 @@ export default function EditorStudio({
                             id="editor-admin-story-select"
                             className={`${s.pageSelect} ${s.adminInlineSelect}`}
                             aria-labelledby="editor-admin-src-label"
+                            disabled={isNewStoryBootstrap}
                             aria-busy={adminListLoading}
                             title={
                               adminListError
@@ -1150,37 +1380,46 @@ export default function EditorStudio({
             </div>
           </div>
 
-          <details className={s.advancedJson}>
-            <summary>Haladó: nyers JSON + vázlat</summary>
-            <div className={s.advancedJsonInner}>
-              {draftStory ? (
-                <EditorOutline
-                  draftStory={draftStory}
-                  textareaRef={textareaRef}
-                  activeCategory={activeCategory}
-                  onActiveCategoryChange={setActiveCategory}
-                  onStoryReplaced={onStoryReplaced}
-                />
-              ) : null}
-              <textarea
-                ref={textareaRef}
-                className={s.textarea}
-                value={jsonText}
-                onChange={(e) => onJsonChange(e.target.value)}
-                spellCheck={false}
-                aria-label="Sztori JSON szerkesztése"
-                style={{ minHeight: "12rem" }}
-              />
-              {parseError ? <p className={s.errorBox}>{parseError}</p> : null}
-              {schemaHint && !parseError ? (
-                <p className={s.hint}>{schemaHint}</p>
-              ) : null}
-              <p className={s.hint}>
-                A vászon és az előnézet a memóriában lévő JSON-ból él — sémaellenőrzés
-                figyelmeztethet, a preview ettől még futhat.
-              </p>
+          {isNewStoryBootstrap ? (
+            <div className={s.advancedJsonBlocked}>
+              A haladó JSON, a sablonok és a nyers szerkesztés csak a kötelező meta mentése
+              után érhető el. Add meg a jobb oldali űrlapot, majd kattints a „Meta mentése és
+              sztori létrehozása” gombra.
             </div>
-          </details>
+          ) : (
+            <details className={s.advancedJson}>
+              <summary>Haladó: nyers JSON + vázlat</summary>
+              <div className={s.advancedJsonInner}>
+                {draftStory ? (
+                  <EditorOutline
+                    draftStory={draftStory}
+                    textareaRef={textareaRef}
+                    activeCategory={activeCategory}
+                    onActiveCategoryChange={setActiveCategory}
+                    onStoryReplaced={onStoryReplaced}
+                  />
+                ) : null}
+                <textarea
+                  ref={textareaRef}
+                  className={s.textarea}
+                  value={jsonText}
+                  onChange={(e) => onJsonChange(e.target.value)}
+                  spellCheck={false}
+                  aria-label="Sztori JSON szerkesztése"
+                  style={{ minHeight: "12rem" }}
+                />
+                {parseError ? <p className={s.errorBox}>{parseError}</p> : null}
+                {schemaHint && !parseError ? (
+                  <p className={s.hint}>{schemaHint}</p>
+                ) : null}
+                <p className={s.hint}>
+                  A vászon és az előnézet a memóriában lévő JSON-ból él — sémaellenőrzés
+                  figyelmeztethet, a preview ettől még futhat. A szerverre íráshoz használd a
+                  vászon sávban a „Változások mentése” gombot (felülírja a storyId alatti fájlt).
+                </p>
+              </div>
+            </details>
+          )}
         </div>
 
         {draftStory && !isFullscreen ? (
@@ -1200,6 +1439,8 @@ export default function EditorStudio({
               onStoryChange={onStoryChangeFromCanvas}
               onDeletePage={onDeletePage}
               onRenamePageId={onRenamePageFromCanvas}
+              bootstrapMode={isNewStoryBootstrap}
+              onBootstrapStoryCreated={handleBootstrapStoryCreated}
             />
           </div>
         ) : null}

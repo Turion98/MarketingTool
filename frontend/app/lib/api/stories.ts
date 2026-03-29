@@ -185,3 +185,40 @@ export async function validateStoryServer(
   return (payload || { ok: true }) as ImportOk;
 }
 
+/**
+ * Sztori mentése JSON body-val (szerkesztő vázlat → szerver `STORIES_DIR`).
+ * Ugyanaz a pipeline, mint a fájl importnál (`/api/stories/import`).
+ */
+export async function saveStoryDocumentJson(
+  document: Record<string, unknown>,
+  options?: { overwrite?: boolean; mode?: ImportMode }
+): Promise<ImportOk> {
+  const overwrite = options?.overwrite ?? true;
+  const mode = options?.mode ?? "strict";
+
+  const url = buildUrl("/api/stories/import", { overwrite, mode });
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(document),
+    cache: "no-store",
+  });
+
+  const payload = (await parseResponse(res)) as any;
+
+  if (!res.ok) {
+    const errPayload: ImportErrPayload =
+      typeof payload === "object" && payload !== null
+        ? payload
+        : { detail: typeof payload === "string" ? payload : undefined };
+
+    const msg = humanizeImportError(errPayload, res.status);
+    const e = new Error(msg);
+    (e as any).response = errPayload;
+    throw e;
+  }
+
+  return (payload || { ok: true }) as ImportOk;
+}
+

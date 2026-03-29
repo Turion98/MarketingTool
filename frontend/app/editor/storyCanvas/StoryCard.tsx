@@ -61,6 +61,8 @@ type StoryCardProps = {
   distantOutgoingEdgeIds?: Set<string>;
   /** Dupla kattintás a fejlécben: oldal-ID; `null` = siker. */
   onRenamePageId?: (fromId: string, toId: string) => string | null;
+  /** Új sztori bootstrap: START kártyán rövid útmutató. */
+  bootstrapStartHint?: boolean;
 };
 
 export default function StoryCard({
@@ -81,6 +83,7 @@ export default function StoryCard({
   incomingPortDotVisible,
   distantOutgoingEdgeIds,
   onRenamePageId,
+  bootstrapStartHint = false,
 }: StoryCardProps) {
   const [idEdit, setIdEdit] = useState(false);
   const [draftId, setDraftId] = useState("");
@@ -264,6 +267,11 @@ export default function StoryCard({
         {isStart ? (
           <div className={s.cardStartInner}>
             <span className={s.cardStartLabel}>Kezdőpont</span>
+            {bootstrapStartHint ? (
+              <span className={s.cardStartBootstrapHint}>
+                Add meg a sztori adatait a jobb panelen.
+              </span>
+            ) : null}
           </div>
         ) : (
           <div
