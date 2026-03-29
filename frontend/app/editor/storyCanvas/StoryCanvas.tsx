@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import {
   STORY_GRAPH_START_NODE_ID,
@@ -69,9 +70,16 @@ const NEAR_START_DY = -22;
 
 const CATEGORY_STRIP_SCROLL_STEP_PX = 260;
 
-function maxCanvasViewportPx() {
+function maxCanvasViewportPx(inFullscreen: boolean) {
   if (typeof window === "undefined") return 920;
-  return Math.min(920, Math.round(window.innerHeight * 0.92));
+  const inner = window.innerHeight;
+  if (inFullscreen) {
+    return Math.max(
+      MIN_CANVAS_VIEWPORT_PX,
+      Math.min(Math.round(inner * 0.88), inner - 120)
+    );
+  }
+  return Math.min(920, Math.round(inner * 0.92));
 }
 
 function defaultCanvasViewportPx() {
@@ -101,6 +109,15 @@ type StoryCanvasProps = {
   embedded?: boolean;
   /** Kártya / inspektor törlés — megerősítés a hívóban. */
   onDeletePage?: (pageId: string) => void;
+  /** Bal szél: teljes képernyő + admin stb. */
+  visualBarLeading?: ReactNode;
+  /** Szülő szerinti teljes képernyő — nagyobb max vászon magasság. */
+  canvasFullscreen?: boolean;
+  /**
+   * Csak teljes képernyőn: vezérlősáv alatt, a vászon melletti jobb oszlop
+   * (szülő adja, pl. előnézet + inspektor).
+   */
+  fullscreenSideSlot?: ReactNode;
 };
 
 export default function StoryCanvas({
@@ -112,6 +129,9 @@ export default function StoryCanvas({
   metaIssues,
   embedded = false,
   onDeletePage,
+  visualBarLeading,
+  canvasFullscreen = false,
+  fullscreenSideSlot,
 }: StoryCanvasProps) {
   const { nodes, edges, startPageId } = useMemo(
     () => buildStoryGraph(draftStory),
@@ -156,6 +176,21 @@ export default function StoryCanvas({
   const canvasHRef = useRef(canvasH);
   canvasHRef.current = canvasH;
   const viewportRef = useRef<HTMLDivElement>(null);
+  const cardRootRefs = useRef(new Map<string, HTMLDivElement>());
+  const cardRootRefCbByPage = useRef(
+    new Map<string, (el: HTMLDivElement | null) => void>()
+  );
+  const getCardRootRef = useCallback((pageId: string) => {
+    let cb = cardRootRefCbByPage.current.get(pageId);
+    if (!cb) {
+      cb = (el: HTMLDivElement | null) => {
+        if (el) cardRootRefs.current.set(pageId, el);
+        else cardRootRefs.current.delete(pageId);
+      };
+      cardRootRefCbByPage.current.set(pageId, cb);
+    }
+    return cb;
+  }, []);
   const categoryStripRef = useRef<HTMLDivElement>(null);
   const categoryStripScrollRef = useRef<HTMLDivElement>(null);
   const [openCategory, setOpenCategory] = useState<EditorPageCategory | null>(
@@ -177,23 +212,23 @@ export default function StoryCanvas({
       if (raw) {
         const parsed = Number.parseInt(raw, 10);
         if (!Number.isNaN(parsed)) {
-          const maxH = maxCanvasViewportPx();
+          const maxH = maxCanvasViewportPx(canvasFullscreen);
           setCanvasH(clamp(parsed, MIN_CANVAS_VIEWPORT_PX, maxH));
         }
       }
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [canvasFullscreen]);
 
   useEffect(() => {
     const onWinResize = () => {
-      const maxH = maxCanvasViewportPx();
+      const maxH = maxCanvasViewportPx(canvasFullscreen);
       setCanvasH((h) => clamp(h, MIN_CANVAS_VIEWPORT_PX, maxH));
     };
     window.addEventListener("resize", onWinResize);
     return () => window.removeEventListener("resize", onWinResize);
-  }, []);
+  }, [canvasFullscreen]);
 
   const nodesWithStart = useMemo(() => {
     const hasStartEdge = edges.some(
@@ -389,6 +424,41 @@ export default function StoryCanvas({
     []
   );
 
+  /** Jobb panel / preview alapú kijelölés: a kártya kerüljön a vászon látható területére. */
+  useEffect(() => {
+    if (!selectedPageId || selectedPageId === STORY_GRAPH_START_NODE_ID) return;
+
+    let cancelled = false;
+    let innerRaf = 0;
+    const run = () => {
+      if (cancelled) return;
+      const cardEl = cardRootRefs.current.get(selectedPageId);
+      const vp = viewportRef.current;
+      if (!cardEl || !vp) return;
+      const cr = cardEl.getBoundingClientRect();
+      const vr = vp.getBoundingClientRect();
+      const margin = 28;
+      let dx = 0;
+      let dy = 0;
+      if (cr.left < vr.left + margin) dx = vr.left + margin - cr.left;
+      else if (cr.right > vr.right - margin) dx = vr.right - margin - cr.right;
+      if (cr.top < vr.top + margin) dy = vr.top + margin - cr.top;
+      else if (cr.bottom > vr.bottom - margin) dy = vr.bottom - margin - cr.bottom;
+      if (dx !== 0 || dy !== 0) {
+        setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+      }
+    };
+
+    const outerRaf = requestAnimationFrame(() => {
+      innerRaf = requestAnimationFrame(run);
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(outerRaf);
+      cancelAnimationFrame(innerRaf);
+    };
+  }, [selectedPageId, zoom, canvasH]);
+
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -488,13 +558,13 @@ export default function StoryCanvas({
     (e: ReactPointerEvent<HTMLDivElement>) => {
       const r = resizeRef.current;
       if (!r) return;
-      const maxH = maxCanvasViewportPx();
+      const maxH = maxCanvasViewportPx(canvasFullscreen);
       const dy = e.clientY - r.startY;
       setCanvasH(
         clamp(r.startH + dy, MIN_CANVAS_VIEWPORT_PX, maxH)
       );
     },
-    []
+    [canvasFullscreen]
   );
 
   const onResizeUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
@@ -504,7 +574,11 @@ export default function StoryCanvas({
         localStorage.setItem(
           CANVAS_VIEWPORT_HEIGHT_LS,
           String(
-            clamp(canvasHRef.current, MIN_CANVAS_VIEWPORT_PX, maxCanvasViewportPx())
+            clamp(
+              canvasHRef.current,
+              MIN_CANVAS_VIEWPORT_PX,
+              maxCanvasViewportPx(canvasFullscreen)
+            )
           )
         );
       } catch {
@@ -514,11 +588,101 @@ export default function StoryCanvas({
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
-  }, []);
+  }, [canvasFullscreen]);
+
+  const viewportColumn = (
+    <div className={s.viewportColumn}>
+      <div
+        ref={viewportRef}
+        className={`${s.viewport} ${panning ? s.viewportPanning : ""}`}
+        style={{
+          height: Math.max(canvasH, MIN_CANVAS_VIEWPORT_PX),
+        }}
+        onPointerDown={onViewportPointerDown}
+        onPointerMove={onViewportPointerMove}
+        onPointerUp={onViewportPointerUp}
+        onPointerCancel={onViewportPointerUp}
+      >
+        <div
+          className={s.world}
+          style={{
+            width: bbox.w,
+            height: bbox.h,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          }}
+        >
+          <StoryEdges ops={edgeOps} />
+          {nodesWithStart.map((n) => {
+            const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
+            const out = outgoingByPage.get(n.pageId) ?? [];
+            const inc = incomingEdgesByTarget.get(n.pageId) ?? [];
+            const incomingPortCount = bundleIncomingEdgesForTarget(inc).length;
+            const issues =
+              n.pageId === STORY_GRAPH_START_NODE_ID
+                ? []
+                : issuesByPage.get(n.pageId) ?? [];
+            const stackZ = localLayout.nodes[n.pageId]?.z;
+            return (
+              <div key={n.pageId} data-story-card="1">
+                <StoryCard
+                  node={n}
+                  x={pos.x}
+                  y={pos.y}
+                  outgoing={out}
+                  incomingPortCount={incomingPortCount}
+                  selected={selectedPageId === n.pageId}
+                  domRef={getCardRootRef(n.pageId)}
+                  issues={issues}
+                  stackZ={
+                    typeof stackZ === "number" && Number.isFinite(stackZ)
+                      ? stackZ
+                      : undefined
+                  }
+                  milestoneActive={
+                    n.pageId === STORY_GRAPH_START_NODE_ID
+                      ? undefined
+                      : editorPageMilestoneActive(draftStory, n.pageId)
+                  }
+                  onSelect={() =>
+                    onSelectPage(
+                      n.pageId === STORY_GRAPH_START_NODE_ID ? null : n.pageId
+                    )
+                  }
+                  onDragStart={(e) => onCardDragStart(n.pageId, e)}
+                  onRequestDelete={
+                    n.pageId === STORY_GRAPH_START_NODE_ID || !onDeletePage
+                      ? undefined
+                      : () => onDeletePage(n.pageId)
+                  }
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div
+        className={s.resizeHandle}
+        role="separator"
+        aria-orientation="horizontal"
+        aria-valuemin={MIN_CANVAS_VIEWPORT_PX}
+        aria-valuemax={maxCanvasViewportPx(canvasFullscreen)}
+        aria-valuenow={Math.round(canvasH)}
+        aria-label="Rács vászon magasságának állítása"
+        onPointerDown={onResizeDown}
+        onPointerMove={onResizeMove}
+        onPointerUp={onResizeUp}
+        onPointerCancel={onResizeUp}
+      />
+    </div>
+  );
 
   return (
     <div className={`${s.wrap} ${embedded ? s.wrapEmbedded : ""}`}>
-      <div className={s.toolbar}>
+      <div className={s.unifiedVisualBar}>
+        {visualBarLeading ? (
+          <div className={s.unifiedLeading}>{visualBarLeading}</div>
+        ) : null}
+        <div className={s.toolbar}>
         <div className={s.toolbarZoomGroup} role="group" aria-label="Vászon nagyítás">
           <button
             type="button"
@@ -544,7 +708,9 @@ export default function StoryCanvas({
             +
           </button>
         </div>
-        <span style={{ opacity: 0.75 }}>Ctrl+Shift+görgetés: vászon zoom</span>
+        <span className={s.toolbarZoomHint} title="Ctrl+Shift + egérgörgő">
+          Ctrl+Shift+scroll: zoom
+        </span>
         <button type="button" onClick={() => setZoom(1)}>
           Zoom 100%
         </button>
@@ -562,13 +728,31 @@ export default function StoryCanvas({
             Meta: {metaIssues[0]?.message}
           </span>
         ) : null}
+        </div>
       </div>
 
       <div ref={categoryStripRef} className={s.categoryStripWrap}>
+        {catStripNav.canBack ? (
+          <button
+            type="button"
+            className={s.categoryStripNavBtn}
+            aria-label="Kategóriák görgetése balra"
+            title="Balra"
+            onClick={() => {
+              categoryStripScrollRef.current?.scrollBy({
+                left: -CATEGORY_STRIP_SCROLL_STEP_PX,
+                behavior: "smooth",
+              });
+            }}
+          >
+            ‹
+          </button>
+        ) : null}
         <div
           ref={categoryStripScrollRef}
           className={s.categoryStripScroll}
           aria-label="Oldalak kategóriánként"
+          onScroll={syncCategoryStripNav}
         >
           {EDITOR_CATEGORY_ORDER.map((cat) => {
             const pages = pagesByCategory[cat];
@@ -630,105 +814,32 @@ export default function StoryCanvas({
             );
           })}
         </div>
-        <button
-          type="button"
-          className={s.categoryStripNavBtn}
-          aria-label="Kategóriák görgetése jobbra"
-          title="Jobbra"
-          disabled={!catStripNav.canFwd}
-          onClick={() => {
-            categoryStripScrollRef.current?.scrollBy({
-              left: CATEGORY_STRIP_SCROLL_STEP_PX,
-              behavior: "smooth",
-            });
-          }}
-        >
-          ›
-        </button>
+        {catStripNav.canFwd ? (
+          <button
+            type="button"
+            className={s.categoryStripNavBtn}
+            aria-label="Kategóriák görgetése jobbra"
+            title="Jobbra"
+            onClick={() => {
+              categoryStripScrollRef.current?.scrollBy({
+                left: CATEGORY_STRIP_SCROLL_STEP_PX,
+                behavior: "smooth",
+              });
+            }}
+          >
+            ›
+          </button>
+        ) : null}
       </div>
 
-      <div
-        ref={viewportRef}
-        className={`${s.viewport} ${panning ? s.viewportPanning : ""}`}
-        style={{
-          height: Math.max(canvasH, MIN_CANVAS_VIEWPORT_PX),
-        }}
-        onPointerDown={onViewportPointerDown}
-        onPointerMove={onViewportPointerMove}
-        onPointerUp={onViewportPointerUp}
-        onPointerCancel={onViewportPointerUp}
-      >
-        <div
-          className={s.world}
-          style={{
-            width: bbox.w,
-            height: bbox.h,
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          }}
-        >
-          <StoryEdges ops={edgeOps} />
-          {nodesWithStart.map((n) => {
-            const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
-            const out = outgoingByPage.get(n.pageId) ?? [];
-            const inc = incomingEdgesByTarget.get(n.pageId) ?? [];
-            const incomingPortCount = bundleIncomingEdgesForTarget(inc).length;
-            const issues =
-              n.pageId === STORY_GRAPH_START_NODE_ID
-                ? []
-                : issuesByPage.get(n.pageId) ?? [];
-            const stackZ = localLayout.nodes[n.pageId]?.z;
-            return (
-              <div key={n.pageId} data-story-card="1">
-                <StoryCard
-                  node={n}
-                  x={pos.x}
-                  y={pos.y}
-                  outgoing={out}
-                  incomingPortCount={incomingPortCount}
-                  selected={selectedPageId === n.pageId}
-                  issues={issues}
-                  stackZ={
-                    typeof stackZ === "number" && Number.isFinite(stackZ)
-                      ? stackZ
-                      : undefined
-                  }
-                  milestoneActive={
-                    n.pageId === STORY_GRAPH_START_NODE_ID
-                      ? undefined
-                      : editorPageMilestoneActive(draftStory, n.pageId)
-                  }
-                  onSelect={() =>
-                    onSelectPage(
-                      n.pageId === STORY_GRAPH_START_NODE_ID
-                        ? null
-                        : n.pageId
-                    )
-                  }
-                  onDragStart={(e) => onCardDragStart(n.pageId, e)}
-                  onRequestDelete={
-                    n.pageId === STORY_GRAPH_START_NODE_ID || !onDeletePage
-                      ? undefined
-                      : () => onDeletePage(n.pageId)
-                  }
-                />
-              </div>
-            );
-          })}
+      {canvasFullscreen && fullscreenSideSlot ? (
+        <div className={s.fullscreenMainRow}>
+          <div className={s.canvasStage}>{viewportColumn}</div>
+          <div className={s.fullscreenSideMount}>{fullscreenSideSlot}</div>
         </div>
-      </div>
-      <div
-        className={s.resizeHandle}
-        role="separator"
-        aria-orientation="horizontal"
-        aria-valuemin={MIN_CANVAS_VIEWPORT_PX}
-        aria-valuemax={maxCanvasViewportPx()}
-        aria-valuenow={Math.round(canvasH)}
-        aria-label="Rács vászon magasságának állítása"
-        onPointerDown={onResizeDown}
-        onPointerMove={onResizeMove}
-        onPointerUp={onResizeUp}
-        onPointerCancel={onResizeUp}
-      />
+      ) : (
+        <div className={s.canvasStage}>{viewportColumn}</div>
+      )}
     </div>
   );
 }

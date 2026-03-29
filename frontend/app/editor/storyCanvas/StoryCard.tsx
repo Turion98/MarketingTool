@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import {
@@ -42,6 +43,8 @@ type StoryCardProps = {
   onRequestDelete?: () => void;
   onSelect: () => void;
   onDragStart: (e: React.PointerEvent) => void;
+  /** Vászon: kijelöléskor a kártya DOM-ja (láthatóság / pan). */
+  domRef?: Ref<HTMLDivElement | null>;
 };
 
 export default function StoryCard({
@@ -57,6 +60,7 @@ export default function StoryCard({
   onRequestDelete,
   onSelect,
   onDragStart,
+  domRef,
 }: StoryCardProps) {
   const ord = orderedOutgoingEdges(node.pageId, outgoing);
   const { w, h } = cardDimensions(node, ord);
@@ -87,6 +91,7 @@ export default function StoryCard({
 
   return (
     <div
+      ref={domRef}
       className={`${s.card} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""}`}
       style={{
         left: x,

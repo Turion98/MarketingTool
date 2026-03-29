@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import StoryPage from "@/app/components/StoryPage/StoryPage";
 import {
   GameStateProvider,
@@ -36,6 +37,62 @@ const EDITOR_SKIN_LS = "questell:editor:skinPref";
 const PREVIEW_HEIGHT_LS = "questell:editor:previewHeightPx";
 const PREVIEW_EXPANDED_LS = "questell:editor:previewExpanded";
 const INSPECTOR_EXPANDED_LS = "questell:editor:inspectorExpanded";
+
+function getDocumentFullscreenElement(): Element | null {
+  if (typeof document === "undefined") return null;
+  const d = document as Document & {
+    webkitFullscreenElement?: Element | null;
+    mozFullScreenElement?: Element | null;
+    msFullscreenElement?: Element | null;
+  };
+  return (
+    document.fullscreenElement ??
+    d.webkitFullscreenElement ??
+    d.mozFullScreenElement ??
+    d.msFullscreenElement ??
+    null
+  );
+}
+
+async function exitDocumentFullscreen(): Promise<void> {
+  const d = document as Document & {
+    webkitExitFullscreen?: () => Promise<void>;
+    mozCancelFullScreen?: () => Promise<void>;
+    msExitFullscreen?: () => Promise<void>;
+  };
+  if (!getDocumentFullscreenElement()) return;
+  await (
+    document.exitFullscreen?.() ??
+    d.webkitExitFullscreen?.() ??
+    d.mozCancelFullScreen?.() ??
+    d.msExitFullscreen?.() ??
+    Promise.resolve()
+  );
+}
+
+async function enterFullscreenElement(el: HTMLElement): Promise<void> {
+  const anyEl = el as HTMLElement & {
+    webkitRequestFullscreen?: () => Promise<void>;
+    mozRequestFullScreen?: () => Promise<void>;
+    msRequestFullscreen?: () => Promise<void>;
+  };
+  await (
+    el.requestFullscreen?.() ??
+    anyEl.webkitRequestFullscreen?.() ??
+    anyEl.mozRequestFullScreen?.() ??
+    anyEl.msRequestFullscreen?.() ??
+    Promise.resolve()
+  );
+}
+
+function previewMaxBodyHeightPx(): number {
+  if (typeof window === "undefined") return 920;
+  const inner = window.innerHeight;
+  if (getDocumentFullscreenElement()) {
+    return Math.max(220, Math.min(Math.round(inner * 0.9), inner - 140));
+  }
+  return Math.min(920, Math.round(inner * 0.92));
+}
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -69,7 +126,14 @@ type ListedStory = {
 
 type SkinEntry = { id: string; title: string };
 
-function PreviewToolbar({ pageIds }: { pageIds: string[] }) {
+function PreviewToolbar({
+  pageIds,
+  onSyncEditorPageId,
+}: {
+  pageIds: string[];
+  /** Preview oldal váltás → ugyanaz a kártya legyen kijelölve a vásznon. */
+  onSyncEditorPageId: (pageId: string) => void;
+}) {
   const { currentPageId, setCurrentPageId, setGlobal } = useGameState();
   const [skins, setSkins] = useState<SkinEntry[]>([]);
   const [skin, setSkin] = useState("contract_creative_dusk");
@@ -111,7 +175,12 @@ function PreviewToolbar({ pageIds }: { pageIds: string[] }) {
         <select
           className={s.pageSelect}
           value={pageIds.includes(currentPageId) ? currentPageId : pageIds[0] ?? ""}
-          onChange={(e) => setCurrentPageId(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value.trim();
+            if (!v) return;
+            setCurrentPageId(v);
+            if (pageIds.includes(v)) onSyncEditorPageId(v);
+          }}
           aria-label="Preview oldal választása"
         >
           {pageIds.length === 0 ? (
@@ -150,20 +219,52 @@ function PreviewToolbar({ pageIds }: { pageIds: string[] }) {
         </select>
       </label>
       <span className={s.previewToolbarHint}>
-        Kézi ugrás + megjelenés csak az előnézetben.
+        Legördülő = vászon kijelölés; a szerkesztő választás is erre állítja a
+        preview-t.
       </span>
     </div>
   );
+}
+
+/**
+ * Szerkesztő (vászon / inspektor) → élő preview: a preview oldala követi a kijelölést.
+ *
+ * A preview → vászon irányt csak a „Preview oldal” legördülő kezeli (`onSyncEditorPageId`);
+ * nem futtatunk külön effektet rá, mert ugyanabban a commitban a régi `currentPageId`
+ * miatt felülírná a friss vászon-kijelölést és végtelen / hibás frissítést okozna.
+ */
+function EditorPreviewSelectionBridge({
+  pageIds,
+  selectedPageId,
+  children,
+}: {
+  pageIds: string[];
+  selectedPageId: string | null;
+  children: ReactNode;
+}) {
+  const { currentPageId, setCurrentPageId } = useGameState();
+
+  useEffect(() => {
+    if (!selectedPageId || !pageIds.includes(selectedPageId)) return;
+    if (currentPageId === selectedPageId) return;
+    setCurrentPageId(selectedPageId);
+  }, [selectedPageId, pageIds, currentPageId, setCurrentPageId]);
+
+  return <>{children}</>;
 }
 
 function EditorPreviewColumn({
   draftStory,
   revision,
   pageIds,
+  selectedPageId,
+  onSelectPageId,
 }: {
   draftStory: Record<string, unknown>;
   revision: number;
   pageIds: string[];
+  selectedPageId: string | null;
+  onSelectPageId: (id: string | null) => void;
 }) {
   const [previewExpanded, setPreviewExpanded] = useState(true);
   const [bodyHeightPx, setBodyHeightPx] = useState(480);
@@ -178,10 +279,7 @@ function EditorPreviewColumn({
       if (rawH) {
         const parsed = Number.parseInt(rawH, 10);
         if (!Number.isNaN(parsed)) {
-          const maxH =
-            typeof window !== "undefined"
-              ? Math.min(920, Math.round(window.innerHeight * 0.92))
-              : 920;
+          const maxH = previewMaxBodyHeightPx();
           const h = clamp(parsed, 220, maxH);
           setBodyHeightPx(h);
           bodyHeightRef.current = h;
@@ -200,18 +298,12 @@ function EditorPreviewColumn({
 
   bodyHeightRef.current = bodyHeightPx;
 
-  const maxBodyHeightPx =
-    typeof window !== "undefined"
-      ? Math.min(920, Math.round(window.innerHeight * 0.92))
-      : 920;
+  const maxBodyHeightPx = previewMaxBodyHeightPx();
 
   useEffect(() => {
     const onResize = () => {
       setBodyHeightPx((h) => {
-        const maxH =
-          typeof window !== "undefined"
-            ? Math.min(920, Math.round(window.innerHeight * 0.92))
-            : 920;
+        const maxH = previewMaxBodyHeightPx();
         const next = clamp(h, 220, maxH);
         bodyHeightRef.current = next;
         return next;
@@ -219,6 +311,25 @@ function EditorPreviewColumn({
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const sync = () => {
+      setBodyHeightPx((h) => {
+        const maxH = previewMaxBodyHeightPx();
+        const next = clamp(h, 220, maxH);
+        bodyHeightRef.current = next;
+        return next;
+      });
+    };
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    document.addEventListener("mozfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+      document.removeEventListener("mozfullscreenchange", sync);
+    };
   }, []);
 
   const togglePreviewExpanded = useCallback(() => {
@@ -249,10 +360,7 @@ function EditorPreviewColumn({
     (e: ReactPointerEvent<HTMLDivElement>) => {
       const drag = resizeDragRef.current;
       if (!drag) return;
-      const maxH =
-        typeof window !== "undefined"
-          ? Math.min(920, Math.round(window.innerHeight * 0.92))
-          : 920;
+      const maxH = previewMaxBodyHeightPx();
       const delta = e.clientY - drag.startY;
       const next = clamp(drag.startH + delta, 220, maxH);
       setBodyHeightPx(next);
@@ -310,18 +418,28 @@ function EditorPreviewColumn({
         storagePrefix={LS_PREFIX}
         draftStoryResolver={resolver}
       >
-        <div
-          id={bodyId}
-          className={s.previewPanelBody}
-          hidden={!previewExpanded}
-          style={
-            previewExpanded
-              ? { height: `${bodyHeightPx}px`, maxHeight: `${maxBodyHeightPx}px` }
-              : undefined
-          }
+        <EditorPreviewSelectionBridge
+          pageIds={pageIds}
+          selectedPageId={selectedPageId}
         >
-          <PreviewToolbar pageIds={pageIds} />
-          <div className={s.previewViewport}>
+          <div
+            id={bodyId}
+            className={s.previewPanelBody}
+            hidden={!previewExpanded}
+            style={
+              previewExpanded
+                ? {
+                    height: `${bodyHeightPx}px`,
+                    maxHeight: `${maxBodyHeightPx}px`,
+                  }
+                : undefined
+            }
+          >
+            <PreviewToolbar
+              pageIds={pageIds}
+              onSyncEditorPageId={(id) => onSelectPageId(id)}
+            />
+            <div className={s.previewViewport}>
             <div className={s.previewStoryMount}>
               <StoryPage />
             </div>
@@ -339,8 +457,129 @@ function EditorPreviewColumn({
             onPointerUp={onResizeHandlePointerUp}
             onPointerCancel={onResizeHandlePointerUp}
           />
-        </div>
+          </div>
+        </EditorPreviewSelectionBridge>
       </GameStateProvider>
+    </div>
+  );
+}
+
+function EditorStudioRightColumn({
+  draftStory,
+  revision,
+  pageIds,
+  inspectorOpen,
+  onToggleInspector,
+  selectedPageId,
+  onSelectPageId,
+  issuesByPage,
+  onStoryChange,
+  onDeletePage,
+}: {
+  draftStory: Record<string, unknown>;
+  revision: number;
+  pageIds: string[];
+  inspectorOpen: boolean;
+  onToggleInspector: () => void;
+  selectedPageId: string | null;
+  onSelectPageId: (id: string | null) => void;
+  issuesByPage: Map<string, PageValidationIssue[]>;
+  onStoryChange: (next: Record<string, unknown>) => void;
+  onDeletePage: (pageId: string) => void;
+}) {
+  return (
+    <div className={s.dockedRightStack}>
+      <EditorPreviewColumn
+        draftStory={draftStory}
+        revision={revision}
+        pageIds={pageIds}
+        selectedPageId={selectedPageId}
+        onSelectPageId={onSelectPageId}
+      />
+      <div
+        className={`${s.panel} ${s.previewPanel} ${s.inspectorPanelRoot}`}
+      >
+        <button
+          type="button"
+          className={`${s.panelHeader} ${s.previewPanelToggle}`}
+          aria-expanded={inspectorOpen}
+          aria-controls="editor-inspector-body"
+          onClick={onToggleInspector}
+        >
+          <span className={s.stackPanelToggleTitle}>
+            <span className={s.stackPanelToggleMain}>Oldal szerkesztő</span>
+            {selectedPageId ? (
+              <span className={s.stackPanelToggleSub}>{selectedPageId}</span>
+            ) : (
+              <span className={s.stackPanelToggleSubMuted}>
+                Nincs oldal kijelölve
+              </span>
+            )}
+          </span>
+          <span className={s.previewPanelToggleChevron} aria-hidden>
+            {inspectorOpen ? "▼" : "▶"}
+          </span>
+        </button>
+        <div
+          id="editor-inspector-body"
+          className={s.inspectorPanelContent}
+          hidden={!inspectorOpen}
+        >
+          <details className={s.inspectorPageDetails}>
+            <summary className={s.inspectorPageSummary}>
+              <span className={s.inspectorPageSummaryLabel}>
+                <span className={s.inspectorPageSummaryChevron} aria-hidden>
+                  ▼
+                </span>
+                Aktuális oldal
+              </span>
+              <code>{selectedPageId ?? "—"}</code>
+            </summary>
+            <div className={s.inspectorPageInner}>
+              <label className={s.inspectorPageLabel}>
+                Oldal a szerkesztőben
+                <select
+                  className={s.pageSelect}
+                  value={selectedPageId ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    onSelectPageId(v || null);
+                  }}
+                  aria-label="Oldal választása a szerkesztőben"
+                >
+                  <option value="">
+                    {pageIds.length
+                      ? "— válassz oldalt —"
+                      : "Nincs oldal a sztoriban"}
+                  </option>
+                  {pageIds.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className={s.inspectorPageHint}>
+                A „Preview oldal” legördülő váltása kijelöli a megfelelő kártyát a
+                vásznon; a szerkesztőben választott oldal az előnézetet is erre
+                állítja.
+              </p>
+            </div>
+          </details>
+          <PageInspector
+            draftStory={draftStory}
+            selectedPageId={selectedPageId}
+            onStoryChange={onStoryChange}
+            onRequestDeletePage={onDeletePage}
+            issues={
+              selectedPageId
+                ? issuesByPage.get(selectedPageId) ?? []
+                : []
+            }
+            knownPageIds={pageIds}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -374,6 +613,11 @@ export default function EditorStudio({
     useState<EditorPageCategory | null>(null);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const visualWorkbenchRef = useRef<HTMLDivElement>(null);
+  const [fullscreenDockEl, setFullscreenDockEl] = useState<HTMLDivElement | null>(
+    null
+  );
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeStorySrc, setActiveStorySrc] =
     useState<string>(SEED_STORY_SRC);
   const [adminStoryList, setAdminStoryList] = useState<ListedStory[]>([]);
@@ -566,6 +810,42 @@ export default function EditorStudio({
     }
   }, []);
 
+  useEffect(() => {
+    const sync = () => {
+      const fs = getDocumentFullscreenElement();
+      const root = visualWorkbenchRef.current;
+      setIsFullscreen(!!fs && !!root && fs === root);
+      if (typeof window !== "undefined") {
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event("resize"));
+        });
+      }
+    };
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    document.addEventListener("mozfullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync);
+      document.removeEventListener("mozfullscreenchange", sync);
+    };
+  }, []);
+
+  const toggleEditorFullscreen = useCallback(async () => {
+    const root = visualWorkbenchRef.current;
+    if (!root) return;
+    try {
+      if (getDocumentFullscreenElement() === root) {
+        await exitDocumentFullscreen();
+      } else {
+        await enterFullscreenElement(root);
+      }
+    } catch {
+      /* pl. böngésző nem engedi */
+    }
+  }, []);
+
   const editorIssues = useMemo(
     () => (draftStory ? validateEditorPages(draftStory) : new Map()),
     [draftStory]
@@ -656,6 +936,37 @@ export default function EditorStudio({
     });
   }, []);
 
+  const adminStorySelectOptions = useMemo((): ReactNode[] => {
+    const cur = normalizeEditorStorySrc(activeStorySrc);
+    const inList = adminStoryList.some(
+      (x) => normalizeEditorStorySrc(x.jsonSrc) === cur
+    );
+    const opts: ReactNode[] = [];
+    if (!inList && cur) {
+      opts.push(
+        <option key="__current__" value={cur}>
+          Jelenlegi (nincs a listán): {cur.replace(/^stories\//, "")}
+        </option>
+      );
+    }
+    adminStoryList.forEach((st) => {
+      const v = normalizeEditorStorySrc(st.jsonSrc);
+      opts.push(
+        <option key={st.id || v} value={v}>
+          {st.title} ({st.id})
+        </option>
+      );
+    });
+    if (opts.length === 0) {
+      opts.push(
+        <option key="__seed__" value={SEED_STORY_SRC}>
+          Alapértelmezett (lista üres)
+        </option>
+      );
+    }
+    return opts;
+  }, [activeStorySrc, adminStoryList]);
+
   return (
     <div className={s.root}>
       <div className={s.shell}>
@@ -675,102 +986,145 @@ export default function EditorStudio({
         ) : null}
       </p>
 
-      <div className={s.workspace}>
+      <div
+        className={`${s.workspace} ${draftStory ? "" : s.workspaceCanvasOnly}`}
+      >
         <div className={s.leftColumn}>
-          {isAdmin ? (
-            <div className={`${s.panel} ${s.adminStorySwitchPanel}`}>
-              <div className={s.panelHeader}>Sztori váltás (admin)</div>
-              <div className={s.adminStoryBar}>
-                <label htmlFor="editor-admin-story-select">
-                  <span className={s.adminStoryLabel}>Forrás</span>
-                  <select
-                    id="editor-admin-story-select"
-                    className={`${s.pageSelect} ${s.adminStorySelect}`}
-                    aria-busy={adminListLoading}
-                    value={normalizeEditorStorySrc(activeStorySrc)}
-                    onChange={(e) => {
-                      const next = normalizeEditorStorySrc(e.target.value);
-                      setActiveStorySrc(next);
-                      setSelectedPageId(null);
-                      try {
-                        localStorage.setItem(LS_ADMIN_STORY_SRC, next);
-                      } catch {
-                        /* ignore */
-                      }
-                    }}
-                  >
-                    {(() => {
-                      const cur = normalizeEditorStorySrc(activeStorySrc);
-                      const inList = adminStoryList.some(
-                        (x) => normalizeEditorStorySrc(x.jsonSrc) === cur
-                      );
-                      const opts: ReactNode[] = [];
-                      if (!inList && cur) {
-                        opts.push(
-                          <option key="__current__" value={cur}>
-                            Jelenlegi (nincs a listán):{" "}
-                            {cur.replace(/^stories\//, "")}
-                          </option>
-                        );
-                      }
-                      adminStoryList.forEach((st) => {
-                        const v = normalizeEditorStorySrc(st.jsonSrc);
-                        opts.push(
-                          <option key={st.id || v} value={v}>
-                            {st.title} ({st.id})
-                          </option>
-                        );
-                      });
-                      if (opts.length === 0) {
-                        opts.push(
-                          <option key="__seed__" value={SEED_STORY_SRC}>
-                            Alapértelmezett (lista üres)
-                          </option>
-                        );
-                      }
-                      return opts;
-                    })()}
-                  </select>
-                </label>
-                {adminListError ? (
-                  <p className={s.adminStoryErr}>{adminListError}</p>
-                ) : adminListLoading && adminStoryList.length === 0 ? (
-                  <p className={s.adminStoryMeta}>Sztori lista betöltése…</p>
-                ) : adminStoryList.length > 0 ? (
-                  <p className={s.adminStoryMeta}>
-                    {adminStoryList.length} sztori a szerverről — válassz
-                    szerkesztéshez.
+          <div ref={visualWorkbenchRef} className={s.visualWorkbench}>
+            <div className={s.visualWorkbenchBody}>
+              {draftStory ? (
+                <StoryCanvas
+                  draftStory={draftStory}
+                  onStoryChange={onStoryChangeFromCanvas}
+                  selectedPageId={selectedPageId}
+                  onSelectPage={setSelectedPageId}
+                  issuesByPage={issuesByPage}
+                  metaIssues={metaEditorIssues}
+                  embedded
+                  onDeletePage={onDeletePage}
+                  canvasFullscreen={isFullscreen}
+                  fullscreenSideSlot={
+                    draftStory && isFullscreen ? (
+                      <div className={s.fullscreenSideInner}>
+                        <EditorStudioRightColumn
+                          draftStory={draftStory}
+                          revision={revision}
+                          pageIds={pageIds}
+                          inspectorOpen={inspectorOpen}
+                          onToggleInspector={toggleInspectorExpanded}
+                          selectedPageId={selectedPageId}
+                          onSelectPageId={setSelectedPageId}
+                          issuesByPage={issuesByPage}
+                          onStoryChange={onStoryChangeFromCanvas}
+                          onDeletePage={onDeletePage}
+                        />
+                      </div>
+                    ) : undefined
+                  }
+                  visualBarLeading={
+                    <>
+                      <button
+                        type="button"
+                        className={s.fullscreenToggleBtn}
+                        onClick={() => void toggleEditorFullscreen()}
+                        aria-pressed={isFullscreen}
+                        aria-label={
+                          isFullscreen
+                            ? "Kilépés a teljes képernyőből"
+                            : "Vizuális szerkesztő teljes képernyőre"
+                        }
+                        title={
+                          isFullscreen
+                            ? "Kilépés (Esc)"
+                            : "Teljes képernyő (vászon)"
+                        }
+                      >
+                        {isFullscreen ? (
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            aria-hidden
+                          >
+                            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            aria-hidden
+                          >
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                          </svg>
+                        )}
+                      </button>
+                      {isAdmin ? (
+                        <div className={s.adminInline}>
+                          <span
+                            className={s.adminInlineLabel}
+                            id="editor-admin-src-label"
+                          >
+                            Forrás
+                          </span>
+                          <select
+                            id="editor-admin-story-select"
+                            className={`${s.pageSelect} ${s.adminInlineSelect}`}
+                            aria-labelledby="editor-admin-src-label"
+                            aria-busy={adminListLoading}
+                            title={
+                              adminListError
+                                ? adminListError
+                                : adminListLoading &&
+                                    adminStoryList.length === 0
+                                  ? "Sztori lista betöltése…"
+                                  : `${adminStoryList.length} sztori a szerveren`
+                            }
+                            value={normalizeEditorStorySrc(activeStorySrc)}
+                            onChange={(e) => {
+                              const next = normalizeEditorStorySrc(
+                                e.target.value
+                              );
+                              setActiveStorySrc(next);
+                              setSelectedPageId(null);
+                              try {
+                                localStorage.setItem(LS_ADMIN_STORY_SRC, next);
+                              } catch {
+                                /* ignore */
+                              }
+                            }}
+                          >
+                            {adminStorySelectOptions}
+                          </select>
+                          {adminListError ? (
+                            <span className={s.adminInlineErr}>
+                              {adminListError}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </>
+                  }
+                />
+              ) : (
+                <div className={s.visualEmptyState}>
+                  <p className={s.visualEmptyStateText}>
+                    Tölts be vagy illessz be érvényes sztori JSON-t a lenti haladó
+                    blokkban. Betöltés után az előnézet és az oldal szerkesztő a
+                    jobb oszlopban jelenik meg.
                   </p>
-                ) : (
-                  <p className={s.adminStoryMeta}>
-                    Nincs listaelem; csak az alapértelmezett forrás érhető el.
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          ) : null}
-          {draftStory ? (
-            <div className={`${s.panel} ${s.storyPanel}`}>
-              <div className={s.panelHeader}>Sztori (vászon)</div>
-              <StoryCanvas
-                draftStory={draftStory}
-                onStoryChange={onStoryChangeFromCanvas}
-                selectedPageId={selectedPageId}
-                onSelectPage={setSelectedPageId}
-                issuesByPage={issuesByPage}
-                metaIssues={metaEditorIssues}
-                embedded
-                onDeletePage={onDeletePage}
-              />
-            </div>
-          ) : (
-            <div className={s.panel}>
-              <div className={s.panelHeader}>Sztori (vászon)</div>
-              <p className={s.hint} style={{ padding: "1.25rem" }}>
-                Tölts be vagy illessz be érvényes sztori JSON-t a haladó nézetben.
-              </p>
-            </div>
-          )}
+          </div>
 
           <details className={s.advancedJson}>
             <summary>Haladó: nyers JSON + vázlat</summary>
@@ -805,118 +1159,31 @@ export default function EditorStudio({
           </details>
         </div>
 
-        {draftStory ? (
-          <div className={s.rightColumn}>
-            <EditorPreviewColumn
+        {draftStory && !isFullscreen ? (
+          <div
+            className={s.rightColumn}
+            aria-label="Előnézet és oldal szerkesztő"
+          >
+            <EditorStudioRightColumn
               draftStory={draftStory}
               revision={revision}
               pageIds={pageIds}
+              inspectorOpen={inspectorOpen}
+              onToggleInspector={toggleInspectorExpanded}
+              selectedPageId={selectedPageId}
+              onSelectPageId={setSelectedPageId}
+              issuesByPage={issuesByPage}
+              onStoryChange={onStoryChangeFromCanvas}
+              onDeletePage={onDeletePage}
             />
-            <div
-              className={`${s.panel} ${s.previewPanel} ${s.inspectorPanelRoot}`}
-            >
-              <button
-                type="button"
-                className={`${s.panelHeader} ${s.previewPanelToggle}`}
-                aria-expanded={inspectorOpen}
-                aria-controls="editor-inspector-body"
-                onClick={toggleInspectorExpanded}
-              >
-                <span className={s.stackPanelToggleTitle}>
-                  <span className={s.stackPanelToggleMain}>
-                    Oldal szerkesztő
-                  </span>
-                  {selectedPageId ? (
-                    <span className={s.stackPanelToggleSub}>
-                      {selectedPageId}
-                    </span>
-                  ) : (
-                    <span className={s.stackPanelToggleSubMuted}>
-                      Nincs oldal kijelölve
-                    </span>
-                  )}
-                </span>
-                <span className={s.previewPanelToggleChevron} aria-hidden>
-                  {inspectorOpen ? "▼" : "▶"}
-                </span>
-              </button>
-              <div
-                id="editor-inspector-body"
-                className={s.inspectorPanelContent}
-                hidden={!inspectorOpen}
-              >
-                <details className={s.inspectorPageDetails}>
-                  <summary className={s.inspectorPageSummary}>
-                    <span className={s.inspectorPageSummaryLabel}>
-                      <span
-                        className={s.inspectorPageSummaryChevron}
-                        aria-hidden
-                      >
-                        ▼
-                      </span>
-                      Aktuális oldal
-                    </span>
-                    <code>{selectedPageId ?? "—"}</code>
-                  </summary>
-                  <div className={s.inspectorPageInner}>
-                    <label className={s.inspectorPageLabel}>
-                      Oldal a szerkesztőben
-                      <select
-                        className={s.pageSelect}
-                        value={selectedPageId ?? ""}
-                        onChange={(e) => {
-                          const v = e.target.value.trim();
-                          setSelectedPageId(v || null);
-                        }}
-                        aria-label="Oldal választása a szerkesztőben"
-                      >
-                        <option value="">
-                          {pageIds.length
-                            ? "— válassz oldalt —"
-                            : "Nincs oldal a sztoriban"}
-                        </option>
-                        {pageIds.map((id) => (
-                          <option key={id} value={id}>
-                            {id}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <p className={s.inspectorPageHint}>
-                      Az előnézet oldala külön állítható a fenti „Preview oldal”
-                      menüben.
-                    </p>
-                  </div>
-                </details>
-                <PageInspector
-                  draftStory={draftStory}
-                  selectedPageId={selectedPageId}
-                  onStoryChange={onStoryChangeFromCanvas}
-                  onRequestDeletePage={onDeletePage}
-                  issues={
-                    selectedPageId
-                      ? issuesByPage.get(selectedPageId) ?? []
-                      : []
-                  }
-                  knownPageIds={pageIds}
-                />
-              </div>
-            </div>
           </div>
-        ) : (
-          <div className={s.panel}>
-            <div className={s.panelHeader}>Előnézet</div>
-            <p className={s.hint} style={{ padding: "1.25rem" }}>
-              Adj meg érvényes JSON-t — az előnézet itt jelenik meg.
-            </p>
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className={s.footerLinks}>
         <Link href="/">← Vissza a kezdőlapra</Link>
       </div>
-      </div>
     </div>
+  </div>
   );
 }
