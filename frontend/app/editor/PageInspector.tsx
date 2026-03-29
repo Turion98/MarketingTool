@@ -5,12 +5,15 @@ import { findPageInStoryDocument } from "@/app/lib/editor/findPageInStory";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
   buildFragmentPicklistSections,
+  editorPageMilestoneActive,
   type FragmentPicklistSections,
 } from "@/app/lib/editor/storyChoiceFragmentIds";
 import { findRiddleChainContext } from "@/app/lib/editor/editorCanvasCluster";
 import { isEditorLogicPage } from "@/app/lib/editor/storyPagesFlatten";
+import { canonicalMilestoneFragmentId } from "@/app/lib/milestoneFragmentId";
 import {
   readFragmentTextFromStory,
+  removeStoryFragment,
   replacePageInStory,
   upsertStoryFragmentText,
 } from "@/app/lib/editor/storyPagePatch";
@@ -484,6 +487,8 @@ type PageInspectorProps = {
   draftStory: Record<string, unknown>;
   selectedPageId: string | null;
   onStoryChange: (next: Record<string, unknown>) => void;
+  /** Ugyanaz a megerősítő törlés, mint a vásznon. */
+  onRequestDeletePage?: (pageId: string) => void;
   issues: PageValidationIssue[];
   knownPageIds: string[];
 };
@@ -492,6 +497,7 @@ export default function PageInspector({
   draftStory,
   selectedPageId,
   onStoryChange,
+  onRequestDeletePage,
   issues,
   knownPageIds,
 }: PageInspectorProps) {
@@ -584,7 +590,11 @@ export default function PageInspector({
     const isObjectLogic = Boolean(logicRec);
 
     setTitle(typeof page.title === "string" ? page.title : "");
-    setSaveMilestone(page.saveMilestone === true);
+    setSaveMilestone(
+      selectedPageId
+        ? editorPageMilestoneActive(draftStory, selectedPageId)
+        : false
+    );
 
     if (isObjectLogic) {
       setLogicIfRows(loadLogicIfRows(page));
@@ -690,18 +700,30 @@ export default function PageInspector({
   }, [page, selectedPageId, draftStory]);
 
   const applyPage = useCallback(
-    (nextPage: Record<string, unknown>) => {
+    (
+      nextPage: Record<string, unknown>,
+      opts?: { stripPageDoneFragment?: boolean }
+    ) => {
       if (!selectedPageId) return;
       let s = replacePageInStory(draftStory, selectedPageId, nextPage);
       const pid =
         (typeof nextPage.id === "string" && nextPage.id.trim()) ||
         selectedPageId.trim();
       if (nextPage.saveMilestone === true && pid) {
-        const done = `${pid}_DONE`;
+        const done = canonicalMilestoneFragmentId(`${pid}_DONE`);
         const bank = asRecord(s.fragments);
         if (!bank || !(done in bank)) {
           s = upsertStoryFragmentText(s, done, "");
         }
+      } else if (
+        opts?.stripPageDoneFragment &&
+        pid &&
+        !isEditorLogicPage(nextPage as Record<string, unknown>)
+      ) {
+        const done = canonicalMilestoneFragmentId(`${pid}_DONE`);
+        const rawKey = `${pid}_DONE`;
+        s = removeStoryFragment(s, done);
+        if (rawKey !== done) s = removeStoryFragment(s, rawKey);
       }
       for (const row of fragRows) {
         const id = row.ifUnlocked.trim();
@@ -871,7 +893,9 @@ export default function PageInspector({
       delete nextP.saveMilestone;
     }
 
-    applyPage(nextP);
+    applyPage(nextP, {
+      stripPageDoneFragment: page.saveMilestone === true && !saveMilestone,
+    });
   }, [
     page,
     selectedPageId,
@@ -975,7 +999,18 @@ export default function PageInspector({
 
   return (
     <div className={s.details}>
-      <h3 className={s.summary}>Oldal részletek — {selectedPageId}</h3>
+      <div className={s.summaryRow}>
+        <h3 className={s.summary}>Oldal részletek — {selectedPageId}</h3>
+        {selectedPageId && onRequestDeletePage ? (
+          <button
+            type="button"
+            className={s.btnDanger}
+            onClick={() => onRequestDeletePage(selectedPageId)}
+          >
+            Oldal törlése
+          </button>
+        ) : null}
+      </div>
       <div className={s.body}>
         {issues.length > 0 ? (
           <ul className={s.issueList}>
@@ -994,10 +1029,12 @@ export default function PageInspector({
               checked={saveMilestone}
               onChange={(e) => setSaveMilestone(e.target.checked)}
             />
-            <span>Save milestone</span>
+            <span>Milestone (oldalazonosító alapú)</span>
             {saveMilestone && selectedPageId ? (
               <span className={s.saveMilestoneHint}>
-                → <code>{selectedPageId}_DONE</code> (belépéskor feloldódik)
+                Fragment: <code>{canonicalMilestoneFragmentId(`${selectedPageId}_DONE`)}</code> —
+                belépéskor feloldódik a játékban. Mentéskor a történetben is beállítjuk a flaget és a
+                bank kulcsot.
               </span>
             ) : null}
           </label>

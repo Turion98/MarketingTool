@@ -10,6 +10,7 @@ import {
   collectRiddleNextTargets,
   collectRiddleNextTargetsInOrder,
 } from "./storyGraph";
+import { canonicalMilestoneFragmentId } from "../milestoneFragmentId";
 import { isEditorLogicPage } from "./storyPagesFlatten";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -50,9 +51,10 @@ export function validatePage(
   ) {
     const pid = readString(page.id);
     if (pid) {
-      const doneId = `${pid}_DONE`;
+      const doneId = canonicalMilestoneFragmentId(`${pid}_DONE`);
+      const rawDone = `${pid}_DONE`;
       const bank = asRecord(story.fragments);
-      if (!bank || !(doneId in bank)) {
+      if (!bank || (!(doneId in bank) && !(rawDone in bank))) {
         issues.push({
           path: "saveMilestone",
           message: `${doneId}: még nincs a fragment bankban; mentéskor létrejön.`,
