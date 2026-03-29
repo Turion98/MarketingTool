@@ -2,9 +2,16 @@
 
 import {
   collectStoryPageIds,
+  findPageInStoryDocument,
   getStartPageIdFromStory,
 } from "./findPageInStory";
-import { mergeEditorLayoutIntoStory, type EditorLayoutState } from "./storyGraphLayout";
+import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
+import {
+  mergeEditorLayoutIntoStory,
+  readEditorLayoutFromStory,
+  type EditorLayoutState,
+} from "./storyGraphLayout";
+import { isEditorPendingPageId } from "./storyTemplateInsert";
 
 function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
@@ -153,4 +160,193 @@ export function removePageFromStory(
   }
 
   return next;
+}
+
+/** Navigációs célok frissítése más oldalakon, ha `from` → `to` átnevezés történt. */
+export function patchOutgoingNavRefsInPage(
+  page: Record<string, unknown>,
+  from: string,
+  to: string
+): Record<string, unknown> {
+  const next = { ...page };
+  if (typeof next.next === "string" && next.next === from) next.next = to;
+
+  if (Array.isArray(next.choices)) {
+    next.choices = next.choices.map((ch) => {
+      const c = asRecord(ch);
+      if (!c) return ch;
+      if (c.next === from) return { ...c, next: to };
+      return c;
+    });
+  }
+
+  const logicVal = next.logic;
+  const logicObj = asRecord(logicVal);
+  if (logicObj && !Array.isArray(logicVal)) {
+    const l = { ...logicObj };
+    if (typeof l.elseGoTo === "string" && l.elseGoTo === from) l.elseGoTo = to;
+    if (Array.isArray(l.ifHasFragment)) {
+      l.ifHasFragment = l.ifHasFragment.map((entry) => {
+        const row = asRecord(entry);
+        if (row && typeof row.goTo === "string" && row.goTo === from)
+          return { ...row, goTo: to };
+        return entry;
+      });
+    }
+    next.logic = l;
+  }
+  if (Array.isArray(logicVal)) {
+    next.logic = logicVal.map((entry) => {
+      const row = asRecord(entry);
+      if (!row) return entry;
+      const o = { ...row };
+      if (o.goto === from) o.goto = to;
+      if (o.default === from) o.default = to;
+      return o;
+    });
+  }
+
+  if (next.type === "conditionalRouting" && Array.isArray(next.nextSwitch)) {
+    next.nextSwitch = next.nextSwitch.map((entry) => {
+      const row = asRecord(entry);
+      if (!row) return entry;
+      if (typeof row.goto === "string" && row.goto === from)
+        return { ...row, goto: to };
+      return entry;
+    });
+  }
+
+  const tr = asRecord(next.transition);
+  if (tr && typeof tr.nextPageId === "string" && tr.nextPageId === from) {
+    next.transition = { ...tr, nextPageId: to };
+  }
+
+  if (next.type === "puzzle") {
+    const onS = asRecord(next.onSuccess);
+    if (onS && onS.goto === from) next.onSuccess = { ...onS, goto: to };
+    const onF = asRecord(next.onFail);
+    if (onF && onF.goto === from) next.onFail = { ...onF, goto: to };
+    const oa = asRecord(next.onAnswer);
+    if (oa) {
+      const ns = oa.nextSwitch;
+      if (typeof ns === "string" && ns === from) {
+        next.onAnswer = { ...oa, nextSwitch: to };
+      } else {
+        const sw = asRecord(ns);
+        if (sw) {
+          const cases = asRecord(sw.cases);
+          if (cases) {
+            const newCases = { ...cases };
+            for (const k of Object.keys(newCases)) {
+              if (newCases[k] === from) newCases[k] = to;
+            }
+            next.onAnswer = {
+              ...oa,
+              nextSwitch: { ...sw, cases: newCases },
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return next;
+}
+
+export type RenameStoryPageIdResult =
+  | { ok: true; story: Record<string, unknown> }
+  | { ok: false; error: string };
+
+/**
+ * Oldal `id` és `pages` kulcs átnevezése, hivatkozások + layout + opcionális `{id}_DONE` fragment.
+ */
+export function renameStoryPageIdInStory(
+  story: Record<string, unknown>,
+  fromId: string,
+  toId: string
+): RenameStoryPageIdResult {
+  const from = fromId.trim();
+  const trimmed = toId.trim();
+  if (!from) return { ok: false, error: "Hiányzó régi azonosító." };
+  if (!trimmed) return { ok: false, error: "Az oldalazonosító nem lehet üres." };
+  if (trimmed === STORY_GRAPH_START_NODE_ID) {
+    return { ok: false, error: "Ez az azonosító foglalt (vászon kezdő csomópont)." };
+  }
+  if (isEditorPendingPageId(trimmed)) {
+    return { ok: false, error: "Érvénytelen célazonosító (szerkesztői előtag)." };
+  }
+  if (!findPageInStoryDocument(story, from)) {
+    return { ok: false, error: "Az oldal nem található a sztoriban." };
+  }
+  const existing = collectStoryPageIds(story);
+  if (existing.includes(trimmed) && trimmed !== from) {
+    return { ok: false, error: "Már van ilyen azonosítójú oldal." };
+  }
+  if (trimmed === from) return { ok: true, story: clone(story) };
+
+  const next = clone(story);
+  const pages = next.pages;
+
+  if (pages && typeof pages === "object" && !Array.isArray(pages)) {
+    const d = { ...(pages as Record<string, unknown>) };
+    const src = asRecord(d[from]);
+    if (!src) return { ok: false, error: "Az oldal nem található a sztoriban." };
+    const newD: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(d)) {
+      if (k === from) continue;
+      const rec = asRecord(v);
+      if (!rec) {
+        newD[k] = v;
+        continue;
+      }
+      newD[k] = patchOutgoingNavRefsInPage(rec, from, trimmed);
+    }
+    const patchedSrc = patchOutgoingNavRefsInPage(src, from, trimmed);
+    newD[trimmed] = { ...patchedSrc, id: trimmed };
+    next.pages = newD;
+  } else if (Array.isArray(pages)) {
+    next.pages = pages.map((p) => {
+      const rec = asRecord(p);
+      if (!rec) return p;
+      let patched = patchOutgoingNavRefsInPage(rec, from, trimmed);
+      if (typeof patched.id === "string" && patched.id === from) {
+        patched = { ...patched, id: trimmed };
+      }
+      return patched;
+    });
+  } else {
+    return { ok: false, error: "Ismeretlen pages szerkezet." };
+  }
+
+  const start = getStartPageIdFromStory(next);
+  if (start === from) {
+    const meta = asRecord(next.meta) ?? {};
+    next.meta = { ...meta, startPageId: trimmed };
+  }
+
+  const layout = readEditorLayoutFromStory(next);
+  if (layout?.nodes[from]) {
+    const nodes = { ...layout.nodes };
+    const pos = nodes[from]!;
+    delete nodes[from];
+    nodes[trimmed] = pos;
+    Object.assign(
+      next,
+      mergeEditorLayoutIntoStory(next, { ...layout, nodes })
+    );
+  }
+
+  const doneOld = `${from}_DONE`;
+  const doneNew = `${trimmed}_DONE`;
+  const fragBank = asRecord(next.fragments);
+  if (fragBank && doneOld in fragBank && !(doneNew in fragBank)) {
+    const rest = { ...fragBank };
+    const entry = rest[doneOld];
+    delete rest[doneOld];
+    const fr = asRecord(entry);
+    rest[doneNew] = fr ? { ...fr, id: doneNew } : entry;
+    next.fragments = rest;
+  }
+
+  return { ok: true, story: next };
 }

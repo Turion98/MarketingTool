@@ -266,6 +266,20 @@ export function clusterMemberIdsToDrag(
   return c ? [...c.members] : [pageId];
 }
 
+/** Több kijelölt kártya együtt húzása: cluster-csomagok uniója. */
+export function clusterMemberIdsToDragUnion(
+  clusters: EditorCanvasCluster[],
+  pageIds: string[]
+): string[] {
+  const acc = new Set<string>();
+  for (const id of pageIds) {
+    for (const m of clusterMemberIdsToDrag(clusters, id)) {
+      acc.add(m);
+    }
+  }
+  return [...acc];
+}
+
 export function isClusterInternalEdge(
   e: StoryGraphEdge,
   cluster: EditorCanvasCluster

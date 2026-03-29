@@ -1,10 +1,6 @@
 "use client";
 
 import type { EditorPageCategory } from "./storyPagesFlatten";
-import {
-  collectStoryPageIds,
-  getStartPageIdFromStory,
-} from "./findPageInStory";
 
 export type StoryTemplateKey =
   | "linear"
@@ -14,11 +10,19 @@ export type StoryTemplateKey =
   | "riddle"
   | "runes";
 
-function defaultNextTarget(story: Record<string, unknown>): string {
-  const s = getStartPageIdFromStory(story);
-  if (s) return s;
-  const ids = collectStoryPageIds(story);
-  return ids[0] ?? "start";
+/** Szerkesztő: még át nem nevezett új oldal — kötelező ID megadás, különben elvetjük. */
+export const EDITOR_PENDING_PAGE_PREFIX = "__editor_pending_" as const;
+
+export function isEditorPendingPageId(pageId: string): boolean {
+  return pageId.startsWith(EDITOR_PENDING_PAGE_PREFIX);
+}
+
+export function createPendingPageId(): string {
+  const u =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  return `${EDITOR_PENDING_PAGE_PREFIX}${u}`;
 }
 
 function buildTemplatePageByKey(
@@ -112,10 +116,10 @@ export function appendPageToStory(
 /** Új, minimálisan kitöltött oldal a szerkesztői kategória szerint (vászon + sablon). */
 export function buildEmptyPageForCategory(
   category: EditorPageCategory,
-  story: Record<string, unknown>
+  _story: Record<string, unknown>
 ): Record<string, unknown> {
-  const next = defaultNextTarget(story);
-  const nid = `new_${Date.now()}`;
+  const next = "";
+  const nid = createPendingPageId();
 
   switch (category) {
     case "narrative1":
@@ -161,9 +165,8 @@ export function insertStoryTemplate(
   story: Record<string, unknown>,
   key: StoryTemplateKey
 ): Record<string, unknown> {
-  const next = defaultNextTarget(story);
-  const nid = `new_${Date.now()}`;
-  const page = buildTemplatePageByKey(key, nid, next);
+  const nid = createPendingPageId();
+  const page = buildTemplatePageByKey(key, nid, "");
   return appendPageToStory(story, page);
 }
 
