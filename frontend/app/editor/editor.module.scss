@@ -309,78 +309,6 @@
   display: none !important;
 }
 
-.inspectorPageDetails {
-  flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.12);
-}
-
-.inspectorPageSummary {
-  padding: 0.55rem 1rem;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 600;
-  list-style: none;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.inspectorPageSummaryLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-}
-
-.inspectorPageSummaryChevron {
-  flex-shrink: 0;
-  font-size: 0.6rem;
-  opacity: 0.75;
-  display: inline-block;
-  transition: transform 0.12s ease;
-}
-
-.inspectorPageDetails:not([open]) .inspectorPageSummaryChevron {
-  transform: rotate(-90deg);
-}
-
-.inspectorPageSummary::-webkit-details-marker {
-  display: none;
-}
-
-.inspectorPageSummary code {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #c7d4ff;
-  word-break: break-all;
-  text-align: right;
-}
-
-.inspectorPageInner {
-  padding: 0.5rem 1rem 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.inspectorPageLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.inspectorPageHint {
-  margin: 0;
-  font-size: 0.72rem;
-  opacity: 0.6;
-  font-weight: 500;
-}
-
 .advancedJson {
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -721,6 +649,11 @@
   word-break: break-all;
   max-width: 100%;
   line-height: 1.25;
+}
+
+.stackPanelToggleSubWarn {
+  color: #fbbf24;
+  font-weight: 650;
 }
 
 .stackPanelToggleSubMuted {

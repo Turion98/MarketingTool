@@ -22,7 +22,11 @@ import { validateStoryPages as validateEditorPages } from "@/app/lib/editor/page
 import type { EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
 import { getClientFetchApiBase } from "@/app/lib/publicApiBase";
 import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
-import { removePageFromStory } from "@/app/lib/editor/storyPagePatch";
+import {
+  removePageFromStory,
+  renameStoryPageIdInStory,
+} from "@/app/lib/editor/storyPagePatch";
+import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import PageInspector from "./PageInspector";
@@ -475,6 +479,7 @@ function EditorStudioRightColumn({
   issuesByPage,
   onStoryChange,
   onDeletePage,
+  onRenamePageId,
 }: {
   draftStory: Record<string, unknown>;
   revision: number;
@@ -486,6 +491,7 @@ function EditorStudioRightColumn({
   issuesByPage: Map<string, PageValidationIssue[]>;
   onStoryChange: (next: Record<string, unknown>) => void;
   onDeletePage: (pageId: string) => void;
+  onRenamePageId?: (fromId: string, toId: string) => string | null;
 }) {
   return (
     <div className={s.dockedRightStack}>
@@ -509,7 +515,17 @@ function EditorStudioRightColumn({
           <span className={s.stackPanelToggleTitle}>
             <span className={s.stackPanelToggleMain}>Oldal szerkesztő</span>
             {selectedPageId ? (
-              <span className={s.stackPanelToggleSub}>{selectedPageId}</span>
+              <span
+                className={
+                  isEditorPendingPageId(selectedPageId)
+                    ? `${s.stackPanelToggleSub} ${s.stackPanelToggleSubWarn}`
+                    : s.stackPanelToggleSub
+                }
+              >
+                {isEditorPendingPageId(selectedPageId)
+                  ? "Új oldal — add meg az ID-t"
+                  : selectedPageId}
+              </span>
             ) : (
               <span className={s.stackPanelToggleSubMuted}>
                 Nincs oldal kijelölve
@@ -525,52 +541,13 @@ function EditorStudioRightColumn({
           className={s.inspectorPanelContent}
           hidden={!inspectorOpen}
         >
-          <details className={s.inspectorPageDetails}>
-            <summary className={s.inspectorPageSummary}>
-              <span className={s.inspectorPageSummaryLabel}>
-                <span className={s.inspectorPageSummaryChevron} aria-hidden>
-                  ▼
-                </span>
-                Aktuális oldal
-              </span>
-              <code>{selectedPageId ?? "—"}</code>
-            </summary>
-            <div className={s.inspectorPageInner}>
-              <label className={s.inspectorPageLabel}>
-                Oldal a szerkesztőben
-                <select
-                  className={s.pageSelect}
-                  value={selectedPageId ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    onSelectPageId(v || null);
-                  }}
-                  aria-label="Oldal választása a szerkesztőben"
-                >
-                  <option value="">
-                    {pageIds.length
-                      ? "— válassz oldalt —"
-                      : "Nincs oldal a sztoriban"}
-                  </option>
-                  {pageIds.map((id) => (
-                    <option key={id} value={id}>
-                      {id}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p className={s.inspectorPageHint}>
-                A „Preview oldal” legördülő váltása kijelöli a megfelelő kártyát a
-                vásznon; a szerkesztőben választott oldal az előnézetet is erre
-                állítja.
-              </p>
-            </div>
-          </details>
           <PageInspector
             draftStory={draftStory}
             selectedPageId={selectedPageId}
             onStoryChange={onStoryChange}
             onRequestDeletePage={onDeletePage}
+            onRenamePageId={onRenamePageId}
+            onSelectPageInEditor={onSelectPageId}
             issues={
               selectedPageId
                 ? issuesByPage.get(selectedPageId) ?? []
@@ -611,7 +588,13 @@ export default function EditorStudio({
   const [schemaHint, setSchemaHint] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] =
     useState<EditorPageCategory | null>(null);
-  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
+  const selectedPageIdsRef = useRef(selectedPageIds);
+  const draftStoryRef = useRef(draftStory);
+  selectedPageIdsRef.current = selectedPageIds;
+  draftStoryRef.current = draftStory;
+  const selectedPageId =
+    selectedPageIds.length === 1 ? selectedPageIds[0] ?? null : null;
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const visualWorkbenchRef = useRef<HTMLDivElement>(null);
   const [fullscreenDockEl, setFullscreenDockEl] = useState<HTMLDivElement | null>(
@@ -795,12 +778,6 @@ export default function EditorStudio({
   );
 
   useEffect(() => {
-    if (selectedPageId && !pageIds.includes(selectedPageId)) {
-      setSelectedPageId(null);
-    }
-  }, [pageIds, selectedPageId]);
-
-  useEffect(() => {
     try {
       if (localStorage.getItem(INSPECTOR_EXPANDED_LS) === "0") {
         setInspectorOpen(false);
@@ -882,6 +859,48 @@ export default function EditorStudio({
     []
   );
 
+  const handleSelectPageIds = useCallback(
+    (ids: string[]) => {
+      const prev = selectedPageIdsRef.current;
+      const cur = draftStoryRef.current;
+      if (cur) {
+        let nextStory = cur;
+        for (const pid of collectStoryPageIds(cur)) {
+          if (
+            isEditorPendingPageId(pid) &&
+            prev.includes(pid) &&
+            !ids.includes(pid)
+          ) {
+            nextStory = removePageFromStory(nextStory, pid);
+          }
+        }
+        if (nextStory !== cur) {
+          onStoryChangeFromCanvas(nextStory);
+        }
+      }
+      setSelectedPageIds(ids);
+    },
+    [onStoryChangeFromCanvas]
+  );
+
+  const onRenamePageFromCanvas = useCallback(
+    (fromId: string, toId: string): string | null => {
+      const cur = draftStoryRef.current;
+      if (!cur) return "Nincs betöltött sztori.";
+      const res = renameStoryPageIdInStory(cur, fromId, toId);
+      if (!res.ok) return res.error;
+      onStoryChangeFromCanvas(res.story);
+      const trimmed = toId.trim();
+      setSelectedPageIds((p) => p.map((x) => (x === fromId ? trimmed : x)));
+      return null;
+    },
+    [onStoryChangeFromCanvas]
+  );
+
+  const openInspectorForPendingPage = useCallback(() => {
+    setInspectorOpen(true);
+  }, []);
+
   const onDeletePage = useCallback(
     (pageId: string) => {
       const pid = pageId.trim();
@@ -895,7 +914,7 @@ export default function EditorStudio({
       }
       const next = removePageFromStory(draftStory, pid);
       onStoryChangeFromCanvas(next);
-      setSelectedPageId((cur) => (cur === pid ? null : cur));
+      setSelectedPageIds((ids) => ids.filter((x) => x !== pid));
     },
     [draftStory, onStoryChangeFromCanvas]
   );
@@ -996,8 +1015,10 @@ export default function EditorStudio({
                 <StoryCanvas
                   draftStory={draftStory}
                   onStoryChange={onStoryChangeFromCanvas}
-                  selectedPageId={selectedPageId}
-                  onSelectPage={setSelectedPageId}
+                  selectedPageIds={selectedPageIds}
+                  onSelectPageIds={handleSelectPageIds}
+                  onRenamePageId={onRenamePageFromCanvas}
+                  onPendingPageCreated={openInspectorForPendingPage}
                   issuesByPage={issuesByPage}
                   metaIssues={metaEditorIssues}
                   embedded
@@ -1013,10 +1034,13 @@ export default function EditorStudio({
                           inspectorOpen={inspectorOpen}
                           onToggleInspector={toggleInspectorExpanded}
                           selectedPageId={selectedPageId}
-                          onSelectPageId={setSelectedPageId}
+                          onSelectPageId={(id) =>
+                            handleSelectPageIds(id ? [id] : [])
+                          }
                           issuesByPage={issuesByPage}
                           onStoryChange={onStoryChangeFromCanvas}
                           onDeletePage={onDeletePage}
+                          onRenamePageId={onRenamePageFromCanvas}
                         />
                       </div>
                     ) : undefined
@@ -1094,7 +1118,7 @@ export default function EditorStudio({
                                 e.target.value
                               );
                               setActiveStorySrc(next);
-                              setSelectedPageId(null);
+                              handleSelectPageIds([]);
                               try {
                                 localStorage.setItem(LS_ADMIN_STORY_SRC, next);
                               } catch {
@@ -1171,10 +1195,11 @@ export default function EditorStudio({
               inspectorOpen={inspectorOpen}
               onToggleInspector={toggleInspectorExpanded}
               selectedPageId={selectedPageId}
-              onSelectPageId={setSelectedPageId}
+              onSelectPageId={(id) => handleSelectPageIds(id ? [id] : [])}
               issuesByPage={issuesByPage}
               onStoryChange={onStoryChangeFromCanvas}
               onDeletePage={onDeletePage}
+              onRenamePageId={onRenamePageFromCanvas}
             />
           </div>
         ) : null}

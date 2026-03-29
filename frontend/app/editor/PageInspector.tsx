@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { findPageInStoryDocument } from "@/app/lib/editor/findPageInStory";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
@@ -17,6 +24,7 @@ import {
   replacePageInStory,
   upsertStoryFragmentText,
 } from "@/app/lib/editor/storyPagePatch";
+import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import s from "./pageInspector.module.scss";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -491,6 +499,10 @@ type PageInspectorProps = {
   onRequestDeletePage?: (pageId: string) => void;
   issues: PageValidationIssue[];
   knownPageIds: string[];
+  /** Oldal-ID átnevezés / véglegesítés (függő → valódi id). */
+  onRenamePageId?: (fromId: string, toId: string) => string | null;
+  /** Oldal váltása a jobb panelben (legördülő). */
+  onSelectPageInEditor?: (id: string | null) => void;
 };
 
 export default function PageInspector({
@@ -500,6 +512,8 @@ export default function PageInspector({
   onRequestDeletePage,
   issues,
   knownPageIds,
+  onRenamePageId,
+  onSelectPageInEditor,
 }: PageInspectorProps) {
   const page = useMemo(
     () =>
@@ -540,6 +554,21 @@ export default function PageInspector({
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
   const [saveMilestone, setSaveMilestone] = useState(false);
+  const [pageIdDraft, setPageIdDraft] = useState("");
+  const [pageIdError, setPageIdError] = useState<string | null>(null);
+  const pageIdInputRef = useRef<HTMLInputElement>(null);
+  const [pageIdMenuOpen, setPageIdMenuOpen] = useState(false);
+  const [pageIdBarEditing, setPageIdBarEditing] = useState(false);
+  const pageIdBarRootRef = useRef<HTMLDivElement>(null);
+  const pageIdClickTimerRef = useRef<number | null>(null);
+  const prevSelForBarRef = useRef<string | null | undefined>(undefined);
+
+  const clearPageIdClickTimer = useCallback(() => {
+    if (pageIdClickTimerRef.current != null) {
+      clearTimeout(pageIdClickTimerRef.current);
+      pageIdClickTimerRef.current = null;
+    }
+  }, []);
 
   const fragmentPicklistSections = useMemo(() => {
     const sections = buildFragmentPicklistSections(
@@ -698,6 +727,95 @@ export default function PageInspector({
       setRunesSuccessFlags("");
     }
   }, [page, selectedPageId, draftStory]);
+
+  useEffect(() => {
+    if (!selectedPageId) return;
+    setPageIdError(null);
+    if (isEditorPendingPageId(selectedPageId)) {
+      setPageIdDraft("");
+    } else {
+      setPageIdDraft(selectedPageId);
+    }
+  }, [selectedPageId]);
+
+  const commitInspectorPageId = useCallback(() => {
+    if (!selectedPageId || !onRenamePageId) return;
+    const t = pageIdDraft.trim();
+    if (t === selectedPageId) {
+      setPageIdError(null);
+      return;
+    }
+    if (!t) {
+      if (isEditorPendingPageId(selectedPageId)) {
+        setPageIdError("Add meg az oldal egyedi azonosítóját.");
+      }
+      return;
+    }
+    const err = onRenamePageId(selectedPageId, t);
+    if (err) setPageIdError(err);
+    else setPageIdError(null);
+  }, [selectedPageId, pageIdDraft, onRenamePageId]);
+
+  useEffect(() => () => clearPageIdClickTimer(), [clearPageIdClickTimer]);
+
+  useEffect(() => {
+    if (!pageIdMenuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const root = pageIdBarRootRef.current;
+      if (root && !root.contains(e.target as Node)) {
+        setPageIdMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [pageIdMenuOpen]);
+
+  useEffect(() => {
+    if (prevSelForBarRef.current === undefined) {
+      prevSelForBarRef.current = selectedPageId;
+      if (selectedPageId && isEditorPendingPageId(selectedPageId)) {
+        setPageIdBarEditing(true);
+      }
+      return;
+    }
+    if (prevSelForBarRef.current !== selectedPageId) {
+      prevSelForBarRef.current = selectedPageId;
+      setPageIdMenuOpen(false);
+      clearPageIdClickTimer();
+      setPageIdBarEditing(
+        Boolean(selectedPageId && isEditorPendingPageId(selectedPageId))
+      );
+    }
+  }, [selectedPageId, clearPageIdClickTimer]);
+
+  useEffect(() => {
+    if (!selectedPageId || !isEditorPendingPageId(selectedPageId)) return;
+    let cancelled = false;
+    const id = window.requestAnimationFrame(() => {
+      if (cancelled) return;
+      pageIdInputRef.current?.focus();
+      pageIdInputRef.current?.select();
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, [selectedPageId]);
+
+  useEffect(() => {
+    if (!pageIdBarEditing) return;
+    if (!selectedPageId || isEditorPendingPageId(selectedPageId)) return;
+    let cancelled = false;
+    const id = window.requestAnimationFrame(() => {
+      if (cancelled) return;
+      pageIdInputRef.current?.focus();
+      pageIdInputRef.current?.select();
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, [pageIdBarEditing, selectedPageId]);
 
   const applyPage = useCallback(
     (
@@ -973,18 +1091,221 @@ export default function PageInspector({
         : null,
     [draftStory, selectedPageId, isRiddlePageForChain]
   );
-  if (!selectedPageId) {
+
+  const renderPageIdUnifiedBar = () => {
+    const canPick = Boolean(onSelectPageInEditor);
+    const sel = selectedPageId;
+    const pending = Boolean(sel && isEditorPendingPageId(sel));
+    const renameOk =
+      Boolean(onRenamePageId) && Boolean(sel) && (pending || page != null);
+
+    const showInput = Boolean(sel && (pending || pageIdBarEditing));
+
+    const openMenuSoon = () => {
+      if (!canPick) return;
+      clearPageIdClickTimer();
+      pageIdClickTimerRef.current = window.setTimeout(() => {
+        pageIdClickTimerRef.current = null;
+        setPageIdMenuOpen(true);
+      }, 320);
+    };
+
+    const onDisplayClick = (e: ReactMouseEvent<HTMLButtonElement>) => {
+      if (!canPick) return;
+      if (e.detail >= 2) {
+        clearPageIdClickTimer();
+        return;
+      }
+      openMenuSoon();
+    };
+
+    const onDisplayDblClick = (e: ReactMouseEvent<HTMLButtonElement>) => {
+      if (!renameOk || !onRenamePageId) return;
+      e.preventDefault();
+      clearPageIdClickTimer();
+      setPageIdMenuOpen(false);
+      setPageIdBarEditing(true);
+    };
+
+    const finishIdEdit = () => {
+      commitInspectorPageId();
+      if (selectedPageId && !isEditorPendingPageId(selectedPageId)) {
+        setPageIdBarEditing(false);
+      }
+    };
+
     return (
-      <div className={s.wrap}>
-        <p className={s.muted}>Válassz egy oldalt a vásznon a részletekhez.</p>
+      <div className={s.pageIdStripOuter} ref={pageIdBarRootRef}>
+        <div className={s.field}>
+          <span>Oldal</span>
+          <div
+            className={`${s.pageIdStrip} ${
+              pageIdError && showInput ? s.pageIdStripWarn : ""
+            }`}
+          >
+            {showInput ? (
+              <input
+                ref={pageIdInputRef}
+                type="text"
+                className={s.pageIdStripInput}
+                value={pageIdDraft}
+                onChange={(e) => {
+                  setPageIdDraft(e.target.value);
+                  setPageIdError(null);
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => finishIdEdit(), 0);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    finishIdEdit();
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    if (
+                      selectedPageId &&
+                      isEditorPendingPageId(selectedPageId)
+                    ) {
+                      setPageIdDraft("");
+                    } else {
+                      setPageIdDraft(selectedPageId ?? "");
+                    }
+                    setPageIdError(null);
+                    if (
+                      selectedPageId &&
+                      !isEditorPendingPageId(selectedPageId)
+                    ) {
+                      setPageIdBarEditing(false);
+                    }
+                  }
+                }}
+                list="editor-known-page-ids"
+                aria-invalid={!!pageIdError}
+                aria-describedby={
+                  pageIdError ? "inspector-page-id-err" : undefined
+                }
+                spellCheck={false}
+                autoComplete="off"
+              />
+            ) : (
+              <button
+                type="button"
+                className={s.pageIdStripDisplay}
+                disabled={!canPick && !sel}
+                onClick={onDisplayClick}
+                onDoubleClick={onDisplayDblClick}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (canPick) setPageIdMenuOpen(true);
+                  }
+                }}
+              >
+                <span className={s.pageIdStripDisplayText}>
+                  {sel
+                    ? sel
+                    : knownPageIds.length
+                      ? "— Válassz oldalt —"
+                      : "Nincs oldal a sztoriban"}
+                </span>
+              </button>
+            )}
+            {canPick ? (
+              <button
+                type="button"
+                className={s.pageIdStripChevron}
+                aria-expanded={pageIdMenuOpen}
+                aria-label="Oldalak listája"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearPageIdClickTimer();
+                  setPageIdMenuOpen((o) => !o);
+                }}
+              >
+                ▼
+              </button>
+            ) : null}
+          </div>
+          {pageIdError ? (
+            <p id="inspector-page-id-err" className={s.pageIdErr}>
+              {pageIdError}
+            </p>
+          ) : null}
+        </div>
+        {pageIdMenuOpen && canPick && onSelectPageInEditor ? (
+          <ul className={s.pageIdMenu} role="listbox">
+            <li>
+              <button
+                type="button"
+                role="option"
+                className={s.pageIdMenuItem}
+                onClick={() => {
+                  onSelectPageInEditor(null);
+                  setPageIdMenuOpen(false);
+                }}
+              >
+                — Nincs kijelölés —
+              </button>
+            </li>
+            {knownPageIds.map((id) => (
+              <li key={id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={id === sel}
+                  className={
+                    id === sel ? s.pageIdMenuItemActive : s.pageIdMenuItem
+                  }
+                  onClick={() => {
+                    onSelectPageInEditor(id);
+                    setPageIdMenuOpen(false);
+                  }}
+                >
+                  {id}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  };
+
+  if (!selectedPageId) {
+    if (!onSelectPageInEditor) {
+      return (
+        <div className={s.wrap}>
+          <p className={s.muted}>Válassz egy oldalt a vásznon a részletekhez.</p>
+        </div>
+      );
+    }
+    return (
+      <div className={s.details}>
+        <div className={s.summaryRow}>
+          <h3 className={s.summary}>Oldal</h3>
+        </div>
+        <div className={s.body}>
+          {renderPageIdUnifiedBar()}
+          <p className={s.hintSmall}>
+            Egy kattintás az ID sávra vagy a ▼ gomb: lista. Kattinthatsz egy kártyára a
+            vásznon is.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!page) {
     return (
-      <div className={s.wrap}>
-        <p className={s.err}>Az oldal nem található: {selectedPageId}</p>
+      <div className={s.details}>
+        <div className={s.summaryRow}>
+          <h3 className={s.summary}>Oldal</h3>
+        </div>
+        <div className={s.body}>
+          {renderPageIdUnifiedBar()}
+          <p className={s.err}>Az oldal nem található: {selectedPageId}</p>
+        </div>
       </div>
     );
   }
@@ -1000,7 +1321,7 @@ export default function PageInspector({
   return (
     <div className={s.details}>
       <div className={s.summaryRow}>
-        <h3 className={s.summary}>Oldal részletek — {selectedPageId}</h3>
+        <h3 className={s.summary}>Oldal részletek</h3>
         {selectedPageId && onRequestDeletePage ? (
           <button
             type="button"
@@ -1020,6 +1341,37 @@ export default function PageInspector({
               </li>
             ))}
           </ul>
+        ) : null}
+
+        {onSelectPageInEditor || onRenamePageId ? (
+          <div className={s.pageChrome}>
+            {selectedPageId && isEditorPendingPageId(selectedPageId) ? (
+              <div className={s.pendingIdBanner} role="status">
+                <strong>Oldalazonosító szükséges.</strong> Adj meg egy egyedi ID-t
+                (pl. <code>chapter_3_shop</code>). Ha másik oldalt választasz a
+                listában vagy a vásznon, ez a vázlat eltűnik.
+              </div>
+            ) : null}
+            {renderPageIdUnifiedBar()}
+            {(() => {
+              const hints: string[] = [];
+              if (onSelectPageInEditor) {
+                hints.push(
+                  "Egy kattintás az ID sávra: lista (▼ azonnal). A lista a vásznat és az előnézetet is erre állítja."
+                );
+              }
+              if (onRenamePageId && !pageIdError) {
+                hints.push(
+                  "Dupla kattintás az ID-n: átírás. A vászonon a kártya fejlécében is szerkeszthető."
+                );
+              }
+              if (onSelectPageInEditor && pageIdError) {
+                hints.push("Másik oldal: lista vagy ▼.");
+              }
+              if (!hints.length) return null;
+              return <p className={s.hintSmall}>{hints.join(" ")}</p>;
+            })()}
+          </div>
         ) : null}
 
         {milestoneEligible ? (
