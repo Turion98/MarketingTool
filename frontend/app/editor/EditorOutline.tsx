@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/editor/jsonPageOffsets";
 import {
   CATEGORY_LABELS,
+  EDITOR_CATEGORY_ORDER,
   type EditorPageCategory,
   flattenStoryPages,
   groupPagesByCategory,
@@ -111,7 +112,7 @@ export default function EditorOutline({
         </summary>
         <div className={s.outlineBody}>
           <div className={s.categoryScroll}>
-            {CATEGORY_ORDER.map((cat) => {
+            {EDITOR_CATEGORY_ORDER.map((cat) => {
               const list = grouped[cat];
               const active = activeCategory === cat;
               return (

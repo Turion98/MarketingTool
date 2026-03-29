@@ -61,6 +61,7 @@ export default function EditorShell() {
       userId={user.id}
       tierLabel={tierLabel}
       tierColor={tierColor}
+      isAdmin={isAdmin}
       onLogout={() => void logout().then(() => router.replace("/"))}
     />
   );

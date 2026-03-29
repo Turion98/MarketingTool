@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import StoryPage from "@/app/components/StoryPage/StoryPage";
 import {
@@ -20,6 +21,7 @@ import { validateStoryPages as validateEditorPages } from "@/app/lib/editor/page
 import type { EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
 import { getClientFetchApiBase } from "@/app/lib/publicApiBase";
 import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
+import { removePageFromStory } from "@/app/lib/editor/storyPagePatch";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import PageInspector from "./PageInspector";
@@ -28,6 +30,7 @@ import s from "./editor.module.scss";
 
 const DEBOUNCE_MS = 380;
 const SEED_STORY_SRC = "stories/Mrk6_D_text_updated_en.json";
+const LS_ADMIN_STORY_SRC = "questell:editor:adminStorySrc";
 const LS_PREFIX = "questell:editor:draft:";
 const EDITOR_SKIN_LS = "questell:editor:skinPref";
 const PREVIEW_HEIGHT_LS = "questell:editor:previewHeightPx";
@@ -42,6 +45,27 @@ function defaultPreviewBodyHeightPx() {
   if (typeof window === "undefined") return 480;
   return Math.round(clamp(window.innerHeight * 0.52, 280, 820));
 }
+
+/** Backend `/api/story?src=` és listás `jsonSrc` egységes formára (`stories/foo.json`). */
+function normalizeEditorStorySrc(raw: string): string {
+  const s = raw.trim().replace(/\\/g, "/");
+  if (!s) return SEED_STORY_SRC;
+  let path = s.startsWith("/") ? s.slice(1) : s;
+  if (!path.startsWith("stories/")) {
+    const base = path.replace(/^\/+/, "");
+    const withJson = base.endsWith(".json") ? base : `${base}.json`;
+    path = `stories/${withJson.replace(/^stories\//, "")}`;
+  }
+  if (!path.endsWith(".json")) path = `${path}.json`;
+  return path;
+}
+
+type ListedStory = {
+  id: string;
+  title: string;
+  jsonSrc: string;
+  startPageId?: string;
+};
 
 type SkinEntry = { id: string; title: string };
 
@@ -326,6 +350,8 @@ type EditorStudioProps = {
   userId: string | undefined;
   tierLabel: string | null;
   tierColor: string;
+  /** Csak adminnak: szerverlista + váltó a vászon panel tetején. */
+  isAdmin?: boolean;
   onLogout: () => void;
 };
 
@@ -334,6 +360,7 @@ export default function EditorStudio({
   userId,
   tierLabel,
   tierColor,
+  isAdmin = false,
   onLogout,
 }: EditorStudioProps) {
   const [jsonText, setJsonText] = useState("");
@@ -347,14 +374,80 @@ export default function EditorStudio({
     useState<EditorPageCategory | null>(null);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [activeStorySrc, setActiveStorySrc] =
+    useState<string>(SEED_STORY_SRC);
+  const [adminStoryList, setAdminStoryList] = useState<ListedStory[]>([]);
+  const [adminListLoading, setAdminListLoading] = useState(false);
+  const [adminListError, setAdminListError] = useState<string | null>(null);
+  const adminLsSyncedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (!isAdmin) return;
     let cancelled = false;
+    setAdminListLoading(true);
+    setAdminListError(null);
+    fetch("/api/stories", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: unknown) => {
+        if (cancelled) return;
+        const arr = Array.isArray(data) ? data : [];
+        const normalized: ListedStory[] = [];
+        for (const item of arr) {
+          if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+          const x = item as Record<string, unknown>;
+          const id = typeof x.id === "string" ? x.id : "";
+          const title = typeof x.title === "string" ? x.title : id || "—";
+          const jsonSrc = typeof x.jsonSrc === "string" ? x.jsonSrc : "";
+          if (!id || !jsonSrc) continue;
+          const row: ListedStory = { id, title, jsonSrc };
+          if (typeof x.startPageId === "string") row.startPageId = x.startPageId;
+          normalized.push(row);
+        }
+        setAdminStoryList(normalized);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAdminStoryList([]);
+        setAdminListError(
+          "Nem sikerült betölteni a sztori listát (/api/stories). Ellenőrizd a backendet."
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setAdminListLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin || !adminStoryList.length || adminLsSyncedRef.current) return;
+    adminLsSyncedRef.current = true;
+    try {
+      const saved = localStorage.getItem(LS_ADMIN_STORY_SRC);
+      if (!saved?.trim()) return;
+      const norm = normalizeEditorStorySrc(saved);
+      const hit = adminStoryList.some(
+        (x) => normalizeEditorStorySrc(x.jsonSrc) === norm
+      );
+      if (hit) setActiveStorySrc(norm);
+    } catch {
+      /* ignore */
+    }
+  }, [isAdmin, adminStoryList]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ac = new AbortController();
     const base = getClientFetchApiBase();
-    const url = `${base}/api/story?src=${encodeURIComponent(SEED_STORY_SRC)}`;
-    fetch(url)
+    const src = normalizeEditorStorySrc(activeStorySrc);
+    const url = `${base}/api/story?src=${encodeURIComponent(src)}`;
+    fetch(url, { signal: ac.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -384,16 +477,18 @@ export default function EditorStudio({
           }
         }
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (cancelled) return;
+        if (e instanceof DOMException && e.name === "AbortError") return;
         setParseError(
-          "Nem sikerült betölteni a minta sztorit (backend /api/story). Illeszd be manuálisan a JSON-t."
+          "Nem sikerült betölteni a sztorit (backend /api/story). Illeszd be manuálisan a JSON-t."
         );
       });
     return () => {
       cancelled = true;
+      ac.abort();
     };
-  }, []);
+  }, [activeStorySrc]);
 
   const applyParsed = useCallback((raw: string) => {
     const t = raw.trim();
@@ -507,6 +602,24 @@ export default function EditorStudio({
     []
   );
 
+  const onDeletePage = useCallback(
+    (pageId: string) => {
+      const pid = pageId.trim();
+      if (!pid || !draftStory) return;
+      if (
+        !window.confirm(
+          `Biztosan törlöd a(z) „${pid}” oldalt? Más oldalak hivatkozásait kézzel ellenőrizd.`
+        )
+      ) {
+        return;
+      }
+      const next = removePageFromStory(draftStory, pid);
+      onStoryChangeFromCanvas(next);
+      setSelectedPageId((cur) => (cur === pid ? null : cur));
+    },
+    [draftStory, onStoryChangeFromCanvas]
+  );
+
   const onStoryReplaced = useCallback(
     (nextStory: Record<string, unknown>, _json: string) => {
       const normalized = normalizeLegacyMilestoneFragmentIdsInStory(nextStory);
@@ -564,6 +677,78 @@ export default function EditorStudio({
 
       <div className={s.workspace}>
         <div className={s.leftColumn}>
+          {isAdmin ? (
+            <div className={`${s.panel} ${s.adminStorySwitchPanel}`}>
+              <div className={s.panelHeader}>Sztori váltás (admin)</div>
+              <div className={s.adminStoryBar}>
+                <label htmlFor="editor-admin-story-select">
+                  <span className={s.adminStoryLabel}>Forrás</span>
+                  <select
+                    id="editor-admin-story-select"
+                    className={`${s.pageSelect} ${s.adminStorySelect}`}
+                    aria-busy={adminListLoading}
+                    value={normalizeEditorStorySrc(activeStorySrc)}
+                    onChange={(e) => {
+                      const next = normalizeEditorStorySrc(e.target.value);
+                      setActiveStorySrc(next);
+                      setSelectedPageId(null);
+                      try {
+                        localStorage.setItem(LS_ADMIN_STORY_SRC, next);
+                      } catch {
+                        /* ignore */
+                      }
+                    }}
+                  >
+                    {(() => {
+                      const cur = normalizeEditorStorySrc(activeStorySrc);
+                      const inList = adminStoryList.some(
+                        (x) => normalizeEditorStorySrc(x.jsonSrc) === cur
+                      );
+                      const opts: ReactNode[] = [];
+                      if (!inList && cur) {
+                        opts.push(
+                          <option key="__current__" value={cur}>
+                            Jelenlegi (nincs a listán):{" "}
+                            {cur.replace(/^stories\//, "")}
+                          </option>
+                        );
+                      }
+                      adminStoryList.forEach((st) => {
+                        const v = normalizeEditorStorySrc(st.jsonSrc);
+                        opts.push(
+                          <option key={st.id || v} value={v}>
+                            {st.title} ({st.id})
+                          </option>
+                        );
+                      });
+                      if (opts.length === 0) {
+                        opts.push(
+                          <option key="__seed__" value={SEED_STORY_SRC}>
+                            Alapértelmezett (lista üres)
+                          </option>
+                        );
+                      }
+                      return opts;
+                    })()}
+                  </select>
+                </label>
+                {adminListError ? (
+                  <p className={s.adminStoryErr}>{adminListError}</p>
+                ) : adminListLoading && adminStoryList.length === 0 ? (
+                  <p className={s.adminStoryMeta}>Sztori lista betöltése…</p>
+                ) : adminStoryList.length > 0 ? (
+                  <p className={s.adminStoryMeta}>
+                    {adminStoryList.length} sztori a szerverről — válassz
+                    szerkesztéshez.
+                  </p>
+                ) : (
+                  <p className={s.adminStoryMeta}>
+                    Nincs listaelem; csak az alapértelmezett forrás érhető el.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
           {draftStory ? (
             <div className={`${s.panel} ${s.storyPanel}`}>
               <div className={s.panelHeader}>Sztori (vászon)</div>
@@ -575,6 +760,7 @@ export default function EditorStudio({
                 issuesByPage={issuesByPage}
                 metaIssues={metaEditorIssues}
                 embedded
+                onDeletePage={onDeletePage}
               />
             </div>
           ) : (
@@ -706,6 +892,7 @@ export default function EditorStudio({
                   draftStory={draftStory}
                   selectedPageId={selectedPageId}
                   onStoryChange={onStoryChangeFromCanvas}
+                  onRequestDeletePage={onDeletePage}
                   issues={
                     selectedPageId
                       ? issuesByPage.get(selectedPageId) ?? []

@@ -66,6 +66,57 @@
   flex-direction: column;
 }
 
+.adminStoryBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 1rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid rgba(196, 181, 253, 0.22);
+  background: linear-gradient(
+    90deg,
+    rgba(196, 181, 253, 0.09),
+    rgba(15, 23, 42, 0.35)
+  );
+  font-size: 0.82rem;
+}
+
+.adminStoryBar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+.adminStoryLabel {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #c4b5fd;
+  letter-spacing: 0.02em;
+}
+
+.adminStorySelect {
+  flex: 1 1 12rem;
+  min-width: min(100%, 14rem);
+  max-width: 100%;
+}
+
+.adminStoryMeta {
+  flex: 1 1 100%;
+  margin: 0;
+  opacity: 0.72;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.adminStoryErr {
+  flex: 1 1 100%;
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.78rem;
+}
+
 .rightColumn {
   display: flex;
   flex-direction: column;
@@ -210,6 +261,11 @@
 
 /* Oldal szerkesztő kártya: ne örökölje a nagy min-height-ot (csak a nyitó sáv stílusa egyezik az előnézettel) */
 .panel.inspectorPanelRoot {
+  min-height: unset;
+}
+
+/* Admin sztori váltó: kompakt sáv a vászon felett (`panel` mellett) */
+.adminStorySwitchPanel {
   min-height: unset;
 }
 
