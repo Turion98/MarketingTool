@@ -103,7 +103,7 @@
       "logic": {
         "ifHasFragment": [
           {
-            "fragment": "A_DONE",
+            "fragment": "A1_DONE",
             "goTo": "A5"
           }
         ],
@@ -114,9 +114,7 @@
     {
       "id": "A1",
       "title": "Team meeting",
-      "unlockEnterFragments": [
-        "A_DONE"
-      ],
+      "saveMilestone": true,
       "choices": [
         {
           "next": "A1B",
@@ -286,14 +284,18 @@
         {
           "next": "B1",
           "hideIfHasFragment": [
-            "B_DONE"
+            "BA4_DONE",
+            "BB3_DONE",
+            "BC1_DONE"
           ],
           "text": "Let’s talk to the dev team"
         },
         {
           "next": "A5",
           "showIfHasFragment": [
-            "B_DONE"
+            "BA4_DONE",
+            "BB3_DONE",
+            "BC1_DONE"
           ],
           "text": "Let’s share what the devs said"
         }
@@ -358,9 +360,7 @@
     {
       "id": "B1",
       "title": "Dev meeting",
-      "unlockEnterFragments": [
-        "B_DONE"
-      ],
+      "saveMilestone": true,
       "choices": [
         {
           "next": "BA1",
@@ -374,7 +374,7 @@
           "next": "BC1",
           "text": "You’ve already talked to the team and have a draft concept",
           "showIfHasFragment": [
-            "A_DONE"
+            "A1_DONE"
           ]
         }
       ],
@@ -422,7 +422,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_DONE"
+              "BA4_DONE"
             ]
           },
           "text": "You go back to the team to align"
@@ -465,7 +465,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_DONE"
+              "BB3_DONE"
             ]
           },
           "text": "You go back to the team to align"
@@ -476,7 +476,7 @@
     {
       "id": "BC1",
       "needsFragment": [
-        "A_DONE"
+        "A1_DONE"
       ],
       "title": "Dev meeting",
       "choices": [
@@ -485,7 +485,7 @@
           "reward": {
             "unlockFragments": [
               "B_final_solution",
-              "B_DONE"
+              "BC1_DONE"
             ]
           },
           "text": "You return to your team to align"
@@ -501,14 +501,16 @@
           "next": "B1",
           "text": "You go back to the dev team to clarify",
           "hideIfHasFragment": [
-            "B_DONE"
+            "BA4_DONE",
+            "BB3_DONE",
+            "BC1_DONE"
           ]
         },
         {
           "next": "A1",
           "text": "You return to the team to align",
           "hideIfHasFragment": [
-            "A_DONE"
+            "A1_DONE"
           ]
         },
         {
@@ -780,13 +782,25 @@
       "id": "A3_ai_flow",
       "text": "The flow itself is the reward. When users feel their decisions matter, and the story responds to them, you gather insight without anyone complaining. It’s a rare win–win that makes a campaign meaningful in the long run."
     },
-    "A_DONE": {
-      "id": "A_DONE",
+    "A1_DONE": {
+      "id": "A1_DONE",
       "text": "Marketing has already said, “it’s all a matter of creative decisions.”"
     },
-    "B_DONE": {
-      "id": "B_DONE",
+    "B1_DONE": {
+      "id": "B1_DONE",
       "text": "The devs have already said, “this is technically impossible — maybe one day.”"
+    },
+    "BA4_DONE": {
+      "id": "BA4_DONE",
+      "text": "Dev alignment wrapped — feedback to marketing (path: BA4)."
+    },
+    "BB3_DONE": {
+      "id": "BB3_DONE",
+      "text": "Dev alignment wrapped — feedback to marketing (path: BB3)."
+    },
+    "BC1_DONE": {
+      "id": "BC1_DONE",
+      "text": "Dev alignment wrapped — feedback to marketing (path: BC1)."
     },
     "B_final_solution": {
       "id": "B_final_solution",

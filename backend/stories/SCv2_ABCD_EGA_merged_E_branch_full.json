@@ -36,7 +36,7 @@
       "title": "Milyen bőrrutin passzol a személyiségedhez?",
       "text": [
         {
-          "text": "Nem csak a bőröd állapota számít, hanem az is, hogyan szeretsz gondoskodni magadról. Válaszd ki, melyik bőrápolási stílus áll hozzád a legközelebb – ez finomhangolja a hangnemet és a javaslatokat a későbbiekben."
+          "text": "Nem csak a bőröd állapota számít, hanem az is, hogyan szeretsz gondoskodni magadról. Válaszd ki, melyik bőrápolási stílus áll hozzád a legközelebb."
         }
       ],
       "choices": [
@@ -48,7 +48,7 @@
               "E_gate_minimal"
             ]
           },
-          "text": "Gyors, egyszerű, hatékony – 5 perces, átlátható rutinra vágyom."
+          "text": "Gyors, egyszerű, hatékony – maximum 5 perces rutinra vágyom."
         },
         {
           "next": "L2_care_puzzle",
@@ -58,7 +58,7 @@
               "E_gate_innovator"
             ]
           },
-          "text": "Szeretem tesztelni az újdonságokat – jöhetnek az innovatív formulák."
+          "text": "Szeretem kényeztetni magam, nálam a bőrápolás egyenlő az énidővel."
         },
         {
           "next": "L2_care_puzzle",
@@ -68,7 +68,7 @@
               "E_gate_premium"
             ]
           },
-          "text": "Prémium, letisztult élményt keresek – fontos az érzés és a vibe is."
+          "text": "Nálam a hétköznap gyors rutin, a hétvége szeánsz"
         },
         {
           "next": "L2_care_puzzle",
@@ -78,7 +78,7 @@
               "E_gate_sensitive"
             ]
           },
-          "text": "Érzékeny a bőröm, a kíméletesség mindenek felett."
+          "text": "Eddig kevés időt szántam a bőrömre, de nyitott vagyok."
         }
       ]
     },
@@ -93,7 +93,7 @@
   "optionFlagsBase": "L2_opt_",
 
   "title": "Válaszd ki a két legfontosabb fókuszt",
-  "text": "Most jön a finomhangolás: hat fókuszt látsz a bőrápolásodból. Válaszd ki azt a KÉT elemet, ami számodra most a legfontosabb – ezek alapján választjuk ki, melyik útvonal illik hozzád a legjobban.",
+  "text": "Válaszd ki a hat fókusz közül azt a kettőt, ami számodra most a legfontosabb – ezek alapján határozzuk meg mi az igazán neked való.",
   "options": [
     "Hidratálás",
     "Fényvédelem",
