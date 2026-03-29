@@ -18,6 +18,7 @@ import {
 } from "@/app/lib/editor/storyGraph";
 import {
   clusterMemberIdsToDrag,
+  clusterMemberIdsToDragUnion,
   getEditorCanvasClustersEffective,
 } from "@/app/lib/editor/editorCanvasCluster";
 import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentIds";
@@ -36,10 +37,15 @@ import {
   flattenStoryPages,
   groupPagesByCategory,
 } from "@/app/lib/editor/storyPagesFlatten";
-import { applyEditorLayout } from "@/app/lib/editor/storyPagePatch";
+import { collectStoryPageIds } from "@/app/lib/editor/findPageInStory";
+import {
+  applyEditorLayout,
+  removePageFromStory,
+} from "@/app/lib/editor/storyPagePatch";
 import {
   appendPageToStory,
   buildEmptyPageForCategory,
+  isEditorPendingPageId,
 } from "@/app/lib/editor/storyTemplateInsert";
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
@@ -78,6 +84,24 @@ const NEAR_START_DY = -22;
 
 const CATEGORY_STRIP_SCROLL_STEP_PX = 260;
 
+/** Üres vászon „kattintás” vs pásztázás: ennél kisebb elmozdulás = kattintás. */
+const VIEWPORT_CLICK_MOVE_THRESHOLD_PX = 5;
+
+/** Shift + üres vászon: téglalap kijelölés minimális mérete (képernyő px). */
+const MARQUEE_MIN_DRAG_PX = 4;
+
+function clientRectsOverlap(
+  a: { left: number; top: number; right: number; bottom: number },
+  b: Pick<DOMRect, "left" | "top" | "right" | "bottom">
+): boolean {
+  return (
+    a.left < b.right &&
+    a.right > b.left &&
+    a.top < b.bottom &&
+    a.bottom > b.top
+  );
+}
+
 function maxCanvasViewportPx(inFullscreen: boolean) {
   if (typeof window === "undefined") return 920;
   const inner = window.innerHeight;
@@ -109,14 +133,18 @@ const START_SYNTH: StoryGraphNode = {
 type StoryCanvasProps = {
   draftStory: Record<string, unknown>;
   onStoryChange: (next: Record<string, unknown>) => void;
-  selectedPageId: string | null;
-  onSelectPage: (pageId: string | null) => void;
+  selectedPageIds: string[];
+  onSelectPageIds: (pageIds: string[]) => void;
   issuesByPage: Map<string, PageValidationIssue[]>;
   metaIssues: PageValidationIssue[];
   /** Panelben: nincs dupla keret */
   embedded?: boolean;
   /** Kártya / inspektor törlés — megerősítés a hívóban. */
   onDeletePage?: (pageId: string) => void;
+  /** Dupla kattintásos oldal-ID a kártyán; `null` = siker. */
+  onRenamePageId?: (fromId: string, toId: string) => string | null;
+  /** Új függő oldal létrejöttekor (pl. jobb panel megnyitása). */
+  onPendingPageCreated?: () => void;
   /** Bal szél: teljes képernyő + admin stb. */
   visualBarLeading?: ReactNode;
   /** Szülő szerinti teljes képernyő — nagyobb max vászon magasság. */
@@ -131,12 +159,14 @@ type StoryCanvasProps = {
 export default function StoryCanvas({
   draftStory,
   onStoryChange,
-  selectedPageId,
-  onSelectPage,
+  selectedPageIds,
+  onSelectPageIds,
   issuesByPage,
   metaIssues,
   embedded = false,
   onDeletePage,
+  onRenamePageId,
+  onPendingPageCreated,
   visualBarLeading,
   canvasFullscreen = false,
   fullscreenSideSlot,
@@ -177,9 +207,25 @@ export default function StoryCanvas({
     sy: number;
     startPositions: Record<string, EditorLayoutNode>;
   } | null>(null);
-  const panRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(
-    null
-  );
+  const panRef = useRef<{
+    sx: number;
+    sy: number;
+    px: number;
+    py: number;
+    moved: boolean;
+  } | null>(null);
+  const marqueeDragRef = useRef<{
+    cx0: number;
+    cy0: number;
+    cx1: number;
+    cy1: number;
+  } | null>(null);
+  const [marqueeRect, setMarqueeRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const resizeRef = useRef<{ startY: number; startH: number } | null>(null);
   const canvasHRef = useRef(canvasH);
   canvasHRef.current = canvasH;
@@ -406,7 +452,10 @@ export default function StoryCanvas({
     (pageId: string, e: ReactPointerEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      const idsToMove = clusterMemberIdsToDrag(canvasClusters, pageId);
+      const idsToMove =
+        selectedPageIds.includes(pageId) && selectedPageIds.length > 0
+          ? clusterMemberIdsToDragUnion(canvasClusters, selectedPageIds)
+          : clusterMemberIdsToDrag(canvasClusters, pageId);
       const startPositions: Record<string, EditorLayoutNode> = {};
       for (const id of idsToMove) {
         const p = localLayout.nodes[id];
@@ -444,33 +493,105 @@ export default function StoryCanvas({
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", up);
     },
-    [localLayout.nodes, zoom, commitLayout, canvasClusters]
+    [
+      localLayout.nodes,
+      zoom,
+      commitLayout,
+      canvasClusters,
+      selectedPageIds,
+    ]
   );
 
-  const onViewportPointerDown = useCallback((e: ReactPointerEvent) => {
-    if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
-    try {
-      window.getSelection()?.removeAllRanges();
-    } catch {
-      /* ignore */
-    }
-    panRef.current = {
-      sx: e.clientX,
-      sy: e.clientY,
-      px: pan.x,
-      py: pan.y,
-    };
-    setPanning(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }, [pan.x, pan.y]);
+  const onCanvasCardBodyPointerDown = useCallback(
+    (pageId: string, e: ReactPointerEvent) => {
+      if (pageId === STORY_GRAPH_START_NODE_ID) {
+        onSelectPageIds([]);
+        return;
+      }
+      if (e.shiftKey) {
+        const set = new Set(selectedPageIds);
+        if (set.has(pageId)) set.delete(pageId);
+        else set.add(pageId);
+        onSelectPageIds([...set]);
+      } else {
+        onSelectPageIds([pageId]);
+      }
+    },
+    [selectedPageIds, onSelectPageIds]
+  );
+
+  const onViewportPointerDown = useCallback(
+    (e: ReactPointerEvent) => {
+      if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
+      if ((e.target as HTMLElement).closest("[data-distant-edge-chip]"))
+        return;
+      try {
+        window.getSelection()?.removeAllRanges();
+      } catch {
+        /* ignore */
+      }
+      const vp = viewportRef.current;
+      if (e.shiftKey && vp) {
+        const r = vp.getBoundingClientRect();
+        marqueeDragRef.current = {
+          cx0: e.clientX,
+          cy0: e.clientY,
+          cx1: e.clientX,
+          cy1: e.clientY,
+        };
+        setMarqueeRect({
+          left: e.clientX - r.left,
+          top: e.clientY - r.top,
+          width: 0,
+          height: 0,
+        });
+        e.currentTarget.setPointerCapture(e.pointerId);
+        return;
+      }
+      panRef.current = {
+        sx: e.clientX,
+        sy: e.clientY,
+        px: pan.x,
+        py: pan.y,
+        moved: false,
+      };
+      setPanning(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [pan.x, pan.y]
+  );
 
   const onViewportPointerMove = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
+      const m = marqueeDragRef.current;
+      if (m) {
+        m.cx1 = e.clientX;
+        m.cy1 = e.clientY;
+        const vp = viewportRef.current;
+        if (vp) {
+          const r = vp.getBoundingClientRect();
+          setMarqueeRect({
+            left: Math.min(m.cx0, m.cx1) - r.left,
+            top: Math.min(m.cy0, m.cy1) - r.top,
+            width: Math.abs(m.cx1 - m.cx0),
+            height: Math.abs(m.cy1 - m.cy0),
+          });
+        }
+        return;
+      }
       const p = panRef.current;
       if (p) {
+        const dx = e.clientX - p.sx;
+        const dy = e.clientY - p.sy;
+        if (
+          !p.moved &&
+          Math.hypot(dx, dy) >= VIEWPORT_CLICK_MOVE_THRESHOLD_PX
+        ) {
+          p.moved = true;
+        }
         setPan({
-          x: p.px + (e.clientX - p.sx),
-          y: p.py + (e.clientY - p.sy),
+          x: p.px + dx,
+          y: p.py + dy,
         });
       }
     },
@@ -479,24 +600,65 @@ export default function StoryCanvas({
 
   const onViewportPointerUp = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
+      const m = marqueeDragRef.current;
+      if (m) {
+        marqueeDragRef.current = null;
+        setMarqueeRect(null);
+        const w = Math.abs(m.cx1 - m.cx0);
+        const h = Math.abs(m.cy1 - m.cy0);
+        if (w >= MARQUEE_MIN_DRAG_PX || h >= MARQUEE_MIN_DRAG_PX) {
+          const sel = {
+            left: Math.min(m.cx0, m.cx1),
+            top: Math.min(m.cy0, m.cy1),
+            right: Math.max(m.cx0, m.cx1),
+            bottom: Math.max(m.cy0, m.cy1),
+          };
+          const hit = new Set<string>();
+          for (const n of nodesWithStart) {
+            if (n.pageId === STORY_GRAPH_START_NODE_ID) continue;
+            const el = cardRootRefs.current.get(n.pageId);
+            if (!el) continue;
+            const cr = el.getBoundingClientRect();
+            if (clientRectsOverlap(sel, cr)) hit.add(n.pageId);
+          }
+          const next = new Set(selectedPageIds);
+          for (const id of hit) next.add(id);
+          onSelectPageIds([...next]);
+        }
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        return;
+      }
+      const p = panRef.current;
+      if (p && !p.moved) {
+        onSelectPageIds([]);
+      }
       panRef.current = null;
       setPanning(false);
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId);
       }
     },
-    []
+    [nodesWithStart, onSelectPageIds, selectedPageIds]
   );
+
+  const singleSelectedScrollTarget =
+    selectedPageIds.length === 1 ? selectedPageIds[0]! : null;
 
   /** Jobb panel / preview alapú kijelölés: a kártya kerüljön a vászon látható területére. */
   useEffect(() => {
-    if (!selectedPageId || selectedPageId === STORY_GRAPH_START_NODE_ID) return;
+    if (
+      !singleSelectedScrollTarget ||
+      singleSelectedScrollTarget === STORY_GRAPH_START_NODE_ID
+    )
+      return;
 
     let cancelled = false;
     let innerRaf = 0;
     const run = () => {
       if (cancelled) return;
-      const cardEl = cardRootRefs.current.get(selectedPageId);
+      const cardEl = cardRootRefs.current.get(singleSelectedScrollTarget);
       const vp = viewportRef.current;
       if (!cardEl || !vp) return;
       const cr = cardEl.getBoundingClientRect();
@@ -521,7 +683,7 @@ export default function StoryCanvas({
       cancelAnimationFrame(outerRaf);
       cancelAnimationFrame(innerRaf);
     };
-  }, [selectedPageId, zoom, canvasH]);
+  }, [singleSelectedScrollTarget, zoom, canvasH]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -581,10 +743,16 @@ export default function StoryCanvas({
 
   const onAddPageForCategory = useCallback(
     (category: EditorPageCategory) => {
-      const page = buildEmptyPageForCategory(category, draftStory);
+      let base = draftStory;
+      for (const pid of collectStoryPageIds(base)) {
+        if (isEditorPendingPageId(pid)) {
+          base = removePageFromStory(base, pid);
+        }
+      }
+      const page = buildEmptyPageForCategory(category, base);
       const id = typeof page.id === "string" ? page.id : "";
       if (!id) return;
-      const storyWithPage = appendPageToStory(draftStory, page);
+      const storyWithPage = appendPageToStory(base, page);
       const start =
         layoutRef.current.nodes[STORY_GRAPH_START_NODE_ID] ?? {
           x: -EDITOR_LAYOUT_COL_STEP_PX,
@@ -607,9 +775,10 @@ export default function StoryCanvas({
         nodes: { ...layoutRef.current.nodes, [id]: position },
       };
       onStoryChange(applyEditorLayout(storyWithPage, nextLayout));
-      onSelectPage(id);
+      onSelectPageIds([id]);
+      onPendingPageCreated?.();
     },
-    [draftStory, onStoryChange, onSelectPage]
+    [draftStory, onStoryChange, onSelectPageIds, onPendingPageCreated]
   );
 
   const onResizeDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
@@ -658,7 +827,7 @@ export default function StoryCanvas({
     <div className={s.viewportColumn}>
       <div
         ref={viewportRef}
-        className={`${s.viewport} ${panning ? s.viewportPanning : ""}`}
+        className={`${s.viewport} ${panning ? s.viewportPanning : ""} ${marqueeRect !== null ? s.viewportMarquee : ""}`}
         style={{
           height: Math.max(canvasH, MIN_CANVAS_VIEWPORT_PX),
         }}
@@ -678,7 +847,7 @@ export default function StoryCanvas({
           <StoryEdges ops={edgeOps} />
           <StoryDistantEdgeLines
             bundles={distantBundles}
-            selectedPageId={selectedPageId}
+            selectedPageIds={selectedPageIds}
             hoveredKey={hoveredDistantKey}
             inboundYByKey={distantInboundYByKey}
           />
@@ -704,7 +873,7 @@ export default function StoryCanvas({
                     n.pageId
                   )}
                   distantOutgoingEdgeIds={distantEdgeIdSet}
-                  selected={selectedPageId === n.pageId}
+                  selected={selectedPageIds.includes(n.pageId)}
                   domRef={getCardRootRef(n.pageId)}
                   issues={issues}
                   stackZ={
@@ -717,16 +886,24 @@ export default function StoryCanvas({
                       ? undefined
                       : editorPageMilestoneActive(draftStory, n.pageId)
                   }
-                  onSelect={() =>
-                    onSelectPage(
-                      n.pageId === STORY_GRAPH_START_NODE_ID ? null : n.pageId
-                    )
+                  onBodyPointerDown={(e) =>
+                    onCanvasCardBodyPointerDown(n.pageId, e)
+                  }
+                  onSelectSingleForA11y={() =>
+                    n.pageId === STORY_GRAPH_START_NODE_ID
+                      ? onSelectPageIds([])
+                      : onSelectPageIds([n.pageId])
                   }
                   onDragStart={(e) => onCardDragStart(n.pageId, e)}
                   onRequestDelete={
                     n.pageId === STORY_GRAPH_START_NODE_ID || !onDeletePage
                       ? undefined
                       : () => onDeletePage(n.pageId)
+                  }
+                  onRenamePageId={
+                    n.pageId === STORY_GRAPH_START_NODE_ID || !onRenamePageId
+                      ? undefined
+                      : onRenamePageId
                   }
                 />
               </div>
@@ -738,6 +915,19 @@ export default function StoryCanvas({
             inboundYByKey={distantInboundYByKey}
           />
         </div>
+        {marqueeRect ? (
+          <div className={s.marqueeOverlay} aria-hidden>
+            <div
+              className={s.marqueeBox}
+              style={{
+                left: marqueeRect.left,
+                top: marqueeRect.top,
+                width: marqueeRect.width,
+                height: marqueeRect.height,
+              }}
+            />
+          </div>
+        ) : null}
       </div>
       <div
         className={s.resizeHandle}
@@ -875,10 +1065,10 @@ export default function StoryCanvas({
                         <button
                           key={p.id}
                           type="button"
-                          className={`${s.categoryStripChip} ${selectedPageId === p.id ? s.categoryStripChipSelected : ""}`}
+                          className={`${s.categoryStripChip} ${selectedPageIds.includes(p.id) ? s.categoryStripChipSelected : ""}`}
                           title={p.id}
                           onClick={() => {
-                            onSelectPage(p.id);
+                            onSelectPageIds([p.id]);
                             setOpenCategory(null);
                           }}
                         >

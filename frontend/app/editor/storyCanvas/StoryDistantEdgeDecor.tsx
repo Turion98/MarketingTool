@@ -21,16 +21,19 @@ function shortId(id: string, max = 14): string {
 export function distantBundleActive(
   b: DistantEdgeBundle,
   hoveredKey: string | null,
-  selectedPageId: string | null
+  selectedPageIds: readonly string[]
 ): boolean {
   if (hoveredKey === b.key) return true;
-  if (!selectedPageId) return false;
-  return b.fromPageId === selectedPageId || b.toPageId === selectedPageId;
+  if (!selectedPageIds.length) return false;
+  return (
+    selectedPageIds.includes(b.fromPageId) ||
+    selectedPageIds.includes(b.toPageId)
+  );
 }
 
 type LinesProps = {
   bundles: DistantEdgeBundle[];
-  selectedPageId: string | null;
+  selectedPageIds: readonly string[];
   hoveredKey: string | null;
   /** Bemeneti oldali Y a címkékkel egyezően (függőleges csomagolás). */
   inboundYByKey: Map<string, number>;
@@ -39,7 +42,7 @@ type LinesProps = {
 /** Kártyák alatt (z-index 1): távoli él vonalai csak hover / kijelölés. */
 export function StoryDistantEdgeLines({
   bundles,
-  selectedPageId,
+  selectedPageIds,
   hoveredKey,
   inboundYByKey,
 }: LinesProps) {
@@ -48,7 +51,7 @@ export function StoryDistantEdgeLines({
   return (
     <svg className={s.distantEdgeLinesSvg} aria-hidden>
       {bundles.map((b) => {
-        const active = distantBundleActive(b, hoveredKey, selectedPageId);
+        const active = distantBundleActive(b, hoveredKey, selectedPageIds);
         const opacity = active ? 1 : 0;
         const dash = dashForKind(b.kind);
         const lineStyle = {

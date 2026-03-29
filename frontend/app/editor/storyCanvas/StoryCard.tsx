@@ -1,6 +1,14 @@
 "use client";
 
-import type { Ref } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type Ref,
+} from "react";
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import {
@@ -25,6 +33,7 @@ import {
   outPortY,
   slotCount,
 } from "./storyCanvasGeometry";
+import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import s from "./storyCanvas.module.scss";
 
 type StoryCardProps = {
@@ -41,14 +50,17 @@ type StoryCardProps = {
   stackZ?: number;
   /** Csak nem-kezdő kártyán; megerősítés a szülőben. */
   onRequestDelete?: () => void;
-  onSelect: () => void;
-  onDragStart: (e: React.PointerEvent) => void;
+  onBodyPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
+  onSelectSingleForA11y?: () => void;
+  onDragStart: (e: ReactPointerEvent<HTMLDivElement>) => void;
   /** Vászon: kijelöléskor a kártya DOM-ja (láthatóság / pan). */
   domRef?: Ref<HTMLDivElement | null>;
   /** Bemeneti kötegenként: false = csak távoli él, ne legyen szürke portpont. */
   incomingPortDotVisible?: boolean[];
   /** Kimenő él id-k, amikhez ne rajzoljunk jobb oldali portpontot (távoli bekötés). */
   distantOutgoingEdgeIds?: Set<string>;
+  /** Dupla kattintás a fejlécben: oldal-ID; `null` = siker. */
+  onRenamePageId?: (fromId: string, toId: string) => string | null;
 };
 
 export default function StoryCard({
@@ -62,12 +74,19 @@ export default function StoryCard({
   milestoneActive,
   stackZ,
   onRequestDelete,
-  onSelect,
+  onBodyPointerDown,
+  onSelectSingleForA11y,
   onDragStart,
   domRef,
   incomingPortDotVisible,
   distantOutgoingEdgeIds,
+  onRenamePageId,
 }: StoryCardProps) {
+  const [idEdit, setIdEdit] = useState(false);
+  const [draftId, setDraftId] = useState("");
+  const [renameErr, setRenameErr] = useState<string | null>(null);
+  const idInputRef = useRef<HTMLInputElement>(null);
+
   const ord = orderedOutgoingEdges(node.pageId, outgoing);
   const { w, h } = cardDimensions(node, ord);
   const rows = slotCount(node, ord);
@@ -97,10 +116,82 @@ export default function StoryCard({
   const showMilestoneOrb =
     !isStart && !isEditorLogicPage(raw) && milestoneOn;
 
+  const pendingPage = !isStart && isEditorPendingPageId(node.pageId);
+
+  useEffect(() => {
+    if (!idEdit || !idInputRef.current) return;
+    idInputRef.current.focus();
+    if (!pendingPage) idInputRef.current.select();
+  }, [idEdit, pendingPage]);
+
+  const cancelIdEdit = useCallback(() => {
+    setIdEdit(false);
+    setRenameErr(null);
+  }, []);
+
+  const tryCommitId = useCallback(() => {
+    if (!onRenamePageId || !idEdit) return;
+    const trimmed = draftId.trim();
+    if (pendingPage) {
+      if (!trimmed) {
+        cancelIdEdit();
+        return;
+      }
+    } else {
+      if (!trimmed) {
+        setRenameErr("Az oldalazonosító nem lehet üres.");
+        return;
+      }
+      if (trimmed === node.pageId) {
+        cancelIdEdit();
+        return;
+      }
+    }
+    const err = onRenamePageId(node.pageId, trimmed);
+    if (err) setRenameErr(err);
+    else {
+      setIdEdit(false);
+      setRenameErr(null);
+    }
+  }, [
+    cancelIdEdit,
+    draftId,
+    idEdit,
+    node.pageId,
+    onRenamePageId,
+    pendingPage,
+  ]);
+
+  const beginIdEdit = useCallback(
+    (e: ReactMouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (isStart || !onRenamePageId) return;
+      setRenameErr(null);
+      setDraftId(pendingPage ? "" : node.pageId);
+      setIdEdit(true);
+    },
+    [isStart, node.pageId, onRenamePageId, pendingPage]
+  );
+
+  const lastAutoOpenPendingKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pendingPage) {
+      lastAutoOpenPendingKey.current = null;
+      return;
+    }
+    if (!selected || !onRenamePageId) return;
+    if (lastAutoOpenPendingKey.current === node.pageId) return;
+    lastAutoOpenPendingKey.current = node.pageId;
+    setRenameErr(null);
+    setDraftId("");
+    setIdEdit(true);
+  }, [pendingPage, selected, onRenamePageId, node.pageId]);
+
   return (
     <div
       ref={domRef}
-      className={`${s.card} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""}`}
+      className={`${s.card} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""} ${pendingPage ? s.cardNeedsPageId : ""}`}
       style={{
         left: x,
         top: y,
@@ -110,13 +201,17 @@ export default function StoryCard({
           ? { zIndex: stackZ }
           : {}),
       }}
-      role="button"
-      tabIndex={0}
+      role={idEdit ? undefined : "button"}
+      tabIndex={idEdit ? -1 : 0}
       onKeyDown={(e) => {
+        if (idEdit) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect();
+          onSelectSingleForA11y?.();
         }
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
       }}
     >
       {showMilestoneOrb ? (
@@ -144,9 +239,24 @@ export default function StoryCard({
 
       <div
         className={s.cardDragStrip}
-        title="Húzd az áthelyezéshez"
+        title={
+          pendingPage
+            ? "Dupla katt az ID mezőn — kötelező. Máshol húzd az áthelyezéshez."
+            : "Húzd az áthelyezéshez (az ID sávon dupla katt: szerkesztés)"
+        }
         onPointerDown={(e) => {
+          if (
+            (e.target as HTMLElement).closest("[data-card-id-zone]")
+          ) {
+            e.stopPropagation();
+            if (e.shiftKey) onBodyPointerDown(e);
+            return;
+          }
           e.stopPropagation();
+          if (e.shiftKey) {
+            onBodyPointerDown(e);
+            return;
+          }
           e.preventDefault();
           onDragStart(e);
         }}
@@ -156,26 +266,94 @@ export default function StoryCard({
             <span className={s.cardStartLabel}>Kezdőpont</span>
           </div>
         ) : (
-          <div className={s.cardRow1}>
-            <span className={s.cardId}>{node.pageId}</span>
+          <div
+            className={s.cardRow1}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if ((e.target as HTMLElement).closest("button")) return;
+              beginIdEdit(e);
+            }}
+          >
+            <div
+              className={s.cardIdZone}
+              data-card-id-zone="1"
+              title={
+                onRenamePageId
+                  ? pendingPage
+                    ? "Kattints vagy dupla katt — egyedi ID megadása (kötelező)"
+                    : "Dupla kattintás: oldalazonosító szerkesztése"
+                  : undefined
+              }
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!onRenamePageId || idEdit || isStart) return;
+                if (pendingPage) {
+                  setRenameErr(null);
+                  setDraftId("");
+                  setIdEdit(true);
+                }
+              }}
+            >
+              {idEdit ? (
+                <input
+                  ref={idInputRef}
+                  className={s.cardIdInput}
+                  value={draftId}
+                  aria-label="Oldalazonosító"
+                  aria-invalid={renameErr ? true : undefined}
+                  title={renameErr ?? undefined}
+                  spellCheck={false}
+                  autoComplete="off"
+                  placeholder={pendingPage ? "pl. chapter_2_a" : undefined}
+                  onChange={(e) => {
+                    setDraftId(e.target.value);
+                    setRenameErr(null);
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      tryCommitId();
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelIdEdit();
+                    }
+                  }}
+                  onBlur={() => {
+                    window.setTimeout(() => tryCommitId(), 0);
+                  }}
+                />
+              ) : (
+                <span
+                  className={`${s.cardId} ${pendingPage ? s.cardIdMuted : ""}`}
+                >
+                  {pendingPage ? "új oldal — ID kötelező" : node.pageId}
+                </span>
+              )}
+            </div>
             <span className={s.cardCat}>{catLabel}</span>
             {onRequestDelete ? (
-              <button
-                type="button"
-                className={s.cardDeleteBtn}
-                aria-label="Oldal törlése"
-                title="Oldal törlése"
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRequestDelete();
-                }}
-              >
-                ×
-              </button>
+              <div className={s.cardHeaderRight}>
+                <button
+                  type="button"
+                  className={s.cardDeleteBtn}
+                  aria-label="Oldal törlése"
+                  title="Oldal törlése"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRequestDelete();
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             ) : null}
           </div>
         )}
@@ -185,7 +363,7 @@ export default function StoryCard({
         className={s.cardBody}
         onPointerDown={(e) => {
           e.stopPropagation();
-          onSelect();
+          onBodyPointerDown(e);
         }}
       >
         {isStart ? (

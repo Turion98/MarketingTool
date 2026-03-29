@@ -366,6 +366,25 @@
   cursor: grabbing;
 }
 
+.viewportMarquee {
+  cursor: crosshair;
+}
+
+.marqueeOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.marqueeBox {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed rgba(139, 168, 255, 0.9);
+  background: rgba(139, 168, 255, 0.1);
+  border-radius: 3px;
+}
+
 .world {
   position: absolute;
   left: 0;
@@ -392,12 +411,19 @@
   box-shadow: 0 0 0 1px rgba(139, 168, 255, 0.35);
 }
 
+/** Új oldal: még nincs végleges oldal-ID (szerkesztői függő). */
+.cardNeedsPageId {
+  border-color: rgba(251, 191, 36, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.35),
+    0 0 12px rgba(251, 191, 36, 0.12);
+}
+
 .cardInvalid {
   border-color: rgba(248, 113, 113, 0.55);
 }
 
 .cardDeleteBtn {
-  margin-left: auto;
   flex-shrink: 0;
   width: 1.35rem;
   height: 1.35rem;
@@ -420,7 +446,8 @@
 .milestoneOrb {
   position: absolute;
   top: 7px;
-  right: 9px;
+  /* Ne takarja a fejléc jobb szélén lévő törlés gombot */
+  right: 26px;
   z-index: 2;
   width: 9px;
   height: 9px;
@@ -459,8 +486,10 @@
 /* storyCanvasGeometry: HEADER_H */
 .cardDragStrip {
   flex-shrink: 0;
+  align-self: stretch;
+  width: 100%;
   height: 32px;
-  padding: 0 7px;
+  padding: 0 4px 0 7px;
   cursor: grab;
   touch-action: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -468,6 +497,8 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  /* Egy soros fejléc: ID input ne nyisson második „kockát” alatta */
+  overflow: hidden;
 }
 
 .cardDragStrip:active {
@@ -491,26 +522,83 @@
 
 .cardRow1 {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 0.15rem;
   min-width: 0;
+  width: 100%;
+  flex: 1;
+}
+
+.cardIdZone {
+  flex: 1 1 42%;
+  min-width: 4.5rem;
+  max-width: 58%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  cursor: text;
 }
 
 .cardId {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  max-width: 38%;
   min-width: 0;
   font-weight: 700;
   font-size: 0.78rem;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardIdMuted {
+  font-weight: 600;
+  font-style: italic;
+  opacity: 0.88;
+  max-width: 100%;
+}
+
+.cardIdInput {
+  display: block;
+  width: 100%;
+  min-width: 3.5rem;
+  height: 22px;
+  line-height: 22px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(139, 168, 255, 0.65);
+  background: rgba(18, 22, 38, 1);
+  color: #e8ecf4;
+  caret-color: #e8ecf4;
+  box-sizing: border-box;
+}
+
+.cardIdInput::placeholder {
+  color: rgba(232, 236, 244, 0.42);
 }
 
 .cardCat {
-  font-size: 0.62rem;
-  opacity: 0.7;
-  flex-shrink: 0;
-  max-width: 38%;
-  text-align: right;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 0.66rem;
+  opacity: 0.78;
+  text-align: center;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardHeaderRight {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .cardRow2 {
