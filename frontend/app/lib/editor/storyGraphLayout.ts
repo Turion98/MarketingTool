@@ -3,6 +3,7 @@
 import type { StoryGraphEdge } from "./storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
 import { getEditorCanvasClustersEffective } from "./editorCanvasCluster";
+import { computeStructuredLayoutWithStartNode } from "./editorGraphAutoLayout";
 
 export type EditorLayoutNode = { x: number; y: number; z?: number };
 export type EditorLayoutState = {
@@ -13,8 +14,12 @@ export type EditorLayoutState = {
 const LAYOUT_VERSION = 1 as const;
 const DEFAULT_CARD_W = 200;
 const DEFAULT_CARD_H = 112;
-const COL_GAP = 56;
+/** Oszlopok közötti vízszintes rés (egyezzen az editorGraphAutoLayout COL_GAP-pal). */
+const COL_GAP = 88;
 const ROW_GAP = 32;
+
+/** Kártya szélesség + oszlop-rés — vászon koordináták, új oldal a start mellett stb. */
+export const EDITOR_LAYOUT_COL_STEP_PX = DEFAULT_CARD_W + COL_GAP;
 /** Egyeznie kell a vászon `CARD_W`-val (200). */
 const CLUSTER_CARD_W = 200;
 /** Riddle-csoport: kártyák között a vásznon. */
@@ -74,81 +79,43 @@ export function mergeEditorLayoutIntoStory(
 }
 
 /**
- * BFS from start page + virtual start node; assign columns by depth, rows within column.
+ * Oszlop: BFS mélység; függőleges: piramis (rétegenként kompakt sorok), sorrend layout-fa DFS preorder.
  */
 export function computeDefaultLayout(input: {
   pageIds: string[];
   edges: StoryGraphEdge[];
   startPageId: string | null;
 }): EditorLayoutState {
-  const { pageIds, edges, startPageId } = input;
-  const idSet = new Set(pageIds);
+  const nodes = computeStructuredLayoutWithStartNode({
+    pageIds: input.pageIds,
+    edges: input.edges,
+    startPageId: input.startPageId,
+  });
+  return { version: LAYOUT_VERSION, nodes };
+}
 
-  const adj = new Map<string, string[]>();
-  for (const e of edges) {
-    if (e.from === STORY_GRAPH_START_NODE_ID) continue;
-    if (!idSet.has(e.from) || !idSet.has(e.to)) continue;
-    const list = adj.get(e.from) ?? [];
-    list.push(e.to);
-    adj.set(e.from, list);
-  }
-
-  const roots: string[] = [];
-  if (startPageId && idSet.has(startPageId)) {
-    roots.push(startPageId);
-  } else if (pageIds.length) {
-    roots.push(pageIds[0]!);
-  }
-
-  const depth = new Map<string, number>();
-  const queue: string[] = [...roots];
-  for (const r of roots) depth.set(r, 0);
-
-  while (queue.length) {
-    const u = queue.shift()!;
-    const d = depth.get(u) ?? 0;
-    for (const v of adj.get(u) ?? []) {
-      if (depth.has(v)) continue;
-      depth.set(v, d + 1);
-      queue.push(v);
+/**
+ * Mentett pozíciók figyelmen kívül hagyása: újraszámolás + cluster pack;
+ * a régi `z` rétegsorrend megmarad, ahol volt.
+ */
+export function recomputeEditorLayoutForStory(
+  story: Record<string, unknown>,
+  pageIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null
+): EditorLayoutState {
+  const computed = computeDefaultLayout({ pageIds, edges, startPageId });
+  const packed = applyClusterHorizontalPacks(story, { ...computed.nodes }, pageIds);
+  const saved = readEditorLayoutFromStory(story);
+  if (!saved) return { version: LAYOUT_VERSION, nodes: packed };
+  const nextNodes: Record<string, EditorLayoutNode> = { ...packed };
+  for (const id of Object.keys(nextNodes)) {
+    const z = saved.nodes[id]?.z;
+    if (z !== undefined && Number.isFinite(z)) {
+      nextNodes[id] = { ...nextNodes[id], z };
     }
   }
-
-  for (const id of pageIds) {
-    if (!depth.has(id)) depth.set(id, 0);
-  }
-
-  const byCol = new Map<number, string[]>();
-  for (const id of pageIds) {
-    const c = depth.get(id) ?? 0;
-    const col = byCol.get(c) ?? [];
-    col.push(id);
-    byCol.set(c, col);
-  }
-
-  const nodes: Record<string, EditorLayoutNode> = {};
-  const sortedCols = Array.from(byCol.keys()).sort((a, b) => a - b);
-
-  let maxRow = 0;
-  sortedCols.forEach((colIndex, ci) => {
-    const row = byCol.get(colIndex) ?? [];
-    row.sort();
-    row.forEach((id, ri) => {
-      nodes[id] = {
-        x: ci * (DEFAULT_CARD_W + COL_GAP),
-        y: ri * (DEFAULT_CARD_H + ROW_GAP),
-      };
-      maxRow = Math.max(maxRow, ri);
-    });
-  });
-
-  const startY = Math.max(0, (maxRow * (DEFAULT_CARD_H + ROW_GAP)) / 2 - 24);
-  nodes[STORY_GRAPH_START_NODE_ID] = {
-    x: -DEFAULT_CARD_W - COL_GAP,
-    y: startY,
-  };
-
-  return { version: LAYOUT_VERSION, nodes };
+  return { version: LAYOUT_VERSION, nodes: nextNodes };
 }
 
 function applyClusterHorizontalPacks(
