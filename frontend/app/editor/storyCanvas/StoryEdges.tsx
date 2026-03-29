@@ -6,7 +6,11 @@ import {
   filterOutClusterInternalEdges,
   findClusterForTopIngress,
 } from "@/app/lib/editor/editorCanvasCluster";
-import type { StoryGraphEdge, StoryGraphEdgeKind } from "@/app/lib/editor/storyGraph";
+import {
+  STORY_GRAPH_START_NODE_ID,
+  type StoryGraphEdge,
+  type StoryGraphEdgeKind,
+} from "@/app/lib/editor/storyGraph";
 
 export type EdgeDrawOp =
   | {
@@ -26,6 +30,27 @@ export type EdgeDrawOp =
     };
 
 const MERGE_INSET = 14;
+
+/** Cél balra a forrás kimenetéhez képest → távoli / vissza él (world px). */
+export const DISTANT_EDGE_EPS = 16;
+
+export type DistantEdgeBundle = {
+  key: string;
+  fromPageId: string;
+  toPageId: string;
+  kind: StoryGraphEdgeKind;
+  drawMode: "line" | "path";
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  pathD?: string;
+  /** Merge ág: kimeneti címke a függőleges busznál. */
+  mergeX?: number;
+  yMid?: number;
+  y1s?: number[];
+  edgeIds: string[];
+};
 
 function strokeForKind(k: StoryGraphEdgeKind): string {
   switch (k) {
@@ -119,7 +144,7 @@ export default function StoryEdges({ ops }: { ops: EdgeDrawOp[] }) {
   );
 }
 
-type WorldNode = {
+export type WorldMetricsNode = {
   x: number;
   y: number;
   w: number;
@@ -128,12 +153,17 @@ type WorldNode = {
   inSlotY: Map<string, number>;
 };
 
+function isDistantEdge(x1: number, x2: number, fromPageId: string): boolean {
+  if (fromPageId === STORY_GRAPH_START_NODE_ID) return false;
+  return x2 < x1 - DISTANT_EDGE_EPS;
+}
+
 /** Csoportosítás: azonos forrás + azonos cél → egy összefutó köteg. */
-export function buildEdgeDrawOps(input: {
+export function buildEdgeLayers(input: {
   edges: StoryGraphEdge[];
-  world: Map<string, WorldNode>;
+  world: Map<string, WorldMetricsNode>;
   clusters?: EditorCanvasCluster[];
-}): EdgeDrawOp[] {
+}): { localOps: EdgeDrawOp[]; distantBundles: DistantEdgeBundle[] } {
   const clusters = input.clusters ?? [];
   const edges =
     clusters.length > 0
@@ -151,7 +181,8 @@ export function buildEdgeDrawOps(input: {
   const sorted = Array.from(groups.entries()).sort(([a], [b]) =>
     a.localeCompare(b)
   );
-  const out: EdgeDrawOp[] = [];
+  const localOps: EdgeDrawOp[] = [];
+  const distantBundles: DistantEdgeBundle[] = [];
 
   for (const [, group] of sorted) {
     group.sort((a, b) => a.id.localeCompare(b.id));
@@ -174,15 +205,31 @@ export function buildEdgeDrawOps(input: {
         ? ingress.top
         : b.y + (b.inSlotY.get(e.id) ?? b.h / 2);
       const x2 = ingress ? ingress.cx : b.x;
-      out.push({
-        type: "line",
-        key: e.id,
-        x1,
-        y1,
-        x2,
-        y2,
-        kind: e.kind,
-      });
+
+      if (isDistantEdge(x1, x2, e0.from)) {
+        distantBundles.push({
+          key: e.id,
+          fromPageId: e0.from,
+          toPageId: e0.to,
+          kind: e.kind,
+          drawMode: "line",
+          x1,
+          y1,
+          x2,
+          y2,
+          edgeIds: [e.id],
+        });
+      } else {
+        localOps.push({
+          type: "line",
+          key: e.id,
+          x1,
+          y1,
+          x2,
+          y2,
+          kind: e.kind,
+        });
+      }
       continue;
     }
 
@@ -193,13 +240,46 @@ export function buildEdgeDrawOps(input: {
       (e) => a.y + (a.outSlotY.get(e.id) ?? a.h / 2)
     );
     const y2 = b.y + (b.inSlotY.get(e0.id) ?? b.h / 2);
-    out.push({
-      type: "path",
-      key: `merge:${e0.from}>${e0.to}`,
-      d: mergePathD(x1, mergeX, x2, y1s, y2),
-      kind,
-    });
+    const ymin = Math.min(...y1s);
+    const ymax = Math.max(...y1s);
+    const yMid = (ymin + ymax) / 2;
+    const pathD = mergePathD(x1, mergeX, x2, y1s, y2);
+    const edgeIds = group.map((e) => e.id);
+
+    if (isDistantEdge(x1, x2, e0.from)) {
+      distantBundles.push({
+        key: `merge:${e0.from}>${e0.to}`,
+        fromPageId: e0.from,
+        toPageId: e0.to,
+        kind,
+        drawMode: "path",
+        x1,
+        y1: yMid,
+        x2,
+        y2,
+        pathD,
+        mergeX,
+        yMid,
+        y1s,
+        edgeIds,
+      });
+    } else {
+      localOps.push({
+        type: "path",
+        key: `merge:${e0.from}>${e0.to}`,
+        d: pathD,
+        kind,
+      });
+    }
   }
 
-  return out;
+  return { localOps, distantBundles };
+}
+
+export function buildEdgeDrawOps(input: {
+  edges: StoryGraphEdge[];
+  world: Map<string, WorldMetricsNode>;
+  clusters?: EditorCanvasCluster[];
+}): EdgeDrawOp[] {
+  return buildEdgeLayers(input).localOps;
 }
