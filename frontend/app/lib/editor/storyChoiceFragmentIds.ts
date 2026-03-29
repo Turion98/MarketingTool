@@ -1,6 +1,7 @@
 "use client";
 
 import { canonicalMilestoneFragmentId } from "../milestoneFragmentId";
+import { findPageInStoryDocument } from "./findPageInStory";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -65,7 +66,9 @@ export function collectMilestoneDoneIdsFromStory(
   const set = new Set<string>();
   visitAllPages(story, (o) => {
     const id = typeof o.id === "string" ? o.id.trim() : "";
-    if (id && o.saveMilestone === true) set.add(`${id}_DONE`);
+    if (id && o.saveMilestone === true) {
+      set.add(canonicalMilestoneFragmentId(`${id}_DONE`));
+    }
   });
   const bank = asRecord(story.fragments);
   if (bank) {
@@ -75,6 +78,53 @@ export function collectMilestoneDoneIdsFromStory(
     }
   }
   return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Szerkesztő: milestone aktív, ha `saveMilestone` be van állítva VAGY a fragment bankban
+ * létezik a kanonikus `{pageId}_DONE` kulcs (JSON és UI szinkronban marad).
+ */
+function pageUnlocksSelfDoneViaChoiceReward(
+  page: Record<string, unknown> | null,
+  pageId: string
+): boolean {
+  if (!page) return false;
+  const selfDone = canonicalMilestoneFragmentId(`${pageId}_DONE`);
+  const choices = Array.isArray(page.choices) ? page.choices : [];
+  for (const ch of choices) {
+    const c = asRecord(ch);
+    const r = asRecord(c?.reward);
+    const uf = Array.isArray(r?.unlockFragments) ? r.unlockFragments : [];
+    for (const x of uf) {
+      if (typeof x === "string" && canonicalMilestoneFragmentId(x.trim()) === selfDone) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function editorPageMilestoneActive(
+  story: Record<string, unknown>,
+  pageId: string | null | undefined
+): boolean {
+  const pid = typeof pageId === "string" ? pageId.trim() : "";
+  if (!pid) return false;
+  const page = findPageInStoryDocument(story, pid) as Record<
+    string,
+    unknown
+  > | null;
+  if (page?.saveMilestone === true) {
+    return true;
+  }
+  if (pageUnlocksSelfDoneViaChoiceReward(page, pid)) {
+    return false;
+  }
+  const key = `${pid}_DONE`;
+  const canon = canonicalMilestoneFragmentId(key);
+  const bank = asRecord(story.fragments);
+  if (!bank) return false;
+  return bank[canon] !== undefined || bank[key] !== undefined;
 }
 
 export type FragmentPicklistSections = {

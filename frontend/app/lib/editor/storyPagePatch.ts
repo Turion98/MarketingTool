@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  collectStoryPageIds,
+  getStartPageIdFromStory,
+} from "./findPageInStory";
 import { mergeEditorLayoutIntoStory, type EditorLayoutState } from "./storyGraphLayout";
 
 function clone<T>(v: T): T {
@@ -95,5 +99,58 @@ export function setMetaStartPageId(
   const next = clone(story);
   const meta = asRecord(next.meta) ?? {};
   next.meta = { ...meta, startPageId };
+  return next;
+}
+
+/** Eltávolítja az oldalt a `pages` tömbből/objektumból, a layoutból; ha ez volt a kezdő, új kezdőt állít. */
+export function removePageFromStory(
+  story: Record<string, unknown>,
+  pageId: string
+): Record<string, unknown> {
+  const id = pageId.trim();
+  if (!id) return story;
+  const next = clone(story);
+  const pages = next.pages;
+
+  if (Array.isArray(pages)) {
+    next.pages = pages.filter((p) => {
+      const r = asRecord(p);
+      return !r || r.id !== id;
+    });
+  } else if (pages && typeof pages === "object" && !Array.isArray(pages)) {
+    const dict = { ...(pages as Record<string, unknown>) };
+    delete dict[id];
+    next.pages = dict;
+  }
+
+  const meta = asRecord(next.meta) ?? {};
+  const layoutWrap = asRecord(meta.editorLayout);
+  if (layoutWrap && layoutWrap.version === 1) {
+    const nodesRaw = layoutWrap.nodes;
+    if (nodesRaw && typeof nodesRaw === "object" && !Array.isArray(nodesRaw)) {
+      const nodes = { ...(nodesRaw as Record<string, unknown>) };
+      delete nodes[id];
+      next.meta = {
+        ...meta,
+        editorLayout: {
+          ...layoutWrap,
+          nodes,
+        },
+      };
+    }
+  }
+
+  const start = getStartPageIdFromStory(next);
+  if (start === id) {
+    const ids = collectStoryPageIds(next);
+    const nextMeta = { ...(asRecord(next.meta) ?? {}) };
+    if (ids.length > 0) {
+      nextMeta.startPageId = ids[0]!;
+    } else {
+      delete nextMeta.startPageId;
+    }
+    next.meta = nextMeta;
+  }
+
   return next;
 }

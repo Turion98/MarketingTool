@@ -4,7 +4,7 @@ import type { StoryGraphEdge } from "./storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
 import { getEditorCanvasClustersEffective } from "./editorCanvasCluster";
 
-export type EditorLayoutNode = { x: number; y: number };
+export type EditorLayoutNode = { x: number; y: number; z?: number };
 export type EditorLayoutState = {
   version: 1;
   nodes: Record<string, EditorLayoutNode>;
@@ -49,7 +49,10 @@ export function readEditorLayoutFromStory(
     const x = typeof o.x === "number" ? o.x : Number(o.x);
     const y = typeof o.y === "number" ? o.y : Number(o.y);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    nodes[k] = { x, y };
+    const zRaw = o.z;
+    const z =
+      typeof zRaw === "number" && Number.isFinite(zRaw) ? zRaw : undefined;
+    nodes[k] = z !== undefined ? { x, y, z } : { x, y };
   }
   return Object.keys(nodes).length ? { version: LAYOUT_VERSION, nodes } : null;
 }
@@ -173,7 +176,7 @@ function applyClusterHorizontalPacks(
       let x = base.x;
       const y = base.y;
       for (const id of row) {
-        next[id] = { x, y };
+        next[id] = { ...next[id], x, y };
         x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
       }
       continue;
@@ -186,7 +189,7 @@ function applyClusterHorizontalPacks(
       let x = base.x;
       const y = base.y;
       for (const id of row) {
-        next[id] = { x, y };
+        next[id] = { ...next[id], x, y };
         x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
       }
       const n = row.length;
@@ -194,6 +197,7 @@ function applyClusterHorizontalPacks(
       const rowRight = next[row[n - 1]!]!.x + CLUSTER_CARD_W;
       const midX = (rowLeft + rowRight) / 2;
       next[retryId] = {
+        ...next[retryId],
         x: midX - CLUSTER_CARD_W / 2,
         y: y - CLUSTER_GAP_ABOVE_RETRY - CLUSTER_RETRY_EST_H,
       };
@@ -208,7 +212,7 @@ function applyClusterHorizontalPacks(
     let xm = baseM.x;
     const ym = baseM.y;
     for (const id of members) {
-      next[id] = { x: xm, y: ym };
+      next[id] = { ...next[id], x: xm, y: ym };
       xm += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
     }
   }

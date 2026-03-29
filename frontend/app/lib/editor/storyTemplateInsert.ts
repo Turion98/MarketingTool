@@ -1,5 +1,6 @@
 "use client";
 
+import type { EditorPageCategory } from "./storyPagesFlatten";
 import {
   collectStoryPageIds,
   getStartPageIdFromStory,
@@ -20,24 +21,20 @@ function defaultNextTarget(story: Record<string, unknown>): string {
   return ids[0] ?? "start";
 }
 
-export function insertStoryTemplate(
-  story: Record<string, unknown>,
-  key: StoryTemplateKey
+function buildTemplatePageByKey(
+  key: StoryTemplateKey,
+  nid: string,
+  next: string
 ): Record<string, unknown> {
-  const next = defaultNextTarget(story);
-  const nid = `new_${Date.now()}`;
-  let page: Record<string, unknown>;
-
   switch (key) {
     case "linear":
-      page = {
+      return {
         id: nid,
         text: "Új lineáris oldal (szerkeszd a szöveget és a következő oldalt).",
         next,
       };
-      break;
     case "oneChoice":
-      page = {
+      return {
         id: nid,
         text: "Új oldal — egy választás.",
         choices: [
@@ -48,9 +45,8 @@ export function insertStoryTemplate(
           },
         ],
       };
-      break;
     case "multiChoice":
-      page = {
+      return {
         id: nid,
         text: "Új oldal — több választás.",
         choices: [
@@ -58,16 +54,14 @@ export function insertStoryTemplate(
           { id: `${nid}_b`, text: "B opció", next },
         ],
       };
-      break;
     case "logic":
-      page = {
+      return {
         id: nid,
         type: "logic",
         logic: [{ default: next }],
       };
-      break;
     case "riddle":
-      page = {
+      return {
         id: nid,
         type: "puzzle",
         kind: "riddle",
@@ -78,9 +72,8 @@ export function insertStoryTemplate(
           nextSwitch: next,
         },
       };
-      break;
     case "runes":
-      page = {
+      return {
         id: nid,
         type: "puzzle",
         kind: "runes",
@@ -91,12 +84,18 @@ export function insertStoryTemplate(
         onSuccess: { goto: next },
         onFail: { goto: next },
       };
-      break;
     default:
-      page = { id: nid, text: "Új oldal", next };
+      return { id: nid, text: "Új oldal", next };
   }
+}
 
+export function appendPageToStory(
+  story: Record<string, unknown>,
+  page: Record<string, unknown>
+): Record<string, unknown> {
   const copy = JSON.parse(JSON.stringify(story)) as Record<string, unknown>;
+  const nid = typeof page.id === "string" ? page.id : "";
+  if (!nid) return copy;
   const pages = copy.pages;
 
   if (Array.isArray(pages)) {
@@ -108,6 +107,64 @@ export function insertStoryTemplate(
   }
 
   return copy;
+}
+
+/** Új, minimálisan kitöltött oldal a szerkesztői kategória szerint (vászon + sablon). */
+export function buildEmptyPageForCategory(
+  category: EditorPageCategory,
+  story: Record<string, unknown>
+): Record<string, unknown> {
+  const next = defaultNextTarget(story);
+  const nid = `new_${Date.now()}`;
+
+  switch (category) {
+    case "narrative1":
+      return buildTemplatePageByKey("oneChoice", nid, next);
+    case "narrativeN":
+      return buildTemplatePageByKey("multiChoice", nid, next);
+    case "puzzleRiddle":
+      return buildTemplatePageByKey("riddle", nid, next);
+    case "puzzleRunes":
+      return buildTemplatePageByKey("runes", nid, next);
+    case "logic":
+      return buildTemplatePageByKey("logic", nid, next);
+    case "conditionalRouting":
+      return {
+        id: nid,
+        type: "conditionalRouting",
+        text: "Új feltételes routing (szerkeszd a nextSwitch szabályokat).",
+        nextSwitch: [{ ifNone: [], goto: next }],
+      };
+    case "transition":
+      return {
+        id: nid,
+        type: "transition",
+        transition: {
+          kind: "video",
+          src: "",
+          poster: "",
+          autoplay: false,
+          muted: true,
+          loop: false,
+          fadeInMs: 200,
+          fadeOutMs: 200,
+          nextPageId: next,
+        },
+      };
+    case "other":
+    default:
+      return buildTemplatePageByKey("linear", nid, next);
+  }
+}
+
+export function insertStoryTemplate(
+  story: Record<string, unknown>,
+  key: StoryTemplateKey
+): Record<string, unknown> {
+  const next = defaultNextTarget(story);
+  const nid = `new_${Date.now()}`;
+  const page = buildTemplatePageByKey(key, nid, next);
+  return appendPageToStory(story, page);
 }
 
 export const TEMPLATE_LABELS: Record<StoryTemplateKey, string> = {

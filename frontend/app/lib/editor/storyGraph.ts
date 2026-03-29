@@ -222,6 +222,29 @@ export function buildStoryGraph(story: Record<string, unknown>): {
       add(n.pageId, elseGoTo, "logicElse");
     }
 
+    /** Tömbös logic (pl. SkinCare: `{ if, goto }` + `{ default }`) — különben a gráf megszakad. */
+    if (Array.isArray(rec.logic)) {
+      rec.logic.forEach((entry, idx) => {
+        const row = asRecord(entry);
+        if (!row) return;
+        const goTo = readString(row.goto);
+        const defaultTo = readString(row.default);
+        const target = goTo ?? defaultTo;
+        if (target) {
+          add(n.pageId, target, "logicIf", String(idx));
+        }
+      });
+    }
+
+    if (rec.type === "conditionalRouting") {
+      const ns = Array.isArray(rec.nextSwitch) ? rec.nextSwitch : [];
+      ns.forEach((entry, idx) => {
+        const row = asRecord(entry);
+        const goTo = readString(row?.goto);
+        add(n.pageId, goTo, "logicIf", `cr:${idx}`);
+      });
+    }
+
     if (rec.type === "puzzle") {
       if (rec.kind === "riddle") {
         const targets = collectRiddleNextTargetsInOrder(rec);

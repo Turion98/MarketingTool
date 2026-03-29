@@ -110,3 +110,15 @@ export const CATEGORY_LABELS: Record<EditorPageCategory, string> = {
   transition: "Átvezetés",
   other: "Egyéb",
 };
+
+/** Vázlat + vászon: minden szerkesztői típus fix sorrendben. */
+export const EDITOR_CATEGORY_ORDER: EditorPageCategory[] = [
+  "narrative1",
+  "narrativeN",
+  "puzzleRiddle",
+  "puzzleRunes",
+  "logic",
+  "conditionalRouting",
+  "transition",
+  "other",
+];
