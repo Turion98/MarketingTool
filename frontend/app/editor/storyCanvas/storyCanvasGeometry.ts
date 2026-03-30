@@ -59,6 +59,47 @@ function riddleFilledOptionCount(node: StoryGraphNode): number {
   return o.filter((x): x is string => typeof x === "string" && !!x).length;
 }
 
+/** Runes puzzle: nem üres opciófeliratok száma (ugyanaz a mező, mint riddle `options`). */
+function runesFilledOptionCount(node: StoryGraphNode): number {
+  if (!node.isPuzzlePage || node.puzzleKind !== "runes") return 0;
+  return riddleFilledOptionCount(node);
+}
+
+/**
+ * Kimenő él → opciósáv index a kártyán (runes: siker/hiba az utolsó két sávra, ne az 1–2. opcióra).
+ */
+export function outgoingSlotIndexForEdge(
+  node: StoryGraphNode,
+  orderedOut: StoryGraphEdge[],
+  edgeIndex: number
+): number {
+  if (
+    node.pageId === STORY_GRAPH_START_NODE_ID ||
+    !node.isPuzzlePage ||
+    node.puzzleKind !== "runes"
+  ) {
+    return edgeIndex;
+  }
+  const nOpt = runesFilledOptionCount(node);
+  const displayRows = Math.max(2, nOpt);
+  const e0 = orderedOut[0];
+  const e1 = orderedOut[1];
+  const looksLikePuzzlePair =
+    orderedOut.length >= 2 &&
+    edgeIndex < 2 &&
+    ((e0?.kind === "puzzleSuccess" && e1?.kind === "puzzleFail") ||
+      (e0?.kind === "puzzleFail" && e1?.kind === "puzzleSuccess"));
+  if (looksLikePuzzlePair) {
+    if (e0?.kind === "puzzleSuccess") {
+      return displayRows - 2 + edgeIndex;
+    }
+    if (e0?.kind === "puzzleFail" && e1?.kind === "puzzleSuccess") {
+      return displayRows - 2 + (edgeIndex === 0 ? 1 : 0);
+    }
+  }
+  return edgeIndex;
+}
+
 export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): number {
   if (node.pageId === STORY_GRAPH_START_NODE_ID) return 1;
   if (isRiddleNode(node)) {
@@ -66,6 +107,10 @@ export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): n
     /** Riddle: annyi sor/port, ahány megírt opció; a score-lánc többlet ágai nem opciók. */
     if (nOpt >= 1) return nOpt;
     return Math.max(1, orderedOut.length);
+  }
+  if (node.isPuzzlePage && node.puzzleKind === "runes") {
+    const nOpt = runesFilledOptionCount(node);
+    return Math.max(2, nOpt);
   }
   if (node.isPuzzlePage) return 2;
   if (node.isLogicPage) {

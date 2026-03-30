@@ -54,6 +54,7 @@ import {
   isRiddleNode,
   orderedOutgoingEdges,
   outPortY,
+  outgoingSlotIndexForEdge,
   slotCount,
 } from "./storyCanvasGeometry";
 import StoryCard from "./StoryCard";
@@ -342,10 +343,16 @@ export default function StoryCanvas({
         n.pageId !== STORY_GRAPH_START_NODE_ID && isRiddleNode(n)
           ? slotCount(n, ord)
           : 0;
-      ord.forEach((e, slotIndex) => {
-        let slot = slotIndex;
+      ord.forEach((e, edgeIdx) => {
+        let slot = edgeIdx;
         if (riddlePortRows > 0) {
-          slot = Math.min(slotIndex, riddlePortRows - 1);
+          slot = Math.min(edgeIdx, riddlePortRows - 1);
+        } else if (
+          n.pageId !== STORY_GRAPH_START_NODE_ID &&
+          n.isPuzzlePage &&
+          n.puzzleKind === "runes"
+        ) {
+          slot = outgoingSlotIndexForEdge(n, ord, edgeIdx);
         }
         const py =
           n.pageId === STORY_GRAPH_START_NODE_ID ? h / 2 : outPortY(slot);

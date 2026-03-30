@@ -404,6 +404,8 @@
   color: #e8ecf4;
   font-size: 0.72rem;
   user-select: none;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .cardSelected {
@@ -640,11 +642,15 @@
   flex-direction: column;
   gap: 0;
   flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cardOptStrip {
   flex-shrink: 0;
   height: 22px;
+  min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -653,6 +659,7 @@
   border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
 }
 
 .cardOptStripLabel {
@@ -685,6 +692,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.cardRunesOptText {
+  font-size: 0.56rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.88;
 }
 
 .cardLogicIfMark {

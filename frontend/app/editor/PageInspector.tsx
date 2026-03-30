@@ -549,7 +549,9 @@ export default function PageInspector({
   const [runesFeedback, setRunesFeedback] = useState("keep");
   const [runesSuccessGoto, setRunesSuccessGoto] = useState("");
   const [runesFailGoto, setRunesFailGoto] = useState("");
-  const [runesSuccessFlags, setRunesSuccessFlags] = useState("");
+  /** Van kötelező helyes megoldás (`answer` tömb nem üres mentéskor). */
+  const [runesRequiresCorrect, setRunesRequiresCorrect] = useState(true);
+  const [runesFormError, setRunesFormError] = useState<string | null>(null);
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
@@ -610,7 +612,8 @@ export default function PageInspector({
       setRunesFeedback("keep");
       setRunesSuccessGoto("");
       setRunesFailGoto("");
-      setRunesSuccessFlags("");
+      setRunesRequiresCorrect(true);
+      setRunesFormError(null);
       setSaveMilestone(false);
       return;
     }
@@ -708,14 +711,12 @@ export default function PageInspector({
       const of = asRecord(page.onFail);
       setRunesSuccessGoto(typeof os?.goto === "string" ? os.goto : "");
       setRunesFailGoto(typeof of?.goto === "string" ? of.goto : "");
-      const sf = os?.setFlags;
-      if (Array.isArray(sf)) {
-        setRunesSuccessFlags(
-          sf.filter((x) => typeof x === "string").join(", ")
-        );
-      } else {
-        setRunesSuccessFlags("");
-      }
+      const ansArr = Array.isArray(page.answer) ? page.answer : [];
+      const hasGradedAnswer = ansArr.some(
+        (x) => typeof x === "string" && x.trim()
+      );
+      setRunesRequiresCorrect(hasGradedAnswer);
+      setRunesFormError(null);
     } else {
       setRunesText("");
       setRunesOptionRows([{ ...EMPTY_RUNES_OPTION }]);
@@ -724,7 +725,8 @@ export default function PageInspector({
       setRunesFeedback("keep");
       setRunesSuccessGoto("");
       setRunesFailGoto("");
-      setRunesSuccessFlags("");
+      setRunesRequiresCorrect(true);
+      setRunesFormError(null);
     }
   }, [page, selectedPageId, draftStory]);
 
@@ -936,21 +938,25 @@ export default function PageInspector({
       const options = runesOptionRows
         .map((r) => r.text.trim())
         .filter(Boolean);
-      const answer = runesOptionRows
-        .filter((r) => r.correct && r.text.trim())
-        .map((r) => r.text.trim());
-      const flags = runesSuccessFlags
-        .split(/[,;\s]+/)
-        .map((x) => x.trim())
-        .filter(Boolean);
+      const answer = runesRequiresCorrect
+        ? runesOptionRows
+            .filter((r) => r.correct && r.text.trim())
+            .map((r) => r.text.trim())
+        : [];
+      if (runesRequiresCorrect && options.length > 0 && answer.length === 0) {
+        setRunesFormError(
+          "Jelölj legalább egy helyes opciót, vagy kapcsold ki a kötelező helyes megoldást."
+        );
+        return;
+      }
+      setRunesFormError(null);
       const prevOs = asRecord(page.onSuccess) ?? {};
-      const prevOf = asRecord(page.onFail) ?? {};
       const nextOs: Record<string, unknown> = {
         ...prevOs,
         goto: runesSuccessGoto.trim(),
       };
-      if (flags.length) nextOs.setFlags = flags;
-      else delete nextOs.setFlags;
+      delete nextOs.setFlags;
+      const prevOf = asRecord(page.onFail) ?? {};
       nextP = {
         ...page,
         title,
@@ -1037,7 +1043,7 @@ export default function PageInspector({
     runesFeedback,
     runesSuccessGoto,
     runesFailGoto,
-    runesSuccessFlags,
+    runesRequiresCorrect,
     logicIfRows,
     logicElseGoTo,
     saveMilestone,
@@ -1426,6 +1432,7 @@ export default function PageInspector({
             </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
+                <p className={s.optionCardTitle}>Blokk {idx + 1}</p>
                 <FragmentIdSelect
                   label="Fragment (feloldás)"
                   value={row.ifUnlocked}
@@ -1509,6 +1516,7 @@ export default function PageInspector({
             </div>
             {choices.map((ch, idx) => (
               <div key={idx} className={s.choiceCard}>
+                <p className={s.optionCardTitle}>Opció {idx + 1}</p>
                 <label className={s.field}>
                   <span>Opció szöveg</span>
                   <input
@@ -1637,6 +1645,7 @@ export default function PageInspector({
             </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
+                <p className={s.optionCardTitle}>Blokk {idx + 1}</p>
                 <FragmentIdSelect
                   label="Fragment (feloldás)"
                   value={row.ifUnlocked}
@@ -1737,6 +1746,7 @@ export default function PageInspector({
                   key={idx}
                   className={`${s.choiceCard} ${ci === idx ? s.riddleOptPanelSelected : ""}`}
                 >
+                  <p className={s.optionCardTitle}>Opció {idx + 1}</p>
                   <label className={s.field}>
                     <span>Helyes válasz</span>
                     <label className={s.riddleOptRadio}>
@@ -1746,7 +1756,7 @@ export default function PageInspector({
                         checked={ci === idx}
                         onChange={() => setRiddleCorrectIndex(String(idx))}
                       />
-                      <span>Opció {idx + 1}</span>
+                      <span>Helyesnek jelöl</span>
                     </label>
                   </label>
                   <label className={s.field}>
@@ -1935,10 +1945,36 @@ export default function PageInspector({
           </>
         ) : isRunesPage ? (
           <>
-            <p className={s.hintSmall}>
-              Runes: minden opció külön panel; balra jelöld a helyes megoldás(oka)t
-              (a játék a <code>answer</code> tömböt tölti ebből).
-            </p>
+            <div className={s.runesModeBar}>
+              <p className={s.runesModeBarLabel}>Puzzle működés</p>
+              <div className={s.runesModeToggleRow}>
+                <label className={s.runesModeToggle}>
+                  <input
+                    type="checkbox"
+                    checked={runesRequiresCorrect}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setRunesRequiresCorrect(on);
+                      setRunesFormError(null);
+                      if (!on) {
+                        setRunesOptionRows((r) =>
+                          r.map((x) => ({ ...x, correct: false }))
+                        );
+                      }
+                    }}
+                  />
+                  <span>Kötelező helyes megoldás</span>
+                </label>
+              </div>
+              <p className={s.runesModeHint}>
+                {runesRequiresCorrect
+                  ? "A játékos választását a megjelölt helyes opciókhoz hasonlítjuk (answer tömb). Hibás próbánál a max. próbálkozás és az ugrások érvényesülnek."
+                  : "Nincs helyes/hibás ellenőrzés: ha a játékos beküldi a kiválasztott elemeket, sikeres ág (open mód). Opcionálisan használható optionFlagsBase a story JSON-ban."}
+              </p>
+              {runesFormError ? (
+                <p className={s.runesFormError}>{runesFormError}</p>
+              ) : null}
+            </div>
             <label className={s.field}>
               <span>Szöveg / instrukció</span>
               <textarea
@@ -1949,54 +1985,59 @@ export default function PageInspector({
               />
             </label>
             <div className={s.blockHead}>
-              <span>Opciók (runes)</span>
+              <span>Opciók</span>
               <button type="button" className={s.btnSm} onClick={addRunesOptionRow}>
                 + opció
               </button>
             </div>
             {runesOptionRows.map((row, idx) => (
-              <div key={idx} className={s.runesOptPanel}>
-                <div className={s.runesOptSide}>
-                  <label className={s.runesOptCheck}>
-                    <input
-                      type="checkbox"
-                      checked={row.correct}
+              <div key={idx} className={s.runesOptBlock}>
+                <p className={s.optionCardTitle}>Opció {idx + 1}</p>
+                <div className={s.runesOptPanel}>
+                  {runesRequiresCorrect ? (
+                    <div className={s.runesOptSide}>
+                      <label className={s.runesOptCheck}>
+                        <input
+                          type="checkbox"
+                          checked={row.correct}
+                          onChange={(e) => {
+                            const v = e.target.checked;
+                            setRunesOptionRows((r) =>
+                              r.map((x, j) =>
+                                j === idx ? { ...x, correct: v } : x
+                              )
+                            );
+                          }}
+                        />
+                        <span>Helyes</span>
+                      </label>
+                    </div>
+                  ) : null}
+                  <div className={s.runesOptBody}>
+                    <textarea
+                      className={s.textarea}
+                      rows={2}
+                      value={row.text}
+                      placeholder="Opció felirata"
                       onChange={(e) => {
-                        const v = e.target.checked;
+                        const v = e.target.value;
                         setRunesOptionRows((r) =>
-                          r.map((x, j) =>
-                            j === idx ? { ...x, correct: v } : x
-                          )
+                          r.map((x, j) => (j === idx ? { ...x, text: v } : x))
                         );
                       }}
                     />
-                    <span>Helyes</span>
-                  </label>
-                </div>
-                <div className={s.runesOptBody}>
-                  <textarea
-                    className={s.textarea}
-                    rows={2}
-                    value={row.text}
-                    placeholder="Opció felirata"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setRunesOptionRows((r) =>
-                        r.map((x, j) => (j === idx ? { ...x, text: v } : x))
-                      );
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className={s.btnGhost}
-                    onClick={() =>
-                      setRunesOptionRows((r) =>
-                        r.length > 1 ? r.filter((_, j) => j !== idx) : r
-                      )
-                    }
-                  >
-                    Opció törlése
-                  </button>
+                    <button
+                      type="button"
+                      className={s.btnGhost}
+                      onClick={() =>
+                        setRunesOptionRows((r) =>
+                          r.length > 1 ? r.filter((_, j) => j !== idx) : r
+                        )
+                      }
+                    >
+                      Opció törlése
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -2011,29 +2052,41 @@ export default function PageInspector({
               />
             </label>
             <label className={s.field}>
-              <span>Mód</span>
+              <span>Választási mód</span>
               <select
                 className={s.input}
                 value={runesMode}
                 onChange={(e) => setRunesMode(e.target.value)}
               >
-                <option value="set">set</option>
-                <option value="ordered">ordered</option>
+                <option value="set">Halmaz — helyes elemek bármilyen sorrendben</option>
+                <option value="ordered">Sorrend — a helyes válasz sorrendje számít</option>
               </select>
             </label>
+            {runesMode === "set" ? (
+              <label className={s.field}>
+                <span>Hibás próba után (halmaz mód)</span>
+                <select
+                  className={s.input}
+                  value={runesFeedback}
+                  onChange={(e) => setRunesFeedback(e.target.value)}
+                >
+                  <option value="keep">
+                    A már helyesen megjelölt elemek megmaradnak — csak a hibás
+                    újrapróbálható
+                  </option>
+                  <option value="reset">
+                    Minden kijelölés törlődik — a próba elölről kezdődik
+                  </option>
+                </select>
+              </label>
+            ) : (
+              <p className={s.hintSmall}>
+                Sorrend módban a visszajelzés mindig újrapróbálható körökkel dolgozik
+                (nincs „megtartás” állapot).
+              </p>
+            )}
             <label className={s.field}>
-              <span>Feedback</span>
-              <select
-                className={s.input}
-                value={runesFeedback}
-                onChange={(e) => setRunesFeedback(e.target.value)}
-              >
-                <option value="keep">keep</option>
-                <option value="reset">reset</option>
-              </select>
-            </label>
-            <label className={s.field}>
-              <span>Siker → oldal id</span>
+              <span>Sikeres beküldés után → oldal (id)</span>
               <input
                 className={`${s.input} ${runesSuccessGoto && !idSet.has(runesSuccessGoto) ? s.inputWarn : ""}`}
                 value={runesSuccessGoto}
@@ -2042,21 +2095,12 @@ export default function PageInspector({
               />
             </label>
             <label className={s.field}>
-              <span>Sikertelen / újra → oldal id</span>
+              <span>Sikertelen / próbák elfogyása után → oldal (id)</span>
               <input
                 className={`${s.input} ${runesFailGoto && !idSet.has(runesFailGoto) ? s.inputWarn : ""}`}
                 value={runesFailGoto}
                 list="editor-known-page-ids"
                 onChange={(e) => setRunesFailGoto(e.target.value)}
-              />
-            </label>
-            <label className={s.field}>
-              <span>Siker setFlags (vesszővel)</span>
-              <input
-                className={s.input}
-                value={runesSuccessFlags}
-                placeholder="pl. c2_core_elements_ok"
-                onChange={(e) => setRunesSuccessFlags(e.target.value)}
               />
             </label>
           </>
@@ -2091,6 +2135,7 @@ export default function PageInspector({
             ) : (
               logicIfRows.map((row, idx) => (
                 <div key={idx} className={s.choiceCard}>
+                  <p className={s.optionCardTitle}>Ág {idx + 1}</p>
                   <FragmentIdSelect
                     label="Fragment (játékosnál feloldott)"
                     value={row.fragment}

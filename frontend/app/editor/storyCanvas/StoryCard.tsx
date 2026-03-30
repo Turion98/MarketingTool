@@ -31,6 +31,7 @@ import {
   isRiddleNode,
   orderedOutgoingEdges,
   outPortY,
+  outgoingSlotIndexForEdge,
   slotCount,
 } from "./storyCanvasGeometry";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
@@ -109,6 +110,17 @@ export default function StoryCard({
       ? riddleOptLabels.length
       : Math.max(ord.length, 1)
     : 0;
+
+  const isRunesPuzzle =
+    node.isPuzzlePage &&
+    !riddle &&
+    node.puzzleKind === "runes" &&
+    Array.isArray(raw.options);
+  const runesOptLabels = isRunesPuzzle
+    ? (raw.options as unknown[]).filter(
+        (x): x is string => typeof x === "string" && x.trim().length > 0
+      )
+    : [];
 
   const inYs = inputPortYs(incomingPortCount, h, {
     logicLayout: node.isLogicPage,
@@ -483,6 +495,27 @@ export default function StoryCard({
                   </div>
                 ))}
               </div>
+            ) : isRunesPuzzle ? (
+              <div className={s.cardOptStripStack}>
+                {runesOptLabels.length === 0 ? (
+                  <span className={s.cardOptMuted}>nincs opció</span>
+                ) : (
+                  runesOptLabels.map((label, idx) => (
+                    <div
+                      key={`${node.pageId}-runes-${idx}`}
+                      className={s.cardOptStrip}
+                    >
+                      <span className={s.cardOptStripLabel}>
+                        Opció {idx + 1}
+                      </span>
+                      <span className={s.cardOptStripSpacer} />
+                      <span className={s.cardRunesOptText} title={label}>
+                        {label.length > 28 ? `${label.slice(0, 27)}…` : label}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
             ) : (
               <div className={s.cardOptStripStack}>
                 <div className={s.cardOptStrip}>
@@ -505,17 +538,14 @@ export default function StoryCard({
 
       {!isStart ? (
         <div className={s.cardOutPorts} aria-hidden>
-          {Array.from({ length: rows }, (_, slotIndex) => {
-            const e = ord[slotIndex];
-            if (
-              e &&
-              distantOutgoingEdgeIds?.has(e.id)
-            ) {
+          {ord.map((e, edgeIdx) => {
+            if (distantOutgoingEdgeIds?.has(e.id)) {
               return null;
             }
+            const slotIndex = outgoingSlotIndexForEdge(node, ord, edgeIdx);
             return (
               <span
-                key={slotIndex}
+                key={e.id}
                 className={s.portDotOut}
                 style={{
                   top: outPortY(slotIndex) - 4,
