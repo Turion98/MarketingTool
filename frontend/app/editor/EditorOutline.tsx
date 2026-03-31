@@ -34,6 +34,7 @@ const CATEGORY_ORDER: EditorPageCategory[] = [
   "narrativeN",
   "puzzleRiddle",
   "puzzleRunes",
+  "puzzleRoute",
   "logic",
   "conditionalRouting",
   "transition",

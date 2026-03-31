@@ -279,6 +279,7 @@ const StoryPage: React.FC = () => {
     globals,
     setGlobal,
     setStorySrc,
+    isEditorDraftPreview,
     progressDisplay,
     storyId,
     sessionId,
@@ -391,6 +392,7 @@ const stringGlobals = useMemo<Record<string, string>>(
 
   // 🔹 LOGIC típusú oldalak automatikus futtatása (L3_route_switch, Route_E_result_logic, stb.)
   useEffect(() => {
+    if (isEditorDraftPreview) return;
     if (!pageData || pageData.type !== "logic") return;
 
     const rules: StoryLogicRule[] = Array.isArray(pageData.logic)
@@ -439,7 +441,7 @@ const stringGlobals = useMemo<Record<string, string>>(
       } catch {}
       goToNextPage(chosen);
     }
-  }, [pageData, unlockedPlus, goToNextPage]);
+  }, [pageData, unlockedPlus, goToNextPage, isEditorDraftPreview]);
 
   /** --- setup effects --- */
 
@@ -1088,6 +1090,25 @@ const showFrame = useMemo(() => {
     [registerTimeout]
   );
 
+  const onNarrativeMeasure = useCallback((m: Measure) => {
+    setMeasure((prev) => {
+      if (
+        prev &&
+        prev.panel.x === m.panel.x &&
+        prev.panel.y === m.panel.y &&
+        prev.panel.width === m.panel.width &&
+        prev.panel.height === m.panel.height &&
+        prev.content.x === m.content.x &&
+        prev.content.y === m.content.y &&
+        prev.content.width === m.content.width &&
+        prev.content.height === m.content.height
+      ) {
+        return prev;
+      }
+      return m;
+    });
+  }, []);
+
   useSfxScheduler({
     pageId: pageData?.id || "unknown",
     sfx: Array.isArray(pageData?.sfx)
@@ -1691,9 +1712,7 @@ const showFrame = useMemo(() => {
             setChoicePageId(pageData.id);
           });
         }}
-        onMeasure={(m: Measure) => {
-          setMeasure(m);
-        }}
+        onMeasure={onNarrativeMeasure}
         typingDone={typingDone}
         lockedMeasure={lockedMeasure}
         setLockedMeasure={(m: Measure) => setLockedMeasure(m)}
@@ -1730,6 +1749,7 @@ const showFrame = useMemo(() => {
             handleChoice={handleChoice}
             setFlag={setFlag}
             goToNextPage={goToNextPage}
+            setGlobal={setGlobal}
           />
         }
 

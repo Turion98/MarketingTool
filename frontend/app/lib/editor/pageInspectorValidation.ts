@@ -11,7 +11,16 @@ import {
   collectRiddleNextTargetsInOrder,
 } from "./storyGraph";
 import { canonicalMilestoneFragmentId } from "../milestoneFragmentId";
-import { isEditorLogicPage } from "./storyPagesFlatten";
+import {
+  hydrateRouteFieldsFromStoryPage,
+  parseLegacyLogicArrayToRouteAssignments,
+} from "./legacyPuzzleRouteHydrate";
+import {
+  classifyEditorPage,
+  isEditorLogicPage,
+} from "./storyPagesFlatten";
+import { generatePuzzleRouteKeys } from "./puzzleRouteCombinations";
+import { runesPickBounds } from "../puzzleRoutePick";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -174,6 +183,109 @@ export function validatePage(
         message: "Puzzle (runes): hiányzó sikertelen / újra ugrás.",
       });
     }
+    if (page.kind === "runes") {
+      const { minPick, maxPick } = runesPickBounds(page as Record<string, unknown>);
+      if (minPick > maxPick) {
+        issues.push({
+          path: "minPick",
+          message: "Runes: minPick nem lehet nagyobb, mint maxPick.",
+        });
+      }
+      const opts = Array.isArray(page.options) ? page.options : [];
+      const n = opts.filter((x) => typeof x === "string" && String(x).trim()).length;
+      if (n > 0 && maxPick > n) {
+        issues.push({
+          path: "maxPick",
+          message: `Runes: maxPick (${maxPick}) több, mint az opciók száma (${n}).`,
+        });
+      }
+    }
+  } else if (classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute") {
+    const pageRec = page as Record<string, unknown>;
+    const h = hydrateRouteFieldsFromStoryPage(story, pageId, pageRec);
+    const src = h.sourceId.trim();
+    if (!src) {
+      issues.push({
+        path: "puzzleSourcePageId",
+        message:
+          "Puzzle route: válassz forrás runes puzzle oldalt (vagy kösd a runes siker → erre az oldalra).",
+      });
+    } else if (!knownIds.has(src)) {
+      issues.push({
+        path: "puzzleSourcePageId",
+        message: `Ismeretlen forrás oldal: "${src}".`,
+      });
+    }
+    const def = h.defaultGoto.trim();
+    if (!def) {
+      issues.push({
+        path: "defaultGoto",
+        message: "Puzzle route: kötelező a default (maradék kombináció / hiba) céloldal.",
+      });
+    } else if (!knownIds.has(def)) {
+      issues.push({
+        path: "defaultGoto",
+        message: `Ismeretlen oldal: "${def}".`,
+      });
+    }
+    const ra: Record<string, unknown> = { ...h.assignments };
+    for (const [k, raw] of Object.entries(ra)) {
+      const t = typeof raw === "string" ? raw.trim() : "";
+      if (t && !knownIds.has(t)) {
+        issues.push({
+          path: `routeAssignments.${k}`,
+          message: `Ismeretlen oldal: "${t}".`,
+        });
+      }
+    }
+    if (
+      page.type === "logic" &&
+      Array.isArray(page.logic) &&
+      src &&
+      knownIds.has(src)
+    ) {
+      const sp = findPageInStoryDocument(story, src);
+      if (
+        sp &&
+        parseLegacyLogicArrayToRouteAssignments(page.logic as unknown[], sp) === null
+      ) {
+        issues.push({
+          path: "logic",
+          message:
+            "Régi tömbös route: a forrás runes-on legyen `optionFlagsBase`, vagy ments `puzzleRoute` sémára (Változások alkalmazása).",
+        });
+      }
+    }
+    if (src && knownIds.has(src)) {
+      const srcPage = findPageInStoryDocument(story, src);
+      if (
+        srcPage &&
+        srcPage.type === "puzzle" &&
+        srcPage.kind === "runes"
+      ) {
+        const opts = Array.isArray(srcPage.options) ? srcPage.options : [];
+        const n = opts.filter((x) => typeof x === "string" && String(x).trim()).length;
+        const ans = Array.isArray(srcPage.answer) ? srcPage.answer : [];
+        const open = !ans.some((x) => typeof x === "string" && String(x).trim());
+        if (open && n > 0) {
+          const { minPick, maxPick } = runesPickBounds(
+            srcPage as Record<string, unknown>
+          );
+          const mode =
+            srcPage.mode === "ordered" ? "ordered" : "set";
+          const expected = generatePuzzleRouteKeys(n, minPick, maxPick, mode);
+          for (const ek of expected) {
+            const dest = readString(ra[ek]);
+            if (!dest) {
+              issues.push({
+                path: `routeAssignments['${ek}']`,
+                message: `Hiányzó céloldal a kombinációhoz: ${ek}.`,
+              });
+            }
+          }
+        }
+      }
+    }
   } else if (logic) {
     const ifHas = Array.isArray(logic.ifHasFragment) ? logic.ifHasFragment : [];
     for (let i = 0; i < ifHas.length; i++) {
@@ -228,7 +340,12 @@ export function validatePage(
         });
       }
     }
-    if (choices.length === 0 && !isPuzzle && !logic) {
+    if (
+      choices.length === 0 &&
+      !isPuzzle &&
+      !logic &&
+      classifyEditorPage(page as Record<string, unknown>) !== "puzzleRoute"
+    ) {
       const hasEnd = page.type === "end";
       if (!hasEnd) {
         issues.push({

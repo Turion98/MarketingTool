@@ -16,7 +16,17 @@ import {
   type FragmentPicklistSections,
 } from "@/app/lib/editor/storyChoiceFragmentIds";
 import { findRiddleChainContext } from "@/app/lib/editor/editorCanvasCluster";
-import { isEditorLogicPage } from "@/app/lib/editor/storyPagesFlatten";
+import {
+  formatRouteKeyWithLabels,
+  generatePuzzleRouteKeys,
+  suggestPageIdForRouteKey,
+} from "@/app/lib/editor/puzzleRouteCombinations";
+import { hydrateRouteFieldsFromStoryPage } from "@/app/lib/editor/legacyPuzzleRouteHydrate";
+import {
+  classifyEditorPage,
+  isEditorLogicPage,
+} from "@/app/lib/editor/storyPagesFlatten";
+import { runesPickBounds } from "@/app/lib/puzzleRoutePick";
 import { canonicalMilestoneFragmentId } from "@/app/lib/milestoneFragmentId";
 import {
   readFragmentTextFromStory,
@@ -552,6 +562,14 @@ export default function PageInspector({
   /** Van kötelező helyes megoldás (`answer` tömb nem üres mentéskor). */
   const [runesRequiresCorrect, setRunesRequiresCorrect] = useState(true);
   const [runesFormError, setRunesFormError] = useState<string | null>(null);
+  const [runesMinPick, setRunesMinPick] = useState("");
+  const [runesMaxPick, setRunesMaxPick] = useState("");
+
+  const [routeSourcePageId, setRouteSourcePageId] = useState("");
+  const [routeDefaultGoto, setRouteDefaultGoto] = useState("");
+  const [routeAssignments, setRouteAssignments] = useState<
+    Record<string, string>
+  >({});
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
@@ -614,6 +632,11 @@ export default function PageInspector({
       setRunesFailGoto("");
       setRunesRequiresCorrect(true);
       setRunesFormError(null);
+      setRunesMinPick("");
+      setRunesMaxPick("");
+      setRouteSourcePageId("");
+      setRouteDefaultGoto("");
+      setRouteAssignments({});
       setSaveMilestone(false);
       return;
     }
@@ -717,6 +740,12 @@ export default function PageInspector({
       );
       setRunesRequiresCorrect(hasGradedAnswer);
       setRunesFormError(null);
+      setRunesMinPick(
+        typeof page.minPick === "number" ? String(page.minPick) : ""
+      );
+      setRunesMaxPick(
+        typeof page.maxPick === "number" ? String(page.maxPick) : ""
+      );
     } else {
       setRunesText("");
       setRunesOptionRows([{ ...EMPTY_RUNES_OPTION }]);
@@ -727,6 +756,27 @@ export default function PageInspector({
       setRunesFailGoto("");
       setRunesRequiresCorrect(true);
       setRunesFormError(null);
+      setRunesMinPick("");
+      setRunesMaxPick("");
+    }
+
+    if (
+      page &&
+      selectedPageId &&
+      classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute"
+    ) {
+      const h = hydrateRouteFieldsFromStoryPage(
+        draftStory,
+        selectedPageId,
+        page as Record<string, unknown>
+      );
+      setRouteSourcePageId(h.sourceId);
+      setRouteDefaultGoto(h.defaultGoto);
+      setRouteAssignments(h.assignments);
+    } else {
+      setRouteSourcePageId("");
+      setRouteDefaultGoto("");
+      setRouteAssignments({});
     }
   }, [page, selectedPageId, draftStory]);
 
@@ -863,6 +913,8 @@ export default function PageInspector({
     const isRunes = page.type === "puzzle" && page.kind === "runes";
     const isOtherPuzzle =
       page.type === "puzzle" && !isRiddle && !isRunes;
+    const isEditorRoutePage =
+      classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
     let nextP: Record<string, unknown>;
 
     if (isRiddle) {
@@ -957,6 +1009,23 @@ export default function PageInspector({
       };
       delete nextOs.setFlags;
       const prevOf = asRecord(page.onFail) ?? {};
+      const parsedMax = Number.parseInt(runesMaxPick, 10);
+      const parsedMin = Number.parseInt(runesMinPick, 10);
+      let maxPickVal =
+        Number.isFinite(parsedMax) && parsedMax > 0
+          ? parsedMax
+          : runesRequiresCorrect
+            ? answer.length
+            : 2;
+      let minPickVal =
+        Number.isFinite(parsedMin) && parsedMin > 0
+          ? parsedMin
+          : runesRequiresCorrect
+            ? maxPickVal
+            : 1;
+      minPickVal = Math.min(Math.max(1, minPickVal), maxPickVal);
+      if (minPickVal < 1) minPickVal = 1;
+      maxPickVal = Math.max(1, maxPickVal);
       nextP = {
         ...page,
         title,
@@ -964,6 +1033,8 @@ export default function PageInspector({
         options,
         answer,
         maxAttempts: Math.max(1, Number.parseInt(runesMaxAttempts, 10) || 3),
+        minPick: minPickVal,
+        maxPick: maxPickVal,
         mode: runesMode,
         feedback: runesFeedback,
         type: "puzzle",
@@ -974,6 +1045,39 @@ export default function PageInspector({
           goto: runesFailGoto.trim(),
         },
       };
+    } else if (isEditorRoutePage) {
+      const sid = routeSourcePageId.trim();
+      const sp = sid ? findPageInStoryDocument(draftStory, sid) : null;
+      let keys: string[] = [];
+      if (sp && sp.type === "puzzle" && sp.kind === "runes") {
+        const opts = Array.isArray(sp.options) ? sp.options : [];
+        const n = opts.filter(
+          (x): x is string => typeof x === "string" && !!x.trim()
+        ).length;
+        if (n >= 1) {
+          const { minPick, maxPick } = runesPickBounds(
+            sp as Record<string, unknown>
+          );
+          const mode = sp.mode === "ordered" ? "ordered" : "set";
+          keys = generatePuzzleRouteKeys(n, minPick, maxPick, mode);
+        }
+      }
+      const out: Record<string, string> = {};
+      for (const k of keys) {
+        const v = (routeAssignments[k] ?? "").trim();
+        if (v) out[k] = v;
+      }
+      nextP = {
+        ...page,
+        title,
+        type: "puzzleRoute",
+        puzzleSourcePageId: routeSourcePageId.trim(),
+        routeAssignments: out,
+        defaultGoto: routeDefaultGoto.trim(),
+      };
+      delete nextP.choices;
+      delete nextP.logic;
+      delete nextP.text;
     } else if (isOtherPuzzle) {
       nextP = { ...page, title, text: primaryText };
     } else if (logic) {
@@ -1044,6 +1148,11 @@ export default function PageInspector({
     runesSuccessGoto,
     runesFailGoto,
     runesRequiresCorrect,
+    runesMinPick,
+    runesMaxPick,
+    routeSourcePageId,
+    routeDefaultGoto,
+    routeAssignments,
     logicIfRows,
     logicElseGoTo,
     saveMilestone,
@@ -1086,6 +1195,65 @@ export default function PageInspector({
   }, []);
 
   const idSet = useMemo(() => new Set(knownPageIds), [knownPageIds]);
+
+  const runesSourcePageIds = useMemo(
+    () =>
+      knownPageIds.filter((id) => {
+        const p = findPageInStoryDocument(draftStory, id);
+        return p?.type === "puzzle" && p?.kind === "runes";
+      }),
+    [draftStory, knownPageIds]
+  );
+
+  const routeExpectedKeys = useMemo(() => {
+    const sid = routeSourcePageId.trim();
+    if (!sid) return [] as string[];
+    const sp = findPageInStoryDocument(draftStory, sid);
+    if (!sp || sp.type !== "puzzle" || sp.kind !== "runes") return [];
+    const opts = Array.isArray(sp.options) ? sp.options : [];
+    const n = opts.filter(
+      (x): x is string => typeof x === "string" && !!x.trim()
+    ).length;
+    if (n < 1) return [];
+    const { minPick, maxPick } = runesPickBounds(
+      sp as Record<string, unknown>
+    );
+    const mode = sp.mode === "ordered" ? "ordered" : "set";
+    return generatePuzzleRouteKeys(n, minPick, maxPick, mode);
+  }, [draftStory, routeSourcePageId]);
+
+  const routeKeysSig = useMemo(
+    () => JSON.stringify(routeExpectedKeys),
+    [routeExpectedKeys]
+  );
+
+  useEffect(() => {
+    let keys: string[] = [];
+    try {
+      keys = JSON.parse(routeKeysSig) as string[];
+      if (!Array.isArray(keys)) keys = [];
+    } catch {
+      keys = [];
+    }
+    setRouteAssignments((prev) => {
+      const next: Record<string, string> = { ...prev };
+      let changed = false;
+      for (const k of keys) {
+        if (next[k] === undefined) {
+          next[k] = "";
+          changed = true;
+        }
+      }
+      for (const ok of Object.keys(next)) {
+        if (!keys.includes(ok)) {
+          delete next[ok];
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      return next;
+    });
+  }, [routeKeysSig]);
 
   const isRiddlePageForChain = Boolean(
     page?.type === "puzzle" && page?.kind === "riddle"
@@ -1321,7 +1489,9 @@ export default function PageInspector({
   const isRunesPage = page.type === "puzzle" && page.kind === "runes";
   const isOtherPuzzle =
     page.type === "puzzle" && !isRiddlePage && !isRunesPage;
-  const isLogic = Boolean(logic);
+  const isEditorPuzzleRoutePage =
+    classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
+  const isLogic = Boolean(logic) && !isEditorPuzzleRoutePage;
   const milestoneEligible = !isEditorLogicPage(page as Record<string, unknown>);
 
   return (
@@ -1407,7 +1577,11 @@ export default function PageInspector({
           />
         </label>
 
-        {!isLogic && !isRiddlePage && !isRunesPage && !isOtherPuzzle ? (
+        {!isLogic &&
+        !isRiddlePage &&
+        !isRunesPage &&
+        !isOtherPuzzle &&
+        !isEditorPuzzleRoutePage ? (
           <>
             <label className={s.field}>
               <span>Fő szöveg</span>
@@ -2052,6 +2226,33 @@ export default function PageInspector({
               />
             </label>
             <label className={s.field}>
+              <span>Min. választható elemszám (open mód)</span>
+              <input
+                className={s.input}
+                type="number"
+                min={1}
+                placeholder="üres = max-szal azonos"
+                value={runesMinPick}
+                onChange={(e) => setRunesMinPick(e.target.value)}
+              />
+            </label>
+            <label className={s.field}>
+              <span>Max. választható elemszám</span>
+              <input
+                className={s.input}
+                type="number"
+                min={1}
+                placeholder="üres = answer hossz vagy 2"
+                value={runesMaxPick}
+                onChange={(e) => setRunesMaxPick(e.target.value)}
+              />
+            </label>
+            <p className={s.hintSmall}>
+              A puzzle route kombinációk a forrás puzzle min/max és mód (halmaz /
+              sorrend) alapján generálódnak. Graded (helyes válasz) módban a beküldés
+              továbbra is pontosan max elemszámot vár.
+            </p>
+            <label className={s.field}>
               <span>Választási mód</span>
               <select
                 className={s.input}
@@ -2103,6 +2304,128 @@ export default function PageInspector({
                 onChange={(e) => setRunesFailGoto(e.target.value)}
               />
             </label>
+          </>
+        ) : isEditorPuzzleRoutePage ? (
+          <>
+            <p className={s.hintSmall}>
+              A runes puzzle <strong>sikeres</strong> beküldése után a játék eltárolja
+              a választás kombinációját, majd erre az oldalra érkezve a megfelelő cél
+              oldalra ugrik. Kösd a runes <code>onSuccess.goto</code> mezőjét erre a
+              route oldalra. Open (nincs kötelező helyes) mód + globál kulcs alapján
+              működik.
+            </p>
+            {page.type === "logic" ? (
+              <p className={s.hintSmall}>
+                Mentéskor az oldal <code>puzzleRoute</code> sémára alakul (nem marad
+                tömbös <code>logic</code> JSON).
+              </p>
+            ) : null}
+            <label className={s.field}>
+              <span>Forrás puzzle (runes oldal)</span>
+              <select
+                className={s.input}
+                value={routeSourcePageId}
+                onChange={(e) => setRouteSourcePageId(e.target.value)}
+              >
+                <option value="">— válassz runes oldalt —</option>
+                {runesSourcePageIds.map((id) => (
+                  <option key={id} value={id}>
+                    {id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {routeExpectedKeys.length > 0 ? (
+              <p className={s.hintSmall} role="status">
+                Kombinációk: {routeExpectedKeys.length} összesen; kitöltve:{" "}
+                {
+                  routeExpectedKeys.filter(
+                    (k) => (routeAssignments[k] ?? "").trim() !== ""
+                  ).length
+                }
+                ; hiány:{" "}
+                {
+                  routeExpectedKeys.filter(
+                    (k) => !(routeAssignments[k] ?? "").trim()
+                  ).length
+                }
+                . Késznek számít, ha mindegyikhez van cél és a default is megvan.
+              </p>
+            ) : routeSourcePageId.trim() ? (
+              <p className={s.hintSmall}>
+                A kiválasztott oldal nem runes puzzle, vagy nincs rajta opció.
+              </p>
+            ) : null}
+            <div className={s.blockHead}>
+              <span>Kombináció → cél oldal</span>
+              <button
+                type="button"
+                className={s.btnSm}
+                onClick={() => {
+                  const sid = routeSourcePageId.trim();
+                  if (!sid) return;
+                  const sp = findPageInStoryDocument(draftStory, sid);
+                  const opts = Array.isArray(sp?.options)
+                    ? (sp.options as unknown[]).filter(
+                        (x): x is string => typeof x === "string" && !!x.trim()
+                      )
+                    : [];
+                  const candidates = knownPageIds.map((id) => {
+                    const p = findPageInStoryDocument(draftStory, id);
+                    return {
+                      id,
+                      title:
+                        typeof p?.title === "string" ? p.title : undefined,
+                    };
+                  });
+                  setRouteAssignments((prev) => {
+                    const next = { ...prev };
+                    for (const k of routeExpectedKeys) {
+                      if ((next[k] ?? "").trim()) continue;
+                      const sug = suggestPageIdForRouteKey(k, opts, candidates);
+                      if (sug) next[k] = sug;
+                    }
+                    return next;
+                  });
+                }}
+              >
+                Javaslat üres sorokra
+              </button>
+            </div>
+            {routeExpectedKeys.map((key) => {
+              const src = findPageInStoryDocument(
+                draftStory,
+                routeSourcePageId.trim()
+              );
+              const opts = Array.isArray(src?.options)
+                ? (src.options as unknown[]).filter(
+                    (x): x is string => typeof x === "string" && !!x.trim()
+                  )
+                : [];
+              const label = formatRouteKeyWithLabels(key, opts);
+              return (
+                <div key={key} className={s.choiceCard}>
+                  <RiddleScoreDestinationSelect
+                    label={label}
+                    value={routeAssignments[key] ?? ""}
+                    onChange={(v) =>
+                      setRouteAssignments((prev) => ({ ...prev, [key]: v }))
+                    }
+                    story={draftStory}
+                    knownPageIds={knownPageIds}
+                    idSet={idSet}
+                  />
+                </div>
+              );
+            })}
+            <RiddleScoreDestinationSelect
+              label="Default → cél (ismeretlen kombináció / első betöltés)"
+              value={routeDefaultGoto}
+              onChange={setRouteDefaultGoto}
+              story={draftStory}
+              knownPageIds={knownPageIds}
+              idSet={idSet}
+            />
           </>
         ) : isOtherPuzzle ? (
           <label className={s.field}>

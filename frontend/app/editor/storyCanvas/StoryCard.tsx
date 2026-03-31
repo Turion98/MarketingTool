@@ -123,7 +123,8 @@ export default function StoryCard({
     : [];
 
   const inYs = inputPortYs(incomingPortCount, h, {
-    logicLayout: node.isLogicPage,
+    logicLayout:
+      node.isLogicPage || node.category === "puzzleRoute",
   });
 
   const milestoneOn =
@@ -391,7 +392,9 @@ export default function StoryCard({
         ) : (
           <>
             <div className={s.cardRow2}>
-              {node.isLogicPage ? (
+              {node.category === "puzzleRoute" ? (
+                <span className={s.cardTagRoute}>route</span>
+              ) : node.isLogicPage ? (
                 <span className={s.cardTag}>logic</span>
               ) : node.isPuzzlePage && !riddle ? (
                 <span className={s.cardTag}>
@@ -428,6 +431,41 @@ export default function StoryCard({
                       />
                     </div>
                   ))
+                )}
+              </div>
+            ) : node.category === "puzzleRoute" ? (
+              <div className={s.cardOptStripStack}>
+                {ord.length === 0 ? (
+                  <span className={s.cardOptMuted}>nincs kimenet</span>
+                ) : (
+                  ord.map((e) => {
+                    const rawLab = String(e.label ?? "");
+                    const comboLab = rawLab.startsWith("rt:")
+                      ? rawLab.slice(3)
+                      : rawLab;
+                    return (
+                      <div key={e.id} className={s.cardOptStrip}>
+                        <span className={s.cardOptStripMain}>
+                          {e.kind === "logicElse" ? (
+                            <span className={s.cardRouteElseMark}>default</span>
+                          ) : (
+                            <>
+                              <span className={s.cardRouteComboMark}>kombó</span>
+                              <span
+                                className={s.cardLogicFragTight}
+                                title={comboLab}
+                              >
+                                {comboLab || "?"}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                        <span className={s.cardOptStripGoto} title={e.to}>
+                          → {e.to}
+                        </span>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             ) : !node.isLogicPage && !node.isPuzzlePage ? (

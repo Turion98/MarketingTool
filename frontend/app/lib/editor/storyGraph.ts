@@ -229,6 +229,19 @@ export function buildStoryGraph(story: Record<string, unknown>): {
         if (!row) return;
         const goTo = readString(row.goto);
         const defaultTo = readString(row.default);
+        const ifArr = Array.isArray(row.if)
+          ? row.if.filter(
+              (x): x is string => typeof x === "string" && x.length > 0
+            )
+          : [];
+        if (ifArr.length > 0 && goTo) {
+          add(n.pageId, goTo, "logicIf", ifArr.join(", "));
+          return;
+        }
+        if (defaultTo && !goTo && ifArr.length === 0) {
+          add(n.pageId, defaultTo, "logicElse");
+          return;
+        }
         const target = goTo ?? defaultTo;
         if (target) {
           add(n.pageId, target, "logicIf", String(idx));
@@ -243,6 +256,16 @@ export function buildStoryGraph(story: Record<string, unknown>): {
         const goTo = readString(row?.goto);
         add(n.pageId, goTo, "logicIf", `cr:${idx}`);
       });
+    }
+
+    if (rec.type === "puzzleRoute") {
+      const ra = asRecord(rec.routeAssignments) ?? {};
+      Object.entries(ra).forEach(([key, v]) => {
+        const goTo = typeof v === "string" ? v : "";
+        add(n.pageId, goTo, "logicIf", `rt:${key}`);
+      });
+      const def = readString(rec.defaultGoto);
+      add(n.pageId, def, "logicElse");
     }
 
     if (rec.type === "puzzle") {

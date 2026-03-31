@@ -130,6 +130,15 @@ export function buildEmptyPageForCategory(
       return buildTemplatePageByKey("riddle", nid, next);
     case "puzzleRunes":
       return buildTemplatePageByKey("runes", nid, next);
+    case "puzzleRoute":
+      return {
+        id: nid,
+        type: "puzzleRoute",
+        title: "Puzzle route",
+        puzzleSourcePageId: "",
+        routeAssignments: {},
+        defaultGoto: next,
+      };
     case "logic":
       return buildTemplatePageByKey("logic", nid, next);
     case "conditionalRouting":

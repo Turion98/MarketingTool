@@ -2,6 +2,7 @@
 
 import { canonicalMilestoneFragmentId } from "./milestoneFragmentId";
 import type { FragmentBank, PageData } from "./gameStateTypes";
+import { puzzleRoutePickGlobalKey } from "./puzzleRoutePick";
 import { getClientFetchApiBase } from "./publicApiBase";
 
 type PageRuntimeDecision =
@@ -58,10 +59,29 @@ export function buildPageRequestUrl(pageId: string, storySrc: string): string {
 
 export function resolvePageRuntimeDecision(
   raw: unknown,
-  unlockedFragments: string[]
+  unlockedFragments: string[],
+  globals?: Record<string, unknown>
 ): PageRuntimeDecision {
   const page = asRecord(raw);
   if (!page) return { kind: "ok" };
+
+  if (page.type === "puzzleRoute") {
+    const source = typeof page.puzzleSourcePageId === "string" ? page.puzzleSourcePageId : "";
+    const assignments = asRecord(page.routeAssignments) ?? {};
+    const def = typeof page.defaultGoto === "string" ? page.defaultGoto : "";
+    if (source && globals) {
+      const gk = puzzleRoutePickGlobalKey(source);
+      const rawPick = globals[gk];
+      const pickKey = typeof rawPick === "string" ? rawPick.trim() : "";
+      const mapped =
+        pickKey && typeof assignments[pickKey] === "string"
+          ? String(assignments[pickKey]).trim()
+          : "";
+      if (mapped) return { kind: "redirect", pageId: mapped };
+    }
+    if (def) return { kind: "redirect", pageId: def };
+    return { kind: "ok" };
+  }
 
   const logic = asRecord(page.logic);
   const ifHasFragment = Array.isArray(logic?.ifHasFragment) ? logic.ifHasFragment : [];

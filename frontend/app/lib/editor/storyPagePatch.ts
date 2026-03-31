@@ -216,6 +216,26 @@ export function patchOutgoingNavRefsInPage(
     });
   }
 
+  if (next.type === "puzzleRoute") {
+    if (
+      typeof next.puzzleSourcePageId === "string" &&
+      next.puzzleSourcePageId === from
+    ) {
+      next.puzzleSourcePageId = to;
+    }
+    if (typeof next.defaultGoto === "string" && next.defaultGoto === from) {
+      next.defaultGoto = to;
+    }
+    const ra = asRecord(next.routeAssignments);
+    if (ra) {
+      const nr: Record<string, unknown> = { ...ra };
+      for (const k of Object.keys(nr)) {
+        if (nr[k] === from) nr[k] = to;
+      }
+      next.routeAssignments = nr;
+    }
+  }
+
   const tr = asRecord(next.transition);
   if (tr && typeof tr.nextPageId === "string" && tr.nextPageId === from) {
     next.transition = { ...tr, nextPageId: to };

@@ -9,6 +9,26 @@ export type Measure = {
   content: { x: number; y: number; width: number; height: number };
 };
 
+function rectNearlyEqual(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+  eps = 1
+): boolean {
+  return (
+    Math.abs(a.x - b.x) <= eps &&
+    Math.abs(a.y - b.y) <= eps &&
+    Math.abs(a.width - b.width) <= eps &&
+    Math.abs(a.height - b.height) <= eps
+  );
+}
+
+function measuresNearlyEqual(a: Measure | null, b: Measure): boolean {
+  if (!a) return false;
+  return (
+    rectNearlyEqual(a.panel, b.panel) && rectNearlyEqual(a.content, b.content)
+  );
+}
+
 export type NarrativePanelProps = {
   pageId: string;
   lines: string[];
@@ -124,8 +144,8 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
               return;
             }
 
-            // ha már van lock és a typing is kész, akkor frissítjük
-            if (lockedMeasure && typingDone) {
+            // Typing után: csak ha a méret tényleg változott (különben setState → layout → végtelen ciklus)
+            if (lockedMeasure && typingDone && !measuresNearlyEqual(lockedMeasure, m)) {
               setLockedMeasure(m);
             }
           }}

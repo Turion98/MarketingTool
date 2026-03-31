@@ -818,15 +818,16 @@ useEffect(() => {
         setIsLoading(false);
         return;
       }
-      const runtimeDecision = resolvePageRuntimeDecision(rawPage, unlockedFragments);
-      if (runtimeDecision.kind === "redirect") {
-        setCurrentPageId(runtimeDecision.pageId);
-        return;
-      }
-      if (runtimeDecision.kind === "blocked") {
-        setCurrentPageId("landing");
-        return;
-      }
+      const runtimeDecision = resolvePageRuntimeDecision(
+        rawPage,
+        unlockedFragments,
+        globals
+      );
+      // Szerkesztő élő preview: ne kövessük a runtime redirectet (puzzleRoute,
+      // logic elseGoTo, stb.) — különben a vászon kijelölés ↔ preview összeveszik
+      // és végtelen setCurrentPageId ciklus keletkezik.
+      // Redirect és blocked is figyelmen kívül: ugyanaz a bridge-ciklus elkerülése.
+      void runtimeDecision;
       setIsLoading(true);
       const normalized = normalizeFetchedPage(rawPage);
       setCurrentPageData(normalized);
@@ -872,7 +873,11 @@ useEffect(() => {
         }
 
         const raw = await response.json();
-        const runtimeDecision = resolvePageRuntimeDecision(raw, unlockedFragments);
+        const runtimeDecision = resolvePageRuntimeDecision(
+          raw,
+          unlockedFragments,
+          globals
+        );
         if (runtimeDecision.kind === "redirect") {
           setCurrentPageId(runtimeDecision.pageId);
           return;
@@ -925,6 +930,7 @@ useEffect(() => {
     currentPageId,
     globalStorySrc,
     unlockedFragments,
+    globals,
     setCurrentPageId,
     setGlobal,
     registerAbort,
@@ -1071,6 +1077,8 @@ useEffect(() => {
         setRewardImageReady,
         registerRewardFrame,
         downloadRewardImage,
+
+        isEditorDraftPreview: Boolean(draftStoryResolver),
       }}
     >
       {children}

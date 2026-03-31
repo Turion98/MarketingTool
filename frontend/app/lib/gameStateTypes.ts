@@ -17,6 +17,10 @@ export type ImagePromptObj = {
 export type PageData = {
   id: string;
   type?: string;
+  /** Runes → route: forrás puzzle id + kombináció → cél + default. */
+  puzzleSourcePageId?: string;
+  routeAssignments?: Record<string, string>;
+  defaultGoto?: string;
   startPageId?: string;
   profile?: {
     name?: string;
@@ -161,4 +165,6 @@ export type GameStateContextType = {
   setRewardImageReady: (ready: boolean) => void;
   registerRewardFrame: (el: HTMLDivElement | null) => void;
   downloadRewardImage: () => void;
+  /** Szerkesztő élő draft előnézet — ne fusson auto-navigáció a StoryPage-ben. */
+  isEditorDraftPreview?: boolean;
 };

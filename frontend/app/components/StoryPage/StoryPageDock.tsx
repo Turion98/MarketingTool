@@ -4,6 +4,11 @@ import type { MutableRefObject, ReactElement } from "react";
 
 import type { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { trackPuzzleResult, trackPuzzleTry } from "../../lib/analytics";
+import {
+  buildOpenModeRoutePickKey,
+  puzzleRoutePickGlobalKey,
+  runesPickBounds,
+} from "../../lib/puzzleRoutePick";
 import CampaignCta from "../CampaignCta/CampaignCta";
 import InteractionDock from "../layout/InteractionDock/InteractionDock";
 import PuzzleRunes from "../labs/PuzzleRunes/PuzzleRunes";
@@ -31,6 +36,7 @@ type PuzzleRunesData = {
   answer?: string[];
   maxAttempts?: number;
   maxPick?: number;
+  minPick?: number;
   optionFlagsBase?: string;
   mode?: "ordered" | "set";
   feedback?: "keep" | "reset";
@@ -66,6 +72,7 @@ type StoryPageDockProps = {
   handleChoice: (next: string, reward?: unknown, choiceObj?: unknown) => void;
   setFlag: (flagId: string) => void;
   goToNextPage: (id: string) => void;
+  setGlobal?: (key: string, value: unknown) => void;
 };
 
 export function StoryPageDock({
@@ -90,6 +97,7 @@ export function StoryPageDock({
   handleChoice,
   setFlag,
   goToNextPage,
+  setGlobal,
 }: StoryPageDockProps): ReactElement | null {
   if (
     !showChoices ||
@@ -147,6 +155,21 @@ export function StoryPageDock({
           setFlag(flagId);
         }
       });
+    }
+
+    if (ok && isOpenPuzzle && setGlobal && Array.isArray(page.options)) {
+      const { minPick, maxPick } = runesPickBounds(page);
+      const mode = page.mode === "ordered" ? "ordered" : "set";
+      const routeKey = buildOpenModeRoutePickKey(
+        pickedIds,
+        page.options,
+        mode,
+        minPick,
+        maxPick
+      );
+      if (routeKey) {
+        setGlobal(puzzleRoutePickGlobalKey(page.id), routeKey);
+      }
     }
 
     const branch = ok ? page.onSuccess : page.onFail;
@@ -218,13 +241,15 @@ export function StoryPageDock({
             (() => {
               const runesPage = pageData as unknown as PuzzleRunesData;
               const answer = Array.isArray(runesPage.answer) ? runesPage.answer : [];
+              const { minPick, maxPick } = runesPickBounds(runesPage);
 
               return (
                 <PuzzleRunes
                   options={runesPage.options}
                   answer={answer}
                   maxAttempts={runesPage.maxAttempts ?? 3}
-                  maxPick={runesPage.maxPick}
+                  maxPick={maxPick}
+                  minPick={minPick}
                   mode={runesPage.mode ?? "ordered"}
                   feedback={runesPage.feedback ?? "reset"}
                   className={dockStyles.grid}

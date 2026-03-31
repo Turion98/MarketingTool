@@ -23,6 +23,8 @@ type PuzzleRunesProps = {
 
   /** Hány runát lehet / kell kiválasztani. Ha nincs, answer.length vagy fallback. */
   maxPick?: number;
+  /** Open módban (nincs answer): legalább ennyi kell beküldéshez. Graded módban figyelmen kívül hagyva. */
+  minPick?: number;
 
   /** onResult: eredmény + ténylegesen kiválasztott opciók */
   onResult: (ok: boolean, picked: string[]) => void;
@@ -96,6 +98,7 @@ export default function PuzzleRunes({
   answer,
   maxAttempts = 3,
   maxPick: maxPickProp,
+  minPick: minPickProp,
   onResult,
   storyId,
   sessionId,
@@ -141,12 +144,27 @@ export default function PuzzleRunes({
       ? effectiveAnswer.length
       : 2; // open puzzle fallback: pl. 2 választás
 
+  const minPickOpen = Math.max(
+    1,
+    !hasAnswer &&
+      typeof minPickProp === "number" &&
+      minPickProp > 0
+      ? Math.min(minPickProp, maxPick)
+      : hasAnswer
+        ? maxPick
+        : 1
+  );
+
   const answerSet = useMemo(() => new Set(effectiveAnswer), [effectiveAnswer]);
 
-  const canSubmit =
-    mode === "ordered"
+  const pickedTotal = picked.length + lockedCorrect.size;
+  const canSubmit = hasAnswer
+    ? mode === "ordered"
       ? picked.length === maxPick
-      : picked.length + lockedCorrect.size === maxPick;
+      : pickedTotal === maxPick
+    : mode === "ordered"
+      ? picked.length >= minPickOpen && picked.length <= maxPick
+      : pickedTotal >= minPickOpen && pickedTotal <= maxPick;
 
   const softResetWrongFlashSoon = () => {
     if (flashTidRef.current != null) {

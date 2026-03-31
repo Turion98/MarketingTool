@@ -70,37 +70,50 @@ export default function NineSlicePanel({
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const onMeasureRef = useRef(onMeasure);
+  onMeasureRef.current = onMeasure;
+  /** Ugyanaz a méret → ne hívjuk onMeasure-t (ResizeObserver + setState végtelen ciklus elkerülése). */
+  const lastMeasureSigRef = useRef("");
   const R = (v: number) => Math.round(v);
 
-  const doMeasure = () => {
-    if (!onMeasure) return;
-    const root = rootRef.current;
-    const content = contentRef.current;
-    if (!root || !content) return;
+  useLayoutEffect(() => {
+    lastMeasureSigRef.current = "";
 
-    const panelRect = root.getBoundingClientRect();
-    const contentRect = content.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const doMeasure = () => {
+      const cb = onMeasureRef.current;
+      if (!cb) return;
+      const root = rootRef.current;
+      const content = contentRef.current;
+      if (!root || !content) return;
 
-    onMeasure({
-      panel: {
+      const panelRect = root.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const panel = {
         x: R(panelRect.x),
         y: R(panelRect.y),
         width: R(panelRect.width),
         height: R(panelRect.height),
-      },
-      content: {
+      };
+      const contentBox = {
         x: R(contentRect.x),
         y: R(contentRect.y),
         width: R(contentRect.width),
         height: R(contentRect.height),
-      },
-      padding: { top: padTop, right: padRight, bottom: padBottom, left: padLeft },
-      dpr,
-    });
-  };
+      };
+      const sig = `${panel.x},${panel.y},${panel.width},${panel.height}|${contentBox.x},${contentBox.y},${contentBox.width},${contentBox.height}|${dpr}`;
+      if (lastMeasureSigRef.current === sig) return;
+      lastMeasureSigRef.current = sig;
 
-  useLayoutEffect(() => {
+      cb({
+        panel,
+        content: contentBox,
+        padding: { top: padTop, right: padRight, bottom: padBottom, left: padLeft },
+        dpr,
+      });
+    };
+
     doMeasure();
     const ro = new ResizeObserver(() => doMeasure());
     const root = rootRef.current;
@@ -123,8 +136,7 @@ export default function NineSlicePanel({
       window.removeEventListener("resize", handle);
       mq.removeEventListener?.("change", handle);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trackScroll]);
+  }, [trackScroll, padTop, padRight, padBottom, padLeft]);
 
   const styleAll: React.CSSProperties = {
     ...styleVars,

@@ -74,6 +74,7 @@ export type PuzzleRunesPage = {
   answer?: string[];
   maxAttempts?: number;
   maxPick?: number;
+  minPick?: number;
   optionFlagsBase?: string;
   mode?: "ordered" | "set";
   feedback?: "keep" | "reset";
