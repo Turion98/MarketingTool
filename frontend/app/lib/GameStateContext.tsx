@@ -7,6 +7,7 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useMemo,
   useRef,
@@ -80,6 +81,21 @@ import type {
   RuneChoice,
 } from "./gameStateTypes";
 
+/** Page-fetch async: mindig a legfrissebb globals / unlock listát használjuk anélkül,
+ * hogy a teljes `globals` objektumot effekt-függőségként kötnénk (meta refresh → új ref → végtelen fetch ciklus). */
+function useRuntimeDecisionRefs(
+  globals: GameStateGlobals,
+  unlockedFragments: string[]
+) {
+  const globalsRef = useRef(globals);
+  const unlockedRef = useRef(unlockedFragments);
+  useLayoutEffect(() => {
+    globalsRef.current = globals;
+    unlockedRef.current = unlockedFragments;
+  });
+  return { globalsRef, unlockedRef };
+}
+
 export { normalizeImagePrompt, resolveNextFromPage } from "./gameStateHelpers";
 export type { FragmentData } from "./gameStateTypes";
 
@@ -127,6 +143,12 @@ export const GameStateProvider = ({
       return next;
     });
   }, [ls.globals]);
+
+  const { globalsRef, unlockedRef } = useRuntimeDecisionRefs(
+    globals,
+    unlockedFragments
+  );
+
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isMuted, setMuted] = useState<boolean>(false);
   const [currentPageId, setCurrentPageIdState] = useState<string>("landing");
@@ -875,8 +897,8 @@ useEffect(() => {
         const raw = await response.json();
         const runtimeDecision = resolvePageRuntimeDecision(
           raw,
-          unlockedFragments,
-          globals
+          unlockedRef.current,
+          globalsRef.current
         );
         if (runtimeDecision.kind === "redirect") {
           setCurrentPageId(runtimeDecision.pageId);
@@ -925,12 +947,13 @@ useEffect(() => {
         ac.abort();
       } catch {}
     };
+    /* A teljes `globals` objektum szándékosan nincs a függőségek között: meta / analytics
+     * setGlobal → új referencia → végtelen abort+refetch. A döntéshez globalsRef / unlockedRef. */
   }, [
     hydrated,
     currentPageId,
     globalStorySrc,
     unlockedFragments,
-    globals,
     setCurrentPageId,
     setGlobal,
     registerAbort,

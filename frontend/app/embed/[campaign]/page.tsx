@@ -10,21 +10,21 @@ const RUNE_LS_KEY = "runePackByCampaignId";
 export default function EmbedCampaignPage() {
   const q = useSearchParams();
 
+  const skin = q.get("skin") || "contract_default";
+  const src = q.get("src");
+  const title = q.get("title");
+  const start = q.get("start");
+  const campaignId = q.get("c");
+  const runes = q.get("runes");
+  const runemode = q.get("runemode");
+
   useEffect(() => {
-    const skin = q.get("skin") || "contract_default";
     loadTokens(`/skins/${skin}.json`).catch(() => {});
-  }, [q]);
+  }, [skin]);
 
   useEffect(() => {
     try {
-      const src       = q.get("src");
-      const title     = q.get("title");
-      const start     = q.get("start");
-      const campaignId= q.get("c");            // ha küldöd
-      const runes     = q.get("runes");        // pl. "ring,arc,dot"
-      const runemode  = q.get("runemode");     // "single" | "triple"
-
-      if (src)   localStorage.setItem("storySrc", src);
+      if (src) localStorage.setItem("storySrc", src);
       if (title) localStorage.setItem("storyTitle", title);
       if (start) localStorage.setItem("currentPageId", start);
 
@@ -37,7 +37,7 @@ export default function EmbedCampaignPage() {
         } catch {}
       }
     } catch {}
-  }, [q]);
+  }, [src, title, start, campaignId, runes, runemode]);
 
   return <StoryPage />;
 }

@@ -25,11 +25,17 @@ export function useStoryPageBootstrap({
    */
   const appliedBootstrapKeyRef = useRef<string | null>(null);
 
+  /** Primitívek: a `params` objektum referenciája Next-ben renderenként változhat → ne kössük effekthez. */
+  const srcQ = params.get("src");
+  const startQ = params.get("start");
+  const titleQ = params.get("title");
+  const rsQ = params.get("rs") || "";
+
   useEffect(() => {
-    const src = params.get("src");
-    const start = params.get("start");
-    const title = params.get("title");
-    const rs = params.get("rs") || "";
+    const src = srcQ;
+    const start = startQ;
+    const title = titleQ;
+    const rs = rsQ;
 
     if (src) {
       setStorySrc?.(src);
@@ -66,5 +72,5 @@ export function useStoryPageBootstrap({
       localStorage.setItem("currentPageId", start);
     } catch {}
     goToNextPage(start);
-  }, [params, goToNextPage, setGlobal, setStorySrc]);
+  }, [srcQ, startQ, titleQ, rsQ, goToNextPage, setGlobal, setStorySrc]);
 }
