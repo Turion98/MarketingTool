@@ -1,4 +1,7 @@
 # .gitignore
+# TypeScript incremental build cache (ne kerüljön a repóba)
+*.tsbuildinfo
+
 node_modules/
 .next/
 dist/
