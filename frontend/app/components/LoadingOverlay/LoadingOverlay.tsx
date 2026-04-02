@@ -5,24 +5,36 @@ import styles from "./LoadingOverlay.module.scss";
 type LoadingOverlayProps = {
   /** Opcionális felirat (alap: "Loading…") */
   message?: string;
+  /** Ghost embed: nincs scrim, csak spinner */
+  variant?: "default" | "minimal";
 };
 
-const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ message = "Loading…" }) => {
+const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
+  message = "Loading…",
+  variant = "default",
+}) => {
   const { isLoading } = useGameState();
   if (!isLoading) return null;
 
-  return (
-    <div className={styles.overlay} role="status" aria-live="polite" aria-busy="true">
-      {/* BG token-vezérelt (szín/gradient/kép + blur + scrim) */}
-      <div className={styles.bg}>
-        <div className={styles.cssBg} aria-hidden />
-        <div className={styles.scrim} aria-hidden />
-      </div>
+  const minimal = variant === "minimal";
 
-      {/* Tartalom */}
+  return (
+    <div
+      className={`${styles.overlay} ${minimal ? styles.overlayMinimal : ""}`}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      {!minimal && (
+        <div className={styles.bg}>
+          <div className={styles.cssBg} aria-hidden />
+          <div className={styles.scrim} aria-hidden />
+        </div>
+      )}
+
       <div className={styles.content}>
         <div className={styles.spinner} aria-hidden />
-        <div className={styles.label}>{message}</div>
+        {!minimal && <div className={styles.label}>{message}</div>}
       </div>
     </div>
   );

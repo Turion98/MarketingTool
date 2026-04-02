@@ -36,6 +36,26 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
+
+/* Ghost embed: folyékony magasság, átlátszó — ne fixed viewport (iframe resize) */
+.canvasEmbedGhost {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+  --_page-bg: transparent;
+}
+
+.canvasEmbedGhost .background {
+  display: none;
+}
+
+.canvasEmbedGhost .playfield {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+}
 /* FIGYELEM:
    kivesszük a .canvasInner réteget nálad ténylegesen nincs is használva a JSX-ben
    (Canvas.tsx nem renderel canvasInner-t), ezért törölhető lenne.

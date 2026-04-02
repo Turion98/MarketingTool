@@ -95,3 +95,16 @@
   font-size: var(--loading-label-size);
   letter-spacing: .02em;
 }
+
+.overlayMinimal {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.overlayMinimal .content {
+  text-shadow: none;
+  --loading-fg: currentColor;
+  --loading-spinner-track: rgba(0, 0, 0, 0.15);
+  --loading-spinner-active: rgba(0, 0, 0, 0.55);
+}

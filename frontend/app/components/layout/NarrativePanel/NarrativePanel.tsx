@@ -53,6 +53,9 @@ export type NarrativePanelProps = {
 
   /** ms-ben: mennyi idő a kifade transition (syncben --np-exit-dur-rel) */
   exitMs?: number;
+
+  /** Ghost embed: minimális króm */
+  embedGhost?: boolean;
 };
 
 /**
@@ -78,6 +81,7 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
     exiting = false,
     onExitDone,
     exitMs = 220,
+    embedGhost = false,
   } = props;
 
   // Ez az a node, amin a kilépő transition fut (.textboxContainer a scss-ben)
@@ -127,6 +131,7 @@ const NarrativePanel: React.FC<NarrativePanelProps> = (props) => {
       role="region"
       aria-label="Narration box"
       data-exiting={exiting ? "1" : "0"}
+      data-embed-ghost={embedGhost ? "1" : undefined}
     >
       <div className={s.textboxContainer} ref={boxRef}>
         <NineSlicePanel

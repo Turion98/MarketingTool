@@ -162,3 +162,20 @@
 }
 
 }
+
+/* Ghost embed: kevesebb „doboz”, host oldal színei */
+.textDockTop[data-embed-ghost="1"] {
+  padding-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.textDockTop[data-embed-ghost="1"] .textboxContainer {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.textDockTop[data-embed-ghost="1"] .titleOverlay {
+  text-shadow: none;
+  color: inherit;
+}

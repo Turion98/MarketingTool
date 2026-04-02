@@ -22,6 +22,8 @@ type InteractionDockProps = {
   onSelect: (choiceId: string) => void;
   /** Külső osztály a wrapperhez (pl. grid-area kiosztáshoz) */
   className?: string;
+  /** Ghost embed: egyszerű szövegszerű választók */
+  embedGhost?: boolean;
 };
 
 /** Egyszerű segédfüggvény a className-ek összefűzésére */
@@ -34,6 +36,7 @@ const InteractionDock: React.FC<InteractionDockProps> = ({
   choices,
   onSelect,
   className,
+  embedGhost = false,
 }) => {
   const safeChoices = useMemo<DockChoice[]>(
     () => (Array.isArray(choices) ? choices : []),
@@ -66,7 +69,7 @@ const InteractionDock: React.FC<InteractionDockProps> = ({
       aria-label="Choices"
       data-mode={mode}
     >
-      <div className={s.grid} role="list">
+      <div className={cx(s.grid, embedGhost && s.gridGhost)} role="list">
         {safeChoices.map((c) => {
           const disabled = !!c.disabled;
           const key = String(c.id);

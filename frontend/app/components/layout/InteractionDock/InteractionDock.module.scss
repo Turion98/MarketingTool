@@ -42,6 +42,43 @@
     transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
 
+.gridGhost {
+  gap: 6px;
+  padding: 0;
+}
+
+.gridGhost .choice {
+  color: inherit;
+  background: transparent;
+  border-width: 0;
+  border-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.gridGhost .choice:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.choiceGhost {
+  color: inherit;
+  background: transparent;
+  border-width: 0;
+  border-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.choiceGhost:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
 /* ===== Children sizing ===== */
 /* mobil baseline (alapértelmezett) */
 .grid > * {
@@ -100,6 +137,12 @@
     background var(--dock-dur-hover, 160ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     opacity var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1)),
     filter var(--dock-dur-fade, 180ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
+}
+
+@media (max-width: 640px) {
+  .choice {
+    font-size: var(--choice-font-mobile, var(--choice-font, 16px));
+  }
 }
 
 /* ===== Belépő animáció a choice gombokra (mountkor) ===== */

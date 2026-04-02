@@ -28,6 +28,9 @@ type CanvasProps = {
 
   /** Extra class, opcionális */
   className?: string;
+
+  /** Ghost embed: nem fixed fullscreen, átlátszó — iframe auto-height méréshez */
+  embedGhost?: boolean;
 };
 
 function cx(...v: Array<string | undefined | false | null>) {
@@ -45,6 +48,7 @@ export default function Canvas({
   children,
   style,
   className,
+  embedGhost = false,
 }: CanvasProps) {
   // 🔹 ténylegesen csak akkor számítson "van mediának", ha van legalább 1 gyerek-node
   const hasMedia = React.Children.toArray(media ?? []).length > 0;
@@ -52,7 +56,7 @@ export default function Canvas({
 
   return (
     <main
-      className={cx(styles.canvasWrap, className)}
+      className={cx(styles.canvasWrap, embedGhost && styles.canvasEmbedGhost, className)}
       style={style}
       data-layout="media-narrative-choices"
       aria-label="Interactive Story Canvas"
