@@ -126,20 +126,18 @@ function AdventuresHeaderBar() {
         <button type="button" onClick={() => router.push("/")}>
           Vissza
         </button>
-        {process.env.NODE_ENV !== "production" && (
-          <button
-            type="button"
-            className={styles.devSkinCacheBtn}
-            onClick={() => {
-              const n = clearSkinCache();
-              alert(`Skin cache törölve (${n} kulcs). Frissítek...`);
-              location.reload();
-            }}
-            title="mt:v1:skin:* + skinByCampaignId törlése"
-          >
-            DEV: Clear skin cache
-          </button>
-        )}
+        <button
+          type="button"
+          className={styles.devSkinCacheBtn}
+          onClick={() => {
+            const n = clearSkinCache();
+            alert(`Skin cache törölve (${n} kulcs). Frissítek...`);
+            location.reload();
+          }}
+          title="mt:v1:skin:* + skinByCampaignId törlése (localStorage)"
+        >
+          Clear skin cache
+        </button>
       </div>
     </div>
   );
