@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { flushSync } from "react-dom";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import style from "./StoryPage.module.scss";
 import {
@@ -37,6 +37,8 @@ import { useStoryPageAnalytics } from "./useStoryPageAnalytics";
 import { useStoryPageEndState } from "./useStoryPageEndState";
 import { useStoryPageMediaAudio } from "./useStoryPageMediaAudio";
 import { useStoryPagePreloads } from "./useStoryPagePreloads";
+import { useEmbedParentResize } from "./useEmbedParentResize";
+import EmbedGhostDocumentBg from "../embed/EmbedGhostDocumentBg";
 import canvasStyles from "../layout/Canvas/Canvas.module.scss";
 
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
@@ -288,6 +290,9 @@ const StoryPage: React.FC = () => {
 
   /** --- URL params / analytics --- */
   const params = useSearchParams();
+  const pathname = usePathname();
+  const isEmbedPath = (pathname ?? "").startsWith("/embed/");
+  const isGhostEmbed = isEmbedPath && params.get("ghost") === "1";
 
 const skin = useMemo(() => {
   return globals?.skin || params.get("skin") || "legacy-default";
@@ -334,6 +339,12 @@ const stringGlobals = useMemo<Record<string, string>>(
     setGlobal,
     setStorySrc,
   });
+
+  useEmbedParentResize(
+    pageRootRef,
+    isEmbedPath,
+    `${isLoading}:${currentPageId ?? ""}:${globals?.storySrc ?? ""}`
+  );
 
   useStoryPageAnalytics({
     derivedStoryId,
@@ -1427,14 +1438,19 @@ const showFrame = useMemo(() => {
 
   if (!globals?.storySrc) {
     return (
-      <div className={style.storyPage}>
-        <DecorBackground />
+      <div
+        ref={isEmbedPath ? pageRootRef : undefined}
+        className={style.storyPage}
+        data-embed-ghost={isGhostEmbed ? "1" : undefined}
+      >
+        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        {!isGhostEmbed && <DecorBackground />}
         <div
           style={{
             position: "relative",
             zIndex: 5,
             padding: "8vh 4vw",
-            color: "#fff",
+            color: isGhostEmbed ? "inherit" : "#fff",
           }}
         >
           <h2>No story loaded</h2>
@@ -1462,10 +1478,13 @@ const showFrame = useMemo(() => {
     });
     return (
       <div
+        ref={isEmbedPath ? pageRootRef : undefined}
         className={style.storyPage}
         data-testid="fallback"
+        data-embed-ghost={isGhostEmbed ? "1" : undefined}
       >
-        <LoadingOverlay />
+        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        <LoadingOverlay variant={isGhostEmbed ? "minimal" : "default"} />
       </div>
     );
   }
@@ -1505,11 +1524,16 @@ const showFrame = useMemo(() => {
   if (isTransitionVideoPage(pageData)) {
     const t = pageData.transition;
     return (
-      <div className={style.storyPage}>
+      <div
+        ref={isEmbedPath ? pageRootRef : undefined}
+        className={style.storyPage}
+        data-embed-ghost={isGhostEmbed ? "1" : undefined}
+      >
+        {isGhostEmbed && <EmbedGhostDocumentBg />}
          <AdminQuickPanel />
         {analyticsSync}
 
-        <DecorBackground />
+        {!isGhostEmbed && <DecorBackground />}
         {showAnalytics && (
           <AnalyticsReport
             storyId={derivedStoryId}
@@ -1573,14 +1597,21 @@ const showFrame = useMemo(() => {
         : null) ||
       "ch4_pg1";
     return (
-      <div className={style.storyPage}>
+      <div
+        ref={isEmbedPath ? pageRootRef : undefined}
+        className={style.storyPage}
+        data-embed-ghost={isGhostEmbed ? "1" : undefined}
+      >
+        {isGhostEmbed && <EmbedGhostDocumentBg />}
         <AdminQuickPanel />
         {analyticsSync}
-        <div
-          className={style.storyBackground}
-        >
-          <DecorBackground preset="subtle" />
-        </div>
+        {!isGhostEmbed && (
+          <div
+            className={style.storyBackground}
+          >
+            <DecorBackground preset="subtle" />
+          </div>
+        )}
 
       
         {showAnalytics && (
@@ -1633,7 +1664,9 @@ const showFrame = useMemo(() => {
       ref={pageRootRef}
       className={style.storyPage}
       data-skin={skin}
+      data-embed-ghost={isGhostEmbed ? "1" : undefined}
     >
+      {isGhostEmbed && <EmbedGhostDocumentBg />}
       <AdminQuickPanel />
       {analyticsSync}
       {showAnalytics && (
@@ -1642,45 +1675,54 @@ const showFrame = useMemo(() => {
         />
       )}
 
-      {isLoading && <LoadingOverlay />}
+      {isLoading && (
+        <LoadingOverlay variant={isGhostEmbed ? "minimal" : "default"} />
+      )}
 
       <Canvas
+        embedGhost={isGhostEmbed}
         background={
-          <DecorBackground preset="subtle" />
+          isGhostEmbed ? undefined : (
+            <DecorBackground preset="subtle" />
+          )
         }
         /* szélesebb tartalmi sáv a runtime-ban */
         style={canvasStyleVars}
         topbar={
-          <>
-            <HeaderBar
-              data-skin={skin}
-              variant="transparent"
-              elevated
-              left={
-                <img
-                  src={logoUrl}
-                  alt={
-                    typeof meta?.title === "string"
-                      ? meta.title
-                      : titleText || "Logo"
-                  }
-                  data-logo
-                />
-              }
-              center={
-                <span data-header-title>
-                  {titleText}
-                </span>
-              }
-              right={null}
-            />
-          </>
+          isGhostEmbed ? null : (
+            <>
+              <HeaderBar
+                data-skin={skin}
+                variant="transparent"
+                elevated
+                left={
+                  <img
+                    src={logoUrl}
+                    alt={
+                      typeof meta?.title === "string"
+                        ? meta.title
+                        : titleText || "Logo"
+                    }
+                    data-logo
+                  />
+                }
+                center={
+                  <span data-header-title>
+                    {titleText}
+                  </span>
+                }
+                right={null}
+              />
+            </>
+          )
         }
         progress={
-          <ProgressStrip
-            value={progressDisplay.value ?? 0}
-            milestones={progressDisplay.milestones}
-          />
+          isGhostEmbed ? null : (
+            <ProgressStrip
+              value={progressDisplay.value ?? 0}
+              milestones={progressDisplay.milestones}
+            />
+          )
         }
                 media={mediaNode}
 
@@ -1721,6 +1763,7 @@ const showFrame = useMemo(() => {
         title={pageData?.title}
         exiting={isFadingOut}              // ha már bekötötted, maradjon
         exitMs={600}
+        embedGhost={isGhostEmbed}
       />
     </div>
   )
@@ -1728,6 +1771,7 @@ const showFrame = useMemo(() => {
 
         dock={
           <StoryPageDock
+            embedGhost={isGhostEmbed}
             showChoices={showChoices}
             choicePageId={choicePageId}
             pageUnlockedForInteraction={pageUnlockedForInteraction}
@@ -1754,50 +1798,52 @@ const showFrame = useMemo(() => {
         }
 
         action={
-          <ActionBar
-            canSkip={
-              skipAvailable &&
-              !isEndNode
-            }
-            onSkip={() => {
-              setSkipRequested(
-                true
-              );
-              setPageUnlockedForInteraction(
-                pageData.id
-              );
-              setTimeout(
-                () =>
-                  setSkipRequested(
-                    false
-                  ),
-                0
-              );
-            }}
-            canReplay={!isEndNode}
-            onReplay={() => {
-              setSkipRequested(
-                false
-              );
-              setReplayKey(
-                (prev) =>
-                  prev + 1
-              );
-              triggerAudioRestart();
-            }}
-            muted={!!isMuted}
-            onToggleMute={() => {
-              const newMuted = !isMuted;
-              setIsMuted(
-                newMuted
-              );
-              try {
-                setSfxMuted(
+          isGhostEmbed ? null : (
+            <ActionBar
+              canSkip={
+                skipAvailable &&
+                !isEndNode
+              }
+              onSkip={() => {
+                setSkipRequested(
+                  true
+                );
+                setPageUnlockedForInteraction(
+                  pageData.id
+                );
+                setTimeout(
+                  () =>
+                    setSkipRequested(
+                      false
+                    ),
+                  0
+                );
+              }}
+              canReplay={!isEndNode}
+              onReplay={() => {
+                setSkipRequested(
+                  false
+                );
+                setReplayKey(
+                  (prev) =>
+                    prev + 1
+                );
+                triggerAudioRestart();
+              }}
+              muted={!!isMuted}
+              onToggleMute={() => {
+                const newMuted = !isMuted;
+                setIsMuted(
                   newMuted
                 );
-              } catch {}
-            }}
-          />
+                try {
+                  setSfxMuted(
+                    newMuted
+                  );
+                } catch {}
+              }}
+            />
+          )
         }
       />
 

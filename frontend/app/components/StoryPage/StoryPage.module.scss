@@ -20,6 +20,28 @@ $gold: #f2b85b;
   font-family: var(--font-cormorant), serif;
 }
 
+.storyPage[data-embed-ghost="1"] {
+  padding: 0.75rem 0;
+  color: inherit;
+  font-family: inherit;
+  align-items: stretch;
+}
+
+.storyPage[data-embed-ghost="1"] .endCtaCard {
+  backdrop-filter: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.storyPage[data-embed-ghost="1"] .endCtaTitle {
+  color: inherit;
+  opacity: 0.85;
+}
+
 
 
 

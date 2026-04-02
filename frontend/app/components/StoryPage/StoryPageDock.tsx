@@ -73,6 +73,7 @@ type StoryPageDockProps = {
   setFlag: (flagId: string) => void;
   goToNextPage: (id: string) => void;
   setGlobal?: (key: string, value: unknown) => void;
+  embedGhost?: boolean;
 };
 
 export function StoryPageDock({
@@ -98,6 +99,7 @@ export function StoryPageDock({
   setFlag,
   goToNextPage,
   setGlobal,
+  embedGhost = false,
 }: StoryPageDockProps): ReactElement | null {
   if (
     !showChoices ||
@@ -201,10 +203,17 @@ export function StoryPageDock({
         dockJustAppeared ? dockStyles.appearing : "",
         isFadingOut ? dockStyles.fadingOut : "",
       ].join(" ")}
+      data-embed-ghost={embedGhost ? "1" : undefined}
     >
       {isEndNode ? (
         resolvedEndCta ? (
-          <div className={dockStyles.grid}>
+          <div
+            className={
+              embedGhost
+                ? `${dockStyles.grid} ${dockStyles.gridGhost}`
+                : dockStyles.grid
+            }
+          >
             <div className={style.endCtaCard}>
               <div className={style.endCtaTitle}>
                 Köszönjük, végigjátszottad a kampányt!
@@ -221,7 +230,7 @@ export function StoryPageDock({
             (() => {
               const riddlePage = pageData as unknown as PuzzleRiddleData;
               return (
-                <div className={dockStyles.grid}>
+                <div className={embedGhost ? `${dockStyles.grid} ${dockStyles.gridGhost}` : dockStyles.grid}>
                   <RiddleQuiz
                     page={pageData}
                     question={riddlePage.question}
@@ -252,8 +261,12 @@ export function StoryPageDock({
                   minPick={minPick}
                   mode={runesPage.mode ?? "ordered"}
                   feedback={runesPage.feedback ?? "reset"}
-                  className={dockStyles.grid}
-                  buttonClassName={dockStyles.choice}
+                  className={embedGhost ? `${dockStyles.grid} ${dockStyles.gridGhost}` : dockStyles.grid}
+                  buttonClassName={
+                    embedGhost
+                      ? `${dockStyles.choice} ${dockStyles.choiceGhost}`
+                      : dockStyles.choice
+                  }
                   storyId={derivedStoryId || "default_story"}
                   sessionId={derivedSessionId || "sess_unknown"}
                   pageId={pageData.id}
@@ -268,6 +281,7 @@ export function StoryPageDock({
           {!isRiddlePage && !isRunesPage && dockChoicesForThisPage.length > 0 && (
             <InteractionDock
               mode="default"
+              embedGhost={embedGhost}
               choices={dockChoicesForThisPage}
               onSelect={(choiceId: string) => {
                 const selection = resolveDockSelection({
