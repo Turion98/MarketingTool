@@ -8,6 +8,7 @@ import styles from "./adventures.module.scss";
 import ReportDrawer from "../components/ReportDrawer/ReportDrawer";
 import ReportScheduleForm from "../components/ReportScheduleForm/ReportScheduleForm";
 import { loadTokens } from "@/app/lib/tokenLoader";
+import { clearSkinCache } from "@/app/lib/utils/skinCacheDebug";
 import CampaignCard, { type RuneChoice } from "./components/CampaignCard";
 
 type StoryMeta = {
@@ -113,9 +114,38 @@ function deriveStoryId(a: Partial<StoryMeta> & Record<string, any>): string {
    Komponens
    ========================= */
 
-export default function AdventuresPage() {
+function AdventuresHeaderBar() {
   const router = useRouter();
+  return (
+    <div className={styles.headerBar}>
+      <h1>Adventures</h1>
+      <div className={styles.headerActions}>
+        <button type="button" onClick={() => router.push("/landing/space")}>
+          Atlasz
+        </button>
+        <button type="button" onClick={() => router.push("/")}>
+          Vissza
+        </button>
+        {process.env.NODE_ENV !== "production" && (
+          <button
+            type="button"
+            className={styles.devSkinCacheBtn}
+            onClick={() => {
+              const n = clearSkinCache();
+              alert(`Skin cache törölve (${n} kulcs). Frissítek...`);
+              location.reload();
+            }}
+            title="mt:v1:skin:* + skinByCampaignId törlése"
+          >
+            DEV: Clear skin cache
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
+export default function AdventuresPage() {
   // adat betöltés
   const [items, setItems] = useState<StoryMeta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,15 +235,7 @@ export default function AdventuresPage() {
     return (
       <div className={styles.adventuresRoot}>
         <ParallaxBackground layers={layers} />
-        <div className={styles.headerBar}>
-          <h1>Adventures</h1>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => router.push("/landing/space")}>
-              Atlasz
-            </button>
-            <button onClick={() => router.push("/")}>Vissza</button>
-          </div>
-        </div>
+        <AdventuresHeaderBar />
         <div className={styles.grid}>Loading…</div>
       </div>
     );
@@ -223,15 +245,7 @@ export default function AdventuresPage() {
     return (
       <div className={styles.adventuresRoot}>
         <ParallaxBackground layers={layers} />
-        <div className={styles.headerBar}>
-          <h1>Adventures</h1>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => router.push("/landing/space")}>
-              Atlasz
-            </button>
-            <button onClick={() => router.push("/")}>Vissza</button>
-          </div>
-        </div>
+        <AdventuresHeaderBar />
         <div className={styles.grid} style={{ color: "tomato" }}>
           {err}
         </div>
@@ -243,15 +257,7 @@ export default function AdventuresPage() {
     <div className={styles.adventuresRoot}>
       <ParallaxBackground layers={layers} />
 
-      <div className={styles.headerBar}>
-        <h1>Adventures</h1>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => router.push("/landing/space")}>
-            Atlasz
-          </button>
-          <button onClick={() => router.push("/")}>Vissza</button>
-        </div>
-      </div>
+      <AdventuresHeaderBar />
 
       <div className={styles.grid}>
         {items.map((a) => {

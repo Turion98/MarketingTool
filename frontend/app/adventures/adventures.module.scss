@@ -7,6 +7,26 @@
   align-items:center; padding: 24px; backdrop-filter: blur(6px);
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.devSkinCacheBtn {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  background: rgba(255, 180, 100, 0.12);
+  color: #ffe8cc;
+  cursor: pointer;
+}
+.devSkinCacheBtn:hover {
+  background: rgba(255, 180, 100, 0.22);
+}
+
 .grid {
   position: relative; z-index: 2; display:grid; gap:20px; padding:24px;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
