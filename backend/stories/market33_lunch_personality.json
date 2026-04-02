@@ -4,7 +4,7 @@
   "locale": "hu",
   "meta": {
     "id": "market33_lunch_personality",
-    "title": "Nem tudod, mit egyél?",
+    "title": "zemélyi Pincér",
     "description": "Gyors Market 33 ebédajánló konkrét fogásokkal.",
     "startPageId": "intro",
     "logo": "assets/market33.png",
@@ -18,55 +18,55 @@
       "cta_7even": {
         "kind": "link",
         "label": "Kóstold meg a 7EVEN standnál",
-        "urlTemplate": "https://example.com/market33/7even",
+        "urlTemplate": "https://market33.nl/7even/",
         "target": "_blank"
       },
       "cta_granelli": {
         "kind": "link",
         "label": "Kóstold meg a Granelli standnál",
-        "urlTemplate": "https://example.com/market33/granelli",
+        "urlTemplate": "https://market33.nl/granelli-2/",
         "target": "_blank"
       },
       "cta_lacatrina": {
         "kind": "link",
         "label": "Kóstold meg a La Catrina standnál",
-        "urlTemplate": "https://example.com/market33/la-catrina",
+        "urlTemplate": "https://market33.nl/la-catrina/",
         "target": "_blank"
       },
       "cta_cocodak": {
         "kind": "link",
         "label": "Kóstold meg a Coco Dak standnál",
-        "urlTemplate": "https://example.com/market33/cocodak",
+        "urlTemplate": "https://market33.nl/cocodak/",
         "target": "_blank"
       },
       "cta_china_supreme": {
         "kind": "link",
         "label": "Kóstold meg a China Supreme standnál",
-        "urlTemplate": "https://example.com/market33/china-supreme",
+        "urlTemplate": "https://market33.nl/china-supreme/",
         "target": "_blank"
       },
       "cta_siam_corner": {
         "kind": "link",
         "label": "Kóstold meg a Siam Corner standnál",
-        "urlTemplate": "https://example.com/market33/siam-corner",
+        "urlTemplate": "https://market33.nl/siam-corner/",
         "target": "_blank"
       },
       "cta_vietnam": {
         "kind": "link",
         "label": "Kóstold meg a Vietnam by Night standnál",
-        "urlTemplate": "https://example.com/market33/vietnam-by-night",
+        "urlTemplate": "https://market33.nl/vietnambynight/",
         "target": "_blank"
       },
       "cta_sushi_sando": {
         "kind": "link",
         "label": "Kóstold meg a Sushi Sando standnál",
-        "urlTemplate": "https://example.com/market33/sushi-sando",
+        "urlTemplate": "https://market33.nl/sushi-sando/",
         "target": "_blank"
       },
       "cta_snackbear": {
         "kind": "link",
         "label": "Kóstold meg a SnackBear standnál",
-        "urlTemplate": "https://example.com/market33/snackbear",
+        "urlTemplate": "https://market33.nl/snack-bear/",
         "target": "_blank"
       }
     },
@@ -90,7 +90,7 @@
     },
     {
       "id": "Q1_people",
-      "title": "Ha szabab kérdezenm...",
+      "title": "Ha szabab kérdeznem...",
       "text": "Úgy látom még egyedül vagy — érkezik valaki, vagy most egyedül ennél?",
       "choices": [
         {
@@ -3435,7 +3435,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -3461,7 +3461,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -3487,7 +3487,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -3513,7 +3513,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -3539,7 +3539,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -3565,7 +3565,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -3591,7 +3591,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -3617,7 +3617,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -3643,7 +3643,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -3669,7 +3669,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_vietnam"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -3695,7 +3695,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_vietnam"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "WORLD_MIX",
@@ -3721,7 +3721,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -3747,7 +3747,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -3773,7 +3773,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -3799,7 +3799,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -3825,7 +3825,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_7even"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "VEG_LIGHT",
@@ -3851,7 +3851,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_7even"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "VEG_LIGHT",
@@ -3877,7 +3877,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
@@ -3903,7 +3903,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
@@ -3929,7 +3929,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -3955,7 +3955,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -3981,7 +3981,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -4007,7 +4007,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4033,7 +4033,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4059,7 +4059,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_vietnam"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4085,7 +4085,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4111,7 +4111,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4137,7 +4137,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4163,7 +4163,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4189,7 +4189,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_snackbear"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SNACK_FAST",
@@ -4215,7 +4215,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_snackbear"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SNACK_FAST",
@@ -4241,7 +4241,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_7even"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4267,7 +4267,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
@@ -4293,7 +4293,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
@@ -4397,7 +4397,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -4423,7 +4423,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_sushi_sando"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "SUSHI_CLEAN",
@@ -4449,7 +4449,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -4475,7 +4475,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_lacatrina"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "STREET_MEX",
@@ -4501,7 +4501,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4527,7 +4527,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_china_supreme"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4553,7 +4553,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_vietnam"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "BUSINESS_NEUTRAL",
@@ -4579,7 +4579,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_vietnam"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "BUSINESS_NEUTRAL",
@@ -4605,7 +4605,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4631,7 +4631,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_siam_corner"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4657,7 +4657,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ASIAN_HOT",
@@ -4683,7 +4683,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_cocodak"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "NOODLE_BOWL",
@@ -4709,7 +4709,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_snackbear"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "COMFORT_HEAVY",
@@ -4735,7 +4735,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_snackbear"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "COMFORT_HEAVY",
@@ -4761,7 +4761,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
@@ -4787,7 +4787,7 @@
         }
       ],
       "endMeta": {
-        "cta": "cta_granelli"
+        "cta": "default"
       },
       "imagePrompt": {
         "archetype": "ITALIAN",
