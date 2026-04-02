@@ -133,8 +133,14 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
 
-    /* mobil tipó */
-    font-size: var(--header-title-size-mobile, 16px);
+    /* mobil tipó — örökölhet html-ről; közvetlenül is a contract token (skin) */
+    font-family: var(--header-title-font, var(--font-sans));
+    font-size: var(
+      --header-title-size-mobile,
+      var(--contract-header-title-font-size-mobile, 16px)
+    );
+    font-weight: var(--header-title-weight, 600);
+    color: var(--header-title-color, var(--skin-fg, #fff));
     letter-spacing: var(--header-title-spacing-mobile, 0.2px);
     line-height: 1.15;
     max-width: 100%;
@@ -162,25 +168,27 @@
 
 
 
-/* ===== TITLE stílus (csak tokenekből) ===== */
-.center [data-header-title] {
-  font-family: var(--header-title-font, var(--font-sans));
-  font-size: var(--header-title-size);
-  font-weight: var(--header-title-weight, 600);
-  color: var(--header-title-color, var(--skin-fg, #fff));
-  letter-spacing: var(--header-title-spacing, 0.04em);
-  line-height: 1.2;
-  margin: var(--header-title-margin, 0 30px 0 0);
-  text-align: center;
-  display: inline-block;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: ellipsis;
-  --_title-shift: var(--header-title-shift, 0px);
-  transform: translateX(var(--_title-shift)) translateZ(0);
-  will-change: transform;
-  transform-origin: center;
+/* ===== TITLE stílus — csak ≥641px; mobilon a fenti @media blokk (különben a desktop font-size felülírná a --header-title-size-mobile-t) ===== */
+@media (min-width: 641px) {
+  .center [data-header-title] {
+    font-family: var(--header-title-font, var(--font-sans));
+    font-size: var(--header-title-size);
+    font-weight: var(--header-title-weight, 600);
+    color: var(--header-title-color, var(--skin-fg, #fff));
+    letter-spacing: var(--header-title-spacing, 0.04em);
+    line-height: 1.2;
+    margin: var(--header-title-margin, 0 30px 0 0);
+    text-align: center;
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: ellipsis;
+    --_title-shift: var(--header-title-shift, 0px);
+    transform: translateX(var(--_title-shift)) translateZ(0);
+    will-change: transform;
+    transform-origin: center;
+  }
 }
 
 /* ===== Rune blokk láthatóság ===== */
@@ -195,23 +203,18 @@
 }
 
 @media (max-width: 640px) {
-  .headerbar {
-    
+  .headerBar {
     /* Header (MOBILE TOKENS – nem a bázist írod át!) */
     --header-gap-mobile: 10px;
-    --header-minh-mobile: 56px;   /* 10px helyett reális érték */
+    --header-minh-mobile: 56px;
     --header-pad-v-mobile: 6px;
     --header-pad-h-mobile: 10px;
 
-    /* Title */
-    --header-title-size-mobile: 16px;
     --header-title-spacing-mobile: 0.2px;
     --header-title-margin-mobile: 0 16px 0 0;
 
-    /* Logo */
-    --logo-scale-mobile: .9;
+    --logo-scale-mobile: 0.9;
     --logo-max-w-mobile: 100%;
-    
   }
 }
 
