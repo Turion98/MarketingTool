@@ -199,6 +199,18 @@ export default function CampaignCard({
     runemode: choice.mode,
   });
 
+  const computedEmbedUrlGhost = buildEmbedUrl({
+    base: embedBase,
+    campaignId: storyId,
+    src: jsonSrc,
+    start: startPageId,
+    title,
+    skin: selectedSkin || undefined,
+    runes: choice.icons?.length ? choice.icons.join(",") : undefined,
+    runemode: choice.mode,
+    ghost: true,
+  });
+
   // Mindig önhordó play URL
   const computedPlayUrl =
     `${playBase}?src=${encodeURIComponent(jsonSrc)}` +
@@ -370,6 +382,11 @@ export default function CampaignCard({
             Schedule
           </button>
 
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 4 }}>
+            <CopyBtn text={computedEmbedUrl} label="Copy embed URL" />
+            <CopyBtn text={computedEmbedUrlGhost} label="Copy ghost embed URL" />
+          </div>
+
           {/* White-label panel */}
           <div className={styles.wlPanel} style={{ marginTop: 12 }}>
             {!wlOpen ? (
@@ -428,6 +445,13 @@ export default function CampaignCard({
                         {computedEmbedUrl}
                       </a>
                       <CopyBtn text={computedEmbedUrl} />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <strong>Embed (ghost):</strong>
+                      <a href={computedEmbedUrlGhost} target="_blank" rel="noreferrer">
+                        {computedEmbedUrlGhost}
+                      </a>
+                      <CopyBtn text={computedEmbedUrlGhost} />
                     </div>
                     {wlRes.verification && (
                       <details>
