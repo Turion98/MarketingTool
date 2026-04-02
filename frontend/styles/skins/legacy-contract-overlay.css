@@ -99,6 +99,7 @@ body[data-skin="legacy-default"] {
   --contract-header-font-family: var(--contract-typography-a-font-family, var(--contract-font-family));
 
   --contract-header-title-font-size: 16px;
+  --contract-header-title-font-size-mobile: 16px;
   --contract-header-title-weight: var(--typography-a-weight-medium);
   --contract-header-title-tracking: 0.2px;
   --contract-header-title-color: #ffffff;
@@ -274,6 +275,7 @@ body[data-skin="legacy-default"] {
   --header-title-color: var(--contract-header-title-color, var(--skin-fg, #fff));
   --header-title-margin: var(--contract-header-title-margin, 0 30px 0 0);
   --header-title-shift: var(--contract-header-title-shift, -25px);
+  --header-title-size-mobile: var(--contract-header-title-font-size-mobile, 16px);
   --header-fg: var(--contract-header-text-color, var(--skin-fg, #fff));
   --logo-scale: var(--contract-header-logo-scale, 1.5);
   --logo-max-w: var(--contract-header-logo-max-w, 100%);
@@ -624,6 +626,7 @@ body[data-skin] {
   html[data-skin="legacy-default"],
   body[data-skin="legacy-default"] {
     --contract-header-title-font-size: 20px;
+    --contract-header-title-font-size-mobile: 16px;
     --contract-header-title-shift: -10px;
     --contract-header-pad-x: 10px;
     --contract-header-pad-y: 6px;

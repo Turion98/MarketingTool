@@ -21,7 +21,7 @@
     "--contract-typography-a-color": "#F4F1EA",
 
     "--contract-typography-b-font-family": "var(--contract-font-family)",
-    "--contract-typography-b-font-size": "16px",
+    "--contract-typography-b-font-size": "18px",
     "--contract-typography-b-line-height": "1.45",
     "--contract-typography-b-letter-spacing": "0.1px",
     "--contract-typography-b-weight": "400",

@@ -14,17 +14,17 @@
     "--typography-b-weight-medium": "500",
 
     "--contract-typography-a-font-family": "var(--contract-font-family)",
-    "--contract-typography-a-font-size": "15px",
+    "--contract-typography-a-font-size": "18px",
     "--contract-typography-a-line-height": "1.22",
     "--contract-typography-a-letter-spacing": "0.18px",
     "--contract-typography-a-weight": "800",
     "--contract-typography-a-color": "#f1f5f9",
 
     "--contract-typography-b-font-family": "var(--contract-font-family)",
-    "--contract-typography-b-font-size": "26px",
+    "--contract-typography-b-font-size": "20px",
     "--contract-typography-b-line-height": "1.50",
     "--contract-typography-b-letter-spacing": "0.10px",
-    "--contract-typography-b-weight": "400",
+    "--contract-typography-b-weight": "500",
     "--contract-typography-b-color": "#e2e8f0",
 
     "--contract-text-font-family": "var(--contract-typography-b-font-family)",
@@ -37,7 +37,7 @@
     "--tt-font-size": "var(--contract-typography-b-font-size)",
     "--tt-line-height": "var(--contract-typography-b-line-height)",
     "--tt-color": "var(--contract-typography-b-color)",
-    "--tt-font-size-mobile": "15px",
+    "--tt-font-size-mobile": "18px",
     "--tt-line-height-mobile": "1.45",
 
     "--np-pad-x": "4vw",
@@ -62,7 +62,6 @@
     "--choice-text-weight": "600",
     "--quiz-title-weight": "800",
     "--contract-cta-overlay-title-weight": "800",
-    "--contract-header-title-weight": "800",
 
     "--contract-media-svg-base-1": "#0f172a",
     "--contract-media-svg-base-2": "#1e293b",
@@ -127,7 +126,9 @@
     "--contract-header-shadow-rest": "0 10px 28px rgba(0,0,0,.35)",
     "--contract-header-shadow-hover": "0 12px 34px rgba(0,0,0,.42)",
 
+    "--contract-header-title-weight": "800",
     "--contract-header-title-font-size": "21px",
+    "--contract-header-title-font-size-mobile": "15px",
     "--contract-header-title-tracking": "0.22px",
     "--contract-header-title-color": "#f1f5f9",
     "--contract-header-text-color": "#e2e8f0",
@@ -160,8 +161,8 @@
     "--contract-choice-border-style": "solid",
     "--contract-choice-radius": "16px",
     "--contract-choice-shadow-rest": "0 14px 34px rgba(0,0,0,.30), 0 0 0 1px rgba(96,165,250,.12) inset",
-    "--contract-choice-font-size": "17px",
-    "--contract-choice-font-size-mobile": "15px",
+    "--contract-choice-font-size": "20px",
+    "--contract-choice-font-size-mobile": "17px",
     "--contract-choice-pad-x": "16px",
     "--contract-choice-pad-y": "15px",
     "--contract-choice-text-color": "#e2e8f0",
