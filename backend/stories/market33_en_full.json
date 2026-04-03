@@ -1660,7 +1660,7 @@
             "flag:sea_opt_1",
             "flag:sea_opt_3"
           ],
-          "goto": "end_sea_tuna_sushi"
+          "goto": "sea_redirect_sushi_or_soup"
         },
         {
           "if": [
@@ -1730,7 +1730,7 @@
             "flag:sea_opt_3",
             "flag:sea_opt_6"
           ],
-          "goto": "end_sea_poke_bowl"
+          "goto": "sea_redirect_soup_or_bowl"
         },
         {
           "if": [
@@ -1755,6 +1755,52 @@
         },
         {
           "default": "end_sea_salmon_sushi"
+        }
+      ]
+    },
+    {
+      "id": "sea_redirect_sushi_or_soup",
+      "title": "",
+      "text": [
+        {
+          "text": "I can see both sushi-style and something soupy are in the mix — they usually mean different kinds of lunch. Let me help narrow it: what are you leaning toward right now?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Let's stay on sushi / sashimi",
+          "next": "end_sea_tuna_sushi"
+        },
+        {
+          "text": "Let's go for a proper brothy soup (pho-style)",
+          "next": "end_sea_seafood_pho"
+        },
+        {
+          "text": "Something in between — a fish-forward poke-style bowl",
+          "next": "end_sea_poke_bowl"
+        }
+      ]
+    },
+    {
+      "id": "sea_redirect_soup_or_bowl",
+      "title": "",
+      "text": [
+        {
+          "text": "I can see you haven't quite decided between a brothy soup and a rice or bowl-style plate — they're both in play. Let me help narrow it: what would hit the spot more right now?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Let's go with a proper soup / broth (pho-style)",
+          "next": "end_sea_seafood_pho"
+        },
+        {
+          "text": "Let's lean into a rice or poke-style bowl",
+          "next": "end_sea_poke_bowl"
+        },
+        {
+          "text": "Something in between — spicy noodle soup",
+          "next": "end_sea_spicy_shrimp_noodles"
         }
       ]
     },

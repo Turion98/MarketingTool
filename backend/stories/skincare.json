@@ -1,0 +1,792 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "skincare_spf_matcher",
+  "locale": "hu",
+  "meta": {
+    "id": "skincare_spf_matcher",
+    "title": "Melyik fényvédő illik hozzád igazán?",
+    "author": "Questell",
+    "description": "Interaktív SPF-ajánló flow személyre szabott útvonalakkal, context-ágakkal, override fragmentekkel és L1 preferencia-visszacsatolással.",
+    "coverImage": "/assets/covers/skincare.jpg",
+    "startPageId": "L1_soft_profile",
+    "campaignId": "skincare_spf_matcher",
+    "logo": "/assets/my_logo.png",
+    "progress": {
+      "milestones": [
+        {
+          "x": 0.12,
+          "label": "Alap preferencia"
+        },
+        {
+          "x": 0.38,
+          "label": "Használati minta"
+        },
+        {
+          "x": 0.68,
+          "label": "Probléma pontosítása"
+        },
+        {
+          "x": 1.0,
+          "label": "Ajánlás"
+        }
+      ]
+    },
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább a márkaoldalra",
+        "urlTemplate": "https://www.google.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "L1_soft_profile",
+      "title": "Amikor fényvédőt választasz, inkább ez számít:",
+      "text": [],
+      "choices": [
+        {
+          "text": "Hogy szinte ne is érezzem",
+          "next": "L1_usage_split",
+          "reward": {
+            "unlockFragments": [
+              "APPEND_compliance_l1_invisible",
+              "APPEND_oily_l1_invisible",
+              "APPEND_dry_l1_invisible",
+              "APPEND_sensitive_l1_invisible",
+              "APPEND_active_l1_invisible"
+            ]
+          }
+        },
+        {
+          "text": "Hogy napközben is rendben maradjon",
+          "next": "L1_usage_split",
+          "reward": {
+            "unlockFragments": [
+              "APPEND_compliance_l1_stable",
+              "APPEND_oily_l1_stable",
+              "APPEND_dry_l1_stable",
+              "APPEND_sensitive_l1_stable",
+              "APPEND_active_l1_stable"
+            ]
+          }
+        },
+        {
+          "text": "Hogy a bőröm jól reagáljon rá",
+          "next": "L1_usage_split",
+          "reward": {
+            "unlockFragments": [
+              "APPEND_compliance_l1_reacts",
+              "APPEND_oily_l1_reacts",
+              "APPEND_dry_l1_reacts",
+              "APPEND_sensitive_l1_reacts",
+              "APPEND_active_l1_reacts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "L1_usage_split",
+      "title": "",
+      "text": [
+        {
+          "text": "Ha őszinte vagy magaddal, inkább ez áll közelebb hozzád:"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Nem igazán következetes a használat",
+          "next": "L2_compliance_short"
+        },
+        {
+          "text": "Használom, de nem működik jól",
+          "next": "L2_friction_puzzle"
+        },
+        {
+          "text": "Bizonyos helyzetekben nem működik",
+          "next": "L2_context_split"
+        }
+      ]
+    },
+    {
+      "id": "L2_context_split",
+      "text": [
+        {
+          "text": "Nem mindig a formula a rossz — néha csak nem ugyanarra a helyzetre van kitalálva. Mikor szokott leginkább elbukni?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Mozgás, meleg vagy izzadás közben",
+          "next": "END_active",
+          "reward": {
+            "unlockFragments": [
+              "END_active_context_override"
+            ]
+          }
+        },
+        {
+          "text": "Napközben kifényesedik vagy szétesik",
+          "next": "END_oily",
+          "reward": {
+            "unlockFragments": [
+              "END_oily_context_override"
+            ]
+          }
+        },
+        {
+          "text": "Csíp, húz vagy a bőröm nem szereti",
+          "next": "L3_context_skin_reaction"
+        }
+      ]
+    },
+    {
+      "id": "L3_context_skin_reaction",
+      "text": [
+        {
+          "text": "Itt már nem ugyanaz a probléma okozza a kényelmetlenséget. Mi a gyakoribb nálad?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Inkább csíp, irritál vagy túl sok a bőrömnek",
+          "next": "END_sensitive",
+          "reward": {
+            "unlockFragments": [
+              "END_sensitive_context_override"
+            ]
+          }
+        },
+        {
+          "text": "Inkább húz, szárít vagy kényelmetlen egész nap",
+          "next": "END_dry",
+          "reward": {
+            "unlockFragments": [
+              "END_dry_context_override"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2_compliance_short",
+      "text": [
+        {
+          "text": "Ha nem kényelmes, könnyű kihagyni. Menjünk egy olyan irányba, ami jobban illeszkedik a napodhoz."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Legyen minél egyszerűbb",
+          "next": "END_compliance",
+          "reward": {
+            "unlockFragments": [
+              "END_compliance_simple_override"
+            ]
+          }
+        },
+        {
+          "text": "Ne vegyem észre egy aktív napon sem",
+          "next": "END_active",
+          "reward": {
+            "unlockFragments": [
+              "END_active_invisible_override"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "L2_friction_puzzle",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "maxPick": 2,
+      "optionFlagsBase": "F_",
+      "title": "Mi történik általában?",
+      "text": "Válaszd ki azt a kettőt, ami leginkább jellemző rád.",
+      "options": [
+        "Egyszerűen nincs kedvem használni",
+        "Kifényesedik napközben",
+        "Pattanásokat okoz",
+        "Száraznak érzem tőle a bőröm",
+        "Csíp vagy irritál",
+        "Izzadás közben eltűnik"
+      ],
+      "onSuccess": {
+        "goto": "L3_route_switch"
+      }
+    },
+    {
+      "id": "L3_route_switch",
+      "type": "logic",
+      "logic": [
+        {
+          "if": [
+            "F_1",
+            "F_2"
+          ],
+          "goto": "END_compliance"
+        },
+        {
+          "if": [
+            "F_1",
+            "F_3"
+          ],
+          "goto": "CL_acne_vs_compliance"
+        },
+        {
+          "if": [
+            "F_1",
+            "F_4"
+          ],
+          "goto": "END_dry"
+        },
+        {
+          "if": [
+            "F_1",
+            "F_5"
+          ],
+          "goto": "CL_compliance_vs_sensitive"
+        },
+        {
+          "if": [
+            "F_1",
+            "F_6"
+          ],
+          "goto": "END_active"
+        },
+        {
+          "if": [
+            "F_2",
+            "F_3"
+          ],
+          "goto": "END_oily"
+        },
+        {
+          "if": [
+            "F_2",
+            "F_4"
+          ],
+          "goto": "CL_oily_vs_dry"
+        },
+        {
+          "if": [
+            "F_2",
+            "F_5"
+          ],
+          "goto": "END_sensitive"
+        },
+        {
+          "if": [
+            "F_2",
+            "F_6"
+          ],
+          "goto": "END_active"
+        },
+        {
+          "if": [
+            "F_3",
+            "F_4"
+          ],
+          "goto": "CL_acne_vs_dry"
+        },
+        {
+          "if": [
+            "F_3",
+            "F_5"
+          ],
+          "goto": "END_sensitive"
+        },
+        {
+          "if": [
+            "F_3",
+            "F_6"
+          ],
+          "goto": "CL_acne_vs_active"
+        },
+        {
+          "if": [
+            "F_4",
+            "F_5"
+          ],
+          "goto": "CL_dry_vs_sensitive"
+        },
+        {
+          "if": [
+            "F_4",
+            "F_6"
+          ],
+          "goto": "END_active"
+        },
+        {
+          "if": [
+            "F_5",
+            "F_6"
+          ],
+          "goto": "CL_sensitive_vs_active"
+        },
+        {
+          "default": "END_compliance"
+        }
+      ]
+    },
+    {
+      "id": "CL_acne_vs_compliance",
+      "text": [
+        {
+          "text": "Két irány is működhet nálad — melyik hozna gyorsabb javulást?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Könnyebb viselés",
+          "next": "END_compliance"
+        },
+        {
+          "text": "Tisztább bőrkép",
+          "next": "END_oily"
+        }
+      ]
+    },
+    {
+      "id": "CL_oily_vs_dry",
+      "text": [
+        {
+          "text": "Nem ugyanaz az érzet hiányzik mindenkinél — nálad melyik lenne a jobb irány?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Könnyebb, rendezettebb",
+          "next": "END_oily"
+        },
+        {
+          "text": "Puhább, komfortosabb",
+          "next": "END_dry"
+        }
+      ]
+    },
+    {
+      "id": "CL_acne_vs_dry",
+      "text": [
+        {
+          "text": "Egy apró különbség sokat számíthat — nálad melyik változás lenne fontosabb?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Nyugodtabb bőrkép",
+          "next": "END_oily"
+        },
+        {
+          "text": "Kényelmesebb érzet",
+          "next": "END_dry"
+        }
+      ]
+    },
+    {
+      "id": "CL_acne_vs_active",
+      "text": [
+        {
+          "text": "Nem mindegy, hol bukik meg a dolog — nálad inkább melyik számít?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Bőrnyugalom",
+          "next": "END_oily"
+        },
+        {
+          "text": "Tartósság",
+          "next": "END_active"
+        }
+      ]
+    },
+    {
+      "id": "CL_dry_vs_sensitive",
+      "text": [
+        {
+          "text": "Két hasonló, de más jellegű élmény — nálad melyik zavaróbb hosszabb távon?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Komforthiány",
+          "next": "END_dry"
+        },
+        {
+          "text": "Túl sok a bőrömnek",
+          "next": "END_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "CL_sensitive_vs_active",
+      "text": [
+        {
+          "text": "Mindkettő számíthat — de most melyik legyen az elsődleges?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Kíméletesség",
+          "next": "END_sensitive"
+        },
+        {
+          "text": "Stabilitás",
+          "next": "END_active"
+        }
+      ]
+    },
+    {
+      "id": "CL_compliance_vs_sensitive",
+      "text": [
+        {
+          "text": "Néha nem több lépés kell, csak jobb irány — melyik segítene többet?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Láthatatlanabb érzet",
+          "next": "END_compliance"
+        },
+        {
+          "text": "Nyugodtabb viselés",
+          "next": "END_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "END_compliance",
+      "type": "end",
+      "title": "La Roche-Posay Anthelios UVMune 400 Invisible Fluid SPF50+",
+      "text": [
+        {
+          "ifUnlocked": "APPEND_compliance_l1_invisible",
+          "text": "{fragment:APPEND_compliance_l1_invisible}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_compliance_l1_stable",
+          "text": "{fragment:APPEND_compliance_l1_stable}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_compliance_l1_reacts",
+          "text": "{fragment:APPEND_compliance_l1_reacts}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Nálad az a kulcs, hogy a fényvédő ne legyen teher a mindennapokban. Ez a formula szinte észrevétlen a bőrön, így könnyebb rendszeresen használni. Ha nem érzed, nagyobb eséllyel rajta is marad."
+        },
+        {
+          "ifUnlocked": "END_compliance_simple_override",
+          "text": "{fragment:END_compliance_simple_override}",
+          "mode": "override"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "END_compliance_simple_override"
+        },
+        {
+          "id": "APPEND_compliance_l1_invisible"
+        },
+        {
+          "id": "APPEND_compliance_l1_stable"
+        },
+        {
+          "id": "APPEND_compliance_l1_reacts"
+        }
+      ]
+    },
+    {
+      "id": "END_oily",
+      "type": "end",
+      "title": "Eucerin Oil Control Sun Gel-Cream SPF50+",
+      "text": [
+        {
+          "ifUnlocked": "APPEND_oily_l1_invisible",
+          "text": "{fragment:APPEND_oily_l1_invisible}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_oily_l1_stable",
+          "text": "{fragment:APPEND_oily_l1_stable}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_oily_l1_reacts",
+          "text": "{fragment:APPEND_oily_l1_reacts}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Nálad a könnyű, stabil viselés számít igazán. Ez a típus segít kordában tartani a fénylést és nem ül nehéz rétegként a bőrön. Napközben is rendezettebb érzetet ad."
+        },
+        {
+          "ifUnlocked": "END_oily_context_override",
+          "text": "{fragment:END_oily_context_override}",
+          "mode": "override"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "END_oily_context_override"
+        },
+        {
+          "id": "APPEND_oily_l1_invisible"
+        },
+        {
+          "id": "APPEND_oily_l1_stable"
+        },
+        {
+          "id": "APPEND_oily_l1_reacts"
+        }
+      ]
+    },
+    {
+      "id": "END_dry",
+      "type": "end",
+      "title": "Beauty of Joseon Relief Sun SPF50+",
+      "text": [
+        {
+          "ifUnlocked": "APPEND_dry_l1_invisible",
+          "text": "{fragment:APPEND_dry_l1_invisible}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_dry_l1_stable",
+          "text": "{fragment:APPEND_dry_l1_stable}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_dry_l1_reacts",
+          "text": "{fragment:APPEND_dry_l1_reacts}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "A bőröd akkor működik jól, ha közben komfortos marad. Ez a formula hidratálóbb érzetet ad, nem húzza a bőrt. Így a fényvédelem nem külön lépésnek érződik."
+        },
+        {
+          "ifUnlocked": "END_dry_context_override",
+          "text": "{fragment:END_dry_context_override}",
+          "mode": "override"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "END_dry_context_override"
+        },
+        {
+          "id": "APPEND_dry_l1_invisible"
+        },
+        {
+          "id": "APPEND_dry_l1_stable"
+        },
+        {
+          "id": "APPEND_dry_l1_reacts"
+        }
+      ]
+    },
+    {
+      "id": "END_sensitive",
+      "type": "end",
+      "title": "Avène Mineral Fluid SPF50+",
+      "text": [
+        {
+          "ifUnlocked": "APPEND_sensitive_l1_invisible",
+          "text": "{fragment:APPEND_sensitive_l1_invisible}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_sensitive_l1_stable",
+          "text": "{fragment:APPEND_sensitive_l1_stable}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_sensitive_l1_reacts",
+          "text": "{fragment:APPEND_sensitive_l1_reacts}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Nálad az számít, hogy a bőröd nyugodtan reagáljon. Ez a típus egyszerűbb, kíméletesebb irányt képvisel. Ha tolerálja a bőröd, sokkal könnyebb kitartani mellette."
+        },
+        {
+          "ifUnlocked": "END_sensitive_context_override",
+          "text": "{fragment:END_sensitive_context_override}",
+          "mode": "override"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "END_sensitive_context_override"
+        },
+        {
+          "id": "APPEND_sensitive_l1_invisible"
+        },
+        {
+          "id": "APPEND_sensitive_l1_stable"
+        },
+        {
+          "id": "APPEND_sensitive_l1_reacts"
+        }
+      ]
+    },
+    {
+      "id": "END_active",
+      "type": "end",
+      "title": "ISDIN Fusion Water MAGIC SPF50",
+      "text": [
+        {
+          "ifUnlocked": "APPEND_active_l1_invisible",
+          "text": "{fragment:APPEND_active_l1_invisible}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_active_l1_stable",
+          "text": "{fragment:APPEND_active_l1_stable}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "ifUnlocked": "APPEND_active_l1_reacts",
+          "text": "{fragment:APPEND_active_l1_reacts}",
+          "mode": "append_after",
+          "separator": "\n\n"
+        },
+        {
+          "default": "Nálad a megbízhatóság mozgás közben is fontos. Ez a formula könnyű, gyorsan beszívódik és nem zavar aktív helyzetekben sem. Egyszerűbb vele tartani a tempót."
+        },
+        {
+          "ifUnlocked": "END_active_invisible_override",
+          "text": "{fragment:END_active_invisible_override}",
+          "mode": "override"
+        },
+        {
+          "ifUnlocked": "END_active_context_override",
+          "text": "{fragment:END_active_context_override}",
+          "mode": "override"
+        }
+      ],
+      "fragmentRefs": [
+        {
+          "id": "END_active_invisible_override"
+        },
+        {
+          "id": "END_active_context_override"
+        },
+        {
+          "id": "APPEND_active_l1_invisible"
+        },
+        {
+          "id": "APPEND_active_l1_stable"
+        },
+        {
+          "id": "APPEND_active_l1_reacts"
+        }
+      ]
+    }
+  ],
+  "fragments": {
+    "END_compliance_simple_override": {
+      "id": "END_compliance_simple_override",
+      "text": "Nálad nem az a fő kérdés, hogy milyen a bőröd, hanem hogy a fényvédő mennyire egyszerűen illeszkedik a napodba. Minél kevesebb ellenállást okoz, annál nagyobb eséllyel lesz belőle napi rutin. Ezért jó választás ez a formula: könnyű, gyors, nem ragad, és nem csinál külön ügyet a használatból."
+    },
+    "END_active_invisible_override": {
+      "id": "END_active_invisible_override",
+      "text": "Nálad nem az a kérdés, hogy mennyire hidratál vagy milyen a finish, hanem hogy bírja-e a napodat. Egy rossz fényvédő ilyenkor lefolyik, eltűnik, zavaróvá válik — és egyszerűen elhagyod. Ez a típus pont ezért működik: könnyű, nem csípi a szemet, és mozgás közben sem érzed. Nem kell rá figyelni — és pont ezért marad fent."
+    },
+    "END_active_context_override": {
+      "id": "END_active_context_override",
+      "text": "Nálad nem az a fő gond, hogy önmagában rossz lenne a fényvédő, hanem hogy bizonyos helyzetekben nem tudja tartani a tempót. Melegben, mozgás közben vagy izzadásnál sok formula zavaróvá válik, elmozdul vagy egyszerűen kényelmetlen lesz. Ez a típus azért jó választás, mert könnyű marad, nem csípi a szemet, és aktívabb helyzetekben is sokkal élhetőbb viselést ad."
+    },
+    "END_oily_context_override": {
+      "id": "END_oily_context_override",
+      "text": "Nálad nem az a fő probléma, hogy önmagában nem működik a fényvédő, hanem hogy napközben elveszíti a stabilitását. Kifényesedik, elcsúszik vagy egyszerűen nem marad egyben a bőrön. Ez a típus segít ezt kontroll alatt tartani: könnyű marad, nem ül rá vastagon a bőrre, és sokkal rendezettebb viselést ad a nap folyamán."
+    },
+    "END_sensitive_context_override": {
+      "id": "END_sensitive_context_override",
+      "text": "Nálad nem az a kérdés, hogy működik-e a fényvédelem, hanem hogy a bőröd egyáltalán tolerálja-e. Ha csíp, irritál vagy túl soknak érzed, akkor nem fogod használni — teljesen mindegy mennyire jó a formula. Ezért itt a legfontosabb a minimalizmus és a kíméletesség."
+    },
+    "END_dry_context_override": {
+      "id": "END_dry_context_override",
+      "text": "Nálad nem az a gond, hogy nem működik, hanem hogy közben kényelmetlen. Húz, szárít vagy egyszerűen rossz érzet egész nap. Ilyenkor a fényvédelem csak akkor fog működni, ha közben komfortos marad a bőrödön."
+    },
+    "APPEND_compliance_l1_invisible": {
+      "id": "APPEND_compliance_l1_invisible",
+      "text": "Úgy látszik, számodra az a jó, ami külön erőfeszítés nélkül beleolvad a napodba."
+    },
+    "APPEND_compliance_l1_stable": {
+      "id": "APPEND_compliance_l1_stable",
+      "text": "A válaszaid alapján az is sokat számít, hogy használat közben végig problémamentes maradjon."
+    },
+    "APPEND_compliance_l1_reacts": {
+      "id": "APPEND_compliance_l1_reacts",
+      "text": "Számodra az sem mellékes, hogy a bőröd könnyen együtt tudjon élni vele a mindennapokban."
+    },
+    "APPEND_oily_l1_invisible": {
+      "id": "APPEND_oily_l1_invisible",
+      "text": "Úgy látszik, számodra itt az is fontos, hogy könnyű maradjon, ne üljön rá feleslegesen a bőrödre."
+    },
+    "APPEND_oily_l1_stable": {
+      "id": "APPEND_oily_l1_stable",
+      "text": "A válaszaid alapján főleg az számít, hogy napközben is összeszedett maradjon az érzet."
+    },
+    "APPEND_oily_l1_reacts": {
+      "id": "APPEND_oily_l1_reacts",
+      "text": "Számodra az is lényegesnek tűnik, hogy ne borítsa fel a bőröd egyensúlyát viselés közben."
+    },
+    "APPEND_dry_l1_invisible": {
+      "id": "APPEND_dry_l1_invisible",
+      "text": "Úgy látszik, számodra az működik jobban, ami kényelmesen jelen van, nem nehezedik rád."
+    },
+    "APPEND_dry_l1_stable": {
+      "id": "APPEND_dry_l1_stable",
+      "text": "A válaszaid alapján az is fontos, hogy az érzet napközben se billenjen át húzódásba vagy feszülésbe."
+    },
+    "APPEND_dry_l1_reacts": {
+      "id": "APPEND_dry_l1_reacts",
+      "text": "Számodra láthatóan az a jó irány, amihez a bőröd végig nyugodtan tud alkalmazkodni."
+    },
+    "APPEND_sensitive_l1_invisible": {
+      "id": "APPEND_sensitive_l1_invisible",
+      "text": "Úgy látszik, számodra itt az is fontos, hogy viselés közben minél kevésbé legyen tolakodó az élmény."
+    },
+    "APPEND_sensitive_l1_stable": {
+      "id": "APPEND_sensitive_l1_stable",
+      "text": "A válaszaid alapján számodra sokat jelent, ha kiszámíthatóan, nyugodtan lehet együtt élni vele napközben."
+    },
+    "APPEND_sensitive_l1_reacts": {
+      "id": "APPEND_sensitive_l1_reacts",
+      "text": "Számodra egyértelműen az a megnyugtató, amihez a bőrödnek nem kell külön alkalmazkodnia."
+    },
+    "APPEND_active_l1_invisible": {
+      "id": "APPEND_active_l1_invisible",
+      "text": "Úgy látszik, számodra itt az a nyerő, amit mozgás közben sem kell külön észben tartani."
+    },
+    "APPEND_active_l1_stable": {
+      "id": "APPEND_active_l1_stable",
+      "text": "A válaszaid alapján főleg az számít, hogy terhelés alatt is egyben maradjon az élmény."
+    },
+    "APPEND_active_l1_reacts": {
+      "id": "APPEND_active_l1_reacts",
+      "text": "Számodra az is fontosnak tűnik, hogy aktív helyzetben se váljon kellemetlenné a bőrödön."
+    }
+  }
+}
