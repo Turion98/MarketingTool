@@ -1,15 +1,13 @@
 // app/play/[pageId]/StoryClient.tsx
 "use client";
 
-import { useEffect } from "react";
-import StoryPage from "@/app/components/StoryPage/StoryPage";   // ⬅ igazítsd az elérési utat, ha máshol van
-import { loadTokens } from "@/app/lib/tokenLoader";            // ⬅ igazítsd az elérési utat, ha máshol van
+import StoryPage from "@/app/components/StoryPage/StoryPage";
 
-export default function StoryClient({ pageId, skin, src }: { pageId: string; skin: string; src: string }) {
-  useEffect(() => {
-    loadTokens(`/skins/${skin}.json`).catch((err) => console.warn("⚠ skin load failed", err));
-  }, [skin]);
-
-  // Ha a StoryPage propokat vár, add át neki (pageId, src, stb.)
+/** Skin / src a StoryPage + GameState + meta.url útvonalon; props a layout kompatibilitásához. */
+export default function StoryClient(_props: {
+  pageId: string;
+  skin: string;
+  src: string;
+}) {
   return <StoryPage />;
 }

@@ -40,6 +40,9 @@ export function applyStoryMetaToState(params: {
   if (typeof meta.startPageId === "string") {
     params.setGlobal("startPageId", meta.startPageId);
   }
+  if (typeof meta.skin === "string" && meta.skin.trim()) {
+    params.setGlobal("skin", meta.skin.trim());
+  }
 
   if (params.persistMetaCache !== false) {
     try {

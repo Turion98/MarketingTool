@@ -3,8 +3,6 @@
 import React, { useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { loadTokens } from "../lib/tokenLoader";
-
 // 🔧 Központi API_BASE (env → fallback localhost)
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
@@ -44,23 +42,17 @@ export default function StoryRoutePage() {
   const q = useSearchParams();
 
   // Snapshot a query paramokról – így tisztán tehetők a dep-ek
-  const { skin, src, title, start, runes, runemode, campaignId } = useMemo(() => {
-    const skin = q.get("skin") ?? "contract_default";
+  const { src, title, start, runes, runemode, campaignId } = useMemo(() => {
     const src = q.get("src");
     const title = q.get("title");
     const start = q.get("start");
     const runes = q.get("runes");
     const runemode = q.get("runemode") as Runemode | null;
     const campaignId = q.get("c");
-    return { skin, src, title, start, runes, runemode, campaignId };
+    return { src, title, start, runes, runemode, campaignId };
   }, [q]);
 
-  // 1) Skin betöltés
-  useEffect(() => {
-    loadTokens(`/skins/${skin}.json`).catch((err) => console.warn("⚠️ Skin load failed:", err));
-  }, [skin]);
-
-  // 2) Paraméterek persistálása
+  // Paraméterek persistálása (skin tokenek: StoryPage → loadTokens a meta/globals/url alapján)
   useEffect(() => {
     const saveRunes = (cid: string | null, r: string | null, mode: Runemode | null) => {
       if (!cid || !r || (mode !== "single" && mode !== "triple")) return;

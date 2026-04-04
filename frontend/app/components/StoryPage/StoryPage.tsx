@@ -80,6 +80,7 @@ import {
 
 
 import { runSecuritySmokeTest } from "@/app/lib/security/securitySmokeTest";
+import { loadTokens } from "@/app/lib/tokenLoader";
 
 import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
 
@@ -297,6 +298,11 @@ const StoryPage: React.FC = () => {
 const skin = useMemo(() => {
   return globals?.skin || params.get("skin") || "legacy-default";
 }, [globals?.skin, params]);
+
+  useEffect(() => {
+    if (!skin || skin === "legacy-default") return;
+    loadTokens(`/skins/${skin}.json`).catch(() => {});
+  }, [skin]);
 
   const showAnalytics = params.get("analytics") === "1";
 

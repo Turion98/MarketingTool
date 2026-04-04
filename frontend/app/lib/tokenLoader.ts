@@ -29,22 +29,27 @@ function applyTokensInline(map: Record<string, string>) {
   });
 }
 
-export async function loadTokens(url: string, opts?: { ttlMs?: number }) {
+export async function loadTokens(
+  url: string,
+  opts?: { ttlMs?: number; forceReload?: boolean }
+) {
   const ttl = opts?.ttlMs ?? 24 * 60 * 60_000; // 24h
   const bucket = "skin";
   // cache-busting query nélkül kulcsolunk
   const id = url.replace(/\?.*$/, "");
+  const forceReload = opts?.forceReload === true;
 
-  // 1) FE cache hit?
-  const cached = getCache<TokensJson>(bucket, id);
-  if (cached?.tokens) {
-    applyTokensInline(cached.tokens);
-    return cached;
+  // 1) FE cache hit? (szerkesztő „skin frissítés”: kihagyjuk)
+  if (!forceReload) {
+    const cached = getCache<TokensJson>(bucket, id);
+    if (cached?.tokens) {
+      applyTokensInline(cached.tokens);
+      return cached;
+    }
   }
 
-  // 2) Hálózat – ne használjunk "no-store"-t, hogy a Next statikus fájl cache se sérüljön
-  //    (kliensen a saját FE cache-ünk dolgozik)
-  const res = await fetch(url); // default: force-cache / browser cache policy
+  // 2) Hálózat — forceReload: no-store + újratöltött JSON a cache-be
+  const res = await fetch(url, forceReload ? { cache: "no-store" } : undefined);
   if (!res.ok) throw new Error(`Token load failed: ${res.status}`);
 
   const json = (await res.json()) as TokensJson;

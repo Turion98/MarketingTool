@@ -30,15 +30,21 @@ export function useStoryPageBootstrap({
   const startQ = params.get("start");
   const titleQ = params.get("title");
   const rsQ = params.get("rs") || "";
+  const skinQ = params.get("skin");
 
   useEffect(() => {
     const src = srcQ;
     const start = startQ;
     const title = titleQ;
     const rs = rsQ;
+    const skin = skinQ;
 
     if (src) {
       setStorySrc?.(src);
+    }
+
+    if (skin?.trim()) {
+      setGlobal?.("skin", skin.trim());
     }
 
     if (title) {
@@ -72,5 +78,5 @@ export function useStoryPageBootstrap({
       localStorage.setItem("currentPageId", start);
     } catch {}
     goToNextPage(start);
-  }, [srcQ, startQ, titleQ, rsQ, goToNextPage, setGlobal, setStorySrc]);
+  }, [srcQ, startQ, titleQ, rsQ, skinQ, goToNextPage, setGlobal, setStorySrc]);
 }
