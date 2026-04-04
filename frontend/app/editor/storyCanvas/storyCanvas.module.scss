@@ -393,6 +393,16 @@
   will-change: transform;
 }
 
+/* A kártyák után, chip-ek előtt: látszik a vonal, pointer-events: none — nem fogja a húzást. */
+.endZoneSeparator {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(139, 168, 255, 0.38);
+  pointer-events: none;
+}
+
 .card {
   position: absolute;
   display: flex;
@@ -406,6 +416,11 @@
   user-select: none;
   overflow: hidden;
   min-width: 0;
+}
+
+.cardEnd {
+  border-color: rgba(167, 139, 250, 0.42);
+  background: rgba(28, 22, 40, 0.92);
 }
 
 .cardSelected {

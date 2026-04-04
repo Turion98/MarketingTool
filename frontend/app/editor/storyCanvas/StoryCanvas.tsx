@@ -24,6 +24,7 @@ import {
 import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentIds";
 import {
   EDITOR_LAYOUT_COL_STEP_PX,
+  collectEndPageIdsFromStory,
   ensureLayout,
   mergeEditorLayoutIntoStory,
   recomputeEditorLayoutForStory,
@@ -443,6 +444,23 @@ export default function StoryCanvas({
     }
     return { w: maxX, h: maxY };
   }, [worldMetrics]);
+
+  const endPageIds = useMemo(
+    () => collectEndPageIdsFromStory(draftStory),
+    [draftStory]
+  );
+
+  const endZoneSeparatorWorldX = useMemo(() => {
+    if (!endPageIds.length) return null;
+    let minX = Infinity;
+    for (const id of endPageIds) {
+      const pos = localLayout.nodes[id];
+      if (!pos) continue;
+      minX = Math.min(minX, pos.x);
+    }
+    if (!Number.isFinite(minX)) return null;
+    return Math.max(0, minX - 28);
+  }, [endPageIds, localLayout.nodes]);
 
   const commitLayout = useCallback(() => {
     if (interactionLocked) return;
@@ -945,6 +963,16 @@ export default function StoryCanvas({
               </div>
             );
           })}
+          {endZoneSeparatorWorldX != null ? (
+            <div
+              className={s.endZoneSeparator}
+              style={{
+                left: endZoneSeparatorWorldX,
+                height: bbox.h,
+              }}
+              aria-hidden
+            />
+          ) : null}
           <StoryDistantEdgeChips
             bundles={distantBundles}
             onHoverKey={setHoveredDistantKey}

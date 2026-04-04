@@ -97,7 +97,10 @@ export default function StoryCard({
   const isStart = node.pageId === STORY_GRAPH_START_NODE_ID;
 
   const raw = node.raw;
-  const catLabel = CATEGORY_LABELS[node.category as EditorPageCategory] ?? node.category;
+  const catLabel =
+    node.category === "end"
+      ? "Végoldal"
+      : CATEGORY_LABELS[node.category as EditorPageCategory] ?? node.category;
   const hasRes = !isStart && pageHasResolvableFragments(raw);
   const choices = Array.isArray(raw.choices) ? raw.choices : [];
 
@@ -207,7 +210,7 @@ export default function StoryCard({
   return (
     <div
       ref={domRef}
-      className={`${s.card} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""} ${pendingPage ? s.cardNeedsPageId : ""}`}
+      className={`${s.card} ${node.category === "end" ? s.cardEnd : ""} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""} ${pendingPage ? s.cardNeedsPageId : ""}`}
       style={{
         left: x,
         top: y,
@@ -432,6 +435,10 @@ export default function StoryCard({
                     </div>
                   ))
                 )}
+              </div>
+            ) : node.category === "end" ? (
+              <div className={s.cardOptStripStack}>
+                <span className={s.cardOptMuted}>vég — nincs kimenet</span>
               </div>
             ) : node.category === "puzzleRoute" ? (
               <div className={s.cardOptStripStack}>
