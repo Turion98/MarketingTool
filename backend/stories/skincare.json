@@ -43,8 +43,12 @@
   "pages": [
     {
       "id": "L1_soft_profile",
-      "title": "Amikor fényvédőt választasz, inkább ez számít:",
-      "text": [],
+      "title": "",
+    "text": [
+      {
+          "text": "Amikor fényvédőt választasz, inkább ez számít:"
+      }
+    ],
       "choices": [
         {
           "text": "Hogy szinte ne is érezzem",
@@ -92,7 +96,7 @@
       "title": "",
       "text": [
         {
-          "text": "Ha őszinte vagy magaddal, inkább ez áll közelebb hozzád:"
+          "text": "Öszintén szólva, melyik áll hozzád közelebb"
         }
       ],
       "choices": [
