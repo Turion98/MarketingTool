@@ -176,39 +176,76 @@
   overflow: visible;
 }
 
-.adminInline {
+.storyPickerWrap {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.28rem 0.45rem;
-  flex: 1 1 8rem;
-  min-width: 0;
-  max-width: min(100%, 26rem);
+  gap: 0.28rem 0.5rem;
+  /* Ne zsugorodjon 0 szélességre a zoom sáv mellett (flex min-width: 0 csapda). */
+  flex: none;
+  min-width: min(100%, 14rem);
+  max-width: min(100%, 28rem);
+  padding: 0.12rem 0.45rem 0.12rem 0.35rem;
+  margin: 0 0.1rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(0, 0, 0, 0.18)
+  );
 }
 
-.adminInlineLabel {
+.storyPickerLabel {
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(196, 181, 253, 0.75);
   flex-shrink: 0;
 }
 
-.adminInlineSelect {
-  flex: 1 1 10rem;
-  min-width: 0;
-  max-width: 100%;
-  font-size: 0.76rem;
-  padding: 0.22rem 0.45rem;
+.storyPickerLabelAdmin {
+  color: rgba(196, 181, 253, 0.82);
 }
 
-.adminInlineErr {
+.storyPickerLabelUser {
+  color: rgba(125, 211, 252, 0.78);
+}
+
+.storyPickerSelect {
+  flex: 1 1 auto;
+  min-width: 10rem;
+  width: auto;
+  max-width: min(100%, 20rem);
+  font-size: 0.76rem;
+  padding: 0.24rem 0.5rem;
+  border-radius: 0.38rem;
+}
+
+.storyPickerErr {
   flex: 1 1 100%;
   margin: 0;
   font-size: 0.72rem;
   color: #fca5a5;
   line-height: 1.3;
+}
+
+.storyPickerHint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.35;
+  color: rgba(232, 236, 244, 0.55);
+  font-weight: 500;
+}
+
+.storyPickerCode {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.62rem;
+  padding: 0.06rem 0.2rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fde68a;
 }
 
 .fullscreenToggleBtn {
@@ -768,6 +805,49 @@
   align-items: center;
   gap: 0.45rem;
   font-weight: 500;
+}
+
+.previewSkinRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+}
+
+.previewSkinLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 500;
+}
+
+.previewSkinApplyBtn {
+  flex-shrink: 0;
+  padding: 0.32rem 0.65rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: rgba(245, 158, 11, 0.18);
+  color: #fde68a;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.previewSkinApplyBtn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: rgba(253, 224, 71, 0.55);
+}
+
+.previewSkinApplyBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.previewSkinApplyBtn:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.55);
+  outline-offset: 2px;
 }
 
 .previewToolbarHint {

@@ -146,7 +146,7 @@ type StoryCanvasProps = {
   onRenamePageId?: (fromId: string, toId: string) => string | null;
   /** Új függő oldal létrejöttekor (pl. jobb panel megnyitása). */
   onPendingPageCreated?: () => void;
-  /** Bal szél: teljes képernyő + admin stb. */
+  /** Bal szél: teljes képernyő, sztori választó, mentés stb. */
   visualBarLeading?: ReactNode;
   /** Új sztori meta fázis: nincs szerkesztés a vásznon. */
   interactionLocked?: boolean;

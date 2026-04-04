@@ -27,6 +27,7 @@ import {
   isNewStorySentinel,
 } from "@/app/lib/editor/newStoryBootstrap";
 import { getClientFetchApiBase } from "@/app/lib/publicApiBase";
+import { loadTokens } from "@/app/lib/tokenLoader";
 import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
 import {
   removePageFromStory,
@@ -42,6 +43,7 @@ import s from "./editor.module.scss";
 
 const DEBOUNCE_MS = 380;
 const SEED_STORY_SRC = "stories/Mrk6_D_text_updated_en.json";
+const LS_EDITOR_STORY_SRC = "questell:editor:activeStorySrc";
 const LS_ADMIN_STORY_SRC = "questell:editor:adminStorySrc";
 const LS_PREFIX = "questell:editor:draft:";
 const EDITOR_SKIN_LS = "questell:editor:skinPref";
@@ -146,19 +148,102 @@ type ListedStory = {
   startPageId?: string;
 };
 
+function readPersistedEditorStorySrc(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const next = localStorage.getItem(LS_EDITOR_STORY_SRC);
+    if (next?.trim()) return next.trim();
+    const legacy = localStorage.getItem(LS_ADMIN_STORY_SRC);
+    return legacy?.trim() ? legacy.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedEditorStorySrc(normalizedPath: string): void {
+  try {
+    localStorage.setItem(LS_EDITOR_STORY_SRC, normalizedPath);
+    localStorage.setItem(LS_ADMIN_STORY_SRC, normalizedPath);
+  } catch {
+    /* ignore */
+  }
+}
+
+function normalizeStoriesListResponse(data: unknown): ListedStory[] {
+  const arr = Array.isArray(data) ? data : [];
+  const normalized: ListedStory[] = [];
+  for (const item of arr) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const x = item as Record<string, unknown>;
+    const id = typeof x.id === "string" ? x.id : "";
+    const title = typeof x.title === "string" ? x.title : id || "—";
+    const jsonSrc = typeof x.jsonSrc === "string" ? x.jsonSrc : "";
+    if (!id || !jsonSrc) continue;
+    const row: ListedStory = { id, title, jsonSrc };
+    if (typeof x.startPageId === "string") row.startPageId = x.startPageId;
+    normalized.push(row);
+  }
+  return normalized;
+}
+
+/**
+ * Nem-admin: vesszővel elválasztott story id vagy fájlnév (.json nélkül).
+ * Egyetlen `*` = minden sztori (csak fejlesztéshez; élesben kerüld).
+ */
+function parseEditorStoryAllowlistFromEnv(): string[] | null {
+  const raw = process.env.NEXT_PUBLIC_EDITOR_STORY_ALLOWLIST;
+  if (raw == null || String(raw).trim() === "") return null;
+  return String(raw)
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function listedStoryAllowKeys(st: ListedStory): string[] {
+  const id = st.id.trim().toLowerCase();
+  const file = st.jsonSrc
+    .replace(/^.*\//, "")
+    .replace(/\.json$/i, "")
+    .trim()
+    .toLowerCase();
+  return [...new Set([id, file].filter(Boolean))];
+}
+
+function filterStoriesForEditorRole(
+  list: ListedStory[],
+  admin: boolean,
+  allowlist: string[] | null
+): ListedStory[] {
+  if (admin) return list;
+  if (!allowlist?.length) return [];
+  if (allowlist.length === 1 && allowlist[0] === "*") return list;
+  const allow = new Set(allowlist);
+  return list.filter((st) =>
+    listedStoryAllowKeys(st).some((k) => allow.has(k))
+  );
+}
+
 type SkinEntry = { id: string; title: string };
 
 function PreviewToolbar({
   pageIds,
   onSyncEditorPageId,
+  metaSkinFromStory,
+  onPersistSkinToMeta,
+  onHardRefreshPreview,
 }: {
   pageIds: string[];
   /** Preview oldal váltás → ugyanaz a kártya legyen kijelölve a vásznon. */
   onSyncEditorPageId: (pageId: string) => void;
+  metaSkinFromStory?: string | null;
+  onPersistSkinToMeta?: (skinId: string) => void;
+  /** Token újratöltés + preview remount (szülő). */
+  onHardRefreshPreview?: (skinId: string) => void | Promise<void>;
 }) {
   const { currentPageId, setCurrentPageId, setGlobal } = useGameState();
   const [skins, setSkins] = useState<SkinEntry[]>([]);
   const [skin, setSkin] = useState("contract_creative_dusk");
+  const [skinApplyBusy, setSkinApplyBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -175,15 +260,21 @@ function PreviewToolbar({
   }, []);
 
   useEffect(() => {
-    let initial = "contract_creative_dusk";
+    const fromMeta = metaSkinFromStory?.trim();
+    if (fromMeta) {
+      setSkin(fromMeta);
+      setGlobal("skin", fromMeta);
+      return;
+    }
+    let fromLs = "contract_creative_dusk";
     try {
-      initial = localStorage.getItem(EDITOR_SKIN_LS) || initial;
+      fromLs = localStorage.getItem(EDITOR_SKIN_LS) || fromLs;
     } catch {
       /* ignore */
     }
-    setSkin(initial);
-    setGlobal("skin", initial);
-  }, [setGlobal]);
+    setSkin(fromLs);
+    setGlobal("skin", fromLs);
+  }, [metaSkinFromStory, setGlobal]);
 
   const skinOptions = useMemo(() => {
     if (skins.length) return skins;
@@ -216,33 +307,65 @@ function PreviewToolbar({
           )}
         </select>
       </label>
-      <label>
-        Skin
-        <select
-          className={s.pageSelect}
-          value={skinOptions.some((sk) => sk.id === skin) ? skin : skinOptions[0]?.id}
-          onChange={(e) => {
-            const v = e.target.value;
-            setSkin(v);
+      <div className={s.previewSkinRow}>
+        <label className={s.previewSkinLabel}>
+          Skin
+          <select
+            className={s.pageSelect}
+            value={
+              skinOptions.some((sk) => sk.id === skin)
+                ? skin
+                : skinOptions[0]?.id
+            }
+            onChange={(e) => {
+              const v = e.target.value;
+              setSkin(v);
+              setGlobal("skin", v);
+              try {
+                localStorage.setItem(EDITOR_SKIN_LS, v);
+              } catch {
+                /* ignore */
+              }
+              onPersistSkinToMeta?.(v);
+            }}
+            aria-label="Preview skin"
+          >
+            {skinOptions.map((sk) => (
+              <option key={sk.id} value={sk.id}>
+                {sk.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className={s.previewSkinApplyBtn}
+          disabled={skinApplyBusy}
+          title="Beírja a meta.skin-t, újratölti a skin JSON-t és frissíti csak az előnézetet (nem kell külön menteni a sztorit)."
+          onClick={() => {
+            if (!onHardRefreshPreview) return;
+            const v = skin;
+            setSkinApplyBusy(true);
             setGlobal("skin", v);
             try {
               localStorage.setItem(EDITOR_SKIN_LS, v);
             } catch {
               /* ignore */
             }
+            onPersistSkinToMeta?.(v);
+            Promise.resolve(onHardRefreshPreview(v))
+              .catch(() => {})
+              .finally(() => setSkinApplyBusy(false));
           }}
-          aria-label="Preview skin"
         >
-          {skinOptions.map((sk) => (
-            <option key={sk.id} value={sk.id}>
-              {sk.title}
-            </option>
-          ))}
-        </select>
-      </label>
+          {skinApplyBusy ? "Frissítés…" : "Skin az előnézetre"}
+        </button>
+      </div>
       <span className={s.previewToolbarHint}>
-        Legördülő = vászon kijelölés; a szerkesztő választás is erre állítja a
-        preview-t.
+        A <strong>Skin az előnézetre</strong> gomb beállítja a{" "}
+        <code className={s.storyPickerCode}>meta.skin</code>-t a vázlatban, és
+        azonnal újrarajzolja a preview-t. Teljes mentés: „Változások mentése” a
+        vásznon. „Preview oldal” = vászon kijelölés.
       </span>
     </div>
   );
@@ -281,12 +404,14 @@ function EditorPreviewColumn({
   pageIds,
   selectedPageId,
   onSelectPageId,
+  onStoryChange,
 }: {
   draftStory: Record<string, unknown>;
   revision: number;
   pageIds: string[];
   selectedPageId: string | null;
   onSelectPageId: (id: string | null) => void;
+  onStoryChange: (next: Record<string, unknown>) => void;
 }) {
   const [previewExpanded, setPreviewExpanded] = useState(true);
   const [bodyHeightPx, setBodyHeightPx] = useState(480);
@@ -321,6 +446,40 @@ function EditorPreviewColumn({
   bodyHeightRef.current = bodyHeightPx;
 
   const maxBodyHeightPx = previewMaxBodyHeightPx();
+
+  const metaSkinFromStory = useMemo(() => {
+    const m = draftStory.meta;
+    if (!m || typeof m !== "object" || Array.isArray(m)) return null;
+    const sk = (m as Record<string, unknown>).skin;
+    return typeof sk === "string" && sk.trim() ? sk.trim() : null;
+  }, [draftStory.meta]);
+
+  const persistPreviewSkinToMeta = useCallback(
+    (skinId: string) => {
+      const prevMeta =
+        draftStory.meta &&
+        typeof draftStory.meta === "object" &&
+        !Array.isArray(draftStory.meta)
+          ? { ...(draftStory.meta as Record<string, unknown>) }
+          : {};
+      onStoryChange({
+        ...draftStory,
+        meta: { ...prevMeta, skin: skinId },
+      });
+    },
+    [draftStory, onStoryChange]
+  );
+
+  const [previewRemountKey, setPreviewRemountKey] = useState(0);
+
+  const hardRefreshPreviewSkin = useCallback(async (skinId: string) => {
+    if (skinId && skinId !== "legacy-default") {
+      await loadTokens(`/skins/${skinId}.json`, {
+        forceReload: true,
+      }).catch(() => {});
+    }
+    setPreviewRemountKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     const onResize = () => {
@@ -460,10 +619,13 @@ function EditorPreviewColumn({
             <PreviewToolbar
               pageIds={pageIds}
               onSyncEditorPageId={(id) => onSelectPageId(id)}
+              metaSkinFromStory={metaSkinFromStory}
+              onPersistSkinToMeta={persistPreviewSkinToMeta}
+              onHardRefreshPreview={hardRefreshPreviewSkin}
             />
             <div className={s.previewViewport}>
             <div className={s.previewStoryMount}>
-              <StoryPage />
+              <StoryPage key={previewRemountKey} />
             </div>
           </div>
           <div
@@ -546,6 +708,7 @@ function EditorStudioRightColumn({
         pageIds={pageIds}
         selectedPageId={selectedPageId}
         onSelectPageId={onSelectPageId}
+        onStoryChange={onStoryChange}
       />
       <div
         className={`${s.panel} ${s.previewPanel} ${s.inspectorPanelRoot}`}
@@ -611,7 +774,7 @@ type EditorStudioProps = {
   userId: string | undefined;
   tierLabel: string | null;
   tierColor: string;
-  /** Csak adminnak: szerverlista + váltó a vászon panel tetején. */
+  /** Admin: teljes sztori-lista; egyéb szerep: allowlist-szűrt lista (lásd env). */
   isAdmin?: boolean;
   onLogout: () => void;
 };
@@ -650,10 +813,23 @@ export default function EditorStudio({
     useState<string>(SEED_STORY_SRC);
   const [isNewStoryBootstrap, setIsNewStoryBootstrap] = useState(false);
   const previousActiveStorySrcRef = useRef<string>(SEED_STORY_SRC);
-  const [adminStoryList, setAdminStoryList] = useState<ListedStory[]>([]);
-  const [adminListLoading, setAdminListLoading] = useState(false);
-  const [adminListError, setAdminListError] = useState<string | null>(null);
-  const adminLsSyncedRef = useRef(false);
+  const [serverStoryList, setServerStoryList] = useState<ListedStory[]>([]);
+  const [storyListLoading, setStoryListLoading] = useState(false);
+  const [storyListError, setStoryListError] = useState<string | null>(null);
+  const editorStorySrcLsSyncedRef = useRef(false);
+  const editorStoryAllowlist = useMemo(
+    () => parseEditorStoryAllowlistFromEnv(),
+    []
+  );
+  const visibleStoryList = useMemo(
+    () =>
+      filterStoriesForEditorRole(
+        serverStoryList,
+        isAdmin,
+        editorStoryAllowlist
+      ),
+    [serverStoryList, isAdmin, editorStoryAllowlist]
+  );
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveServerTimerRef = useRef<number | null>(null);
@@ -754,45 +930,21 @@ export default function EditorStudio({
       const norm = normalizeEditorStorySrc(path);
       setActiveStorySrc(norm);
       setSelectedPageIds([]);
-      try {
-        localStorage.setItem(LS_ADMIN_STORY_SRC, norm);
-      } catch {
-        /* ignore */
-      }
-      if (isAdmin) {
-        fetch("/api/stories", { cache: "no-store" })
-          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("list"))))
-          .then((data: unknown) => {
-            const arr = Array.isArray(data) ? data : [];
-            const normalized: ListedStory[] = [];
-            for (const item of arr) {
-              if (!item || typeof item !== "object" || Array.isArray(item)) {
-                continue;
-              }
-              const x = item as Record<string, unknown>;
-              const id = typeof x.id === "string" ? x.id : "";
-              const title = typeof x.title === "string" ? x.title : id || "—";
-              const jsonSrc = typeof x.jsonSrc === "string" ? x.jsonSrc : "";
-              if (!id || !jsonSrc) continue;
-              const row: ListedStory = { id, title, jsonSrc };
-              if (typeof x.startPageId === "string") {
-                row.startPageId = x.startPageId;
-              }
-              normalized.push(row);
-            }
-            setAdminStoryList(normalized);
-          })
-          .catch(() => {});
-      }
+      writePersistedEditorStorySrc(norm);
+      fetch("/api/stories", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("list"))))
+        .then((data: unknown) => {
+          setServerStoryList(normalizeStoriesListResponse(data));
+        })
+        .catch(() => {});
     },
-    [isAdmin]
+    []
   );
 
   useEffect(() => {
-    if (!isAdmin) return;
     let cancelled = false;
-    setAdminListLoading(true);
-    setAdminListError(null);
+    setStoryListLoading(true);
+    setStoryListError(null);
     fetch("/api/stories", { cache: "no-store" })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -800,51 +952,39 @@ export default function EditorStudio({
       })
       .then((data: unknown) => {
         if (cancelled) return;
-        const arr = Array.isArray(data) ? data : [];
-        const normalized: ListedStory[] = [];
-        for (const item of arr) {
-          if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-          const x = item as Record<string, unknown>;
-          const id = typeof x.id === "string" ? x.id : "";
-          const title = typeof x.title === "string" ? x.title : id || "—";
-          const jsonSrc = typeof x.jsonSrc === "string" ? x.jsonSrc : "";
-          if (!id || !jsonSrc) continue;
-          const row: ListedStory = { id, title, jsonSrc };
-          if (typeof x.startPageId === "string") row.startPageId = x.startPageId;
-          normalized.push(row);
-        }
-        setAdminStoryList(normalized);
+        setServerStoryList(normalizeStoriesListResponse(data));
       })
       .catch(() => {
         if (cancelled) return;
-        setAdminStoryList([]);
-        setAdminListError(
+        setServerStoryList([]);
+        setStoryListError(
           "Nem sikerült betölteni a sztori listát (/api/stories). Ellenőrizd a backendet."
         );
       })
       .finally(() => {
-        if (!cancelled) setAdminListLoading(false);
+        if (!cancelled) setStoryListLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [isAdmin]);
+  }, []);
 
   useEffect(() => {
-    if (!isAdmin || !adminStoryList.length || adminLsSyncedRef.current) return;
-    adminLsSyncedRef.current = true;
-    try {
-      const saved = localStorage.getItem(LS_ADMIN_STORY_SRC);
-      if (!saved?.trim()) return;
-      const norm = normalizeEditorStorySrc(saved);
-      const hit = adminStoryList.some(
-        (x) => normalizeEditorStorySrc(x.jsonSrc) === norm
-      );
-      if (hit) setActiveStorySrc(norm);
-    } catch {
-      /* ignore */
-    }
-  }, [isAdmin, adminStoryList]);
+    if (!serverStoryList.length || editorStorySrcLsSyncedRef.current) return;
+    editorStorySrcLsSyncedRef.current = true;
+    const saved = readPersistedEditorStorySrc();
+    if (!saved?.trim()) return;
+    const norm = normalizeEditorStorySrc(saved);
+    const visible = filterStoriesForEditorRole(
+      serverStoryList,
+      isAdmin,
+      editorStoryAllowlist
+    );
+    const hit = visible.some(
+      (x) => normalizeEditorStorySrc(x.jsonSrc) === norm
+    );
+    if (hit) setActiveStorySrc(norm);
+  }, [serverStoryList, isAdmin, editorStoryAllowlist]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1134,7 +1274,7 @@ export default function EditorStudio({
     });
   }, []);
 
-  const adminStorySelectOptions = useMemo((): ReactNode[] => {
+  const editorStorySelectOptions = useMemo((): ReactNode[] => {
     const cur = normalizeEditorStorySrc(activeStorySrc);
     const opts: ReactNode[] = [];
     if (isNewStorySentinel(activeStorySrc)) {
@@ -1144,7 +1284,7 @@ export default function EditorStudio({
         </option>
       );
     }
-    const inList = adminStoryList.some(
+    const inList = visibleStoryList.some(
       (x) => normalizeEditorStorySrc(x.jsonSrc) === cur
     );
     if (!inList && cur && !isNewStorySentinel(activeStorySrc)) {
@@ -1154,7 +1294,7 @@ export default function EditorStudio({
         </option>
       );
     }
-    adminStoryList.forEach((st) => {
+    visibleStoryList.forEach((st) => {
       const v = normalizeEditorStorySrc(st.jsonSrc);
       opts.push(
         <option key={st.id || v} value={v}>
@@ -1170,7 +1310,7 @@ export default function EditorStudio({
       );
     }
     return opts;
-  }, [activeStorySrc, adminStoryList]);
+  }, [activeStorySrc, visibleStoryList]);
 
   return (
     <div className={s.root}>
@@ -1280,6 +1420,65 @@ export default function EditorStudio({
                           </svg>
                         )}
                       </button>
+                      <div className={s.storyPickerWrap}>
+                        <span
+                          className={`${s.storyPickerLabel} ${
+                            isAdmin
+                              ? s.storyPickerLabelAdmin
+                              : s.storyPickerLabelUser
+                          }`}
+                          id="editor-story-src-label"
+                        >
+                          Sztori
+                        </span>
+                        <select
+                          id="editor-story-select"
+                          className={`${s.pageSelect} ${s.storyPickerSelect}`}
+                          aria-labelledby="editor-story-src-label"
+                          disabled={isNewStoryBootstrap}
+                          aria-busy={storyListLoading}
+                          title={
+                            storyListError
+                              ? storyListError
+                              : storyListLoading && visibleStoryList.length === 0
+                                ? "Sztori lista betöltése…"
+                                : isAdmin
+                                  ? `${serverStoryList.length} sztori a szerveren`
+                                  : `${visibleStoryList.length} elérhető sztori`
+                          }
+                          value={normalizeEditorStorySrc(activeStorySrc)}
+                          onChange={(e) => {
+                            const next = normalizeEditorStorySrc(
+                              e.target.value
+                            );
+                            setActiveStorySrc(next);
+                            handleSelectPageIds([]);
+                            writePersistedEditorStorySrc(next);
+                          }}
+                        >
+                          {editorStorySelectOptions}
+                        </select>
+                        {storyListError ? (
+                          <span className={s.storyPickerErr}>
+                            {storyListError}
+                          </span>
+                        ) : null}
+                        {!isAdmin &&
+                        (!editorStoryAllowlist ||
+                          editorStoryAllowlist.length === 0) &&
+                        !storyListError ? (
+                          <span className={s.storyPickerHint}>
+                            Előfizetői mód: add meg a{" "}
+                            <code className={s.storyPickerCode}>
+                              NEXT_PUBLIC_EDITOR_STORY_ALLOWLIST
+                            </code>{" "}
+                            env változót (story id-k, vesszővel). Fejlesztéshez:
+                            egyetlen{" "}
+                            <code className={s.storyPickerCode}>*</code> = összes
+                            sztori.
+                          </span>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
                         className={s.newStoryBtn}
@@ -1320,51 +1519,6 @@ export default function EditorStudio({
                           </span>
                         ) : null}
                       </div>
-                      {isAdmin ? (
-                        <div className={s.adminInline}>
-                          <span
-                            className={s.adminInlineLabel}
-                            id="editor-admin-src-label"
-                          >
-                            Forrás
-                          </span>
-                          <select
-                            id="editor-admin-story-select"
-                            className={`${s.pageSelect} ${s.adminInlineSelect}`}
-                            aria-labelledby="editor-admin-src-label"
-                            disabled={isNewStoryBootstrap}
-                            aria-busy={adminListLoading}
-                            title={
-                              adminListError
-                                ? adminListError
-                                : adminListLoading &&
-                                    adminStoryList.length === 0
-                                  ? "Sztori lista betöltése…"
-                                  : `${adminStoryList.length} sztori a szerveren`
-                            }
-                            value={normalizeEditorStorySrc(activeStorySrc)}
-                            onChange={(e) => {
-                              const next = normalizeEditorStorySrc(
-                                e.target.value
-                              );
-                              setActiveStorySrc(next);
-                              handleSelectPageIds([]);
-                              try {
-                                localStorage.setItem(LS_ADMIN_STORY_SRC, next);
-                              } catch {
-                                /* ignore */
-                              }
-                            }}
-                          >
-                            {adminStorySelectOptions}
-                          </select>
-                          {adminListError ? (
-                            <span className={s.adminInlineErr}>
-                              {adminListError}
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : null}
                     </>
                   }
                 />
