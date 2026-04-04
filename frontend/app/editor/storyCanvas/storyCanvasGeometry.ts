@@ -101,6 +101,8 @@ export function outgoingSlotIndexForEdge(
 }
 
 export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): number {
+  /** Végoldal: ugyanakkora „testmagasság”, mint egy tipikus több sávos kártyán. */
+  if (node.category === "end") return 3;
   if (node.pageId === STORY_GRAPH_START_NODE_ID) return 1;
   if (isRiddleNode(node)) {
     const nOpt = riddleFilledOptionCount(node);
