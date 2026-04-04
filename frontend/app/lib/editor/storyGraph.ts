@@ -25,7 +25,7 @@ export type StoryGraphEdge = {
 
 export type StoryGraphNode = {
   pageId: string;
-  category: EditorPageCategory;
+  category: EditorPageCategory | "end";
   raw: Record<string, unknown>;
   /** `classifyEditorPage === "logic"` (egyezik az `isEditorLogicPage` szemantikával). */
   isLogicPage: boolean;
@@ -54,7 +54,18 @@ function collectPages(story: Record<string, unknown>): StoryGraphNode[] {
     const id = readString(rec.id);
     if (!id) return;
     const cls = classifyEditorPage(rec);
-    if (cls === "end") return;
+    if (cls === "end") {
+      out.push({
+        pageId: id,
+        category: "end",
+        raw: rec,
+        isLogicPage: false,
+        isPuzzlePage: false,
+        puzzleKind: undefined,
+        choiceCount: 0,
+      });
+      return;
+    }
 
     const choices = Array.isArray(rec.choices) ? rec.choices : [];
     const isLogicPage = isEditorLogicPage(rec);
