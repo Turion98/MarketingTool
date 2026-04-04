@@ -574,6 +574,8 @@ export default function PageInspector({
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
   const [saveMilestone, setSaveMilestone] = useState(false);
+  const [endCtaPresetKey, setEndCtaPresetKey] = useState("");
+  const [endCtaInlineLocked, setEndCtaInlineLocked] = useState(false);
   const [pageIdDraft, setPageIdDraft] = useState("");
   const [pageIdError, setPageIdError] = useState<string | null>(null);
   const pageIdInputRef = useRef<HTMLInputElement>(null);
@@ -608,6 +610,22 @@ export default function PageInspector({
     return { milestones, others };
   }, [draftStory, choices, saveMilestone, selectedPageId]);
 
+  const ctaPresetKeys = useMemo(() => {
+    const meta = draftStory.meta;
+    if (!meta || typeof meta !== "object" || Array.isArray(meta)) return [];
+    const presets = (meta as Record<string, unknown>).ctaPresets;
+    if (
+      !presets ||
+      typeof presets !== "object" ||
+      Array.isArray(presets)
+    ) {
+      return [];
+    }
+    return Object.keys(presets as Record<string, unknown>).sort((a, b) =>
+      a.localeCompare(b)
+    );
+  }, [draftStory]);
+
   useEffect(() => {
     if (!page) {
       setTitle("");
@@ -638,6 +656,8 @@ export default function PageInspector({
       setRouteDefaultGoto("");
       setRouteAssignments({});
       setSaveMilestone(false);
+      setEndCtaPresetKey("");
+      setEndCtaInlineLocked(false);
       return;
     }
 
@@ -777,6 +797,25 @@ export default function PageInspector({
       setRouteSourcePageId("");
       setRouteDefaultGoto("");
       setRouteAssignments({});
+    }
+
+    if (page.type === "end") {
+      setChoices([]);
+      const em = asRecord(page.endMeta);
+      const cta = em?.cta;
+      if (typeof cta === "string" && cta.trim()) {
+        setEndCtaPresetKey(cta.trim());
+        setEndCtaInlineLocked(false);
+      } else if (cta && typeof cta === "object") {
+        setEndCtaPresetKey("");
+        setEndCtaInlineLocked(true);
+      } else {
+        setEndCtaPresetKey("");
+        setEndCtaInlineLocked(false);
+      }
+    } else {
+      setEndCtaPresetKey("");
+      setEndCtaInlineLocked(false);
     }
   }, [page, selectedPageId, draftStory]);
 
@@ -1080,6 +1119,27 @@ export default function PageInspector({
       delete nextP.text;
     } else if (isOtherPuzzle) {
       nextP = { ...page, title, text: primaryText };
+    } else if (page.type === "end") {
+      nextP = mergeFragRowsIntoPage(
+        { ...page, title },
+        fragRows,
+        primaryText
+      );
+      delete nextP.choices;
+      if (!endCtaInlineLocked) {
+        const key = endCtaPresetKey.trim();
+        if (key) {
+          nextP.endMeta = {
+            ...(asRecord(nextP.endMeta) ?? {}),
+            cta: key,
+          };
+        } else {
+          const em = { ...(asRecord(nextP.endMeta) ?? {}) };
+          delete em.cta;
+          if (Object.keys(em).length) nextP.endMeta = em;
+          else delete nextP.endMeta;
+        }
+      }
     } else if (logic) {
       const ifHas = logicIfRows
         .filter((r) => r.fragment.trim() && r.goTo.trim())
@@ -1156,6 +1216,8 @@ export default function PageInspector({
     logicIfRows,
     logicElseGoTo,
     saveMilestone,
+    endCtaPresetKey,
+    endCtaInlineLocked,
   ]);
 
   const addFragRow = useCallback(() => {
@@ -1492,7 +1554,9 @@ export default function PageInspector({
   const isEditorPuzzleRoutePage =
     classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
   const isLogic = Boolean(logic) && !isEditorPuzzleRoutePage;
-  const milestoneEligible = !isEditorLogicPage(page as Record<string, unknown>);
+  const isEndPage = page.type === "end";
+  const milestoneEligible =
+    !isEditorLogicPage(page as Record<string, unknown>) && !isEndPage;
 
   return (
     <div className={s.details}>
@@ -1682,6 +1746,8 @@ export default function PageInspector({
               </div>
             ))}
 
+            {!isEndPage ? (
+              <>
             <div className={s.blockHead}>
               <span>Opciók (kötelező: szöveg + következő oldal)</span>
               <button type="button" className={s.btnSm} onClick={addChoice}>
@@ -1788,10 +1854,45 @@ export default function PageInspector({
                     setChoices((c) => c.filter((_, j) => j !== idx))
                   }
                 >
-                  Opció törlése
-                </button>
+                Opció törlése
+              </button>
               </div>
             ))}
+              </>
+            ) : (
+              <>
+                {endCtaInlineLocked ? (
+                  <p className={s.hintSmall}>
+                    Az <code>endMeta.cta</code> egy beágyazott objektum — a JSON
+                    nézetben szerkeszthető. Preset kulcs választásával felülírhatod
+                    string hivatkozásra.
+                  </p>
+                ) : null}
+                <label className={s.field}>
+                  <span>
+                    CTA preset (<code>meta.ctaPresets</code> kulcs)
+                  </span>
+                  <select
+                    className={s.input}
+                    value={endCtaPresetKey}
+                    disabled={endCtaInlineLocked}
+                    onChange={(e) => {
+                      setEndCtaPresetKey(e.target.value);
+                      if (e.target.value.trim()) setEndCtaInlineLocked(false);
+                    }}
+                  >
+                    <option value="">
+                      — alapértelmezett (meta.endDefaultCta / motor) —
+                    </option>
+                    {ctaPresetKeys.map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
           </>
         ) : isRiddlePage ? (
           <>

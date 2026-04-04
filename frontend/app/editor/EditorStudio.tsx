@@ -37,6 +37,7 @@ import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import NewStoryMetaPanel from "./NewStoryMetaPanel";
+import EditorEndPagesPanel from "./EditorEndPagesPanel";
 import PageInspector from "./PageInspector";
 import StoryCanvas from "./storyCanvas/StoryCanvas";
 import s from "./editor.module.scss";
@@ -709,6 +710,11 @@ function EditorStudioRightColumn({
         selectedPageId={selectedPageId}
         onSelectPageId={onSelectPageId}
         onStoryChange={onStoryChange}
+      />
+      <EditorEndPagesPanel
+        draftStory={draftStory}
+        selectedPageId={selectedPageId}
+        onSelectPageId={(id) => onSelectPageId(id)}
       />
       <div
         className={`${s.panel} ${s.previewPanel} ${s.inspectorPanelRoot}`}
