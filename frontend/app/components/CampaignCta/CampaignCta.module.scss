@@ -117,10 +117,3 @@
   max-width: 100%;
 }
 
-.takeoverCluster[data-embed-ghost="1"] .ctaContextLine {
-  color: color-mix(
-    in oklch,
-    var(--contract-text-color, var(--tt-color, currentColor)) 90%,
-    transparent
-  );
-}
