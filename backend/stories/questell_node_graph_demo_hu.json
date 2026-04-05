@@ -1,0 +1,1994 @@
+{
+  "schemaVersion": "1.2.0",
+  "storyId": "questell_node_graph_demo_hu",
+  "locale": "hu",
+  "meta": {
+    "id": "questell_node_graph_demo_hu",
+    "title": "Questell – interaktív döntési élmény",
+    "description": "Nemlineáris, gráf-alapú demo: a választásaid alakítják az útvonalat és a megjelenő tartalmat.",
+    "startPageId": "1.1",
+    "campaignId": "questell_node_graph_demo_hu",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://example.com?c={{campaignId}}&end={{nodeId}}"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "x-sourceFiles": {
+    "text": "/mnt/data/node_text.txt",
+    "pool": "/mnt/data/node_pool.txt"
+  },
+  "pages": [
+    {
+      "id": "1.1",
+      "type": "decision",
+      "title": "Interaktív döntési élmény",
+      "text": "A Questell egy olyan rendszer, ahol a user döntéseken keresztül halad előre. Nem egy előre rögzített oldalt lát, hanem egy alakuló élményt. A tartalom az interakciók mentén épül fel.",
+      "choices": [
+        {
+          "text": "Oké, de mitől reagál a tartalom valójában?",
+          "next": "1.2",
+          "type": "deep"
+        },
+        {
+          "text": "Mi a probléma a mostani statikus oldalakkal?",
+          "next": "2.1",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan fordul le konkrét ajánlásokra a végén?",
+          "next": "4.1",
+          "type": "apply"
+        },
+        {
+          "text": "Hogyan van felépítve mögötte a döntési logika?",
+          "next": "5.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Mitől érzi ezt a user folyamatosnak és relevánsnak?",
+          "next": "7.1",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen növeli a figyelmet vagy csak jól hangzik?",
+          "next": "8.1",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "1.2",
+      "type": "decision",
+      "title": "Tartalom, ami reagál",
+      "text": "A megjelenő információ attól függ, mit választott a user. Nem mindenki ugyanazt az utat járja be. Így a tartalom releváns marad.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan áll össze ebből egy teljes útvonal?",
+          "next": "1.4",
+          "type": "deep"
+        },
+        {
+          "text": "Mi dönti el technikailag, hogy mit lát a user?",
+          "next": "5.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől érzi ezt a user tényleg relevánsnak?",
+          "next": "7.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Hogyan épül ez fel lépésről lépésre a háttérben?",
+          "next": "6.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan vezet konkrét ajánlásokhoz a végén?",
+          "next": "8.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ezt AI nélkül is meg lehet csinálni, vagy kell hozzá értelmezés?",
+          "next": "11.2",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "1.3",
+      "type": "decision",
+      "title": "Beágyazható rendszer",
+      "text": "A Questell meglévő weboldalakba illeszthető. Nem külön platformként működik, hanem a site részeként. Ez lehetővé teszi a gyors integrációt.",
+      "choices": [
+        {
+          "text": "Oké, de technikailag hogyan kerül be egy oldalba?",
+          "next": "9.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez tényleg képes több figyelmet hozni egy meglévő oldalon?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Ez hogyan segít abban, hogy jobban értsék a brandet?",
+          "next": "4.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mennyire szabadon lehet ezt elhelyezni egy oldalon?",
+          "next": "9.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Honnan indul egy ilyen integráció egyáltalán?",
+          "next": "10.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen hoz konverziót, vagy csak interaktívabb lesz?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "1.4",
+      "type": "decision",
+      "title": "Útvonal alapú gondolkodás",
+      "text": "A rendszer nem oldalakban, hanem útvonalakban gondolkodik. A user egy folyamaton megy végig. Ennek minden lépése összefügg.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan néz ki maga a döntési struktúra?",
+          "next": "5.1",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan építesz fel egy ilyen útvonalat nulláról?",
+          "next": "10.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mit lehet ebből később elemezni a user viselkedéséről?",
+          "next": "12.1",
+          "type": "cause"
+        },
+        {
+          "text": "Mennyire tud ez elágazni és komplexé válni?",
+          "next": "5.2",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hogyan épül fel ez lépésről lépésre a user szemszögéből?",
+          "next": "6.3",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Milyen értékes adatokat ad ez üzleti szempontból?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "2.1",
+      "type": "decision",
+      "title": "Információ túlterhelés",
+      "text": "A legtöbb weboldal egyszerre próbál mindent elmondani. Ez túl sok a usernek. Emiatt gyorsan elveszti a fókuszt.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan lehet ezt kisebb, érthető egységekre bontani?",
+          "next": "6.1",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől érzi ezt a user kevésbé túlterhelőnek?",
+          "next": "7.4",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez konkrétan hogyan hat a konverzióra?",
+          "next": "8.3",
+          "type": "business"
+        },
+        {
+          "text": "Ez inkább tartalmi probléma vagy brand kommunikációs hiba?",
+          "next": "4.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Hogyan lehet ezt fokozatosan felépíteni, nem egyszerre rázúdítani?",
+          "next": "6.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Mitől marad releváns a tartalom ennyi információ mellett?",
+          "next": "7.1",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "2.2",
+      "type": "decision",
+      "title": "Passzív fogyasztás",
+      "text": "A user csak görget és olvas. Nincs döntési helyzetben. Ez csökkenti az aktivitást.",
+      "choices": [
+        {
+          "text": "Oké, hogyan lehet ebből aktív választási helyzetet csinálni?",
+          "next": "6.2",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől válik ez élménnyé, nem csak olvasássá?",
+          "next": "7.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez ténylegesen növeli a figyelmet, vagy csak interaktívabbnak tűnik?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Ez hogyan néz ki egy kampányban, nem csak egy oldalon?",
+          "next": "4.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Milyen döntési struktúra kell ahhoz, hogy a user bevonódjon?",
+          "next": "5.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Mitől érzi a user, hogy halad, nem csak görget?",
+          "next": "7.2",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "2.3",
+      "type": "decision",
+      "title": "Irányítás hiánya",
+      "text": "A user sokszor egyedül marad a választásokkal. Nem kap segítséget a döntéshez. Ez bizonytalanságot okoz.",
+      "choices": [
+        {
+          "text": "Oké, hogyan lehet ezt strukturált döntési rendszerré alakítani?",
+          "next": "5.1",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan lehet a usert végigvezetni egy ilyen folyamaton?",
+          "next": "3.4",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan fordul le konkrét kvalifikációvá a végén?",
+          "next": "4.5",
+          "type": "business"
+        },
+        {
+          "text": "Mennyire tud ez elágazni anélkül, hogy káosz lenne?",
+          "next": "5.2",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan vezet relevánsabb ajánlásokhoz?",
+          "next": "8.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell kijelölni a döntési pontokat egy ilyen flow-ban?",
+          "next": "10.3",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "2.4",
+      "type": "decision",
+      "title": "Figyelem elvesztése",
+      "text": "Az érdeklődés gyorsan csökken. A user nem jut el a lényegig. A legtöbb tartalom így nem teljesül.",
+      "choices": [
+        {
+          "text": "Oké, mitől érzi a user, hogy folyamatosan halad?",
+          "next": "7.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez ténylegesen növeli a figyelmet, vagy csak rövid ideig tartja meg?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Hol érdemes ezt elhelyezni egy oldalon, hogy működjön?",
+          "next": "9.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mitől válik ez élménnyé, nem csak információvá?",
+          "next": "7.3",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan hat a konverzióra a teljes flow végén?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Hol esnek ki a userek, és ezt hogyan lehet felismerni?",
+          "next": "12.2",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "3.1",
+      "type": "decision",
+      "title": "Komplex értékű cégek",
+      "text": "Azoknak a cégeknek készült, akiknek összetett mondanivalójuk van. Nehéz röviden átadni az értéket. A Questell ezt strukturálja.",
+      "choices": [
+        {
+          "text": "Hol csúszik szét ez a legtöbb weboldalon?",
+          "next": "2.1",
+          "type": "cause"
+        },
+        {
+          "text": "Hogyan lehet ezt úgy átadni, hogy a user tényleg megértse?",
+          "next": "4.2",
+          "type": "apply"
+        },
+        {
+          "text": "Honnan indul egy ilyen komplex flow felépítése?",
+          "next": "10.1",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan lehet ezt kisebb, kezelhető blokkokra bontani?",
+          "next": "6.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan illeszthető be egy meglévő weboldalba?",
+          "next": "9.1",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen segít a konverzióban, vagy csak tisztább lesz a kommunikáció?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "3.2",
+      "type": "decision",
+      "title": "Interakcióra építő márkák",
+      "text": "Azoknak, akik nem csak informálni akarnak. Hanem bevonni a usert. Az élmény aktív részvételen alapul.",
+      "choices": [
+        {
+          "text": "Ez hogyan néz ki konkrétan egy kampány élményben?",
+          "next": "4.4",
+          "type": "apply"
+        },
+        {
+          "text": "Mitől lesz ez tényleg felfedezés, nem csak kattintgatás?",
+          "next": "7.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez valóban növeli a figyelmet, vagy csak több interakciót ad?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Hol érdemes ezt elhelyezni, hogy működjön?",
+          "next": "9.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segít mélyebben megértetni a brandet?",
+          "next": "4.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez technikailag hogyan kerül be egy meglévő oldalba?",
+          "next": "1.3",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "3.3",
+      "type": "decision",
+      "title": "Döntési helyzetek",
+      "text": "Olyan termékeknél működik jól, ahol választani kell. A usernek segítségre van szüksége. A rendszer végigvezeti ezen.",
+      "choices": [
+        {
+          "text": "Hogyan lesz ebből konkrét ajánlás a végén?",
+          "next": "4.1",
+          "type": "apply"
+        },
+        {
+          "text": "Mi történik, ha a user nem kap segítséget a döntéshez?",
+          "next": "2.3",
+          "type": "cause"
+        },
+        {
+          "text": "Mitől lesz egy ajánlás tényleg releváns a user számára?",
+          "next": "8.2",
+          "type": "business"
+        },
+        {
+          "text": "Hogyan lehet ezt zárt, egyértelmű kimenetekre vinni?",
+          "next": "5.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell definiálni a végső kimeneteket egy ilyen flow-ban?",
+          "next": "10.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki a user döntéseiből?",
+          "next": "12.4",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "3.4",
+      "type": "decision",
+      "title": "Vezetett folyamatok",
+      "text": "Olyan flow-khoz ideális, ahol irányítani kell a usert. Nem hagyod magára. A haladás kontrollált.",
+      "choices": [
+        {
+          "text": "Hogyan épül fel egy ilyen elágazó útvonal?",
+          "next": "5.2",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan rakod össze ezt az egész folyamatot lépésről lépésre?",
+          "next": "10.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mitől érzi a user, hogy halad és nincs elveszve?",
+          "next": "7.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Milyen döntési struktúra kell ehhez a háttérben?",
+          "next": "5.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan néz ki egy onboarding folyamatban?",
+          "next": "4.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót egy ilyen flow-ban?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "4.1",
+      "type": "decision",
+      "title": "Ajánlás generálás",
+      "text": "A rendszer segít kiválasztani a megfelelő opciót. A user döntései alapján jut el egy ajánláshoz. Ez növeli a relevanciát.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan lesz ebből egyértelmű végső kimenet?",
+          "next": "5.4",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől lesz egy ajánlás tényleg releváns, nem csak általános?",
+          "next": "8.2",
+          "type": "business"
+        },
+        {
+          "text": "Milyen mintázatok rajzolódnak ki a végén a kimenetekből?",
+          "next": "12.4",
+          "type": "cause"
+        },
+        {
+          "text": "Hol kell definiálni a kimeneteket egy ilyen rendszerben?",
+          "next": "10.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Milyen helyzetekben van tényleg szükség ilyen döntési segítségre?",
+          "next": "3.3",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Milyen adatokat kapsz vissza egy ilyen ajánlási folyamatból?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "4.2",
+      "type": "decision",
+      "title": "Brand megértés",
+      "text": "A user nem egyszerre kapja meg az információt. Lépésenként fedezi fel a márkát. Így mélyebb megértés alakul ki.",
+      "choices": [
+        {
+          "text": "Hogyan épül fel ez a fokozatos információátadás?",
+          "next": "6.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől érzi a user, hogy ez róla szól és releváns?",
+          "next": "7.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan kerül be egy meglévő weboldalba?",
+          "next": "9.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez technikailag hogyan működik beágyazva?",
+          "next": "1.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Milyen cégeknek van igazán szüksége ilyen mélységű magyarázatra?",
+          "next": "3.1",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen növeli a figyelmet, vagy csak strukturáltabb lesz a tartalom?",
+          "next": "8.1",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "4.3",
+      "type": "decision",
+      "title": "Onboarding folyamat",
+      "text": "Új userek bevezetésére használható. Fokozatosan mutatja meg a rendszert. Ez csökkenti a belépési súrlódást.",
+      "choices": [
+        {
+          "text": "Mitől lesz ez egyszerűbb és kevésbé túlterhelő a usernek?",
+          "next": "7.4",
+          "type": "perspective"
+        },
+        {
+          "text": "Hogyan építed fel ezt az onboarding flow-t lépésről lépésre?",
+          "next": "10.2",
+          "type": "apply"
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót a belépési ponton?",
+          "next": "8.3",
+          "type": "business"
+        },
+        {
+          "text": "Hogyan lehet ezt fokozatosan felépíteni a háttérben?",
+          "next": "6.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Milyen esetekben kell vezetni a usert egy folyamaton?",
+          "next": "3.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez működhet teljesen önálló flow-ként is?",
+          "next": "9.3",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "4.4",
+      "type": "decision",
+      "title": "Kampány élmény",
+      "text": "Interaktív kampányok építhetők vele. A user részt vesz a történetben. Ez növeli az aktivitást.",
+      "choices": [
+        {
+          "text": "Hol és hogyan érdemes ezt elhelyezni egy kampányban?",
+          "next": "9.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mitől lesz ez valódi felfedezés, nem csak kattintgatás?",
+          "next": "7.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez ténylegesen növeli az aktivitást, vagy csak több interakciót ad?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Milyen márkáknál működik ez igazán jól?",
+          "next": "3.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez technikailag hogyan illeszthető be egy oldalba?",
+          "next": "1.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segít mélyebben megérteni a brandet?",
+          "next": "4.2",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "4.5",
+      "type": "decision",
+      "title": "Kvalifikáció",
+      "text": "A válaszok alapján pontos képet kapsz a userről. Nem csak adatot, hanem kontextust. Ez segíti az értékesítést.",
+      "choices": [
+        {
+          "text": "Milyen típusú adatokat lehet így kinyerni a userről?",
+          "next": "8.4",
+          "type": "business"
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki a user választásaiból?",
+          "next": "12.3",
+          "type": "cause"
+        },
+        {
+          "text": "Hol kell definiálni a kimeneteket egy kvalifikációs flow-ban?",
+          "next": "10.4",
+          "type": "deep"
+        },
+        {
+          "text": "Mi történik, ha nincs irányítás a döntési folyamatban?",
+          "next": "2.3",
+          "type": "cause",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan vezet relevánsabb ajánlatokhoz?",
+          "next": "8.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Mit lehet elemezni a teljes user útvonalból?",
+          "next": "12.1",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "5.1",
+      "type": "decision",
+      "title": "Döntési struktúra",
+      "text": "A rendszer egymásra épülő döntési pontokból áll. Minden választás meghatározza a következő lépést. Ez adja a flow alapját.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan ágazik ez szét több útvonalra?",
+          "next": "5.2",
+          "type": "deep"
+        },
+        {
+          "text": "Mitől lesz a user tényleg bevonva a döntésekbe?",
+          "next": "6.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Hol kell kijelölni a döntési pontokat egy ilyen rendszerben?",
+          "next": "10.3",
+          "type": "apply"
+        },
+        {
+          "text": "Hogyan jut el ez egy konkrét végső kimenethez?",
+          "next": "5.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az útvonal alapú gondolkodáshoz?",
+          "next": "1.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Mit lehet ebből később elemezni a user viselkedéséről?",
+          "next": "12.1",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "5.2",
+      "type": "decision",
+      "title": "Elágazó útvonalak",
+      "text": "Több lehetséges útvonal létezik. A user ezek közül halad végig egyen. Az élmény nem lineáris.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan záródnak le ezek az útvonalak a végén?",
+          "next": "5.4",
+          "type": "deep"
+        },
+        {
+          "text": "Mit lehet elemezni abból, hogy ki melyik utat járja be?",
+          "next": "12.1",
+          "type": "cause"
+        },
+        {
+          "text": "Mitől érzi a user, hogy folyamatosan halad, nem elveszik?",
+          "next": "7.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Milyen esetekben kell irányítani a usert egy ilyen flow-ban?",
+          "next": "3.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell definiálni a végső kimeneteket ezekhez az ágakhoz?",
+          "next": "10.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót egy nem lineáris flow-ban?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "5.3",
+      "type": "decision",
+      "title": "Állapot alapú logika",
+      "text": "A rendszer figyeli a korábbi döntéseket. Ezek alapján működik a routing. Így alakul ki a személyre szabás.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan kapcsolódnak össze ezek a döntések a háttérben?",
+          "next": "11.4",
+          "type": "deep"
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki a user választásaiból?",
+          "next": "12.3",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan jelenik meg konkrétan a user által látott tartalomban?",
+          "next": "1.2",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan épül fel automatikusan egy teljes flow-vá?",
+          "next": "11.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hogyan kapcsolódik ez a teljes döntési struktúrához?",
+          "next": "5.1",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Milyen értékes adatokat ad ez üzleti szempontból?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "5.4",
+      "type": "decision",
+      "title": "Zárt kimenetek",
+      "text": "Minden út egy konkrét végpontra fut ki. Ez lehet ajánlás vagy akció. A flow nem marad nyitva.",
+      "choices": [
+        {
+          "text": "Mitől lesz egy kimenet valóban releváns a user számára?",
+          "next": "8.2",
+          "type": "business"
+        },
+        {
+          "text": "Hol kell definiálni ezeket a kimeneteket a rendszerben?",
+          "next": "10.4",
+          "type": "deep"
+        },
+        {
+          "text": "Milyen eloszlás alakul ki a különböző kimenetek között?",
+          "next": "12.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik konkrét ajánlás generáláshoz?",
+          "next": "4.1",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Hogyan lehet ezt egyértelmű lezárássá tenni a user számára?",
+          "next": "6.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen növeli a konverziót a flow végén?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "6.1",
+      "type": "decision",
+      "title": "Moduláris információ",
+      "text": "A tartalom kis egységekre van bontva. Minden rész önállóan is értelmezhető. Ez segíti a feldolgozást.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan épülnek ezek egymásra egy teljes élménnyé?",
+          "next": "6.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mi történik, ha ezt nem bontod szét és mindent egyszerre mutatsz?",
+          "next": "2.1",
+          "type": "cause"
+        },
+        {
+          "text": "Mitől marad így releváns a tartalom a user számára?",
+          "next": "7.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Hogyan jut el ez egy konkrét lezárásig a végén?",
+          "next": "6.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segít a brand jobb megértésében?",
+          "next": "4.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez tényleg csökkenti a komplexitást, vagy csak jobban van darabolva?",
+          "next": "7.4",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "6.2",
+      "type": "decision",
+      "title": "Aktív választás",
+      "text": "A user minden lépésnél dönt. Ez fenntartja a figyelmet. Az élmény interaktív marad.",
+      "choices": [
+        {
+          "text": "Oké, de milyen döntési struktúra kell ehhez a háttérben?",
+          "next": "5.1",
+          "type": "deep"
+        },
+        {
+          "text": "Mi történik, ha a user csak passzívan fogyaszt tartalmat?",
+          "next": "2.2",
+          "type": "cause"
+        },
+        {
+          "text": "Mitől lesz ez valódi élmény, nem csak kattintgatás?",
+          "next": "7.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy konkrét kampányban?",
+          "next": "4.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell kijelölni a döntési pontokat a flow-ban?",
+          "next": "10.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen növeli a figyelmet, vagy csak több interakciót ad?",
+          "next": "8.1",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "6.3",
+      "type": "decision",
+      "title": "Progresszív építkezés",
+      "text": "Az információ egymásra épül. Minden lépés hozzáad valamit. Így alakul ki a teljes kép.",
+      "choices": [
+        {
+          "text": "Oké, de mikor és hogyan záródik le ez a folyamat?",
+          "next": "6.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan segíti a brand mélyebb megértését?",
+          "next": "4.2",
+          "type": "apply"
+        },
+        {
+          "text": "Hogyan építed fel ezt az egész útvonalat lépésről lépésre?",
+          "next": "10.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mitől érzi a user, hogy folyamatosan halad?",
+          "next": "7.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan működik onboarding helyzetben?",
+          "next": "4.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót a teljes folyamat során?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "6.4",
+      "type": "decision",
+      "title": "Célorientált lezárás",
+      "text": "A flow végén mindig egy konkrét eredmény van. Ez lehet döntés vagy következő lépés. A user nem marad bizonytalan.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan kapcsolódik ez a konkrét kimenetekhez?",
+          "next": "5.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez ténylegesen növeli a konverziót a flow végén?",
+          "next": "8.3",
+          "type": "business"
+        },
+        {
+          "text": "Hol kell definiálni ezeket a végső kimeneteket?",
+          "next": "10.4",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan jelenik meg konkrét ajánlásként a user számára?",
+          "next": "4.1",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Milyen eloszlás alakul ki a különböző kimenetek között?",
+          "next": "12.4",
+          "type": "cause",
+          "fallback": true
+        },
+        {
+          "text": "Mitől lesz egy kimenet valóban releváns?",
+          "next": "8.2",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "7.1",
+      "type": "decision",
+      "title": "Releváns tartalom",
+      "text": "A user csak a számára fontos információt látja. Nem kell szűrnie. Ez gyorsítja a megértést.",
+      "choices": [
+        {
+          "text": "Oké, de mitől lesz ténylegesen releváns a tartalom?",
+          "next": "1.2",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan segíti a márka mélyebb megértését?",
+          "next": "4.2",
+          "type": "apply"
+        },
+        {
+          "text": "Ez ténylegesen javítja a döntési minőséget?",
+          "next": "8.2",
+          "type": "business"
+        },
+        {
+          "text": "Hogyan épül fel ez moduláris tartalomként?",
+          "next": "6.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez tényleg csökkenti a mentális terhelést?",
+          "next": "7.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez növeli a figyelmet, vagy csak kevesebb zajt ad?",
+          "next": "8.1",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "7.2",
+      "type": "decision",
+      "title": "Folyamatos haladás",
+      "text": "Mindig van következő lépés. A user nem akad el. Ez fenntartja a flow élményt.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan épül fel ez a lépésről lépésre haladás?",
+          "next": "6.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mi történik, ha a user elakad egy hagyományos oldalon?",
+          "next": "2.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez ténylegesen növeli a konverziót?",
+          "next": "8.3",
+          "type": "business"
+        },
+        {
+          "text": "Mikor kell tudatosan irányítani a usert?",
+          "next": "3.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az elágazó útvonalakhoz?",
+          "next": "5.2",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell megtervezni a teljes user útvonalat?",
+          "next": "10.2",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "7.3",
+      "type": "decision",
+      "title": "Felfedezés élménye",
+      "text": "Az információ feltárása lépésenként történik. A user kíváncsi marad. Ez növeli az engagementet.",
+      "choices": [
+        {
+          "text": "Mi történik, ha mindent egyszerre mutatsz meg a usernek?",
+          "next": "2.2",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan működik egy konkrét kampányban?",
+          "next": "4.4",
+          "type": "apply"
+        },
+        {
+          "text": "Ez ténylegesen növeli az engagementet?",
+          "next": "8.1",
+          "type": "business"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az aktív választáshoz?",
+          "next": "6.2",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez milyen típusú márkáknál működik igazán jól?",
+          "next": "3.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy konkrét kampány élményben?",
+          "next": "9.2",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "7.4",
+      "type": "decision",
+      "title": "Csökkentett komplexitás",
+      "text": "A döntések kisebb egységekben jelennek meg. Nem egyszerre kell mindent átlátni. Ez csökkenti a mentális terhelést.",
+      "choices": [
+        {
+          "text": "Mi történik, ha túl sok információt adsz egyszerre?",
+          "next": "2.1",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan működik onboarding helyzetben?",
+          "next": "4.3",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a moduláris tartalomhoz?",
+          "next": "6.1",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan javítja a tartalom relevanciáját?",
+          "next": "7.1",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan épül fel progresszíven egy flow-ban?",
+          "next": "6.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "8.1",
+      "type": "decision",
+      "title": "Figyelem növelése",
+      "text": "Az interakció növeli az oldalon töltött időt. A user aktív marad. Több tartalmat ér el.",
+      "choices": [
+        {
+          "text": "Mi történik, ha a user csak passzívan görget egy oldalon?",
+          "next": "2.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a felfedezés élményéhez?",
+          "next": "7.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Mit lehet ebből mérni konkrétan?",
+          "next": "12.2",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy kampányban?",
+          "next": "4.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan illeszkedik egy meglévő weboldalba?",
+          "next": "1.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez ténylegesen vezet konverzió növekedéshez?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "8.2",
+      "type": "decision",
+      "title": "Releváns ajánlatok",
+      "text": "A döntések alapján célzott ajánlás adható. Ez növeli az értékesítés hatékonyságát. A user azt kapja, amire szüksége van.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan generálódik egy konkrét ajánlás?",
+          "next": "4.1",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan biztosítod, hogy minden út egy kimenetre fusson?",
+          "next": "5.4",
+          "type": "deep"
+        },
+        {
+          "text": "Milyen eloszlás alakul ki a különböző ajánlatok között?",
+          "next": "12.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez milyen döntési helyzetekben működik a legjobban?",
+          "next": "3.3",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell definiálni ezeket az ajánlásokat a rendszerben?",
+          "next": "10.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg a user által látott tartalomban?",
+          "next": "7.1",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "8.3",
+      "type": "decision",
+      "title": "Konverzió növekedés",
+      "text": "A vezetett flow csökkenti a bizonytalanságot. A user könnyebben dönt. Ez javítja a konverziót.",
+      "choices": [
+        {
+          "text": "Mi történik, ha nincs vezetett döntési folyamat?",
+          "next": "2.3",
+          "type": "cause"
+        },
+        {
+          "text": "Hogyan záródik le egy flow konkrét eredménnyel?",
+          "next": "6.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy valós use case-ben?",
+          "next": "9.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan működik onboarding helyzetben?",
+          "next": "4.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a zárt kimenetekhez?",
+          "next": "5.4",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Mit lehet ebből mérni a valós működés során?",
+          "next": "12.2",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "8.4",
+      "type": "decision",
+      "title": "Kvalitatív adatok",
+      "text": "A válaszokból mélyebb insight nyerhető. Nem csak számok, hanem döntési minták. Ez segíti a stratégiát.",
+      "choices": [
+        {
+          "text": "Milyen minták rajzolódnak ki a user döntéseiből?",
+          "next": "12.1",
+          "type": "deep"
+        },
+        {
+          "text": "Hogyan lehet ezeket az insightokat strukturálni?",
+          "next": "12.3",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan segíti a kvalifikációt és az értékesítést?",
+          "next": "4.5",
+          "type": "apply"
+        },
+        {
+          "text": "Milyen eloszlás alakul ki a különböző kimenetek között?",
+          "next": "12.4",
+          "type": "cause",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az állapot alapú logikához?",
+          "next": "5.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell definiálni, mit mérsz egy ilyen rendszerben?",
+          "next": "10.4",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "9.1",
+      "type": "decision",
+      "title": "Embed integráció",
+      "text": "Egyszerűen beilleszthető egy meglévő oldalba. Nem igényel teljes újratervezést. Gyorsan deployolható.",
+      "choices": [
+        {
+          "text": "Oké, de pontosan hogyan illeszkedik egy meglévő oldalba?",
+          "next": "1.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mit kell technikailag előkészíteni egy ilyen integrációhoz?",
+          "next": "10.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez ténylegesen javítja a konverziót egy meglévő oldalon?",
+          "next": "8.3",
+          "type": "business"
+        },
+        {
+          "text": "Ez hogyan működik kampány jellegű használatnál?",
+          "next": "9.2",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segíti a márka mélyebb megértését?",
+          "next": "4.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy interaktív kampány élményben?",
+          "next": "4.4",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "9.2",
+      "type": "decision",
+      "title": "Rugalmas elhelyezés",
+      "text": "Több ponton is használható egy oldalon. Lehet bevezető, köztes vagy záró elem. Illeszkedik a struktúrához.",
+      "choices": [
+        {
+          "text": "Ez hogyan működik konkrét kampány élményként?",
+          "next": "4.4",
+          "type": "apply"
+        },
+        {
+          "text": "Hogyan kell megtervezni, hogy hol helyezed el a flow-t?",
+          "next": "10.2",
+          "type": "apply"
+        },
+        {
+          "text": "Mi történik, ha nincs vezetett flow egy oldalon?",
+          "next": "2.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan illeszkedik technikailag egy meglévő oldalba?",
+          "next": "1.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez növeli a figyelmet több ponton elhelyezve?",
+          "next": "8.1",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az embed integrációhoz?",
+          "next": "9.1",
+          "type": "perspective",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "9.3",
+      "type": "decision",
+      "title": "Önálló használat",
+      "text": "Akár külön experience-ként is futtatható. Nem szükséges köré teljes site. Ez gyors tesztelést tesz lehetővé.",
+      "choices": [
+        {
+          "text": "Ez hogyan működik onboarding flow-ként?",
+          "next": "4.3",
+          "type": "apply"
+        },
+        {
+          "text": "Mit kell technikailag felépíteni egy standalone experience-hez?",
+          "next": "10.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a teljes rendszer működéséhez?",
+          "next": "11.1",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan használható kampány élményként?",
+          "next": "4.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan illeszkedik az útvonal alapú gondolkodáshoz?",
+          "next": "1.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Hogyan kell megtervezni egy teljes flow-t nulláról?",
+          "next": "10.2",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "10.1",
+      "type": "decision",
+      "title": "Célból indul",
+      "text": "Minden flow egy konkrét céllal kezdődik. Ez határozza meg az irányt. Nélküle nem működik jól.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan épül fel ebből egy teljes user út?",
+          "next": "10.2",
+          "type": "deep"
+        },
+        {
+          "text": "Milyen típusú cégeknél fontos különösen a cél tisztázása?",
+          "next": "3.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy embedelt flow esetében?",
+          "next": "9.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan vezet konkrét ajánláshoz vagy kimenethez?",
+          "next": "4.1",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segíti a márka jobb megértését?",
+          "next": "4.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan illeszkedik a teljes rendszer működésébe?",
+          "next": "11.1",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "10.2",
+      "type": "decision",
+      "title": "Út felépítése",
+      "text": "A user útját lépésekre bontod. Nem egyszerre adsz át mindent. Így kontrollált marad a flow.",
+      "choices": [
+        {
+          "text": "Oké, de hol kell kijelölni a döntési pontokat ebben az útban?",
+          "next": "10.3",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan működik progresszív információ felépítéssel?",
+          "next": "6.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan áll össze egy teljes rendszerben?",
+          "next": "11.3",
+          "type": "deep"
+        },
+        {
+          "text": "Mikor kell irányítani a usert egy ilyen flow-ban?",
+          "next": "3.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan működik onboarding helyzetben?",
+          "next": "4.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Hova érdemes elhelyezni ezt egy oldalon?",
+          "next": "9.2",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "10.3",
+      "type": "decision",
+      "title": "Döntési pontok kijelölése",
+      "text": "Meghatározod, hol választ a user. Ezek a flow kulcspontjai. Itt történik az elágazás.",
+      "choices": [
+        {
+          "text": "Ez hogyan épül fel döntési struktúraként?",
+          "next": "5.1",
+          "type": "deep"
+        },
+        {
+          "text": "Oké, de hogyan definiálod a végső kimeneteket?",
+          "next": "10.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan működik a háttérben állapot alapú logikával?",
+          "next": "11.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az elágazó útvonalakhoz?",
+          "next": "5.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segíti a user kvalifikációját?",
+          "next": "4.5",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki ezekből a döntésekből?",
+          "next": "12.1",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "10.4",
+      "type": "decision",
+      "title": "Kimenetek definiálása",
+      "text": "Minden út végére konkrét kimenetet teszel. Ez lehet ajánlás vagy akció. Így zárul a folyamat.",
+      "choices": [
+        {
+          "text": "Ez hogyan kapcsolódik a zárt kimenetek logikájához?",
+          "next": "5.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan működik konkrét ajánlás generálásnál?",
+          "next": "4.1",
+          "type": "apply"
+        },
+        {
+          "text": "Milyen eloszlás alakul ki a különböző kimenetek között?",
+          "next": "12.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan növeli az ajánlatok relevanciáját?",
+          "next": "8.2",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg egy lezárt flow végén?",
+          "next": "6.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Milyen insight nyerhető ezekből a kimenetekből?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "11.1",
+      "type": "decision",
+      "title": "Input alapú indulás",
+      "text": "Az AI egy meglévő tartalomból indul ki. Ez lehet URL vagy szöveg. Innen építi fel a struktúrát.",
+      "choices": [
+        {
+          "text": "Oké, de mit csinál pontosan az AI ezzel az inputtal?",
+          "next": "11.2",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan működik egy standalone experience esetében?",
+          "next": "9.3",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a flow céljának meghatározásához?",
+          "next": "10.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan áll össze egy teljes flow-vá automatikusan?",
+          "next": "11.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan illeszthető egy meglévő oldalba?",
+          "next": "1.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan használható onboarding flow generálásra?",
+          "next": "4.3",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "11.2",
+      "type": "decision",
+      "title": "Tartalom értelmezése",
+      "text": "Elemzi a fő témákat és kapcsolódásokat. Megérti a logikát. Ez az alapja a javaslatnak.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan lesz ebből konkrét flow struktúra?",
+          "next": "11.3",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan jelenik meg a user által látott tartalomban?",
+          "next": "1.2",
+          "type": "apply"
+        },
+        {
+          "text": "Milyen insight nyerhető már ebből az értelmezésből?",
+          "next": "12.3",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az állapot alapú logikához?",
+          "next": "5.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan segíti a teljes út felépítését?",
+          "next": "10.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan generál üzleti szempontból értékes adatot?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "11.3",
+      "type": "decision",
+      "title": "Flow generálás",
+      "text": "Javaslatot ad a lépésekre és döntési pontokra. Automatikusan struktúrát épít. Gyorsítja a folyamatot.",
+      "choices": [
+        {
+          "text": "Oké, de hogyan kapcsolódnak ezek a lépések egymáshoz?",
+          "next": "11.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan működik a user út felépítésével?",
+          "next": "10.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan használható onboarding flow generálásra?",
+          "next": "4.3",
+          "type": "apply"
+        },
+        {
+          "text": "Hol kell manuálisan belenyúlni a döntési pontokba?",
+          "next": "10.3",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az állapot alapú logikához?",
+          "next": "5.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez működhet teljesen standalone experience-ként?",
+          "next": "9.3",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "11.4",
+      "type": "decision",
+      "title": "Kapcsolatok kialakítása",
+      "text": "Összeköti az opciókat és kimeneteket. Logikus útvonalakat hoz létre. Segít a rendszerben gondolkodni.",
+      "choices": [
+        {
+          "text": "Ez hogyan működik állapot alapú routingként?",
+          "next": "5.3",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a döntési pontok kijelöléséhez?",
+          "next": "10.3",
+          "type": "perspective"
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki ezekből az útvonalakból?",
+          "next": "12.1",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan finomítható tovább egy generált flow-ban?",
+          "next": "11.3",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan épül fel teljes döntési struktúraként?",
+          "next": "5.1",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan strukturálható tovább insightokká?",
+          "next": "12.3",
+          "type": "cause",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "12.1",
+      "type": "decision",
+      "title": "Útvonal elemzés",
+      "text": "Látható, milyen utakat járnak be a userek. Ez feltárja a viselkedési mintákat. Segít optimalizálni.",
+      "choices": [
+        {
+          "text": "Oké, de mit lehet konkrétan mérni ezekből az útvonalakból?",
+          "next": "12.2",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a kvalitatív insightokhoz?",
+          "next": "8.4",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan épül fel elágazó útvonalakból?",
+          "next": "5.2",
+          "type": "deep"
+        },
+        {
+          "text": "Milyen minták rajzolódnak ki a teljes flow-ban?",
+          "next": "12.3",
+          "type": "cause",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell beavatkozni a flow optimalizálásához?",
+          "next": "10.4",
+          "type": "apply",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a routing logikához?",
+          "next": "11.4",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "12.2",
+      "type": "decision",
+      "title": "Drop-off pontok",
+      "text": "Megmutatja, hol hagyják el a flow-t. Ezek kritikus pontok. Itt lehet javítani.",
+      "choices": [
+        {
+          "text": "Mi történik, ha a user elakad egy hagyományos oldalon?",
+          "next": "2.4",
+          "type": "cause"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a figyelem fenntartásához?",
+          "next": "8.1",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan javítható konkrét elhelyezéssel egy oldalon?",
+          "next": "9.2",
+          "type": "apply"
+        },
+        {
+          "text": "Ez ténylegesen hat a konverzióra?",
+          "next": "8.3",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a folyamatos haladás élményéhez?",
+          "next": "7.2",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg teljes útvonal elemzésben?",
+          "next": "12.1",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "12.3",
+      "type": "decision",
+      "title": "Választási minták",
+      "text": "Kiderül, mely opciók a leggyakoribbak. Ez trendeket mutat. Segíti a döntéseket.",
+      "choices": [
+        {
+          "text": "Ez hogyan segíti a user kvalifikációját?",
+          "next": "4.5",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik az állapot alapú logikához?",
+          "next": "5.3",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan épül fel már a tartalom értelmezés szintjén?",
+          "next": "11.2",
+          "type": "perspective"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a kvalitatív insightokhoz?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg teljes útvonal elemzésben?",
+          "next": "12.1",
+          "type": "deep",
+          "fallback": true
+        },
+        {
+          "text": "Hol kell ezeket a döntési pontokat optimalizálni?",
+          "next": "10.3",
+          "type": "apply",
+          "fallback": true
+        }
+      ]
+    },
+    {
+      "id": "12.4",
+      "type": "decision",
+      "title": "Kimeneti eloszlás",
+      "text": "Látható, milyen eredményekhez jutnak el a userek. Ez üzleti insight. Segít priorizálni.",
+      "choices": [
+        {
+          "text": "Ez hogyan kapcsolódik az ajánlás generáláshoz?",
+          "next": "4.1",
+          "type": "apply"
+        },
+        {
+          "text": "Ez hogyan növeli az ajánlatok relevanciáját?",
+          "next": "8.2",
+          "type": "business"
+        },
+        {
+          "text": "Hol kell definiálni ezeket a kimeneteket?",
+          "next": "10.4",
+          "type": "deep"
+        },
+        {
+          "text": "Ez hogyan kapcsolódik a zárt kimenetek logikájához?",
+          "next": "5.4",
+          "type": "perspective",
+          "fallback": true
+        },
+        {
+          "text": "Milyen további insight nyerhető ezekből az adatokból?",
+          "next": "8.4",
+          "type": "business",
+          "fallback": true
+        },
+        {
+          "text": "Ez hogyan jelenik meg teljes útvonal szinten?",
+          "next": "12.1",
+          "type": "deep",
+          "fallback": true
+        }
+      ]
+    }
+  ]
+}

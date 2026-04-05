@@ -290,6 +290,7 @@ const StoryPage: React.FC = () => {
     storyId,
     sessionId,
     runId,
+    visitedPages,
   } = useGameState() as StoryPageContext;
 
   /** --- URL params / analytics --- */
@@ -810,13 +811,18 @@ const dockChoicesForThisPage = useMemo(() => {
     choices: pageData?.choices,
     resolvedNext,
     unlockedFragments,
+    pageType:
+      typeof pageData?.type === "string" ? pageData.type : undefined,
+    visitedPages,
   });
 }, [
   canInteractHere,
   pageData ? pageData.choices : undefined,
   resolvedNext,
   pageData ? pageData.id : undefined,
-  unlockedFragments, // 🔹 ÚJ dependency
+  unlockedFragments,
+  visitedPages,
+  pageData?.type,
 ]);
 
   // recall szövegek

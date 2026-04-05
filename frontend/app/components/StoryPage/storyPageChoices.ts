@@ -26,6 +26,9 @@ type BuildDockChoicesParams = {
   choices?: unknown;
   resolvedNext?: string | null;
   unlockedFragments: string[];
+  /** `type: "decision"` + 6 choices: 3 primary + 3 fallback pairs (index i ↔ i+3). */
+  pageType?: string;
+  visitedPages?: Set<string>;
 };
 
 type ResolveDockSelectionParams = {
@@ -49,18 +52,102 @@ function toStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => String(item)) : [];
 }
 
+function isChoiceFragmentVisible(
+  choice: StoryPageChoiceRecord,
+  unlockedSet: Set<string>
+): boolean {
+  const showList = toStringArray(choice.showIfHasFragment);
+  const hideList = toStringArray(choice.hideIfHasFragment);
+
+  let visible = true;
+  if (showList.length > 0) {
+    visible = showList.some((fragmentId) => unlockedSet.has(fragmentId));
+  }
+  if (visible && hideList.length > 0) {
+    visible = !hideList.some((fragmentId) => unlockedSet.has(fragmentId));
+  }
+  return visible;
+}
+
+/**
+ * Decision pool: always 3 dock slots. Slot i uses choice i (primary) unless
+ * `primary.next` is already in `visitedPages`, then choice i+3 (fallback).
+ * Fragment show/hide is applied; if the preferred option is hidden, the pair's other option is tried.
+ */
+function buildDecisionPoolDockEntries(
+  allChoices: StoryPageChoiceRecord[],
+  visitedPages: Set<string>,
+  unlockedSet: Set<string>
+): { choice: StoryPageChoiceRecord; id: string }[] {
+  const out: { choice: StoryPageChoiceRecord; id: string }[] = [];
+
+  for (let slot = 0; slot < 3; slot++) {
+    const primaryIdx = slot;
+    const fallbackIdx = slot + 3;
+    const primary = allChoices[primaryIdx];
+    const fallback = allChoices[fallbackIdx];
+    if (!primary) continue;
+
+    const primaryNext = String(primary.next ?? "").trim();
+    const useFallbackFirst =
+      !!primaryNext &&
+      visitedPages.has(primaryNext) &&
+      fallback !== undefined &&
+      fallback !== null;
+
+    const tryOrder = useFallbackFirst
+      ? [fallbackIdx, primaryIdx]
+      : [primaryIdx, fallbackIdx];
+
+    let picked: { choice: StoryPageChoiceRecord; id: string } | null = null;
+    for (const idx of tryOrder) {
+      const ch = allChoices[idx];
+      if (!ch) continue;
+      if (!isChoiceFragmentVisible(ch, unlockedSet)) continue;
+      picked = { choice: ch, id: String(ch.id ?? idx) };
+      break;
+    }
+    if (picked) out.push(picked);
+  }
+
+  return out;
+}
+
 export function buildDockChoices({
   canInteractHere,
   pageId,
   choices,
   resolvedNext,
   unlockedFragments,
+  pageType,
+  visitedPages,
 }: BuildDockChoicesParams): DockChoiceItem[] {
   if (!canInteractHere) return [];
 
   const allChoices = asChoiceArray(choices);
   if (allChoices.length > 0) {
     const unlockedSet = new Set(unlockedFragments);
+    const visited = visitedPages ?? new Set<string>();
+
+    if (pageType === "decision" && allChoices.length === 6) {
+      const poolEntries = buildDecisionPoolDockEntries(
+        allChoices,
+        visited,
+        unlockedSet
+      );
+      if (poolEntries.length > 0) {
+        return poolEntries.map(({ choice, id }) => ({
+          id,
+          label: String(
+            choice.text ??
+              choice.label ??
+              choice.id ??
+              `choice_${id}`
+          ),
+          disabled: Boolean(choice.disabled),
+        }));
+      }
+    }
 
     const visibleChoices = allChoices
       .map((choice, index) => {
