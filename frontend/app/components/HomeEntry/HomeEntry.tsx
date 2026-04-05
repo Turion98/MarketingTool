@@ -7,8 +7,14 @@ import {
   buildMarketingEmbedUrl,
   type SkinEntry,
 } from "@/app/lib/marketingEmbedPreview";
+import { useEmbedParentIframeHeight } from "@/app/lib/useEmbedParentIframeHeight";
 import s from "./HomeEntry.module.scss";
 import ls from "@/app/login/login.module.scss";
+
+const QUESTELL_HOME_EMBED_URL =
+  "https://www.thequestell.com/embed/questell_node_graph_demo_hu?skin=contract_creative_dusk&start=1.1&src=%2Fstories%2Fquestell_node_graph_demo_hu.json&title=Questell+%E2%80%93+interakt%C3%ADv+d%C3%B6nt%C3%A9si+%C3%A9lm%C3%A9ny&runes=ring&runemode=single&ghost=1";
+
+const QUESTELL_HOME_EMBED_ORIGIN = new URL(QUESTELL_HOME_EMBED_URL).origin;
 
 export default function HomeEntry() {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -21,6 +27,10 @@ export default function HomeEntry() {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   /** Volt már „beúszott” állapot (transition end / gyors bezárás elágazás) */
   const dockWasRevealedRef = useRef(false);
+  const homeEmbedIframeHeight = useEmbedParentIframeHeight(
+    QUESTELL_HOME_EMBED_ORIGIN,
+    120
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +113,21 @@ export default function HomeEntry() {
             </div>
           </div>
 
-          <div className={s.leftMainFrame} aria-hidden="true" />
+          <section
+            className={s.leftMainFrame}
+            aria-label="Interaktív demó — Questell"
+          >
+            <div className={s.leftMainFrameInner}>
+              <iframe
+                src={QUESTELL_HOME_EMBED_URL}
+                title="Questell — interaktív döntési élmény"
+                className={s.homeEmbedIframe}
+                style={{ height: homeEmbedIframeHeight }}
+                allow="fullscreen"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+              />
+            </div>
+          </section>
         </div>
 
         <div className={s.centerWrap}>

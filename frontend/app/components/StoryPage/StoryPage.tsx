@@ -353,7 +353,8 @@ const stringGlobals = useMemo<Record<string, string>>(
   useEmbedParentResize(
     pageRootRef,
     isEmbedPath,
-    `${isLoading}:${currentPageId ?? ""}:${globals?.storySrc ?? ""}`
+    `${isLoading}:${currentPageId ?? ""}:${globals?.storySrc ?? ""}`,
+    isGhostEmbed
   );
 
   useStoryPageAnalytics({

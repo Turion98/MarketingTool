@@ -50,6 +50,8 @@ function buildCsp(isDev: boolean, frameAncestors: string): string {
     "default-src 'self'",
     "base-uri 'self'",
     "form-action 'self'",
+    /* Kezdőlap / egyéb oldalak: külső player iframe (pl. thequestell.com ghost embed) */
+    "frame-src 'self' https://www.thequestell.com",
     `frame-ancestors ${frameAncestors}`,
     IMG_SRC,
     "object-src 'none'",

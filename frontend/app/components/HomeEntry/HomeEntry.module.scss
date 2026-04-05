@@ -80,7 +80,7 @@
   z-index: 2;
 }
 
-/* Keret: logo alatt a flow-ban — nem takarja a logót; min. magasság 750px (szélesség változatlan) */
+/* Keret: logo alatt — ghost embed iframe; magasság postMessage (player → szülő) */
 .leftMainFrame {
   display: block;
   position: relative;
@@ -88,13 +88,34 @@
   flex-shrink: 0;
   width: 100%;
   max-width: min(34rem, 100%);
-  min-height: 550px;
+  min-height: 0;
   margin: 0;
   box-sizing: border-box;
-  pointer-events: none;
+  pointer-events: auto;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.leftMainFrameInner {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.homeEmbedIframe {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  background: transparent;
+  color-scheme: normal;
 }
 
 .srOnly {
@@ -189,7 +210,7 @@
   .leftMainFrame {
     width: 100%;
     max-width: min(34rem, 100%);
-    min-height: 550px;
+    min-height: 0;
   }
 
   .centerWrap {
