@@ -93,19 +93,34 @@
   box-shadow: var(--cta-shadow);
 }
 
+/* Ugyanaz a szín- és betűcsalád-lánc, mint a narrációs dock (TypingText / contract) */
 .ctaContextLine {
   margin: 0;
   padding: 0 6px;
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: clamp(13px, 2.8vw, 15px);
-  font-weight: 400;
-  line-height: 1.4;
+  font-family: var(
+    --contract-text-font-family,
+    var(--tt-font-family, var(--font-sans, system-ui, sans-serif))
+  );
+  font-size: clamp(
+    13px,
+    2.8vw,
+    var(--contract-text-font-size, var(--tt-font-size, 15px))
+  );
+  font-weight: var(--contract-text-weight, var(--tt-font-weight, 400));
+  line-height: var(--contract-text-line-height, var(--tt-line-height, 1.4));
   letter-spacing: 0.02em;
-  color: color-mix(in oklch, var(--skin-fg, #fff) 88%, transparent);
+  color: var(
+    --contract-text-color,
+    var(--tt-color, color-mix(in oklch, var(--skin-fg, #fff) 88%, transparent))
+  );
   text-wrap: balance;
   max-width: 100%;
 }
 
 .takeoverCluster[data-embed-ghost="1"] .ctaContextLine {
-  color: color-mix(in oklch, currentColor 82%, transparent);
+  color: color-mix(
+    in oklch,
+    var(--contract-text-color, var(--tt-color, currentColor)) 90%,
+    transparent
+  );
 }
