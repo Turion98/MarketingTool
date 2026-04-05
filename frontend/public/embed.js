@@ -1,12 +1,13 @@
 /**
  * Adventure embed loader — iframe + auto height (postMessage).
+ * Útmutató (URL vs iframe, ghost, paraméterek): frontend/docs/embed.md
  * Protokoll: szinkronban kell lennie app/lib/embedParentMessaging.ts literáljaival.
  *
  * Használat (ne tegyél async-t a scriptre, hogy a currentScript biztos legyen):
  * <script src="https://YOUR_ORIGIN/embed.js" data-campaign="slug" data-src="..." data-start="start"></script>
  *
- * Opcionális: data-mode="ghost" → ghost=1 query; data-skin, data-title, data-c, data-runes, data-runemode, data-analytics
- * Embed URL query: gmin=<px> minimum iframe magasság; gmax=<px> felső korlát + belső görgetés (ghost)
+ * Opcionális: data-mode="ghost" → ghost=1; data-skin, data-title, data-c, data-runes, data-runemode, data-analytics
+ * data-gmin / data-gmax → URL query (min. küldött magasság + ghost max + belső görgetés)
  */
 (function () {
   var MSG_SOURCE = "adventure-embed";
@@ -65,6 +66,8 @@
   setQP("c", "data-c", "");
   setQP("runes", "data-runes", "");
   setQP("runemode", "data-runemode", "");
+  setQP("gmin", "data-gmin", "");
+  setQP("gmax", "data-gmax", "");
   if (attr(scriptEl, "data-analytics", "") === "1") {
     iframeUrl.searchParams.set("analytics", "1");
   }
@@ -75,10 +78,18 @@
   wrap.style.cssText =
     "width:100%;margin:0;padding:0;border:0;background:transparent;overflow:hidden;";
 
+  var gminAttr = attr(scriptEl, "data-gmin", "");
+  var minH = 120;
+  if (gminAttr && /^\d+$/.test(String(gminAttr))) {
+    minH = Math.max(120, parseInt(gminAttr, 10));
+  }
+
   var iframe = document.createElement("iframe");
   iframe.setAttribute("title", attr(scriptEl, "data-title", "Embedded story"));
   iframe.style.cssText =
-    "display:block;width:100%;border:0;background:transparent;min-height:120px;height:120px;";
+    "display:block;width:100%;border:0;background:transparent;min-height:" +
+    minH +
+    "px;height:120px;";
   iframe.setAttribute("src", iframeUrl.toString());
   iframe.setAttribute(
     "sandbox",
