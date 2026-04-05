@@ -5,16 +5,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   buildMarketingEmbedUrl,
+  buildHomeGhostEmbedUrl,
   type SkinEntry,
-} from "@/app/lib/marketingEmbedPreview";
+} from "@/app/lib/embedSiteConfig";
 import { useEmbedParentIframeHeight } from "@/app/lib/useEmbedParentIframeHeight";
 import s from "./HomeEntry.module.scss";
 import ls from "@/app/login/login.module.scss";
-
-const QUESTELL_HOME_EMBED_URL =
-  "https://www.thequestell.com/embed/questell_node_graph_demo_hu?skin=contract_creative_dusk&start=1.1&src=%2Fstories%2Fquestell_node_graph_demo_hu.json&title=Questell+%E2%80%93+interakt%C3%ADv+d%C3%B6nt%C3%A9si+%C3%A9lm%C3%A9ny&runes=ring&runemode=single&ghost=1&gmin=560";
-
-const QUESTELL_HOME_EMBED_ORIGIN = new URL(QUESTELL_HOME_EMBED_URL).origin;
 
 export default function HomeEntry() {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -27,8 +23,13 @@ export default function HomeEntry() {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   /** Volt már „beúszott” állapot (transition end / gyors bezárás elágazás) */
   const dockWasRevealedRef = useRef(false);
+  const questellHomeEmbedUrl = useMemo(() => buildHomeGhostEmbedUrl(), []);
+  const questellHomeEmbedOrigin = useMemo(
+    () => new URL(questellHomeEmbedUrl).origin,
+    [questellHomeEmbedUrl]
+  );
   const homeEmbedIframeHeight = useEmbedParentIframeHeight(
-    QUESTELL_HOME_EMBED_ORIGIN,
+    questellHomeEmbedOrigin,
     120
   );
 
@@ -119,7 +120,7 @@ export default function HomeEntry() {
           >
             <div className={s.leftMainFrameInner}>
               <iframe
-                src={QUESTELL_HOME_EMBED_URL}
+                src={questellHomeEmbedUrl}
                 title="Questell — interaktív döntési élmény"
                 className={s.homeEmbedIframe}
                 style={{ height: homeEmbedIframeHeight }}

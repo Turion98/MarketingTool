@@ -80,7 +80,7 @@
   z-index: 2;
 }
 
-/* Keret: logo alatt — ghost embed iframe; magasság postMessage (player → szülő) */
+/* Logo alatt — ghost embed iframe; magasság postMessage (player → szülő); nincs külső keret */
 .leftMainFrame {
   display: block;
   position: relative;
@@ -93,9 +93,9 @@
   box-sizing: border-box;
   pointer-events: auto;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 0.75rem;
-  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .leftMainFrameInner {
