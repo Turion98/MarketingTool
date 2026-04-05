@@ -56,101 +56,199 @@
       "logic": [
         {
           "if": [
-            "flag:skin_opt_1",
-            "flag:skin_opt_2"
+            "skin_opt_1",
+            "skin_opt_2"
           ],
           "goto": "q2_dry_timing"
         },
         {
           "if": [
-            "flag:skin_opt_1",
-            "flag:skin_opt_6"
+            "skin_opt_1",
+            "skin_opt_6"
           ],
           "goto": "q2_dry_timing"
         },
         {
           "if": [
-            "flag:skin_opt_2",
-            "flag:skin_opt_6"
+            "skin_opt_2",
+            "skin_opt_6"
           ],
           "goto": "q2_dry_timing"
         },
         {
           "if": [
-            "flag:skin_opt_3",
-            "flag:skin_opt_4"
+            "skin_opt_3",
+            "skin_opt_4"
           ],
           "goto": "q2_oily_pattern"
         },
         {
           "if": [
-            "flag:skin_opt_5",
-            "flag:skin_opt_6"
+            "skin_opt_5",
+            "skin_opt_6"
           ],
           "goto": "q2_texture_type"
         },
         {
           "if": [
-            "flag:skin_opt_5",
-            "flag:skin_opt_3"
+            "skin_opt_5",
+            "skin_opt_3"
           ],
           "goto": "q2_texture_type"
         },
         {
           "if": [
-            "flag:skin_opt_6",
-            "flag:skin_opt_3"
+            "skin_opt_6",
+            "skin_opt_3"
           ],
           "goto": "q2_texture_type"
         },
         {
           "if": [
-            "flag:skin_opt_6",
-            "flag:skin_opt_4"
+            "skin_opt_6",
+            "skin_opt_4"
           ],
           "goto": "q2_texture_type"
         },
         {
           "if": [
-            "flag:skin_opt_5",
-            "flag:skin_opt_4"
+            "skin_opt_5",
+            "skin_opt_4"
           ],
           "goto": "q2_texture_type"
         },
         {
           "if": [
-            "flag:skin_opt_7",
-            "flag:skin_opt_8"
+            "skin_opt_7",
+            "skin_opt_8"
           ],
           "goto": "q2_sensitive_trigger"
         },
         {
           "if": [
-            "flag:skin_opt_1",
-            "flag:skin_opt_8"
+            "skin_opt_1",
+            "skin_opt_8"
           ],
           "goto": "q2_sensitive_trigger"
         },
         {
           "if": [
-            "flag:skin_opt_1",
-            "flag:skin_opt_7"
+            "skin_opt_1",
+            "skin_opt_7"
           ],
           "goto": "q2_sensitive_trigger"
         },
         {
           "if": [
-            "flag:skin_opt_2",
-            "flag:skin_opt_8"
+            "skin_opt_2",
+            "skin_opt_8"
           ],
           "goto": "q2_sensitive_trigger"
         },
         {
           "if": [
-            "flag:skin_opt_2",
-            "flag:skin_opt_7"
+            "skin_opt_2",
+            "skin_opt_7"
           ],
           "goto": "q2_sensitive_trigger"
+        },
+        {
+          "if": [
+            "skin_opt_1",
+            "skin_opt_3"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_1",
+            "skin_opt_4"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_1",
+            "skin_opt_5"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_2",
+            "skin_opt_3"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_2",
+            "skin_opt_4"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_2",
+            "skin_opt_5"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_3",
+            "skin_opt_7"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_3",
+            "skin_opt_8"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_4",
+            "skin_opt_7"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_4",
+            "skin_opt_8"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_5",
+            "skin_opt_7"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_5",
+            "skin_opt_8"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_6",
+            "skin_opt_7"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "skin_opt_6",
+            "skin_opt_8"
+          ],
+          "goto": "q2_dry_timing"
         },
         {
           "default": "q2_dry_timing"
