@@ -1297,18 +1297,16 @@ export default function PageInspector({
     } catch {
       keys = [];
     }
+    // Csak új (üres) kulcsokat adunk hozzá. Ne töröljünk itt: üres `keys` (pl. még nem
+    // állt be a forrás runes ID) versenyben lehet a hidratálással és kitörölné a
+    // `routeAssignments`-ot. Oldalváltáskor a fő page-sync effect teljes cserét csinál.
+    if (keys.length === 0) return;
     setRouteAssignments((prev) => {
       const next: Record<string, string> = { ...prev };
       let changed = false;
       for (const k of keys) {
         if (next[k] === undefined) {
           next[k] = "";
-          changed = true;
-        }
-      }
-      for (const ok of Object.keys(next)) {
-        if (!keys.includes(ok)) {
-          delete next[ok];
           changed = true;
         }
       }

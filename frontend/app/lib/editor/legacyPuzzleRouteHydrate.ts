@@ -90,6 +90,52 @@ export function parseLegacyLogicArrayToRouteAssignments(
   return { assignments, defaultGoto };
 }
 
+/**
+ * `classifyEditorPage` puzzleRoute lehet `routeAssignments` / `puzzleSourcePageId` alapján is,
+ * miközben a `type` még nem `puzzleRoute`. A régi tömbös (`type: logic` + `logic[]`) ágat külön kezeljük.
+ */
+function shouldReadPuzzleRouteRecordFields(page: Record<string, unknown>): boolean {
+  const logicArr = Array.isArray(page.logic) ? page.logic : [];
+  if (page.type === "logic" && logicArr.length > 0) return false;
+  if (page.type === "puzzleRoute") return true;
+  const sid =
+    typeof page.puzzleSourcePageId === "string"
+      ? page.puzzleSourcePageId.trim()
+      : "";
+  if (sid) return true;
+  const ra = page.routeAssignments;
+  if (ra && typeof ra === "object" && !Array.isArray(ra)) return true;
+  return false;
+}
+
+/** Kulcsok egyeztetése a `generatePuzzleRouteKeys` kimenetével (szóköz, set mód sorrend). */
+function normalizeRouteAssignmentKeys(
+  assignments: Record<string, string>,
+  sourcePage: Record<string, unknown> | null | undefined
+): Record<string, string> {
+  const mode = sourcePage?.mode === "ordered" ? "ordered" : "set";
+  const out: Record<string, string> = {};
+  for (const [k0, v] of Object.entries(assignments)) {
+    const s = typeof v === "string" ? v : "";
+    const kTrim = k0.trim();
+    if (!kTrim) continue;
+    const parts = kTrim
+      .split(",")
+      .map((x) => Number.parseInt(x.trim(), 10))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (parts.length === 0) {
+      out[kTrim] = s;
+      continue;
+    }
+    const canon = canonicalRouteKey(parts, mode);
+    const key = canon || kTrim;
+    const prev = out[key];
+    if (prev !== undefined && prev.trim() !== "" && s.trim() === "") continue;
+    out[key] = s;
+  }
+  return out;
+}
+
 export function hydrateRouteFieldsFromStoryPage(
   story: Record<string, unknown>,
   routePageId: string,
@@ -99,7 +145,7 @@ export function hydrateRouteFieldsFromStoryPage(
   defaultGoto: string;
   assignments: Record<string, string>;
 } {
-  if (page.type === "puzzleRoute") {
+  if (shouldReadPuzzleRouteRecordFields(page)) {
     let sid =
       typeof page.puzzleSourcePageId === "string"
         ? page.puzzleSourcePageId.trim()
@@ -110,10 +156,12 @@ export function hydrateRouteFieldsFromStoryPage(
     const def =
       typeof page.defaultGoto === "string" ? page.defaultGoto.trim() : "";
     const ra = asRecord(page.routeAssignments) ?? {};
-    const assignments: Record<string, string> = {};
+    const raw: Record<string, string> = {};
     for (const [k, v] of Object.entries(ra)) {
-      assignments[k] = typeof v === "string" ? v : "";
+      raw[k] = typeof v === "string" ? v : "";
     }
+    const sp = sid ? findPageInStoryDocument(story, sid) : null;
+    const assignments = normalizeRouteAssignmentKeys(raw, sp);
     return { sourceId: sid, defaultGoto: def, assignments };
   }
 
