@@ -5,7 +5,7 @@ import { computeStructuredLayoutPositions } from "./editorGraphAutoLayout";
 import type { StoryGraphEdge } from "./storyGraph";
 
 const CARD_H = 112;
-const ROW_GAP = 32;
+const ROW_GAP = 20;
 const rowH = CARD_H + ROW_GAP;
 
 const edges: StoryGraphEdge[] = [

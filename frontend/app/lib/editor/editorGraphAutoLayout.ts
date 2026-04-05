@@ -4,14 +4,18 @@ import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
 /** Egyezik a storyGraphLayout.ts értékeivel. */
 const DEFAULT_CARD_W = 200;
 const DEFAULT_CARD_H = 112;
-const COL_GAP = 88;
-const ROW_GAP = 32;
+const COL_GAP = 56;
+const ROW_GAP = 20;
 
 export type StructuredLayoutDims = {
   cardW: number;
   cardH: number;
   colGap: number;
   rowGap: number;
+  /**
+   * Oldalankénti becsült magasság (pl. runes sok opciósávval). Ha nincs, `cardH` az egész gráfra.
+   */
+  getCardH?: (pageId: string) => number;
 };
 
 const DEFAULT_DIMS: StructuredLayoutDims = {
@@ -20,6 +24,10 @@ const DEFAULT_DIMS: StructuredLayoutDims = {
   colGap: COL_GAP,
   rowGap: ROW_GAP,
 };
+
+function resolveCardH(dims: StructuredLayoutDims, pageId: string): number {
+  return dims.getCardH?.(pageId) ?? dims.cardH;
+}
 
 function buildAdjSorted(
   pageIds: string[],
@@ -142,27 +150,27 @@ function dfsPreorderForest(
   return out;
 }
 
-/** Egy mélységi oszlop kártyáinak függőleges középpontja (befoglaló téglalap). */
+/** Egy mélységi oszlop kártyáinak függőleges középpontja (befoglaló téglalap, változó kártyamagassággal). */
 function columnVerticalCenter(
   ids: string[],
   yMap: Map<string, number>,
-  cardH: number
+  getCardH: (id: string) => number
 ): number {
   if (ids.length === 0) return 0;
   let minT = Infinity;
   let maxB = -Infinity;
   for (const id of ids) {
     const y = yMap.get(id) ?? 0;
+    const h = getCardH(id);
     minT = Math.min(minT, y);
-    maxB = Math.max(maxB, y + cardH);
+    maxB = Math.max(maxB, y + h);
   }
   return (minT + maxB) / 2;
 }
 
 /**
- * Piramis / kompakt réteg: X = BFS mélység oszlop; Y = azonos mélységen belül fix sorlépcső.
- * Sorrend: spanning tree DFS preorder. Oszloponként a blokk függőlegesen középre igazít
- * az előző oszlophoz képest (2. megoldás).
+ * Piramis / kompakt réteg: X = BFS mélység oszlop; Y = azonos mélységen belül változó magasságú sorlépcső.
+ * Oszloponként a blokk függőlegesen középre igazít a szomszéd oszlophoz képest.
  */
 export function computeStructuredLayoutPositions(
   input: {
@@ -218,12 +226,14 @@ export function computeStructuredLayoutPositions(
     });
   }
 
-  const rowH = dims.cardH + dims.rowGap;
+  const getH = (id: string) => resolveCardH(dims, id);
   const yPos = new Map<string, number>();
   for (const [, list] of byDepth) {
-    list.forEach((id, ri) => {
-      yPos.set(id, ri * rowH);
-    });
+    let yAcc = 0;
+    for (const id of list) {
+      yPos.set(id, yAcc);
+      yAcc += getH(id) + dims.rowGap;
+    }
   }
 
   const depthValues = [...new Set(pageIds.map((id) => depth.get(id) ?? 0))].sort(
@@ -237,8 +247,8 @@ export function computeStructuredLayoutPositions(
     if (list.length === 0) continue;
     const dPrev = depthValues[i - 1]!;
     const listPrev = byDepth.get(dPrev) ?? [];
-    const cPrev = columnVerticalCenter(listPrev, yWorking, dims.cardH);
-    const cCurr = columnVerticalCenter(list, yWorking, dims.cardH);
+    const cPrev = columnVerticalCenter(listPrev, yWorking, getH);
+    const cCurr = columnVerticalCenter(list, yWorking, getH);
     const delta = cPrev - cCurr;
     for (const id of list) {
       yWorking.set(id, (yWorking.get(id) ?? 0) + delta);
@@ -278,6 +288,7 @@ export function computeStructuredLayoutWithStartNode(input: {
   dims?: StructuredLayoutDims;
 }): Record<string, { x: number; y: number }> {
   const dims = input.dims ?? DEFAULT_DIMS;
+  const getH = (id: string) => resolveCardH(dims, id);
   const nodes = computeStructuredLayoutPositions(
     {
       pageIds: input.pageIds,
@@ -290,7 +301,7 @@ export function computeStructuredLayoutWithStartNode(input: {
   let maxBottom = 0;
   for (const id of input.pageIds) {
     const n = nodes[id];
-    if (n) maxBottom = Math.max(maxBottom, n.y + dims.cardH);
+    if (n) maxBottom = Math.max(maxBottom, n.y + getH(id));
   }
   const startY = Math.max(0, maxBottom / 2 - 24);
   nodes[STORY_GRAPH_START_NODE_ID] = {

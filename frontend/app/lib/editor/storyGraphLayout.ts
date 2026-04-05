@@ -1,7 +1,10 @@
 "use client";
 
-import type { StoryGraphEdge } from "./storyGraph";
-import { STORY_GRAPH_START_NODE_ID } from "./storyGraph";
+import {
+  STORY_GRAPH_START_NODE_ID,
+  buildStoryGraph,
+  type StoryGraphEdge,
+} from "./storyGraph";
 import { getEditorCanvasClustersEffective } from "./editorCanvasCluster";
 import { computeStructuredLayoutWithStartNode } from "./editorGraphAutoLayout";
 import { classifyEditorPage } from "./storyPagesFlatten";
@@ -10,20 +13,30 @@ import {
   HEADER_H,
   ROW2_H,
   ROW_H,
+  START_H,
+  cardDimensions,
+  orderedOutgoingEdges,
 } from "@/app/editor/storyCanvas/storyCanvasGeometry";
 
 export type EditorLayoutNode = { x: number; y: number; z?: number };
 export type EditorLayoutState = {
   version: 1;
+  /**
+   * Algoritmus / mentés generáció. Régi JSON-okban hiányzik → `readEditorLayoutFromStory` null,
+   * így a szerkesztő nem „ragad rá” a régi, szétnyílt pozíciókra.
+   */
+  layoutRevision: number;
   nodes: Record<string, EditorLayoutNode>;
 };
 
 const LAYOUT_VERSION = 1 as const;
+/** Növeld, ha az auto-layout szabályai változnak és a régi mentett pozíciókat el kell dobni. */
+export const EDITOR_LAYOUT_REVISION = 2;
 const DEFAULT_CARD_W = 200;
 const DEFAULT_CARD_H = 112;
 /** Oszlopok közötti vízszintes rés (egyezzen az editorGraphAutoLayout COL_GAP-pal). */
-const COL_GAP = 88;
-const ROW_GAP = 32;
+const COL_GAP = 56;
+const ROW_GAP = 20;
 /** Fő gráf jobb széle és a végoldal-oszlop között (world px). */
 const END_ZONE_GAP_PX = 56;
 /** Végkártya magasság — egyeztetve a `slotCount === 3` end kártyával a storyCanvasGeometry-ben. */
@@ -31,6 +44,12 @@ const END_CARD_LAYOUT_EST_H =
   HEADER_H + ROW2_H + 3 * ROW_H + CARD_BODY_BOTTOM_PAD;
 /** Extra függőleges rés két végoldal között (world px). */
 const END_COLUMN_ROW_GAP_EXTRA = 24;
+/**
+ * Ennyi végoldal után új vízszintes „szuboszlop” (market33: ne egy végtelen függőleges lista).
+ */
+const END_ZONE_SUBCOLUMN_MAX_NODES = 10;
+/** Vízszintes lépés a vég-szuboszlopok között (world px). */
+const END_ZONE_SUBCOLUMN_STEP_X = DEFAULT_CARD_W + 56;
 
 /** Kártya szélesség + oszlop-rés — vászon koordináták, új oldal a start mellett stb. */
 export const EDITOR_LAYOUT_COL_STEP_PX = DEFAULT_CARD_W + COL_GAP;
@@ -42,6 +61,32 @@ const CLUSTER_PACK_GAP = 28;
 const CLUSTER_RETRY_EST_H = 112;
 /** Retry és a riddle-sor közötti függőleges rés. */
 const CLUSTER_GAP_ABOVE_RETRY = 28;
+
+/** Automatikus elrendezés: függőleges lépcső a valós kártyamagassággal (runes opciósávak). */
+function buildEditorLayoutCardHeightGetter(
+  story: Record<string, unknown>,
+  edges: StoryGraphEdge[]
+): (pageId: string) => number {
+  const { nodes } = buildStoryGraph(story);
+  const byId = new Map(nodes.map((n) => [n.pageId, n]));
+  const outgoingByFrom = new Map<string, StoryGraphEdge[]>();
+  for (const e of edges) {
+    if (e.from === STORY_GRAPH_START_NODE_ID) continue;
+    const list = outgoingByFrom.get(e.from) ?? [];
+    list.push(e);
+    outgoingByFrom.set(e.from, list);
+  }
+  return (pageId: string) => {
+    if (pageId === STORY_GRAPH_START_NODE_ID) return START_H;
+    const n = byId.get(pageId);
+    if (!n) return DEFAULT_CARD_H;
+    const ord = orderedOutgoingEdges(
+      pageId,
+      outgoingByFrom.get(pageId) ?? []
+    );
+    return cardDimensions(n, ord).h;
+  };
+}
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -57,6 +102,9 @@ export function readEditorLayoutFromStory(
   const wrap = asRecord(raw);
   if (!wrap) return null;
   if (wrap.version !== LAYOUT_VERSION) return null;
+  const revRaw = wrap.layoutRevision;
+  const rev = typeof revRaw === "number" ? revRaw : Number(revRaw);
+  if (!Number.isFinite(rev) || rev !== EDITOR_LAYOUT_REVISION) return null;
   const nodesRaw = wrap.nodes;
   if (!nodesRaw || typeof nodesRaw !== "object" || Array.isArray(nodesRaw)) {
     return null;
@@ -73,7 +121,13 @@ export function readEditorLayoutFromStory(
       typeof zRaw === "number" && Number.isFinite(zRaw) ? zRaw : undefined;
     nodes[k] = z !== undefined ? { x, y, z } : { x, y };
   }
-  return Object.keys(nodes).length ? { version: LAYOUT_VERSION, nodes } : null;
+  return Object.keys(nodes).length
+    ? {
+        version: LAYOUT_VERSION,
+        layoutRevision: EDITOR_LAYOUT_REVISION,
+        nodes,
+      }
+    : null;
 }
 
 export function mergeEditorLayoutIntoStory(
@@ -86,6 +140,7 @@ export function mergeEditorLayoutIntoStory(
     ...prevMeta,
     editorLayout: {
       version: LAYOUT_VERSION,
+      layoutRevision: layout.layoutRevision ?? EDITOR_LAYOUT_REVISION,
       nodes: { ...layout.nodes },
     },
   };
@@ -103,6 +158,7 @@ export function computeDefaultLayout(input: {
 }): EditorLayoutState {
   return {
     version: LAYOUT_VERSION,
+    layoutRevision: EDITOR_LAYOUT_REVISION,
     nodes: finalizeEditorLayoutNodes(
       input.story,
       input.pageIds,
@@ -124,7 +180,13 @@ export function recomputeEditorLayoutForStory(
 ): EditorLayoutState {
   const packed = finalizeEditorLayoutNodes(story, pageIds, edges, startPageId);
   const saved = readEditorLayoutFromStory(story);
-  if (!saved) return { version: LAYOUT_VERSION, nodes: packed };
+  if (!saved) {
+    return {
+      version: LAYOUT_VERSION,
+      layoutRevision: EDITOR_LAYOUT_REVISION,
+      nodes: packed,
+    };
+  }
   const nextNodes: Record<string, EditorLayoutNode> = { ...packed };
   for (const id of Object.keys(nextNodes)) {
     const z = saved.nodes[id]?.z;
@@ -132,7 +194,11 @@ export function recomputeEditorLayoutForStory(
       nextNodes[id] = { ...nextNodes[id], z };
     }
   }
-  return { version: LAYOUT_VERSION, nodes: nextNodes };
+  return {
+    version: LAYOUT_VERSION,
+    layoutRevision: EDITOR_LAYOUT_REVISION,
+    nodes: nextNodes,
+  };
 }
 
 function applyClusterHorizontalPacks(
@@ -223,31 +289,83 @@ export function collectEndPageIdsFromStory(
   return out;
 }
 
+/**
+ * `meta.startPageId`-től kimenő élek mentén elérhető oldalak.
+ * Árva lapok ne toljanak ki indokolatlanul messzire a végzónát (maxRight).
+ */
+function pagesReachableFromStoryStart(
+  pageIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null
+): Set<string> | null {
+  const idSet = new Set(pageIds);
+  const root =
+    startPageId && idSet.has(startPageId) ? startPageId : null;
+  if (!root) return null;
+
+  const adj = new Map<string, string[]>();
+  for (const e of edges) {
+    if (e.from === STORY_GRAPH_START_NODE_ID) continue;
+    if (!idSet.has(e.from) || !idSet.has(e.to)) continue;
+    const list = adj.get(e.from) ?? [];
+    list.push(e.to);
+    adj.set(e.from, list);
+  }
+
+  const seen = new Set<string>();
+  const q = [root];
+  seen.add(root);
+  while (q.length) {
+    const u = q.shift()!;
+    for (const v of adj.get(u) ?? []) {
+      if (seen.has(v)) continue;
+      seen.add(v);
+      q.push(v);
+    }
+  }
+  return seen;
+}
+
 export function packEndNodesIntoRightColumn(
   nodes: Record<string, EditorLayoutNode>,
   pageIds: string[],
   endIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null,
   options?: { skipPageIds?: ReadonlySet<string> }
 ): Record<string, EditorLayoutNode> {
   if (!endIds.length) return nodes;
   const skip = options?.skipPageIds ?? new Set<string>();
   const endSet = new Set(endIds);
+  const reachable = pagesReachableFromStoryStart(pageIds, edges, startPageId);
   let maxRight = 0;
   for (const id of pageIds) {
     if (endSet.has(id)) continue;
+    if (reachable && !reachable.has(id)) continue;
     const n = nodes[id];
     if (!n) continue;
     maxRight = Math.max(maxRight, n.x + DEFAULT_CARD_W);
   }
   const baseX = maxRight + COL_GAP + END_ZONE_GAP_PX;
-  let y = 20;
+  /** Ugyanaz a sáv, mint a virtuális kezdő node (ne fix 20 px-től „lógjanak” messze a gráftól). */
+  const sn = nodes[STORY_GRAPH_START_NODE_ID];
+  const yStart =
+    sn && Number.isFinite(sn.y) ? sn.y : 20;
   const step = END_CARD_LAYOUT_EST_H + ROW_GAP + END_COLUMN_ROW_GAP_EXTRA;
   const next = { ...nodes };
+  let col = 0;
+  let row = 0;
   for (const id of endIds) {
     if (skip.has(id)) continue;
+    if (row >= END_ZONE_SUBCOLUMN_MAX_NODES) {
+      col += 1;
+      row = 0;
+    }
+    const x = baseX + col * END_ZONE_SUBCOLUMN_STEP_X;
+    const y = yStart + row * step;
     const prev = next[id];
-    next[id] = prev ? { ...prev, x: baseX, y } : { x: baseX, y };
-    y += step;
+    next[id] = prev ? { ...prev, x, y } : { x, y };
+    row += 1;
   }
   return next;
 }
@@ -259,12 +377,20 @@ function finalizeEditorLayoutNodes(
   startPageId: string | null,
   structuredBase?: Record<string, EditorLayoutNode>
 ): Record<string, EditorLayoutNode> {
+  const getCardH = buildEditorLayoutCardHeightGetter(story, edges);
   const structured =
     structuredBase ??
     computeStructuredLayoutWithStartNode({
       pageIds,
       edges,
       startPageId,
+      dims: {
+        cardW: DEFAULT_CARD_W,
+        cardH: DEFAULT_CARD_H,
+        colGap: COL_GAP,
+        rowGap: ROW_GAP,
+        getCardH,
+      },
     });
   const clustered = applyClusterHorizontalPacks(
     story,
@@ -274,7 +400,9 @@ function finalizeEditorLayoutNodes(
   return packEndNodesIntoRightColumn(
     clustered,
     pageIds,
-    collectEndPageIdsFromStory(story)
+    collectEndPageIdsFromStory(story),
+    edges,
+    startPageId
   );
 }
 
@@ -287,7 +415,11 @@ export function ensureLayout(
   const fresh = finalizeEditorLayoutNodes(story, pageIds, edges, startPageId);
   const saved = readEditorLayoutFromStory(story);
   if (!saved) {
-    return { version: LAYOUT_VERSION, nodes: fresh };
+    return {
+      version: LAYOUT_VERSION,
+      layoutRevision: EDITOR_LAYOUT_REVISION,
+      nodes: fresh,
+    };
   }
   const nodes = { ...fresh };
   for (const id of pageIds) {
@@ -305,8 +437,16 @@ export function ensureLayout(
   );
   return {
     version: LAYOUT_VERSION,
-    nodes: packEndNodesIntoRightColumn(packed, pageIds, endIds, {
-      skipPageIds: skipPackedEnds,
-    }),
+    layoutRevision: EDITOR_LAYOUT_REVISION,
+    nodes: packEndNodesIntoRightColumn(
+      packed,
+      pageIds,
+      endIds,
+      edges,
+      startPageId,
+      {
+        skipPageIds: skipPackedEnds,
+      }
+    ),
   };
 }
