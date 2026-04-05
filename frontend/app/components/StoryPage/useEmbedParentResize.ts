@@ -11,12 +11,16 @@ import {
  * Küldi a dokumentum gyökér magasságát a szülőnek (embed.js), hogy az iframe auto-resize-oljon.
  * @param resubscribeKey változzon, ha a mérendő root más DOM csomópontra kerül (pl. loading → runtime).
  * @param preferDocumentHeight ghost embed: a root div mellett html/body scrollHeight is (kevesebb belső iframe-csúszka).
+ * @param minHeightPx URL `gmin`: legalább ennyi pixelre küldött magasság (rövid tartalom).
+ * @param maxHeightPx URL `gmax` > 0: felső korlát; felette belső görgetés (EmbedGhostDocumentBg capped).
  */
 export function useEmbedParentResize(
   rootRef: RefObject<HTMLElement | null>,
   enabled: boolean,
   resubscribeKey?: string | number,
-  preferDocumentHeight?: boolean
+  preferDocumentHeight?: boolean,
+  minHeightPx = 0,
+  maxHeightPx = 0
 ): void {
   const lastHRef = useRef<number>(-1);
   const rafRef = useRef<number | null>(null);
@@ -58,6 +62,8 @@ export function useEmbedParentResize(
           body?.scrollHeight ?? 0
         );
       }
+      if (minHeightPx > 0) h = Math.max(h, minHeightPx);
+      if (maxHeightPx > 0) h = Math.min(h, maxHeightPx);
       post(h);
     };
 
@@ -79,10 +85,18 @@ export function useEmbedParentResize(
     const id = window.setInterval(schedule, 400);
 
     return () => {
+      lastHRef.current = -1;
       ro.disconnect();
       window.removeEventListener("resize", schedule);
       window.clearInterval(id);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [enabled, rootRef, resubscribeKey, preferDocumentHeight]);
+  }, [
+    enabled,
+    rootRef,
+    resubscribeKey,
+    preferDocumentHeight,
+    minHeightPx,
+    maxHeightPx,
+  ]);
 }

@@ -25,6 +25,8 @@ $gold: #f2b85b;
   color: inherit;
   font-family: inherit;
   align-items: stretch;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .storyPage[data-embed-ghost="1"] .endCtaTakeoverRootGhost {

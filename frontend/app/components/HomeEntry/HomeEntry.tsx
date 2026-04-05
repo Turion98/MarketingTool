@@ -12,7 +12,7 @@ import s from "./HomeEntry.module.scss";
 import ls from "@/app/login/login.module.scss";
 
 const QUESTELL_HOME_EMBED_URL =
-  "https://www.thequestell.com/embed/questell_node_graph_demo_hu?skin=contract_creative_dusk&start=1.1&src=%2Fstories%2Fquestell_node_graph_demo_hu.json&title=Questell+%E2%80%93+interakt%C3%ADv+d%C3%B6nt%C3%A9si+%C3%A9lm%C3%A9ny&runes=ring&runemode=single&ghost=1";
+  "https://www.thequestell.com/embed/questell_node_graph_demo_hu?skin=contract_creative_dusk&start=1.1&src=%2Fstories%2Fquestell_node_graph_demo_hu.json&title=Questell+%E2%80%93+interakt%C3%ADv+d%C3%B6nt%C3%A9si+%C3%A9lm%C3%A9ny&runes=ring&runemode=single&ghost=1&gmin=560";
 
 const QUESTELL_HOME_EMBED_ORIGIN = new URL(QUESTELL_HOME_EMBED_URL).origin;
 

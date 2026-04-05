@@ -43,6 +43,15 @@ button:active,
   color: #1F3A3E;
 }
 
+/* Ghost embed (iframe): görgetés lehetséges, sáv vizuálisan rejtve */
+html[data-questell-ghost] {
+  scrollbar-width: none;
+}
+html[data-questell-ghost]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 
 
 

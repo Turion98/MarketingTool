@@ -6,6 +6,7 @@
  * <script src="https://YOUR_ORIGIN/embed.js" data-campaign="slug" data-src="..." data-start="start"></script>
  *
  * Opcionális: data-mode="ghost" → ghost=1 query; data-skin, data-title, data-c, data-runes, data-runemode, data-analytics
+ * Embed URL query: gmin=<px> minimum iframe magasság; gmax=<px> felső korlát + belső görgetés (ghost)
  */
 (function () {
   var MSG_SOURCE = "adventure-embed";

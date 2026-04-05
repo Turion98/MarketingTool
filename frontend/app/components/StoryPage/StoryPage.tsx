@@ -299,6 +299,15 @@ const StoryPage: React.FC = () => {
   const isEmbedPath = (pathname ?? "").startsWith("/embed/");
   const isGhostEmbed = isEmbedPath && params.get("ghost") === "1";
 
+  const embedGmin = useMemo(() => {
+    const n = parseInt(params.get("gmin") || "", 10);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }, [params]);
+  const embedGmax = useMemo(() => {
+    const n = parseInt(params.get("gmax") || "", 10);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }, [params]);
+
 const skin = useMemo(() => {
   return globals?.skin || params.get("skin") || "legacy-default";
 }, [globals?.skin, params]);
@@ -353,8 +362,10 @@ const stringGlobals = useMemo<Record<string, string>>(
   useEmbedParentResize(
     pageRootRef,
     isEmbedPath,
-    `${isLoading}:${currentPageId ?? ""}:${globals?.storySrc ?? ""}`,
-    isGhostEmbed
+    `${isLoading}:${currentPageId ?? ""}:${globals?.storySrc ?? ""}:${embedGmin}:${embedGmax}`,
+    isGhostEmbed,
+    embedGmin,
+    embedGmax
   );
 
   useStoryPageAnalytics({
@@ -1470,7 +1481,9 @@ const showFrame = useMemo(() => {
         className={style.storyPage}
         data-embed-ghost={isGhostEmbed ? "1" : undefined}
       >
-        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        {isGhostEmbed && (
+          <EmbedGhostDocumentBg cappedHeight={embedGmax > 0} />
+        )}
         {!isGhostEmbed && <DecorBackground />}
         <div
           style={{
@@ -1510,7 +1523,9 @@ const showFrame = useMemo(() => {
         data-testid="fallback"
         data-embed-ghost={isGhostEmbed ? "1" : undefined}
       >
-        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        {isGhostEmbed && (
+          <EmbedGhostDocumentBg cappedHeight={embedGmax > 0} />
+        )}
         <LoadingOverlay variant={isGhostEmbed ? "minimal" : "default"} />
       </div>
     );
@@ -1556,7 +1571,9 @@ const showFrame = useMemo(() => {
         className={style.storyPage}
         data-embed-ghost={isGhostEmbed ? "1" : undefined}
       >
-        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        {isGhostEmbed && (
+          <EmbedGhostDocumentBg cappedHeight={embedGmax > 0} />
+        )}
          <AdminQuickPanel />
         {analyticsSync}
 
@@ -1629,7 +1646,9 @@ const showFrame = useMemo(() => {
         className={style.storyPage}
         data-embed-ghost={isGhostEmbed ? "1" : undefined}
       >
-        {isGhostEmbed && <EmbedGhostDocumentBg />}
+        {isGhostEmbed && (
+          <EmbedGhostDocumentBg cappedHeight={embedGmax > 0} />
+        )}
         <AdminQuickPanel />
         {analyticsSync}
         {!isGhostEmbed && (
@@ -1692,7 +1711,9 @@ const showFrame = useMemo(() => {
       data-skin={skin}
       data-embed-ghost={isGhostEmbed ? "1" : undefined}
     >
-      {isGhostEmbed && <EmbedGhostDocumentBg />}
+      {isGhostEmbed && (
+        <EmbedGhostDocumentBg cappedHeight={embedGmax > 0} />
+      )}
       <AdminQuickPanel />
       {analyticsSync}
       {showAnalytics && (
