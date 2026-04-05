@@ -22,8 +22,15 @@ $gold: #f2b85b;
 
 .storyPage[data-embed-ghost="1"] {
   padding: 0.75rem 0;
-  color: inherit;
-  font-family: inherit;
+  /* Ghost: átlátszó háttér marad (EmbedGhostDocumentBg); szöveg = skin tokenek */
+  color: var(
+    --contract-text-color,
+    var(--tt-color, var(--choice-color, rgba(232, 236, 244, 0.96)))
+  );
+  font-family: var(
+    --contract-text-font-family,
+    var(--tt-font-family, var(--font-cormorant), serif)
+  );
   align-items: stretch;
   overflow-x: hidden;
   max-width: 100%;

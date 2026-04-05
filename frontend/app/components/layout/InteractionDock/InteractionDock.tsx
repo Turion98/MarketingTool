@@ -78,6 +78,7 @@ const InteractionDock: React.FC<InteractionDockProps> = ({
             <button
               key={key}
               type="button"
+              data-questell-dock-choice
               className={cx(s.choice, c.className)}
               disabled={disabled}
               aria-disabled={disabled || undefined}

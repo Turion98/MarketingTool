@@ -176,6 +176,6 @@
 }
 
 .textDockTop[data-embed-ghost="1"] .titleOverlay {
-  text-shadow: none;
-  color: inherit;
+  /* Skin cím tokenek (ne inherit → host/fekete) */
+  text-shadow: var(--np-title-shadow, none);
 }

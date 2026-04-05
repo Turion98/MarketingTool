@@ -288,11 +288,6 @@ export function StoryPageDock({
                   mode={runesPage.mode ?? "ordered"}
                   feedback={runesPage.feedback ?? "reset"}
                   className={embedGhost ? `${dockStyles.grid} ${dockStyles.gridGhost}` : dockStyles.grid}
-                  buttonClassName={
-                    embedGhost
-                      ? `${dockStyles.choice} ${dockStyles.choiceGhost}`
-                      : dockStyles.choice
-                  }
                   storyId={derivedStoryId || "default_story"}
                   sessionId={derivedSessionId || "sess_unknown"}
                   pageId={pageData.id}
