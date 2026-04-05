@@ -11,6 +11,8 @@
 
   inline-size: 100%;
   max-inline-size: var(--mf-max-w, 1180px);
+  /* flex/grid szülőben ne a kép intrinsic min szélessége legyen a méret */
+  min-inline-size: 0;
   block-size: auto;
 
   overflow: visible;
@@ -41,6 +43,7 @@
   display: block;
   inline-size: 100%;
   max-inline-size: 100%;
+  min-inline-size: 0;
   box-sizing: border-box;
 
   /* itt állítjuk be a vászon arányát – skin felülírhatja */

@@ -1658,7 +1658,6 @@ const showFrame = useMemo(() => {
 
   const canvasStyleVars: StoryPageStyleVars = {
     "--np-maxw": "1400px",
-    "--mf-max-w": "1400px",
     "--wrapper-maxw": "1400px",
   };
 

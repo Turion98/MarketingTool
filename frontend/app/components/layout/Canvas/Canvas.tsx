@@ -82,7 +82,9 @@ export default function Canvas({
 
             {/* 🔥 Csak akkor rendereljük a media cellát, ha tényleg van! */}
             {hasMedia && (
-              <div className={styles.areaMedia}>{media}</div>
+              <div className={styles.areaMedia}>
+                <div className={styles.areaMediaSlot}>{media}</div>
+              </div>
             )}
 
             <div className={styles.areaNarr}>{narr}</div>
