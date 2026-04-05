@@ -4,11 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/app/lib/auth/useAuth";
 import EditorStudio from "./EditorStudio";
+import { useEditorSessionAdmin } from "./useEditorSessionAdmin";
 
 export default function EditorShell() {
   const router = useRouter();
   const { user, ready, logout, tierLabel, canUsePaidFeatures, isAdmin } =
     useAuth();
+  const sessionEditorAdmin = useEditorSessionAdmin();
+  const editorActsAsAdmin = isAdmin || sessionEditorAdmin;
 
   useEffect(() => {
     if (!ready) return;
@@ -49,7 +52,7 @@ export default function EditorShell() {
     );
   }
 
-  const tierColor = isAdmin
+  const tierColor = editorActsAsAdmin
     ? "#c4b5fd"
     : canUsePaidFeatures
       ? "#7dd3fc"
@@ -61,7 +64,7 @@ export default function EditorShell() {
       userId={user.id}
       tierLabel={tierLabel}
       tierColor={tierColor}
-      isAdmin={isAdmin}
+      isAdmin={editorActsAsAdmin}
       onLogout={() => void logout().then(() => router.replace("/"))}
     />
   );

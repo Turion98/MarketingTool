@@ -780,7 +780,7 @@ type EditorStudioProps = {
   userId: string | undefined;
   tierLabel: string | null;
   tierColor: string;
-  /** Admin: teljes sztori-lista; egyéb szerep: allowlist-szűrt lista (lásd env). */
+  /** Admin (fiók tier vagy böngészős admin munkamenet): teljes sztori-lista; különben allowlist. */
   isAdmin?: boolean;
   onLogout: () => void;
 };
@@ -823,6 +823,7 @@ export default function EditorStudio({
   const [storyListLoading, setStoryListLoading] = useState(false);
   const [storyListError, setStoryListError] = useState<string | null>(null);
   const editorStorySrcLsSyncedRef = useRef(false);
+  const prevIsAdminRef = useRef(isAdmin);
   const editorStoryAllowlist = useMemo(
     () => parseEditorStoryAllowlistFromEnv(),
     []
@@ -836,6 +837,14 @@ export default function EditorStudio({
       ),
     [serverStoryList, isAdmin, editorStoryAllowlist]
   );
+
+  useEffect(() => {
+    if (!prevIsAdminRef.current && isAdmin) {
+      editorStorySrcLsSyncedRef.current = false;
+    }
+    prevIsAdminRef.current = isAdmin;
+  }, [isAdmin]);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveServerTimerRef = useRef<number | null>(null);
