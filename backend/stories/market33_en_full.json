@@ -430,71 +430,71 @@
       "logic": [
         {
           "if": [
-            "flag:gshveg_opt_1",
-            "flag:gshveg_opt_2"
+            "gshveg_opt_1",
+            "gshveg_opt_2"
           ],
           "goto": "end_b_veg_sushi_california_collection"
         },
         {
           "if": [
-            "flag:gshveg_opt_1",
-            "flag:gshveg_opt_3"
+            "gshveg_opt_1",
+            "gshveg_opt_3"
           ],
           "goto": "end_b_veg_lacatrina_veggie_tacos"
         },
         {
           "if": [
-            "flag:gshveg_opt_1",
-            "flag:gshveg_opt_4"
+            "gshveg_opt_1",
+            "gshveg_opt_4"
           ],
           "goto": "end_b_veg_lacatrina_veggie_quesadilla"
         },
         {
           "if": [
-            "flag:gshveg_opt_1",
-            "flag:gshveg_opt_5"
+            "gshveg_opt_1",
+            "gshveg_opt_5"
           ],
           "goto": "end_b_veg_7even_falafel_bowl"
         },
         {
           "if": [
-            "flag:gshveg_opt_2",
-            "flag:gshveg_opt_3"
+            "gshveg_opt_2",
+            "gshveg_opt_3"
           ],
           "goto": "end_b_veg_vietnam_vegetarian_pho"
         },
         {
           "if": [
-            "flag:gshveg_opt_2",
-            "flag:gshveg_opt_4"
+            "gshveg_opt_2",
+            "gshveg_opt_4"
           ],
           "goto": "end_b_veg_sushi_veg_maki_mix"
         },
         {
           "if": [
-            "flag:gshveg_opt_2",
-            "flag:gshveg_opt_5"
+            "gshveg_opt_2",
+            "gshveg_opt_5"
           ],
           "goto": "end_b_veg_granelli_pesto_ravioli"
         },
         {
           "if": [
-            "flag:gshveg_opt_3",
-            "flag:gshveg_opt_4"
+            "gshveg_opt_3",
+            "gshveg_opt_4"
           ],
           "goto": "end_b_veg_thai_pad_thai_tofu"
         },
         {
           "if": [
-            "flag:gshveg_opt_3",
-            "flag:gshveg_opt_5"
+            "gshveg_opt_3",
+            "gshveg_opt_5"
           ],
           "goto": "end_b_veg_cocodak_bibimbap"
         },
         {
           "if": [
-            "flag:gshveg_opt_4",
-            "flag:gshveg_opt_5"
+            "gshveg_opt_4",
+            "gshveg_opt_5"
           ],
           "goto": "end_b_veg_granelli_pizza_selection"
         },
@@ -511,71 +511,71 @@
       "logic": [
         {
           "if": [
-            "flag:gshmix_opt_1",
-            "flag:gshmix_opt_2"
+            "gshmix_opt_1",
+            "gshmix_opt_2"
           ],
           "goto": "end_b_mix_world_sushi_tacos_guac"
         },
         {
           "if": [
-            "flag:gshmix_opt_1",
-            "flag:gshmix_opt_3"
+            "gshmix_opt_1",
+            "gshmix_opt_3"
           ],
           "goto": "end_b_mix_mexico_mixed_tacos"
         },
         {
           "if": [
-            "flag:gshmix_opt_1",
-            "flag:gshmix_opt_4"
+            "gshmix_opt_1",
+            "gshmix_opt_4"
           ],
           "goto": "end_b_mix_snackbar_snack_platter_vegan_bitterballen"
         },
         {
           "if": [
-            "flag:gshmix_opt_1",
-            "flag:gshmix_opt_5"
+            "gshmix_opt_1",
+            "gshmix_opt_5"
           ],
           "goto": "end_b_mix_7even_bowls_mix"
         },
         {
           "if": [
-            "flag:gshmix_opt_2",
-            "flag:gshmix_opt_3"
+            "gshmix_opt_2",
+            "gshmix_opt_3"
           ],
           "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
         },
         {
           "if": [
-            "flag:gshmix_opt_2",
-            "flag:gshmix_opt_4"
+            "gshmix_opt_2",
+            "gshmix_opt_4"
           ],
           "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
         },
         {
           "if": [
-            "flag:gshmix_opt_2",
-            "flag:gshmix_opt_5"
+            "gshmix_opt_2",
+            "gshmix_opt_5"
           ],
           "goto": "end_b_mix_sushi_small_family_platter"
         },
         {
           "if": [
-            "flag:gshmix_opt_3",
-            "flag:gshmix_opt_4"
+            "gshmix_opt_3",
+            "gshmix_opt_4"
           ],
           "goto": "end_b_mix_thai_pad_thai_green_curry"
         },
         {
           "if": [
-            "flag:gshmix_opt_3",
-            "flag:gshmix_opt_5"
+            "gshmix_opt_3",
+            "gshmix_opt_5"
           ],
           "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
         },
         {
           "if": [
-            "flag:gshmix_opt_4",
-            "flag:gshmix_opt_5"
+            "gshmix_opt_4",
+            "gshmix_opt_5"
           ],
           "goto": "end_b_mix_world_pizza_korean_falafel"
         },
@@ -592,71 +592,71 @@
       "logic": [
         {
           "if": [
-            "flag:gshnon_opt_1",
-            "flag:gshnon_opt_2"
+            "gshnon_opt_1",
+            "gshnon_opt_2"
           ],
           "goto": "end_b_non_sushi_family_platter_xl"
         },
         {
           "if": [
-            "flag:gshnon_opt_1",
-            "flag:gshnon_opt_3"
+            "gshnon_opt_1",
+            "gshnon_opt_3"
           ],
           "goto": "end_b_non_mexico_mixed_tacos"
         },
         {
           "if": [
-            "flag:gshnon_opt_1",
-            "flag:gshnon_opt_4"
+            "gshnon_opt_1",
+            "gshnon_opt_4"
           ],
           "goto": "end_b_non_snackbar_smash_burger_loaded_fries"
         },
         {
           "if": [
-            "flag:gshnon_opt_1",
-            "flag:gshnon_opt_5"
+            "gshnon_opt_1",
+            "gshnon_opt_5"
           ],
           "goto": "end_b_non_world_smash_burgers_tacos_korean"
         },
         {
           "if": [
-            "flag:gshnon_opt_2",
-            "flag:gshnon_opt_3"
+            "gshnon_opt_2",
+            "gshnon_opt_3"
           ],
           "goto": "end_b_non_vietnam_party_mix_beef_pho"
         },
         {
           "if": [
-            "flag:gshnon_opt_2",
-            "flag:gshnon_opt_4"
+            "gshnon_opt_2",
+            "gshnon_opt_4"
           ],
           "goto": "end_b_non_cocodak_korean_fried_chicken_mix"
         },
         {
           "if": [
-            "flag:gshnon_opt_2",
-            "flag:gshnon_opt_5"
+            "gshnon_opt_2",
+            "gshnon_opt_5"
           ],
           "goto": "end_b_non_world_sushi_korean"
         },
         {
           "if": [
-            "flag:gshnon_opt_3",
-            "flag:gshnon_opt_4"
+            "gshnon_opt_3",
+            "gshnon_opt_4"
           ],
           "goto": "end_b_non_thai_pad_thai_massaman"
         },
         {
           "if": [
-            "flag:gshnon_opt_3",
-            "flag:gshnon_opt_5"
+            "gshnon_opt_3",
+            "gshnon_opt_5"
           ],
           "goto": "end_b_non_world_pho_padthai_dimsum"
         },
         {
           "if": [
-            "flag:gshnon_opt_4",
-            "flag:gshnon_opt_5"
+            "gshnon_opt_4",
+            "gshnon_opt_5"
           ],
           "goto": "end_b_non_granelli_diavola_bresaola_mortadella"
         },
@@ -673,71 +673,71 @@
       "logic": [
         {
           "if": [
-            "flag:gindveg_opt_1",
-            "flag:gindveg_opt_2"
+            "gindveg_opt_1",
+            "gindveg_opt_2"
           ],
           "goto": "end_b_veg_7even_falafel_bowl"
         },
         {
           "if": [
-            "flag:gindveg_opt_1",
-            "flag:gindveg_opt_3"
+            "gindveg_opt_1",
+            "gindveg_opt_3"
           ],
           "goto": "end_b_veg_cocodak_bokkeumbap"
         },
         {
           "if": [
-            "flag:gindveg_opt_1",
-            "flag:gindveg_opt_4"
+            "gindveg_opt_1",
+            "gindveg_opt_4"
           ],
           "goto": "end_b_veg_china_mini_bowls"
         },
         {
           "if": [
-            "flag:gindveg_opt_1",
-            "flag:gindveg_opt_5"
+            "gindveg_opt_1",
+            "gindveg_opt_5"
           ],
           "goto": "end_b_veg_thai_pad_thai_tofu"
         },
         {
           "if": [
-            "flag:gindveg_opt_2",
-            "flag:gindveg_opt_3"
+            "gindveg_opt_2",
+            "gindveg_opt_3"
           ],
           "goto": "end_b_veg_granelli_pesto_ravioli"
         },
         {
           "if": [
-            "flag:gindveg_opt_2",
-            "flag:gindveg_opt_4"
+            "gindveg_opt_2",
+            "gindveg_opt_4"
           ],
           "goto": "end_b_veg_lacatrina_vegan_tacos"
         },
         {
           "if": [
-            "flag:gindveg_opt_2",
-            "flag:gindveg_opt_5"
+            "gindveg_opt_2",
+            "gindveg_opt_5"
           ],
           "goto": "end_b_veg_vietnam_veg_dimsum"
         },
         {
           "if": [
-            "flag:gindveg_opt_3",
-            "flag:gindveg_opt_4"
+            "gindveg_opt_3",
+            "gindveg_opt_4"
           ],
           "goto": "end_b_veg_granelli_pizza_selection"
         },
         {
           "if": [
-            "flag:gindveg_opt_3",
-            "flag:gindveg_opt_5"
+            "gindveg_opt_3",
+            "gindveg_opt_5"
           ],
           "goto": "end_b_veg_thai_phad_phak_ruam"
         },
         {
           "if": [
-            "flag:gindveg_opt_4",
-            "flag:gindveg_opt_5"
+            "gindveg_opt_4",
+            "gindveg_opt_5"
           ],
           "goto": "end_b_veg_lacatrina_veggie_tacos"
         },
@@ -754,71 +754,71 @@
       "logic": [
         {
           "if": [
-            "flag:gindmix_opt_1",
-            "flag:gindmix_opt_2"
+            "gindmix_opt_1",
+            "gindmix_opt_2"
           ],
           "goto": "end_b_mix_7even_bowls_mix"
         },
         {
           "if": [
-            "flag:gindmix_opt_1",
-            "flag:gindmix_opt_3"
+            "gindmix_opt_1",
+            "gindmix_opt_3"
           ],
           "goto": "end_b_mix_cocodak_bokkeumbap_chicken_veg"
         },
         {
           "if": [
-            "flag:gindmix_opt_1",
-            "flag:gindmix_opt_4"
+            "gindmix_opt_1",
+            "gindmix_opt_4"
           ],
           "goto": "end_b_mix_mexico_mixed_tacos"
         },
         {
           "if": [
-            "flag:gindmix_opt_1",
-            "flag:gindmix_opt_5"
+            "gindmix_opt_1",
+            "gindmix_opt_5"
           ],
           "goto": "end_b_mix_china_orange_chicken_mapo"
         },
         {
           "if": [
-            "flag:gindmix_opt_2",
-            "flag:gindmix_opt_3"
+            "gindmix_opt_2",
+            "gindmix_opt_3"
           ],
           "goto": "end_b_mix_granelli_carbonara_pesto_chicken_tiramisu"
         },
         {
           "if": [
-            "flag:gindmix_opt_2",
-            "flag:gindmix_opt_4"
+            "gindmix_opt_2",
+            "gindmix_opt_4"
           ],
           "goto": "end_b_mix_mexico_mixed_tacos_quesadilla"
         },
         {
           "if": [
-            "flag:gindmix_opt_2",
-            "flag:gindmix_opt_5"
+            "gindmix_opt_2",
+            "gindmix_opt_5"
           ],
           "goto": "end_b_mix_vietnam_pho_dimsum_summer_rolls"
         },
         {
           "if": [
-            "flag:gindmix_opt_3",
-            "flag:gindmix_opt_4"
+            "gindmix_opt_3",
+            "gindmix_opt_4"
           ],
           "goto": "end_b_mix_snackbar_snack_platter_burgers_loaded_fries"
         },
         {
           "if": [
-            "flag:gindmix_opt_3",
-            "flag:gindmix_opt_5"
+            "gindmix_opt_3",
+            "gindmix_opt_5"
           ],
           "goto": "end_b_mix_thai_pad_thai_green_curry"
         },
         {
           "if": [
-            "flag:gindmix_opt_4",
-            "flag:gindmix_opt_5"
+            "gindmix_opt_4",
+            "gindmix_opt_5"
           ],
           "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
         },
@@ -835,71 +835,71 @@
       "logic": [
         {
           "if": [
-            "flag:gindnon_opt_1",
-            "flag:gindnon_opt_2"
+            "gindnon_opt_1",
+            "gindnon_opt_2"
           ],
           "goto": "end_b_non_granelli_bolognese_carbonara_porchetta"
         },
         {
           "if": [
-            "flag:gindnon_opt_1",
-            "flag:gindnon_opt_3"
+            "gindnon_opt_1",
+            "gindnon_opt_3"
           ],
           "goto": "end_b_non_thai_phad_kaprao_green_curry"
         },
         {
           "if": [
-            "flag:gindnon_opt_1",
-            "flag:gindnon_opt_4"
+            "gindnon_opt_1",
+            "gindnon_opt_4"
           ],
           "goto": "end_b_non_mexico_mixed_tacos"
         },
         {
           "if": [
-            "flag:gindnon_opt_1",
-            "flag:gindnon_opt_5"
+            "gindnon_opt_1",
+            "gindnon_opt_5"
           ],
           "goto": "end_b_non_china_pork_chashiu_black_bean_beef"
         },
         {
           "if": [
-            "flag:gindnon_opt_2",
-            "flag:gindnon_opt_3"
+            "gindnon_opt_2",
+            "gindnon_opt_3"
           ],
           "goto": "end_b_non_vietnam_dimsum_fried_snacks"
         },
         {
           "if": [
-            "flag:gindnon_opt_2",
-            "flag:gindnon_opt_4"
+            "gindnon_opt_2",
+            "gindnon_opt_4"
           ],
           "goto": "end_b_non_world_pizza_nachos_guac"
         },
         {
           "if": [
-            "flag:gindnon_opt_2",
-            "flag:gindnon_opt_5"
+            "gindnon_opt_2",
+            "gindnon_opt_5"
           ],
           "goto": "end_b_non_world_china_thai_rice"
         },
         {
           "if": [
-            "flag:gindnon_opt_3",
-            "flag:gindnon_opt_4"
+            "gindnon_opt_3",
+            "gindnon_opt_4"
           ],
           "goto": "end_b_non_snackbar_ribeye_pastrami_fries"
         },
         {
           "if": [
-            "flag:gindnon_opt_3",
-            "flag:gindnon_opt_5"
+            "gindnon_opt_3",
+            "gindnon_opt_5"
           ],
           "goto": "end_b_non_thai_pad_thai_massaman"
         },
         {
           "if": [
-            "flag:gindnon_opt_4",
-            "flag:gindnon_opt_5"
+            "gindnon_opt_4",
+            "gindnon_opt_5"
           ],
           "goto": "end_b_non_mexico_barbacoa_quesadilla"
         },
@@ -916,71 +916,71 @@
       "logic": [
         {
           "if": [
-            "flag:gcompmix_opt_1",
-            "flag:gcompmix_opt_2"
+            "gcompmix_opt_1",
+            "gcompmix_opt_2"
           ],
           "goto": "end_b_mix_world_sushi_tacos_guac"
         },
         {
           "if": [
-            "flag:gcompmix_opt_1",
-            "flag:gcompmix_opt_3"
+            "gcompmix_opt_1",
+            "gcompmix_opt_3"
           ],
           "goto": "end_b_mix_sushi_small_family_platter"
         },
         {
           "if": [
-            "flag:gcompmix_opt_1",
-            "flag:gcompmix_opt_4"
+            "gcompmix_opt_1",
+            "gcompmix_opt_4"
           ],
           "goto": "end_b_mix_mexico_mixed_tacos_quesadilla"
         },
         {
           "if": [
-            "flag:gcompmix_opt_1",
-            "flag:gcompmix_opt_5"
+            "gcompmix_opt_1",
+            "gcompmix_opt_5"
           ],
           "goto": "end_b_mix_7even_bowls_mix"
         },
         {
           "if": [
-            "flag:gcompmix_opt_2",
-            "flag:gcompmix_opt_3"
+            "gcompmix_opt_2",
+            "gcompmix_opt_3"
           ],
           "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
         },
         {
           "if": [
-            "flag:gcompmix_opt_2",
-            "flag:gcompmix_opt_4"
+            "gcompmix_opt_2",
+            "gcompmix_opt_4"
           ],
           "goto": "end_b_mix_snackbar_snack_platter_vegan_bitterballen"
         },
         {
           "if": [
-            "flag:gcompmix_opt_2",
-            "flag:gcompmix_opt_5"
+            "gcompmix_opt_2",
+            "gcompmix_opt_5"
           ],
           "goto": "end_b_mix_granelli_carbonara_pesto_chicken_tiramisu"
         },
         {
           "if": [
-            "flag:gcompmix_opt_3",
-            "flag:gcompmix_opt_4"
+            "gcompmix_opt_3",
+            "gcompmix_opt_4"
           ],
           "goto": "end_b_mix_world_mixed_tacos_sushi_edamame"
         },
         {
           "if": [
-            "flag:gcompmix_opt_3",
-            "flag:gcompmix_opt_5"
+            "gcompmix_opt_3",
+            "gcompmix_opt_5"
           ],
           "goto": "end_b_mix_thai_phad_kaprao_veg_stirfry"
         },
         {
           "if": [
-            "flag:gcompmix_opt_4",
-            "flag:gcompmix_opt_5"
+            "gcompmix_opt_4",
+            "gcompmix_opt_5"
           ],
           "goto": "end_b_mix_world_pizza_korean_falafel"
         },
@@ -997,71 +997,71 @@
       "logic": [
         {
           "if": [
-            "flag:gcompnon_opt_1",
-            "flag:gcompnon_opt_2"
+            "gcompnon_opt_1",
+            "gcompnon_opt_2"
           ],
           "goto": "end_b_non_world_sushi_snack_platter"
         },
         {
           "if": [
-            "flag:gcompnon_opt_1",
-            "flag:gcompnon_opt_3"
+            "gcompnon_opt_1",
+            "gcompnon_opt_3"
           ],
           "goto": "end_b_non_world_smash_burgers_tacos_korean"
         },
         {
           "if": [
-            "flag:gcompnon_opt_1",
-            "flag:gcompnon_opt_4"
+            "gcompnon_opt_1",
+            "gcompnon_opt_4"
           ],
           "goto": "end_b_non_world_china_thai_rice"
         },
         {
           "if": [
-            "flag:gcompnon_opt_1",
-            "flag:gcompnon_opt_5"
+            "gcompnon_opt_1",
+            "gcompnon_opt_5"
           ],
           "goto": "end_b_non_mexico_barbacoa_quesadilla"
         },
         {
           "if": [
-            "flag:gcompnon_opt_2",
-            "flag:gcompnon_opt_3"
+            "gcompnon_opt_2",
+            "gcompnon_opt_3"
           ],
           "goto": "end_b_non_snackbar_smash_burger_loaded_fries"
         },
         {
           "if": [
-            "flag:gcompnon_opt_2",
-            "flag:gcompnon_opt_4"
+            "gcompnon_opt_2",
+            "gcompnon_opt_4"
           ],
           "goto": "end_b_non_world_pizza_nachos_guac"
         },
         {
           "if": [
-            "flag:gcompnon_opt_2",
-            "flag:gcompnon_opt_5"
+            "gcompnon_opt_2",
+            "gcompnon_opt_5"
           ],
           "goto": "end_b_non_world_snack_tacos_sushi"
         },
         {
           "if": [
-            "flag:gcompnon_opt_3",
-            "flag:gcompnon_opt_4"
+            "gcompnon_opt_3",
+            "gcompnon_opt_4"
           ],
           "goto": "end_b_non_vietnam_party_mix_beef_pho"
         },
         {
           "if": [
-            "flag:gcompnon_opt_3",
-            "flag:gcompnon_opt_5"
+            "gcompnon_opt_3",
+            "gcompnon_opt_5"
           ],
           "goto": "end_b_non_sushi_signature_platter_deluxe"
         },
         {
           "if": [
-            "flag:gcompnon_opt_4",
-            "flag:gcompnon_opt_5"
+            "gcompnon_opt_4",
+            "gcompnon_opt_5"
           ],
           "goto": "end_b_non_world_pho_padthai_dimsum"
         },
@@ -1428,106 +1428,106 @@
       "logic": [
         {
           "if": [
-            "flag:veg_opt_1",
-            "flag:veg_opt_2"
+            "veg_opt_1",
+            "veg_opt_2"
           ],
           "goto": "end_veg_hummus_vegetables"
         },
         {
           "if": [
-            "flag:veg_opt_1",
-            "flag:veg_opt_3"
+            "veg_opt_1",
+            "veg_opt_3"
           ],
           "goto": "end_veg_falafel_bowl"
         },
         {
           "if": [
-            "flag:veg_opt_1",
-            "flag:veg_opt_4"
+            "veg_opt_1",
+            "veg_opt_4"
           ],
           "goto": "veg_redirect_light_or_pasta"
         },
         {
           "if": [
-            "flag:veg_opt_1",
-            "flag:veg_opt_5"
+            "veg_opt_1",
+            "veg_opt_5"
           ],
           "goto": "end_veg_veggie_tacos"
         },
         {
           "if": [
-            "flag:veg_opt_1",
-            "flag:veg_opt_6"
+            "veg_opt_1",
+            "veg_opt_6"
           ],
           "goto": "end_veg_vegan_burrito"
         },
         {
           "if": [
-            "flag:veg_opt_2",
-            "flag:veg_opt_3"
+            "veg_opt_2",
+            "veg_opt_3"
           ],
           "goto": "end_veg_bibimbap"
         },
         {
           "if": [
-            "flag:veg_opt_2",
-            "flag:veg_opt_4"
+            "veg_opt_2",
+            "veg_opt_4"
           ],
           "goto": "end_veg_japchae"
         },
         {
           "if": [
-            "flag:veg_opt_2",
-            "flag:veg_opt_5"
+            "veg_opt_2",
+            "veg_opt_5"
           ],
           "goto": "end_veg_4formaggi"
         },
         {
           "if": [
-            "flag:veg_opt_2",
-            "flag:veg_opt_6"
+            "veg_opt_2",
+            "veg_opt_6"
           ],
           "goto": "end_veg_mapo_tofu"
         },
         {
           "if": [
-            "flag:veg_opt_3",
-            "flag:veg_opt_4"
+            "veg_opt_3",
+            "veg_opt_4"
           ],
           "goto": "veg_redirect_rice_or_noodle"
         },
         {
           "if": [
-            "flag:veg_opt_3",
-            "flag:veg_opt_5"
+            "veg_opt_3",
+            "veg_opt_5"
           ],
           "goto": "end_veg_falafel_bowl"
         },
         {
           "if": [
-            "flag:veg_opt_3",
-            "flag:veg_opt_6"
+            "veg_opt_3",
+            "veg_opt_6"
           ],
           "goto": "end_veg_stirfry_siam"
         },
         {
           "if": [
-            "flag:veg_opt_4",
-            "flag:veg_opt_5"
+            "veg_opt_4",
+            "veg_opt_5"
           ],
           "goto": "end_veg_pesto_pasta"
         },
         {
           "if": [
-            "flag:veg_opt_4",
-            "flag:veg_opt_6"
+            "veg_opt_4",
+            "veg_opt_6"
           ],
           "goto": "end_veg_stirfry_noodles"
         },
         {
           "if": [
-            "flag:veg_opt_5",
-            "flag:veg_opt_6"
+            "veg_opt_5",
+            "veg_opt_6"
           ],
           "goto": "end_veg_vegan_burrito"
         },
@@ -1544,106 +1544,106 @@
       "logic": [
         {
           "if": [
-            "flag:chicken_opt_1",
-            "flag:chicken_opt_2"
+            "chicken_opt_1",
+            "chicken_opt_2"
           ],
           "goto": "end_chicken_korean_fried_chicken"
         },
         {
           "if": [
-            "flag:chicken_opt_1",
-            "flag:chicken_opt_3"
+            "chicken_opt_1",
+            "chicken_opt_3"
           ],
           "goto": "end_chicken_wings"
         },
         {
           "if": [
-            "flag:chicken_opt_1",
-            "flag:chicken_opt_4"
+            "chicken_opt_1",
+            "chicken_opt_4"
           ],
           "goto": "end_chicken_katsu_rice"
         },
         {
           "if": [
-            "flag:chicken_opt_1",
-            "flag:chicken_opt_5"
+            "chicken_opt_1",
+            "chicken_opt_5"
           ],
           "goto": "chicken_redirect_crispy_or_noodle"
         },
         {
           "if": [
-            "flag:chicken_opt_1",
-            "flag:chicken_opt_6"
+            "chicken_opt_1",
+            "chicken_opt_6"
           ],
           "goto": "end_chicken_burger"
         },
         {
           "if": [
-            "flag:chicken_opt_2",
-            "flag:chicken_opt_3"
+            "chicken_opt_2",
+            "chicken_opt_3"
           ],
           "goto": "end_chicken_thai_curry"
         },
         {
           "if": [
-            "flag:chicken_opt_2",
-            "flag:chicken_opt_4"
+            "chicken_opt_2",
+            "chicken_opt_4"
           ],
           "goto": "end_chicken_pad_kaprao"
         },
         {
           "if": [
-            "flag:chicken_opt_2",
-            "flag:chicken_opt_5"
+            "chicken_opt_2",
+            "chicken_opt_5"
           ],
           "goto": "end_chicken_pad_thai"
         },
         {
           "if": [
-            "flag:chicken_opt_2",
-            "flag:chicken_opt_6"
+            "chicken_opt_2",
+            "chicken_opt_6"
           ],
           "goto": "end_chicken_tinga_tacos"
         },
         {
           "if": [
-            "flag:chicken_opt_3",
-            "flag:chicken_opt_4"
+            "chicken_opt_3",
+            "chicken_opt_4"
           ],
           "goto": "end_chicken_teriyaki_rice"
         },
         {
           "if": [
-            "flag:chicken_opt_3",
-            "flag:chicken_opt_5"
+            "chicken_opt_3",
+            "chicken_opt_5"
           ],
           "goto": "end_chicken_pasta"
         },
         {
           "if": [
-            "flag:chicken_opt_3",
-            "flag:chicken_opt_6"
+            "chicken_opt_3",
+            "chicken_opt_6"
           ],
           "goto": "end_chicken_quesadilla"
         },
         {
           "if": [
-            "flag:chicken_opt_4",
-            "flag:chicken_opt_5"
+            "chicken_opt_4",
+            "chicken_opt_5"
           ],
           "goto": "chicken_redirect_rice_or_noodle"
         },
         {
           "if": [
-            "flag:chicken_opt_4",
-            "flag:chicken_opt_6"
+            "chicken_opt_4",
+            "chicken_opt_6"
           ],
           "goto": "end_chicken_tinga_burrito"
         },
         {
           "if": [
-            "flag:chicken_opt_5",
-            "flag:chicken_opt_6"
+            "chicken_opt_5",
+            "chicken_opt_6"
           ],
           "goto": "chicken_redirect_noodle_or_handheld"
         },
@@ -1660,106 +1660,106 @@
       "logic": [
         {
           "if": [
-            "flag:sea_opt_1",
-            "flag:sea_opt_2"
+            "sea_opt_1",
+            "sea_opt_2"
           ],
           "goto": "end_sea_ebi_tempura"
         },
         {
           "if": [
-            "flag:sea_opt_1",
-            "flag:sea_opt_3"
+            "sea_opt_1",
+            "sea_opt_3"
           ],
           "goto": "sea_redirect_sushi_or_soup"
         },
         {
           "if": [
-            "flag:sea_opt_1",
-            "flag:sea_opt_4"
+            "sea_opt_1",
+            "sea_opt_4"
           ],
           "goto": "end_sea_salmon_roll"
         },
         {
           "if": [
-            "flag:sea_opt_1",
-            "flag:sea_opt_5"
+            "sea_opt_1",
+            "sea_opt_5"
           ],
           "goto": "end_sea_spicy_tuna"
         },
         {
           "if": [
-            "flag:sea_opt_1",
-            "flag:sea_opt_6"
+            "sea_opt_1",
+            "sea_opt_6"
           ],
           "goto": "end_sea_poke_bowl"
         },
         {
           "if": [
-            "flag:sea_opt_2",
-            "flag:sea_opt_3"
+            "sea_opt_2",
+            "sea_opt_3"
           ],
           "goto": "end_sea_seafood_pho"
         },
         {
           "if": [
-            "flag:sea_opt_2",
-            "flag:sea_opt_4"
+            "sea_opt_2",
+            "sea_opt_4"
           ],
           "goto": "end_sea_shrimp_curry"
         },
         {
           "if": [
-            "flag:sea_opt_2",
-            "flag:sea_opt_5"
+            "sea_opt_2",
+            "sea_opt_5"
           ],
           "goto": "end_sea_five_spice_shrimp"
         },
         {
           "if": [
-            "flag:sea_opt_2",
-            "flag:sea_opt_6"
+            "sea_opt_2",
+            "sea_opt_6"
           ],
           "goto": "end_sea_ebi_furai_rice"
         },
         {
           "if": [
-            "flag:sea_opt_3",
-            "flag:sea_opt_4"
+            "sea_opt_3",
+            "sea_opt_4"
           ],
           "goto": "end_sea_seafood_pho"
         },
         {
           "if": [
-            "flag:sea_opt_3",
-            "flag:sea_opt_5"
+            "sea_opt_3",
+            "sea_opt_5"
           ],
           "goto": "end_sea_spicy_shrimp_noodles"
         },
         {
           "if": [
-            "flag:sea_opt_3",
-            "flag:sea_opt_6"
+            "sea_opt_3",
+            "sea_opt_6"
           ],
           "goto": "sea_redirect_soup_or_bowl"
         },
         {
           "if": [
-            "flag:sea_opt_4",
-            "flag:sea_opt_5"
+            "sea_opt_4",
+            "sea_opt_5"
           ],
           "goto": "end_sea_shrimp_curry"
         },
         {
           "if": [
-            "flag:sea_opt_4",
-            "flag:sea_opt_6"
+            "sea_opt_4",
+            "sea_opt_6"
           ],
           "goto": "end_sea_shrimp_noodles"
         },
         {
           "if": [
-            "flag:sea_opt_5",
-            "flag:sea_opt_6"
+            "sea_opt_5",
+            "sea_opt_6"
           ],
           "goto": "end_sea_spicy_shrimp_noodles"
         },
