@@ -134,7 +134,7 @@ Locally, the frontend often talks to `http://127.0.0.1:8000`; in production, set
 
 ## Deployment notes
 
-- **Frontend**: any Next.js-friendly host (e.g. Vercel). Set public env vars for API base and monitoring (e.g. Sentry DSN) as needed.
+- **Frontend**: any Next.js-friendly host (e.g. Vercel). Set public env vars for API base and monitoring (e.g. Sentry DSN) as needed. For session login (`NEXT_PUBLIC_AUTH_PROVIDER=session`), set **`NEXT_PUBLIC_DEV_ADMIN_EMAILS`** (and optional **`NEXT_PUBLIC_DEV_PAID_EMAILS`**) on the host: these are inlined at **build** time, so trigger a rebuild after changing them.
 - **Embedding** (`/embed/...` in a third-party `<iframe>`): framing policy is applied in **`middleware.ts`** (not `headers()` in `next.config.js`, to avoid catch-all conflicts). Use **`EMBED_FRAME_ANCESTORS`** or **`NEXT_PUBLIC_EMBED_FRAME_ANCESTORS`** (see root [`.env.example`](.env.example)): default is `*` (any parent origin); restrict with a space- or comma-separated origin list if needed. Redeploy after changing env.
 - **Backend**: a process host or container running Uvicorn (or equivalent) with persistent storage for `STORIES_DIR`, generated assets, and analytics data if used.
 - **CORS**: update allowed origins in `backend/main.py` or via `CORS_EXTRA_ORIGINS` for previews and custom domains.

@@ -27,7 +27,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.65rem, 2vh, 1.1rem);
+  gap: clamp(0px, 0.35vh, 0.15rem);
   width: 100%;
   max-width: min(34rem, 100%);
   margin-inline: auto;
@@ -51,7 +51,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: clamp(0.35rem, 1.5vh, 0.85rem) 0 clamp(0.5rem, 2vh, 0.75rem);
+  padding: clamp(0.2rem, 1vh, 0.65rem) 0 0;
   box-sizing: border-box;
   pointer-events: none;
   overflow: visible;
@@ -89,7 +89,7 @@
   width: 100%;
   max-width: min(34rem, 100%);
   min-height: 0;
-  margin: 0;
+  margin: clamp(-0.55rem, -1.5vh, -0.2rem) 0 0;
   box-sizing: border-box;
   pointer-events: auto;
   background: transparent;
@@ -195,7 +195,7 @@
   .brandDockShell {
     position: relative;
     width: 100%;
-    padding: clamp(0.35rem, 1.5vh, 1rem) 0 0;
+    padding: clamp(0.1rem, 0.75vh, 0.15rem) 0 0;
   }
 
   .brandDock {
