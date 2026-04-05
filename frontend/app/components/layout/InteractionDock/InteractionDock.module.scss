@@ -42,41 +42,33 @@
     transform var(--dock-dur-in, 480ms) var(--dock-ease-out, cubic-bezier(.2,.8,.2,1));
 }
 
+/* Ghost embed: kompaktabb dock; szélesség ≈ tartalom (legszélesebb választó), nem teljes konténer */
 .gridGhost {
-  gap: 6px;
-  padding: 0;
+  gap: var(--dock-gap-ghost, 10px);
+  padding: var(--dock-pad-ghost, 4px 0 0);
 }
 
-.gridGhost .choice {
-  color: inherit;
-  background: transparent;
-  border-width: 0;
-  border-radius: 0;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  padding-top: 10px;
-  padding-bottom: 10px;
-  box-shadow: none;
-  backdrop-filter: none;
+.grid.gridGhost {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: minmax(min(12rem, 100%), max-content);
+  width: max-content;
+  max-width: min(100%, var(--choice-maxw, 480px));
+  margin-inline: auto;
+  justify-items: stretch;
+  align-items: stretch;
 }
 
-.gridGhost .choice:hover:not(:disabled) {
-  background: color-mix(in srgb, currentColor 6%, transparent);
+.grid.gridGhost > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: 0;
 }
 
-.choiceGhost {
-  color: inherit;
-  background: transparent;
-  border-width: 0;
-  border-radius: 0;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  padding-top: 10px;
-  padding-bottom: 10px;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.choiceGhost:hover:not(:disabled) {
-  background: color-mix(in srgb, currentColor 6%, transparent);
+.grid.gridGhost > button.choice {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ===== Children sizing ===== */
@@ -89,8 +81,8 @@
   box-sizing: border-box;
 }
 
-/* ===== Choice button ===== */
-.choice {
+/* ===== Choice button (.grid > button: erősebb mint PuzzleRunes .choice / globál button) ===== */
+.grid > button.choice {
   appearance: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -100,20 +92,24 @@
   max-width: 100%;
   margin-inline: 0;
 
-  padding: var(--choice-padding-y, 14px) var(--choice-padding-x, 16px);
+  padding: var(--choice-padding-y, var(--contract-choice-pad-y, 14px))
+    var(--choice-padding-x, var(--contract-choice-pad-x, 16px));
 
-  color: var(--choice-color, #fff);
+  color: var(
+    --choice-color,
+    var(--contract-choice-text-color, var(--contract-text-color, #fff))
+  );
   background: linear-gradient(
     180deg,
-    var(--choice-bg-top, rgba(255,255,255,.12)),
-    var(--choice-bg-bot, rgba(255,255,255,.06))
+    var(--choice-bg-top, var(--contract-choice-bg-color-top, rgba(255,255,255,.12))),
+    var(--choice-bg-bot, var(--contract-choice-bg-color-bot, rgba(255,255,255,.06)))
   );
 
-  border-color: var(--choice-border, rgba(255,255,255,.18));
-  border-style: var(--choice-border-style, solid);
-  border-width: var(--choice-border-width, 1px);
+  border-color: var(--choice-border, var(--contract-choice-border-color, rgba(255,255,255,.18)));
+  border-style: var(--choice-border-style, var(--contract-choice-border-style, solid));
+  border-width: var(--choice-border-width, var(--contract-choice-border-width, 1px));
 
-  border-radius: var(--choice-radius, 12px);
+  border-radius: var(--choice-radius, var(--contract-choice-radius, 12px));
 
   text-align: center;
 
@@ -127,7 +123,10 @@
   font-weight: var(--choice-text-weight, 600);
   letter-spacing: var(--choice-text-letter-spacing, .2px);
 
-  box-shadow: var(--choice-shadow, 0 6px 18px rgba(0,0,0,.30));
+  box-shadow: var(
+    --choice-shadow,
+    var(--contract-choice-shadow-rest, 0 6px 18px rgba(0,0,0,.30))
+  );
   cursor: pointer;
 
   transition:
@@ -140,8 +139,11 @@
 }
 
 @media (max-width: 640px) {
-  .choice {
-    font-size: var(--choice-font-mobile, var(--choice-font, 16px));
+  .grid > button.choice {
+    font-size: var(
+      --choice-font-mobile,
+      var(--contract-choice-font-size-mobile, var(--choice-font, var(--contract-choice-font-size, 16px)))
+    );
   }
 }
 
@@ -166,7 +168,7 @@
 }
 
 /* Alap animáció minden choice-ra, amikor DOM-ba kerül */
-.grid .choice {
+.grid > button.choice {
   animation-name: dock-choice-in;
   animation-duration: var(--dock-dur-in, 420ms);
   animation-timing-function: var(
@@ -177,21 +179,21 @@
 }
 
 /* Enyhe lépcsőzés, hogy ne egyszerre ugorjanak be */
-.grid .choice:nth-child(1) {
+.grid > button.choice:nth-child(1) {
   animation-delay: 60ms;
 }
-.grid .choice:nth-child(2) {
+.grid > button.choice:nth-child(2) {
   animation-delay: 120ms;
 }
-.grid .choice:nth-child(3) {
+.grid > button.choice:nth-child(3) {
   animation-delay: 180ms;
 }
-.grid .choice:nth-child(4) {
+.grid > button.choice:nth-child(4) {
   animation-delay: 240ms;
 }
 
 /* Hover */
-.choice:enabled:hover {
+.grid > button.choice:enabled:hover {
   transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
 
   border-color: var(
@@ -209,7 +211,7 @@
 }
 
 /* Active / press */
-.choice:enabled:active {
+.grid > button.choice:enabled:active {
   transform: scale(var(--choice-scale-active, .995)) translateY(0);
 
   border-color: var(
@@ -229,7 +231,7 @@
 }
 
 /* Disabled */
-.choice:disabled {
+.grid > button.choice:disabled {
   cursor: not-allowed;
   opacity: .55;
   filter: grayscale(.2) saturate(.8);
@@ -242,7 +244,7 @@
 }
 
 /* Focus ring */
-.choice:focus-visible {
+.grid > button.choice:focus-visible {
   outline: none;
   box-shadow:
     var(--choice-shadow-hover, 0 10px 24px rgba(0,0,0,.36)),
@@ -314,9 +316,27 @@
     margin-inline: auto;
   }
 
-  .choice {
+  .grid > button.choice {
     max-width: var(--choice-maxw, 480px);
     margin-inline: auto;
+  }
+
+  /* Ghost: ne a teljes wrapper / 420px min — marad max-content oszlop + choice-maxw plafon */
+  .grid.gridGhost {
+    width: max-content;
+    max-width: min(100%, var(--choice-maxw, 480px));
+    margin-inline: auto;
+  }
+
+  .grid.gridGhost > * {
+    min-width: 0;
+    max-width: 100%;
+    margin-inline: 0;
+  }
+
+  .grid.gridGhost > button.choice {
+    max-width: 100%;
+    margin-inline: 0;
   }
 }
 
@@ -337,12 +357,12 @@
 
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
-  .choice,
+  .grid > button.choice,
   .grid {
     transition: none;
   }
 
-  .grid .choice {
+  .grid > button.choice {
     animation: none !important;
   }
 

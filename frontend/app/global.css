@@ -52,6 +52,148 @@ html[data-questell-ghost]::-webkit-scrollbar {
   height: 0;
 }
 
+/*
+ * InteractionDock választók: a `InteractionDock.module.scss` `.grid > button.choice` (0,2,1)
+ * erősebb mint `button[data-…]` (0,1,1), ezért az alapállapot a modulból jött — ha ott a
+ * háttér érvénytelen, hover még látszik (color-mix fallback). Itt magasabb specifikusság:
+ * main[data-layout] + ghost html együtt (0,2,2) felülírja a modult.
+ */
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice],
+html[data-questell-ghost] button[data-questell-dock-choice] {
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  display: block;
+  box-sizing: border-box;
+  padding: var(--choice-padding-y, var(--contract-choice-pad-y, 14px))
+    var(--choice-padding-x, var(--contract-choice-pad-x, 16px));
+  text-align: center;
+  font-family: var(
+    --choice-font-family,
+    var(--contract-text-font-family, var(--contract-typography-b-font-family, var(--contract-font-family, ui-sans-serif, system-ui, sans-serif)))
+  );
+  font-size: var(--choice-font, var(--contract-choice-font-size, 18px));
+  line-height: var(--choice-line-height, 1.25);
+  font-weight: var(--choice-text-weight, 600);
+  letter-spacing: var(--choice-text-letter-spacing, 0.2px);
+  color: var(
+    --choice-color,
+    var(--contract-choice-text-color, var(--contract-text-color, #e8eef8))
+  );
+  background: linear-gradient(
+    180deg,
+    var(--choice-bg-top, var(--contract-choice-bg-color-top, rgba(255, 255, 255, 0.12))),
+    var(--choice-bg-bot, var(--contract-choice-bg-color-bot, rgba(255, 255, 255, 0.06)))
+  );
+  border-style: var(--choice-border-style, var(--contract-choice-border-style, solid));
+  border-width: var(--choice-border-width, var(--contract-choice-border-width, 1px));
+  border-color: var(
+    --choice-border,
+    var(--contract-choice-border-color, rgba(255, 255, 255, 0.2))
+  );
+  border-radius: var(--choice-radius, var(--contract-choice-radius, 12px));
+  box-shadow: var(
+    --choice-shadow,
+    var(--contract-choice-shadow-rest, 0 6px 18px rgba(0, 0, 0, 0.35))
+  );
+}
+
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice] {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+/* Ghost iframe: a dock ne töltse ki a teljes szélességet; a modul .grid.gridGhost finomhangol */
+html[data-questell-ghost] button[data-questell-dock-choice] {
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+@media (max-width: 640px) {
+  main[data-layout="media-narrative-choices"] button[data-questell-dock-choice],
+  html[data-questell-ghost] button[data-questell-dock-choice] {
+    font-size: var(
+      --choice-font-mobile,
+      var(--contract-choice-font-size-mobile, var(--choice-font, var(--contract-choice-font-size, 16px)))
+    );
+  }
+}
+
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice]:enabled:hover,
+html[data-questell-ghost] button[data-questell-dock-choice]:enabled:hover {
+  transform: scale(var(--choice-scale-hover, 1.02)) translateY(-1px);
+  border-color: var(
+    --choice-border-hover,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 42%, var(--choice-border, rgba(255, 255, 255, 0.18)))
+  );
+  box-shadow: var(--choice-shadow-hover, 0 10px 24px rgba(0, 0, 0, 0.36));
+  background: linear-gradient(
+    180deg,
+    var(
+      --choice-bg-top-hover,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 12%, var(--choice-bg-top, rgba(255, 255, 255, 0.12)))
+    ),
+    var(
+      --choice-bg-bot-hover,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 8%, var(--choice-bg-bot, rgba(255, 255, 255, 0.06)))
+    )
+  );
+}
+
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice]:enabled:active,
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice]:active,
+html[data-questell-ghost] button[data-questell-dock-choice]:enabled:active,
+html[data-questell-ghost] button[data-questell-dock-choice]:active {
+  transform: scale(var(--choice-scale-active, 0.995)) translateY(0);
+  filter: none;
+  color: var(
+    --choice-color,
+    var(--contract-choice-text-color, var(--contract-text-color, #e8eef8))
+  );
+  border-color: var(
+    --choice-border-active,
+    color-mix(in oklch, var(--brand-accent, #ffc861) 56%, var(--choice-border, rgba(255, 255, 255, 0.18)))
+  );
+  box-shadow: var(--choice-shadow-active, 0 6px 16px rgba(0, 0, 0, 0.44));
+  background: linear-gradient(
+    180deg,
+    var(
+      --choice-bg-top-active,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 20%, var(--choice-bg-top, rgba(255, 255, 255, 0.12)))
+    ),
+    var(
+      --choice-bg-bot-active,
+      color-mix(in oklch, var(--brand-accent, #ffc861) 14%, var(--choice-bg-bot, rgba(255, 255, 255, 0.06)))
+    )
+  );
+  transition-duration: var(--dock-dur-press, 100ms);
+}
+
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice]:disabled,
+html[data-questell-ghost] button[data-questell-dock-choice]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.2) saturate(0.8);
+  background: linear-gradient(
+    180deg,
+    var(--choice-bg-top-disabled, rgba(255, 255, 255, 0.05)),
+    var(--choice-bg-bot-disabled, rgba(255, 255, 255, 0.03))
+  );
+}
+
+main[data-layout="media-narrative-choices"] button[data-questell-dock-choice]:focus-visible,
+html[data-questell-ghost] button[data-questell-dock-choice]:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--choice-shadow-hover, 0 10px 24px rgba(0, 0, 0, 0.36)),
+    var(
+      --choice-focus-ring,
+      0 0 0 2px color-mix(in oklch, white 50%, transparent),
+      0 0 0 6px color-mix(in oklch, var(--brand-accent, #ffc861) 55%, transparent)
+    );
+}
+
 
 
 
