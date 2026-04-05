@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 
@@ -125,6 +126,39 @@ export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): n
     return Math.max(orderedOut.length, node.choiceCount, 1);
   }
   return Math.max(1, node.choiceCount);
+}
+
+/**
+ * Végoldal: oldal-id alapú egyedi arany + zöldes árnyalat (szerkesztő vászon).
+ */
+export function editorEndCardAccentStyle(
+  pageId: string,
+  selected: boolean
+): CSSProperties {
+  let h = 2166136261;
+  for (let i = 0; i < pageId.length; i++) {
+    h ^= pageId.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const u = h >>> 0;
+  const goldHue = 32 + (u % 28);
+  const greenHue = 104 + ((u >> 8) % 40);
+  const goldS = 52 + (u % 16);
+  const greenS = 36 + ((u >> 16) % 18);
+  const innerRing = `0 0 0 1px hsla(${greenHue} 48% 32% / 0.5), inset 0 1px 0 hsla(${goldHue} 62% 50% / 0.18)`;
+  const base: CSSProperties = {
+    borderColor: `hsl(${goldHue} ${goldS}% 54%)`,
+    background: `linear-gradient(156deg, hsla(${goldHue} 48% 16% / 0.98) 0%, hsla(${greenHue} ${greenS}% 12% / 0.96) 100%)`,
+    boxShadow: innerRing,
+  };
+  if (selected) {
+    return {
+      ...base,
+      borderColor: "rgba(139, 168, 255, 0.82)",
+      boxShadow: `${innerRing}, 0 0 0 1px rgba(139, 168, 255, 0.38)`,
+    };
+  }
+  return base;
 }
 
 export function cardDimensions(

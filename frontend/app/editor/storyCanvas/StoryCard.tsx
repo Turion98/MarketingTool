@@ -27,6 +27,7 @@ import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidati
 import {
   START_H,
   cardDimensions,
+  editorEndCardAccentStyle,
   inputPortYs,
   isRiddleNode,
   orderedOutgoingEdges,
@@ -216,6 +217,9 @@ export default function StoryCard({
         top: y,
         width: w,
         height: h,
+        ...(node.category === "end"
+          ? editorEndCardAccentStyle(node.pageId, selected)
+          : {}),
         ...(typeof stackZ === "number" && Number.isFinite(stackZ)
           ? { zIndex: stackZ }
           : {}),

@@ -163,13 +163,20 @@ export function buildEdgeLayers(input: {
   edges: StoryGraphEdge[];
   world: Map<string, WorldMetricsNode>;
   clusters?: EditorCanvasCluster[];
-}): { localOps: EdgeDrawOp[]; distantBundles: DistantEdgeBundle[] } {
+  /** `type: end` célú oldalak: külön zöld / chip réteg, nem a normál lokális vonalak. */
+  endTargetPageIds?: ReadonlySet<string> | null;
+}): {
+  localOps: EdgeDrawOp[];
+  distantBundles: DistantEdgeBundle[];
+  endIngressBundles: DistantEdgeBundle[];
+} {
   const clusters = input.clusters ?? [];
   const edges =
     clusters.length > 0
       ? filterOutClusterInternalEdges(input.edges, clusters)
       : input.edges;
   const { world } = input;
+  const endTargets = input.endTargetPageIds ?? null;
   const groups = new Map<string, StoryGraphEdge[]>();
   for (const e of edges) {
     const k = `${e.from}\0${e.to}`;
@@ -183,6 +190,7 @@ export function buildEdgeLayers(input: {
   );
   const localOps: EdgeDrawOp[] = [];
   const distantBundles: DistantEdgeBundle[] = [];
+  const endIngressBundles: DistantEdgeBundle[] = [];
 
   for (const [, group] of sorted) {
     group.sort((a, b) => a.id.localeCompare(b.id));
@@ -192,6 +200,7 @@ export function buildEdgeLayers(input: {
     if (!a || !b) continue;
 
     const kind = kindForGroup(group);
+    const toIsEnd = Boolean(endTargets?.has(e0.to));
 
     if (group.length === 1) {
       const e = e0;
@@ -206,7 +215,20 @@ export function buildEdgeLayers(input: {
         : b.y + (b.inSlotY.get(e.id) ?? b.h / 2);
       const x2 = ingress ? ingress.cx : b.x;
 
-      if (isDistantEdge(x1, x2, e0.from)) {
+      if (toIsEnd) {
+        endIngressBundles.push({
+          key: `end:${e.id}`,
+          fromPageId: e0.from,
+          toPageId: e0.to,
+          kind: e.kind,
+          drawMode: "line",
+          x1,
+          y1,
+          x2,
+          y2,
+          edgeIds: [e.id],
+        });
+      } else if (isDistantEdge(x1, x2, e0.from)) {
         distantBundles.push({
           key: e.id,
           fromPageId: e0.from,
@@ -246,7 +268,24 @@ export function buildEdgeLayers(input: {
     const pathD = mergePathD(x1, mergeX, x2, y1s, y2);
     const edgeIds = group.map((e) => e.id);
 
-    if (isDistantEdge(x1, x2, e0.from)) {
+    if (toIsEnd) {
+      endIngressBundles.push({
+        key: `end:merge:${e0.from}>${e0.to}`,
+        fromPageId: e0.from,
+        toPageId: e0.to,
+        kind,
+        drawMode: "path",
+        x1,
+        y1: yMid,
+        x2,
+        y2,
+        pathD,
+        mergeX,
+        yMid,
+        y1s,
+        edgeIds,
+      });
+    } else if (isDistantEdge(x1, x2, e0.from)) {
       distantBundles.push({
         key: `merge:${e0.from}>${e0.to}`,
         fromPageId: e0.from,
@@ -273,7 +312,7 @@ export function buildEdgeLayers(input: {
     }
   }
 
-  return { localOps, distantBundles };
+  return { localOps, distantBundles, endIngressBundles };
 }
 
 export function buildEdgeDrawOps(input: {

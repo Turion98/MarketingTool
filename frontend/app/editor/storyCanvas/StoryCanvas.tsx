@@ -64,6 +64,10 @@ import {
   StoryDistantEdgeChips,
   StoryDistantEdgeLines,
 } from "./StoryDistantEdgeDecor";
+import {
+  StoryEndIngressChips,
+  StoryEndIngressLines,
+} from "./StoryEndIngressDecor";
 import StoryEdges, { buildEdgeLayers } from "./StoryEdges";
 import s from "./storyCanvas.module.scss";
 
@@ -320,6 +324,15 @@ export default function StoryCanvas({
     return m;
   }, [edges]);
 
+  const endPageIds = useMemo(
+    () => collectEndPageIdsFromStory(draftStory),
+    [draftStory]
+  );
+  const endPageIdSet = useMemo(
+    () => new Set(endPageIds),
+    [endPageIds]
+  );
+
   const worldMetrics = useMemo(() => {
     const world = new Map<
       string,
@@ -386,23 +399,37 @@ export default function StoryCanvas({
     return world;
   }, [nodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
 
-  const { localOps: edgeOps, distantBundles } = useMemo(
+  const { localOps: edgeOps, distantBundles, endIngressBundles } = useMemo(
     () =>
       buildEdgeLayers({
         edges,
         world: worldMetrics,
         clusters: canvasClusters,
+        endTargetPageIds: endPageIdSet,
       }),
-    [edges, worldMetrics, canvasClusters]
+    [edges, worldMetrics, canvasClusters, endPageIdSet]
   );
 
   const [hoveredDistantKey, setHoveredDistantKey] = useState<string | null>(
     null
   );
+  const [hoveredEndIngressKey, setHoveredEndIngressKey] = useState<
+    string | null
+  >(null);
 
   const distantEdgeIdSet = useMemo(
     () => new Set(distantBundles.flatMap((b) => b.edgeIds)),
     [distantBundles]
+  );
+
+  const endIngressEdgeIdSet = useMemo(
+    () => new Set(endIngressBundles.flatMap((b) => b.edgeIds)),
+    [endIngressBundles]
+  );
+
+  const distantOrEndIngressEdgeIdSet = useMemo(
+    () => new Set([...distantEdgeIdSet, ...endIngressEdgeIdSet]),
+    [distantEdgeIdSet, endIngressEdgeIdSet]
   );
 
   const distantInboundWorldBox = useMemo(() => {
@@ -418,6 +445,12 @@ export default function StoryCanvas({
     [distantBundles, distantInboundWorldBox]
   );
 
+  const endIngressInboundYByKey = useMemo(
+    () =>
+      computeDistantInboundYByKey(endIngressBundles, distantInboundWorldBox),
+    [endIngressBundles, distantInboundWorldBox]
+  );
+
   const incomingPortDotVisibleByPageId = useMemo(() => {
     const m = new Map<string, boolean[]>();
     for (const n of nodesWithStart) {
@@ -425,15 +458,26 @@ export default function StoryCanvas({
       if (pid === STORY_GRAPH_START_NODE_ID) continue;
       const inc = incomingEdgesByTarget.get(pid) ?? [];
       const bundles = bundleIncomingEdgesForTarget(inc);
+      if (n.category === "end") {
+        m.set(
+          pid,
+          bundles.map(() => false)
+        );
+        continue;
+      }
       m.set(
         pid,
         bundles.map((bundle) =>
-          bundle.some((e) => !distantEdgeIdSet.has(e.id))
+          bundle.some((e) => !distantOrEndIngressEdgeIdSet.has(e.id))
         )
       );
     }
     return m;
-  }, [nodesWithStart, incomingEdgesByTarget, distantEdgeIdSet]);
+  }, [
+    nodesWithStart,
+    incomingEdgesByTarget,
+    distantOrEndIngressEdgeIdSet,
+  ]);
 
   const bbox = useMemo(() => {
     let maxX = 400;
@@ -444,11 +488,6 @@ export default function StoryCanvas({
     }
     return { w: maxX, h: maxY };
   }, [worldMetrics]);
-
-  const endPageIds = useMemo(
-    () => collectEndPageIdsFromStory(draftStory),
-    [draftStory]
-  );
 
   const endZoneSeparatorWorldX = useMemo(() => {
     if (!endPageIds.length) return null;
@@ -564,6 +603,7 @@ export default function StoryCanvas({
       if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
       if ((e.target as HTMLElement).closest("[data-distant-edge-chip]"))
         return;
+      if ((e.target as HTMLElement).closest("[data-end-ingress-chip]")) return;
       try {
         window.getSelection()?.removeAllRanges();
       } catch {
@@ -897,6 +937,12 @@ export default function StoryCanvas({
             hoveredKey={hoveredDistantKey}
             inboundYByKey={distantInboundYByKey}
           />
+          <StoryEndIngressLines
+            bundles={endIngressBundles}
+            selectedPageIds={selectedPageIds}
+            hoveredKey={hoveredEndIngressKey}
+            inboundYByKey={endIngressInboundYByKey}
+          />
           {nodesWithStart.map((n) => {
             const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
             const out = outgoingByPage.get(n.pageId) ?? [];
@@ -918,7 +964,7 @@ export default function StoryCanvas({
                   incomingPortDotVisible={incomingPortDotVisibleByPageId.get(
                     n.pageId
                   )}
-                  distantOutgoingEdgeIds={distantEdgeIdSet}
+                  distantOutgoingEdgeIds={distantOrEndIngressEdgeIdSet}
                   selected={selectedPageIds.includes(n.pageId)}
                   domRef={getCardRootRef(n.pageId)}
                   issues={issues}
@@ -973,6 +1019,11 @@ export default function StoryCanvas({
               aria-hidden
             />
           ) : null}
+          <StoryEndIngressChips
+            bundles={endIngressBundles}
+            onHoverKey={setHoveredEndIngressKey}
+            inboundYByKey={endIngressInboundYByKey}
+          />
           <StoryDistantEdgeChips
             bundles={distantBundles}
             onHoverKey={setHoveredDistantKey}
