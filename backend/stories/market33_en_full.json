@@ -13,59 +13,69 @@
       "default": {
         "kind": "link",
         "label": "Explore Market 33",
+        "subtitle": "Menus, traders, and what’s open — your lunch hub.",
         "urlTemplate": "https://market33.nl"
       },
       "cta_7even": {
         "kind": "link",
-        "label": "Try it at the 7EVEN stand",
+        "label": "Open 7EVEN",
+        "subtitle": "Try it at the 7EVEN stand — new tab.",
         "urlTemplate": "https://market33.nl/7even/",
         "target": "_blank"
       },
       "cta_granelli": {
         "kind": "link",
-        "label": "Try it at the Granelli stand",
+        "label": "Open Granelli",
+        "subtitle": "Try it at the Granelli stand — new tab.",
         "urlTemplate": "https://market33.nl/granelli-2/",
         "target": "_blank"
       },
       "cta_lacatrina": {
         "kind": "link",
-        "label": "Try it at the La Catrina stand",
+        "label": "Open La Catrina",
+        "subtitle": "Try it at the La Catrina stand — new tab.",
         "urlTemplate": "https://market33.nl/la-catrina/",
         "target": "_blank"
       },
       "cta_cocodak": {
         "kind": "link",
-        "label": "Try it at the Coco Dak stand",
+        "label": "Open Coco Dak",
+        "subtitle": "Try it at the Coco Dak stand — new tab.",
         "urlTemplate": "https://market33.nl/cocodak/",
         "target": "_blank"
       },
       "cta_china_supreme": {
         "kind": "link",
-        "label": "Try it at the China Supreme stand",
+        "label": "Open China Supreme",
+        "subtitle": "Try it at the China Supreme stand — new tab.",
         "urlTemplate": "https://market33.nl/china-supreme/",
         "target": "_blank"
       },
       "cta_siam_corner": {
         "kind": "link",
-        "label": "Try it at the Siam Corner stand",
+        "label": "Open Siam Corner",
+        "subtitle": "Try it at the Siam Corner stand — new tab.",
         "urlTemplate": "https://market33.nl/siam-corner/",
         "target": "_blank"
       },
       "cta_vietnam": {
         "kind": "link",
-        "label": "Try it at the Vietnam by Night stand",
+        "label": "Open Vietnam by Night",
+        "subtitle": "Try it at the Vietnam by Night stand — new tab.",
         "urlTemplate": "https://market33.nl/vietnambynight/",
         "target": "_blank"
       },
       "cta_sushi_sando": {
         "kind": "link",
-        "label": "Try it at the Sushi Sando stand",
+        "label": "Open Sushi Sando",
+        "subtitle": "Try it at the Sushi Sando stand — new tab.",
         "urlTemplate": "https://market33.nl/sushi-sando/",
         "target": "_blank"
       },
       "cta_snackbear": {
         "kind": "link",
-        "label": "Try it at the SnackBear stand",
+        "label": "Open SnackBear",
+        "subtitle": "Try it at the SnackBear stand — new tab.",
         "urlTemplate": "https://market33.nl/snack-bear/",
         "target": "_blank"
       }

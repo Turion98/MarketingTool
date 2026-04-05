@@ -11,7 +11,8 @@
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Tovább",
+        "label": "Ajánlat megtekintése",
+        "subtitle": "A válaszaid alapján összeállított SPF és bőrápolási irány.",
         "urlTemplate": "#"
       }
     },

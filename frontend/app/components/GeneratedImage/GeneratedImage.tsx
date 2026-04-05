@@ -22,6 +22,8 @@ type GeneratedImageProps = {
   imageTiming?: { generate?: boolean; delayMs?: number };
   mode?: "draft" | "refine";
   pageIsFadingOut?: boolean;
+  /** parent: nincs saját fade animáció – a szülő (pl. vége CTA cluster) vezérli a megjelenést */
+  imageEntrance?: "internal" | "parent";
 };
 
 const FALLBACK_SRC = "/assets/FallBack_image.png";
@@ -45,6 +47,7 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
   imageTiming,
   mode = "draft",
   pageIsFadingOut = false,
+  imageEntrance = "internal",
 }) => {
   // 🔹 reward flag beépítése
   const { setGlobalError, imageApiKey, setRewardImageReady } = useGameState();
@@ -148,11 +151,18 @@ const GeneratedImage_with_fadein: React.FC<GeneratedImageProps> = ({
     return () => clearTimeout(t);
   }, [displayedSrc]);
 
+  const useInternalFade =
+    imageEntrance === "internal" && Boolean(fadeIn);
+
   const imgClass =
     displayedSrc != null
       ? [
           styles.generatedImage,
-          fadeIn ? styles.fadeIn : "",
+          imageEntrance === "parent"
+            ? styles.parentEntrance
+            : useInternalFade
+              ? styles.fadeIn
+              : "",
           pageIsFadingOut ? styles.fadeOut : "",
         ]
           .filter(Boolean)

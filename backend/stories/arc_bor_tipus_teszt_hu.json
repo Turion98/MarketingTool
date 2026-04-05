@@ -11,7 +11,8 @@
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Tovább",
+        "label": "Megnézem a javaslatot",
+        "subtitle": "La Roche-Posay – könnyű, észrevétlen viselet",
         "urlTemplate": "https://example.com"
       }
     },

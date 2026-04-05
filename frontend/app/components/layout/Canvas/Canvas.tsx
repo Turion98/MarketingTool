@@ -31,6 +31,9 @@ type CanvasProps = {
 
   /** Ghost embed: nem fixed fullscreen, átlátszó — iframe auto-height méréshez */
   embedGhost?: boolean;
+
+  /** Vége CTA takeover: ActionBar a viewport tetejére rögzítve */
+  ctaMode?: boolean;
 };
 
 function cx(...v: Array<string | undefined | false | null>) {
@@ -49,6 +52,7 @@ export default function Canvas({
   style,
   className,
   embedGhost = false,
+  ctaMode = false,
 }: CanvasProps) {
   // 🔹 ténylegesen csak akkor számítson "van mediának", ha van legalább 1 gyerek-node
   const hasMedia = React.Children.toArray(media ?? []).length > 0;
@@ -74,6 +78,7 @@ export default function Canvas({
         role="group"
         aria-label="Playfield"
         data-has-media={hasMedia ? "1" : "0"}
+        data-cta-mode={ctaMode ? "1" : undefined}
       >
         {hasSlots ? (
           <>

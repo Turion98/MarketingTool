@@ -1,6 +1,6 @@
 "use client";
 
-import type { MutableRefObject, ReactElement } from "react";
+import type { MutableRefObject, ReactElement, ReactNode } from "react";
 
 import type { CtaConfig, CtaContext } from "../../core/cta/ctaTypes";
 import { trackPuzzleResult, trackPuzzleTry } from "../../lib/analytics";
@@ -74,6 +74,8 @@ type StoryPageDockProps = {
   goToNextPage: (id: string) => void;
   setGlobal?: (key: string, value: unknown) => void;
   embedGhost?: boolean;
+  /** Vége CTA: ugyanaz a média blokk, mint a Canvas-on (kis előnézet a gomb fölött) */
+  endCtaMedia?: ReactNode;
 };
 
 export function StoryPageDock({
@@ -100,6 +102,7 @@ export function StoryPageDock({
   goToNextPage,
   setGlobal,
   embedGhost = false,
+  endCtaMedia,
 }: StoryPageDockProps): ReactElement | null {
   if (
     !showChoices ||
@@ -195,31 +198,54 @@ export function StoryPageDock({
     }
   };
 
+  const endTakeoverActive = isEndNode && !!resolvedEndCta;
+
   return (
     <div
       ref={dockRef}
-      className={[
-        dockStyles.fadeWrapper,
-        dockJustAppeared ? dockStyles.appearing : "",
-        isFadingOut ? dockStyles.fadingOut : "",
-      ].join(" ")}
+      className={
+        endTakeoverActive
+          ? dockStyles.dockTakeoverHost
+          : [
+              dockStyles.fadeWrapper,
+              dockJustAppeared ? dockStyles.appearing : "",
+              isFadingOut ? dockStyles.fadingOut : "",
+            ].join(" ")
+      }
       data-embed-ghost={embedGhost ? "1" : undefined}
     >
       {isEndNode ? (
         resolvedEndCta ? (
           <div
-            className={
-              embedGhost
-                ? `${dockStyles.grid} ${dockStyles.gridGhost}`
-                : dockStyles.grid
-            }
+            className={[
+              style.endCtaTakeoverRoot,
+              embedGhost ? style.endCtaTakeoverRootGhost : "",
+              isFadingOut ? style.endCtaTakeoverFading : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
-            <div className={style.endCtaCard}>
-              <div className={style.endCtaTitle}>
-                Köszönjük, végigjátszottad a kampányt!
-              </div>
-              <div className={style.endCtaActions}>
-                <CampaignCta cta={resolvedEndCta} context={endCtaContext} />
+            {!embedGhost ? (
+              <div
+                className={style.endCtaTakeoverBackdrop}
+                aria-hidden="true"
+              />
+            ) : null}
+            <div className={style.endCtaTakeoverFloat}>
+              <div className={style.endCtaRevealCluster}>
+                {endCtaMedia ? (
+                  <div className={style.endCtaMediaPreview}>
+                    <div className={style.endCtaMediaFrameEnter}>{endCtaMedia}</div>
+                  </div>
+                ) : null}
+                <div className={style.endCtaCtaEnter}>
+                  <CampaignCta
+                    variant="endSoftTakeover"
+                    embedGhost={embedGhost}
+                    cta={resolvedEndCta}
+                    context={endCtaContext}
+                  />
+                </div>
               </div>
             </div>
           </div>

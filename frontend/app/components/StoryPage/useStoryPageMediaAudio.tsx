@@ -74,6 +74,8 @@ type UseStoryPageMediaAudioParams = {
   unlockedPlus: Set<string>;
   unlockedFragments: string[];
   fragments: FragmentBank;
+  /** Vége CTA dock: keret azonnal nyíljon, ne a default ~3900 ms késleltetés */
+  ctaDockMediaActive?: boolean;
 };
 
 function pickReplayVisual(
@@ -124,6 +126,7 @@ export function useStoryPageMediaAudio({
   unlockedPlus,
   unlockedFragments,
   fragments,
+  ctaDockMediaActive = false,
 }: UseStoryPageMediaAudioParams): {
   mediaNode: ReactNode;
   narrationPlaylistMemo: Array<{ src: string; gapAfterMs: number; label?: string }>;
@@ -137,6 +140,8 @@ export function useStoryPageMediaAudio({
 
     const pageId = pageData.id;
     const mode = pageData.imageTiming?.mode || "draft";
+    const imageEntrance = ctaDockMediaActive ? "parent" : "internal";
+    const mediaFrameOpenDelayMs = ctaDockMediaActive ? 0 : 3900;
 
     if (isProfileCardPage) {
       return (
@@ -155,6 +160,7 @@ export function useStoryPageMediaAudio({
             }}
             mode={mode}
             pageIsFadingOut={isFadingOut}
+            imageEntrance={imageEntrance}
           />
         </ProfileCardFrame>
       );
@@ -166,6 +172,8 @@ export function useStoryPageMediaAudio({
         pageId={pageId}
         pageIsFadingOut={isFadingOut}
         logoSrc={logoUrl}
+        openDelayMs={mediaFrameOpenDelayMs}
+        presentationMode={ctaDockMediaActive ? "ctaDock" : "default"}
       >
         <GeneratedImage_with_fadein
           pageId={pageId}
@@ -177,6 +185,7 @@ export function useStoryPageMediaAudio({
           }}
           mode={mode}
           pageIsFadingOut={isFadingOut}
+          imageEntrance={imageEntrance}
         />
       </MediaFrame>
     );
@@ -191,6 +200,7 @@ export function useStoryPageMediaAudio({
     resolvedPrompt,
     effectiveImageParams,
     stableImageTiming,
+    ctaDockMediaActive,
   ]);
 
   const narrationPlaylistMemo = useMemo(() => {

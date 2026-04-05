@@ -53,6 +53,12 @@
   transition: opacity 0.85s ease, transform 0.85s ease;
 }
 
+/* Szülő (pl. vége CTA cluster) vezérli a fade-et – a kép legyen teljesen látható */
+.parentEntrance {
+  opacity: 1;
+  transform: none;
+}
+
 .fadeIn {
   opacity: 1;
   transform: scale(1);

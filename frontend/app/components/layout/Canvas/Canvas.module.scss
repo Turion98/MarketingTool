@@ -189,6 +189,32 @@
   min-width: 0;
 }
 
+/*
+ * Vége CTA takeover: ActionBar a képernyő tetejére rögzítve (a dim / takeover fölött).
+ * --cta-mode-action-top: opcionális offset (pl. progress + header alá: calc(env(safe-area) + 56px))
+ */
+.playfield[data-cta-mode="1"] .areaAction {
+  position: fixed;
+  top: var(--cta-mode-action-top, env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  z-index: 1000000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-inline: max(12px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding-block: 10px;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--_page-bg, #0d0f13) 88%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  grid-area: action;
+}
+
 /* Media frame containment */
 .areaMedia .mediaFrame {
   aspect-ratio: var(--media-aspect, auto);
@@ -335,6 +361,10 @@
     margin-top: calc(-1 * var(--canvas-gap) - 10px);
     display: flex;
     justify-content: center;
+  }
+
+  .playfield[data-cta-mode="1"] .areaAction {
+    margin-top: 0;
   }
 
   .runeDockTopLeft { display: none; }

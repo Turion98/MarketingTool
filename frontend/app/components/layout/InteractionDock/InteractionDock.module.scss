@@ -266,6 +266,16 @@
 
 /* ===== Dock visibility / mount lifecycle ===== */
 
+/* Vége oldal: fixed takeover saját animációt használ, ne a fadeWrapper rejtse */
+.dockTakeoverHost {
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+  width: 100%;
+  min-height: 0;
+  position: relative;
+}
+
 .fadeWrapper {
   opacity: 0;
   transform: translateY(8px);
@@ -342,5 +352,9 @@
     transition: none;
     transform: none;
     opacity: 1;
+  }
+
+  .dockTakeoverHost {
+    transform: none;
   }
 }

@@ -27,19 +27,8 @@ $gold: #f2b85b;
   align-items: stretch;
 }
 
-.storyPage[data-embed-ghost="1"] .endCtaCard {
-  backdrop-filter: none;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0;
-  margin-top: 12px;
-}
-
-.storyPage[data-embed-ghost="1"] .endCtaTitle {
-  color: inherit;
-  opacity: 0.85;
+.storyPage[data-embed-ghost="1"] .endCtaTakeoverRootGhost {
+  padding-top: 8px;
 }
 
 
@@ -205,44 +194,166 @@ $gold: #f2b85b;
   pointer-events: none;
 }
 
-.endCtaCard {
-  pointer-events: auto;
-
-  /* ⬇️ overlay layout OFF: normál kártya a dockban */
-  position: static;
-  top: auto;
-
-  /* 🔹 csak a kártya blur-ölt, vizuál marad */
-  backdrop-filter: blur(var(--cta-ol-blur, var(--cta-backdrop-blur, 6px)));
-  background: var(--cta-ol-bg, var(--cta-overlay-color, rgba(0, 0, 0, .55)));
-
-  isolation: isolate;
-  contain: paint;
-
-  border: var(--cta-ol-border-width, 1px)
-          var(--cta-ol-border-style, solid)
-          var(--cta-ol-border, rgba(255, 255, 255, .12));
-  border-radius: var(--cta-ol-radius, 16px);
-  padding: var(--cta-ol-pad, clamp(14px, 2cqi, 20px));
-  box-shadow: var(--cta-ol-shadow, 0 12px 28px rgba(0, 0, 0, .45));
-
-  /* 🔹 a dock oszlopához igazodjon, ne vándoroljon oldalra */
-  max-width: min(92vw, 560px);
-  width: 100%;
-  margin-inline: auto;
-  margin-top: var(--dock-gap, 24px);
-}
-
-.endCtaTitle {
-  color: var(--cta-ol-title-color, #ffffff50);
-  font-size: var(--cta-ol-title-size, clamp(16px, 2.2cqi, 20px));
-  font-weight: var(--cta-ol-title-weight, 600);
-  text-align: var(--cta-ol-title-align, center);
-  margin-bottom: clamp(8px, 1.6cqi, 12px);
-}
-
-.endCtaActions {
+/* Soft takeover: teljes nézet dim + blur; lebegő CTA (CampaignCta variant) */
+.endCtaTakeoverRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 999900;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  gap: var(--cta-ol-gap, 10px);
+  align-items: center;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding-block: max(20px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+  padding-inline: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+}
+
+.endCtaTakeoverRootGhost {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  min-height: 0;
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.endCtaTakeoverFading {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.endCtaTakeoverBackdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: var(--cta-takeover-scrim, rgba(6, 8, 12, 0.55));
+  -webkit-backdrop-filter: blur(var(--cta-ol-blur, 10px));
+  backdrop-filter: blur(var(--cta-ol-blur, 10px));
+}
+
+.endCtaTakeoverFloat {
+  --end-cta-stack-gap: 15%;
+  /* Lassú, elegáns belépés (média + CTA) */
+  --end-cta-media-in-dur: 1100ms;
+  --end-cta-media-in-ease: cubic-bezier(0.22, 1, 0.32, 1);
+  --end-cta-cta-in-dur: 1050ms;
+  --end-cta-cta-in-ease: cubic-bezier(0.22, 1, 0.32, 1);
+  --end-cta-cta-in-delay: 120ms;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  width: 100%;
+  max-width: min(96vw, 560px);
+  padding-inline: 12px;
+}
+
+/* Csak vége CTA: elrendezés; fade külön a média- és CTA-blokkon */
+.endCtaRevealCluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--end-cta-stack-gap);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Mobil: a gomb marad középre igazított stackben; csak a kép rajzolódik feljebb, gap változatlan */
+@media (max-width: 767px) {
+  .endCtaTakeoverFloat .endCtaMediaPreview {
+    transform: translateY(calc(-1 * var(--end-cta-stack-gap)));
+  }
+}
+
+/* Desktop: a média + CTA blokk feljebb (action bar alá igazítva), nem középen */
+@media (min-width: 768px) {
+  .endCtaTakeoverRoot:not(.endCtaTakeoverRootGhost) {
+    justify-content: flex-start;
+    padding-top: max(100px, calc(env(safe-area-inset-top, 0px) + 72px));
+  }
+
+  .endCtaTakeoverFloat {
+    --end-cta-stack-gap: clamp(28px, 3.5vw, 44px);
+  }
+}
+
+/* Ugyanaz a MediaFrame / profile tartalom a CTA fölött */
+.endCtaMediaPreview {
+  width: 100%;
+  max-width: min(92vw, 500px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.endCtaMediaPreview > .endCtaMediaFrameEnter {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.endCtaMediaFrameEnter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  animation: endCtaDockMediaFadeIn var(--end-cta-media-in-dur) var(--end-cta-media-in-ease) both;
+}
+
+/* Csak vége CTA: külön fade a gombnak (subtitle is együtt halad), finoman a média után */
+.endCtaCtaEnter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  animation: endCtaDockCtaFadeIn var(--end-cta-cta-in-dur) var(--end-cta-cta-in-ease) var(--end-cta-cta-in-delay) both;
+}
+
+.endCtaMediaFrameEnter > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@keyframes endCtaDockMediaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.982);
+  }
+  55% {
+    opacity: 0.92;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes endCtaDockCtaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.988);
+  }
+  50% {
+    opacity: 0.88;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .endCtaMediaFrameEnter,
+  .endCtaCtaEnter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

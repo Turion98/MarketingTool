@@ -19,6 +19,8 @@ export type CtaPayloadValue =
 export type CtaBase = {
   id?: string;
   label?: string;
+  /** Rövid gombfelirat melletti kontextus (nem a gomb része); preset: subtitle vagy contextLine */
+  subtitle?: string;
   kind: CtaKind;
   presetKey?: string;         // ha presetből jön
 };

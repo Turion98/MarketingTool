@@ -22,7 +22,8 @@
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Nyisd meg a jutalmat",
+        "label": "Jutalom megnyitása",
+        "subtitle": "Külső link — a kampány befejező lépése.",
         "urlTemplate": "https://www.google.com"
       }
     },

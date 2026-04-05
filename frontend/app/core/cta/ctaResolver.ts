@@ -47,9 +47,11 @@ function normalizeCtaConfig(
   const kind = asString(record.kind);
   if (!kind) return undefined;
 
+  const subtitleRaw = record.subtitle ?? record.contextLine;
   const base = {
     id: asString(record.id),
     label: asString(record.label),
+    subtitle: interpolateMaybe(subtitleRaw, ctx),
     presetKey,
   };
 

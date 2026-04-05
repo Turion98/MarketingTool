@@ -7,7 +7,15 @@ import { dispatchCta } from "../../core/cta/ctaDispatcher";
 import { useUiClickSound } from "./../../lib/useUiClickSound";
 import { trackCtaShown, trackCtaClick } from "../../lib/analytics";
 
-type Props = { cta: CtaConfig; context: CtaContext; onShown?: () => void };
+type Props = {
+  cta: CtaConfig;
+  context: CtaContext;
+  onShown?: () => void;
+  /** Vége oldal: lebegő gomb + subtitle a gomb alatt */
+  variant?: "default" | "endSoftTakeover";
+  /** Iframe ghost: visszafogott megjelenés */
+  embedGhost?: boolean;
+};
 
 const isExternal = (url: string) => {
   try {
@@ -35,7 +43,13 @@ const openDownload = (
   a.remove();
 };
 
-const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
+const CampaignCta: React.FC<Props> = ({
+  cta,
+  context,
+  onShown,
+  variant = "default",
+  embedGhost = false,
+}) => {
   // 🔊 CTA megjelenési hang (mountkor)
   const playCtaAppear = useUiClickSound("/sounds/cta.wav");
 
@@ -146,9 +160,35 @@ const CampaignCta: React.FC<Props> = ({ cta, context, onShown }) => {
     dispatchCta(cta, context);
   };
 
+  const label = cta.label ?? "Continue";
+  const descId = React.useId();
+
+  if (variant === "endSoftTakeover") {
+    return (
+      <div
+        className={s.takeoverCluster}
+        data-embed-ghost={embedGhost ? "1" : undefined}
+      >
+        <button
+          type="button"
+          className={`${s.ctaBtn} ${s.ctaBtnFloating}`}
+          onClick={handleClick}
+          aria-describedby={cta.subtitle ? descId : undefined}
+        >
+          {label}
+        </button>
+        {cta.subtitle ? (
+          <p id={descId} className={s.ctaContextLine}>
+            {cta.subtitle}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <button className={s.ctaBtn} onClick={handleClick}>
-      {cta.label ?? "Continue"}
+    <button type="button" className={s.ctaBtn} onClick={handleClick}>
+      {label}
     </button>
   );
 };

@@ -90,7 +90,10 @@ import AdminQuickPanel from "../AdminQuickPanel/AdminQuickPanel";
 const DEBUG_RUNES = true;
 // Globális narrációs / gépelési indulási késleltetés (ms).
 // 3000ms helyett alacsonyabb érték, hogy hamarabb induljon a szöveg + hang.
-const DELAY_MS = 1200;
+const DELAY_MS = 0;
+
+/** Vége CTA takeover: narráció után, külön a narráció DELAY_MS-től (0 narrációnál is várhat). */
+const END_CTA_REVEAL_DELAY_MS = 2800;
 const FADE_IN_MS = 600;
 const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
@@ -1411,6 +1414,12 @@ const showFrame = useMemo(() => {
     ]
   );
 
+  const endCtaUiActive =
+    isEndNode &&
+    showChoices &&
+    Boolean(resolvedEndCta) &&
+    !isGhostEmbed;
+
   const {
     mediaNode,
     narrationPlaylistMemo,
@@ -1430,7 +1439,12 @@ const showFrame = useMemo(() => {
     unlockedPlus,
     unlockedFragments,
     fragments,
+    ctaDockMediaActive: endCtaUiActive,
   });
+
+  /** CTA takeover: média egy példányban a dockban jelenik meg, a Canvas slot üres */
+  const canvasMediaForLayout =
+    endCtaUiActive && mediaNode != null ? undefined : mediaNode;
 
   // prefetch sound toggle icons
   useEffect(() => {
@@ -1686,6 +1700,7 @@ const showFrame = useMemo(() => {
 
       <Canvas
         embedGhost={isGhostEmbed}
+        ctaMode={endCtaUiActive}
         background={
           isGhostEmbed ? undefined : (
             <DecorBackground preset="subtle" />
@@ -1729,7 +1744,7 @@ const showFrame = useMemo(() => {
             />
           )
         }
-                media={mediaNode}
+        media={canvasMediaForLayout}
 
 
        narr={
@@ -1753,11 +1768,25 @@ const showFrame = useMemo(() => {
           setTypingDone(true);
           setPageUnlockedForInteraction(pageData.id);
 
-          requestAnimationFrame(() => {
-            setDockJustAppeared(true);
-            setShowChoices(true);
-            setChoicePageId(pageData.id);
-          });
+          const endPage =
+            pageData?.type === "end" ||
+            (typeof pageData?.id === "string" &&
+              pageData.id.startsWith("end_"));
+
+          const revealDock = () => {
+            requestAnimationFrame(() => {
+              setDockJustAppeared(true);
+              setShowChoices(true);
+              setChoicePageId(pageData.id);
+            });
+          };
+
+          if (endPage && END_CTA_REVEAL_DELAY_MS > 0) {
+            const tid = window.setTimeout(revealDock, END_CTA_REVEAL_DELAY_MS);
+            registerTimeout(tid);
+          } else {
+            revealDock();
+          }
         }}
         onMeasure={onNarrativeMeasure}
         typingDone={typingDone}
@@ -1777,6 +1806,7 @@ const showFrame = useMemo(() => {
         dock={
           <StoryPageDock
             embedGhost={isGhostEmbed}
+            endCtaMedia={endCtaUiActive ? mediaNode : undefined}
             showChoices={showChoices}
             choicePageId={choicePageId}
             pageUnlockedForInteraction={pageUnlockedForInteraction}

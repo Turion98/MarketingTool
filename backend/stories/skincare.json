@@ -34,7 +34,8 @@
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Tovább a márkaoldalra",
+        "label": "Tovább",
+        "subtitle": "SPF és bőrápolás — a márka / partner oldala egy kattintással.",
         "urlTemplate": "https://www.google.com"
       }
     },

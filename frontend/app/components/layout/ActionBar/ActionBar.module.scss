@@ -297,9 +297,19 @@
   }
   .actionBar.open { right: auto; }
 
-  /* Kinyitva: sáv teljes szélesség */
+  /* Kinyitva: ne legyen görgetősáv; a panel ne zsugorítsa a gombokat (flex-shrink: 0 a gyerekeken) */
   .actionBar:not(.collapsed) {
     max-width: 100%;
+    overflow: visible;
+    align-items: stretch;
+  }
+
+  .actionBar:not(.collapsed) > .group,
+  .actionBar:not(.collapsed) > .footer,
+  .actionBar:not(.collapsed) > .stickyFooter,
+  .actionBar:not(.collapsed) > .desktopToggleRow {
+    flex-shrink: 0;
+    align-self: center;
   }
 
   /* Összecsukva: csak a toggle látszik bal oldalon (row-reverse miatt), jobbról „kinő” a sáv */
@@ -359,5 +369,19 @@
     justify-content: flex-end;
     margin-left: 0;
     flex-shrink: 0;
+  }
+
+  /* Táj nézet, alacsony magasság (tablet / nagy telefon): több vízszintes hely + többsor, ne takarja a sáv a gombokat */
+  @media (orientation: landscape) and (max-height: 640px) {
+    .actionBarScope {
+      width: min(94vw, 680px);
+      max-width: min(94vw, 680px);
+    }
+
+    .actionBar:not(.collapsed) {
+      flex-wrap: wrap;
+      justify-content: center;
+      row-gap: 8px;
+    }
   }
 }

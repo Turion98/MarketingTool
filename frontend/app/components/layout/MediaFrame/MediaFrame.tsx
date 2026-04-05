@@ -24,6 +24,9 @@ type MediaFrameProps = {
 
   /** 🔹 Első oldal: ne nyíljon ki automatikusan, csak ha tényleg jön media-gyerek */
   suppressFirstAutoOpen?: boolean;
+
+  /** ctaDock: nincs felülről „lehajló” scaleY nyitás; a vége CTA takeover saját animációja */
+  presentationMode?: "default" | "ctaDock";
 };
 
 const VIEWBOX_W = 1600;
@@ -60,7 +63,9 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   pageIsFadingOut = false,
   openDelayMs = 3900,
   suppressFirstAutoOpen = false,
+  presentationMode = "default",
 }) => {
+  const isCtaDockPresentation = presentationMode === "ctaDock";
   const { registerRewardFrame } = useGameState();
 
   // SVG stroke-ok (skin felülírhatja)
@@ -152,6 +157,12 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
     lastPageIdRef.current = pageId;
 
+    if (isCtaDockPresentation) {
+      setFrameOpen(true);
+      setHasEverOpened(true);
+      return;
+    }
+
     setFrameOpen(false);
 
     if (suppressFirstAutoOpen && isFirstPage) {
@@ -159,7 +170,13 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     }
 
     scheduleOpen(openDelayMs);
-  }, [pageId, openDelayMs, suppressFirstAutoOpen, scheduleOpen]);
+  }, [
+    pageId,
+    openDelayMs,
+    suppressFirstAutoOpen,
+    scheduleOpen,
+    isCtaDockPresentation,
+  ]);
 
   // fade out fázis: csukjuk a keretet és ne nyíljon ki újra
   React.useEffect(() => {
@@ -174,15 +191,24 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
 
   // 🔹 Első oldal speciális: ha eddig nem nyitottunk ki, de végre jött media-gyerek
   React.useEffect(() => {
+    if (isCtaDockPresentation) return;
     if (!suppressFirstAutoOpen) return;
     if (hasEverOpened) return;
     if (!children) return;
 
     scheduleOpen(openDelayMs);
-  }, [children, suppressFirstAutoOpen, hasEverOpened, openDelayMs, scheduleOpen]);
+  }, [
+    children,
+    suppressFirstAutoOpen,
+    hasEverOpened,
+    openDelayMs,
+    scheduleOpen,
+    isCtaDockPresentation,
+  ]);
 
   // 🔹 EXTRA BIZTOSÍTÉK: ha van pageId + vizuális tartalom, de valamiért nem nyitottunk
   React.useEffect(() => {
+    if (isCtaDockPresentation) return;
     if (!pageId) return;
     if (hasEverOpened) return;
     if (!currentChild && !prevChild && !showGoldFrame) return;
@@ -198,6 +224,7 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
     frameOpen,
     openDelayMs,
     scheduleOpen,
+    isCtaDockPresentation,
   ]);
 
   // 🔸 crossfade logika
@@ -314,9 +341,16 @@ const MediaFrame: React.FC<MediaFrameProps> = ({
   return (
     <div
       ref={registerRewardFrame}
-      className={`${s.mediaFrame} ${fadeIn ? s.fadeIn : ""}`}
+      className={[
+        s.mediaFrame,
+        fadeIn ? s.fadeIn : "",
+        isCtaDockPresentation ? s.presentationCtaDock : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-label="Media frame"
       data-mode={mode}
+      data-presentation={presentationMode}
       style={frameStyle}
     >
       <div className={s.content}>
@@ -508,6 +542,7 @@ function areEqualMediaFrameProps(prev: MediaFrameProps, next: MediaFrameProps) {
     prev.showGoldFrame === next.showGoldFrame &&
     prev.logoSrc === next.logoSrc &&
     prev.openDelayMs === next.openDelayMs &&
+    prev.presentationMode === next.presentationMode &&
     prev.suppressFirstAutoOpen === next.suppressFirstAutoOpen &&
     prev.children === next.children &&
     prev.style === next.style

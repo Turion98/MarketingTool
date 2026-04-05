@@ -65,6 +65,14 @@
   overflow: hidden;
 }
 
+/* Vége CTA dock: ne scaleY(0→1) „felülről le”, maradjon teljes méret, nincs transform átmenet */
+.presentationCtaDock .content {
+  transform-origin: center center;
+  transform: translateZ(0) scaleY(1);
+  transition: none;
+  will-change: auto;
+}
+
 /* === BITMAP LAYEREK – CROSSFADE === */
 
 /* konténer a képrétegeknek – EZ SZŰKÍTI A KÉP TERÉT A KERETEN BELÜL */

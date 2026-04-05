@@ -22,7 +22,8 @@
     "ctaPresets": {
       "default": {
         "kind": "link",
-        "label": "Open your reward",
+        "label": "Open reward",
+        "subtitle": "External link — your campaign completion step.",
         "urlTemplate": "https://www.google.com"
       }
     },
