@@ -1,0 +1,702 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "skincare_spf_recommender_hu_v1",
+  "locale": "hu",
+  "meta": {
+    "id": "skincare_spf_recommender_hu_v1",
+    "title": "Bőrtípus + SPF ajánló",
+    "description": "Bőrtípus profilozás és személyre szabott SPF ajánló.",
+    "startPageId": "q1_skin_profile",
+    "campaignId": "skincare_spf_recommender_hu_v1",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "#"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "q1_skin_profile",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "feedback": "reset",
+      "title": "Mi jellemző rád inkább?",
+      "text": [
+        {
+          "text": "Válassz 2-t."
+        }
+      ],
+      "options": [
+        "Mosakodás után feszül",
+        "Fakó / nem ragyog",
+        "Napközben kifényesedik",
+        "Gyorsan zsírosodik",
+        "Látszanak a pórusok",
+        "Nem sima a felszín",
+        "Könnyen kipirosodik",
+        "Csíp / éget"
+      ],
+      "maxPick": 2,
+      "maxAttempts": 1,
+      "optionFlagsBase": "skin_opt_",
+      "onSuccess": {
+        "goto": "q1_router"
+      }
+    },
+    {
+      "id": "q1_router",
+      "type": "logic",
+      "title": "",
+      "text": [],
+      "logic": [
+        {
+          "if": [
+            "flag:skin_opt_1",
+            "flag:skin_opt_2"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "flag:skin_opt_1",
+            "flag:skin_opt_6"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "flag:skin_opt_2",
+            "flag:skin_opt_6"
+          ],
+          "goto": "q2_dry_timing"
+        },
+        {
+          "if": [
+            "flag:skin_opt_3",
+            "flag:skin_opt_4"
+          ],
+          "goto": "q2_oily_pattern"
+        },
+        {
+          "if": [
+            "flag:skin_opt_5",
+            "flag:skin_opt_6"
+          ],
+          "goto": "q2_texture_type"
+        },
+        {
+          "if": [
+            "flag:skin_opt_5",
+            "flag:skin_opt_3"
+          ],
+          "goto": "q2_texture_type"
+        },
+        {
+          "if": [
+            "flag:skin_opt_6",
+            "flag:skin_opt_3"
+          ],
+          "goto": "q2_texture_type"
+        },
+        {
+          "if": [
+            "flag:skin_opt_6",
+            "flag:skin_opt_4"
+          ],
+          "goto": "q2_texture_type"
+        },
+        {
+          "if": [
+            "flag:skin_opt_5",
+            "flag:skin_opt_4"
+          ],
+          "goto": "q2_texture_type"
+        },
+        {
+          "if": [
+            "flag:skin_opt_7",
+            "flag:skin_opt_8"
+          ],
+          "goto": "q2_sensitive_trigger"
+        },
+        {
+          "if": [
+            "flag:skin_opt_1",
+            "flag:skin_opt_8"
+          ],
+          "goto": "q2_sensitive_trigger"
+        },
+        {
+          "if": [
+            "flag:skin_opt_1",
+            "flag:skin_opt_7"
+          ],
+          "goto": "q2_sensitive_trigger"
+        },
+        {
+          "if": [
+            "flag:skin_opt_2",
+            "flag:skin_opt_8"
+          ],
+          "goto": "q2_sensitive_trigger"
+        },
+        {
+          "if": [
+            "flag:skin_opt_2",
+            "flag:skin_opt_7"
+          ],
+          "goto": "q2_sensitive_trigger"
+        },
+        {
+          "default": "q2_dry_timing"
+        }
+      ]
+    },
+    {
+      "id": "q2_dry_timing",
+      "title": "Mikor érzed leginkább ezt?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Mosakodás után szinte rögtön feszül",
+          "next": "q3_dry_reaction"
+        },
+        {
+          "text": "Napközben fokozatosan válik kellemetlenné",
+          "next": "q3_dehydrated_split"
+        },
+        {
+          "text": "Néha random csíp / reagál dolgokra",
+          "next": "profile_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "q3_dry_reaction",
+      "title": "Mi történik, ha gazdagabb hidratálót használsz?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Megnyugszik, kényelmesebb lesz",
+          "next": "profile_dry"
+        },
+        {
+          "text": "Nemcsak feszül, hanem könnyen csíp / reagál is",
+          "next": "profile_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "q3_dehydrated_split",
+      "title": "Melyik igazabb?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Inkább fakó, élettelen, „szomjas” a bőröm",
+          "next": "profile_dehydrated"
+        },
+        {
+          "text": "Inkább feszes, száraz tapintású",
+          "next": "profile_dry"
+        }
+      ]
+    },
+    {
+      "id": "q2_oily_pattern",
+      "title": "Hogyan jelenik meg a zsírosodás?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Reggel még rendben van, később fényesedik ki",
+          "next": "q3_oily_zone"
+        },
+        {
+          "text": "Már reggel is zsíros érzetű",
+          "next": "profile_oily"
+        },
+        {
+          "text": "Lemosás után gyorsan újra zsírosodik",
+          "next": "q3_oily_irritation"
+        }
+      ]
+    },
+    {
+      "id": "q3_oily_zone",
+      "title": "Hol jelenik meg leginkább?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Főleg a T-zónában",
+          "next": "profile_combination"
+        },
+        {
+          "text": "Szinte az egész arcon",
+          "next": "profile_oily"
+        }
+      ]
+    },
+    {
+      "id": "q3_oily_irritation",
+      "title": "Mi társul hozzá inkább?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Csak fényesedik, de nem igazán irritált",
+          "next": "profile_oily"
+        },
+        {
+          "text": "Könnyen irritált is, mintha túl lenne tisztítva",
+          "next": "profile_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "q2_texture_type",
+      "title": "Milyen típusú egyenetlenséget látsz inkább?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Apró dudorok / nem sima felszín",
+          "next": "q3_texture_split"
+        },
+        {
+          "text": "Fekete vagy fehér pontok / mitesszerek",
+          "next": "q3_acne_split"
+        },
+        {
+          "text": "Inkább a pórusok látszanak és a bőr is kifényesedik",
+          "next": "q3_texture_vs_oily"
+        }
+      ]
+    },
+    {
+      "id": "q3_texture_split",
+      "title": "Mit látsz emellett?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Inkább csak egyenetlen, érdes felszín",
+          "next": "profile_textured"
+        },
+        {
+          "text": "Apró eltömődések / kis mitesszer-szerű pontok is",
+          "next": "profile_comedonal"
+        }
+      ]
+    },
+    {
+      "id": "q3_acne_split",
+      "title": "Van gyulladt pattanás is?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Igen, időnként gyulladt is",
+          "next": "profile_acne"
+        },
+        {
+          "text": "Nem, inkább eltömődéses",
+          "next": "profile_comedonal"
+        }
+      ]
+    },
+    {
+      "id": "q3_texture_vs_oily",
+      "title": "Melyik a főbb élmény?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Inkább a fénylés és zsíros érzet",
+          "next": "profile_oily"
+        },
+        {
+          "text": "Inkább a felszín egyenetlensége és pórusossága",
+          "next": "q4_texture_finish_split"
+        }
+      ]
+    },
+    {
+      "id": "q4_texture_finish_split",
+      "title": "Mi áll közelebb ahhoz, amit látsz?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Inkább érdes, egyenetlen felszín",
+          "next": "profile_textured"
+        },
+        {
+          "text": "Inkább eltömődések / mitesszeres érzés",
+          "next": "profile_comedonal"
+        }
+      ]
+    },
+    {
+      "id": "q2_sensitive_trigger",
+      "title": "Mi váltja ki leginkább?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Új termékeknél, aktívabb összetevőknél jelentkezik",
+          "next": "profile_sensitive"
+        },
+        {
+          "text": "Inkább víz, időjárás, hideg, szél után jön elő",
+          "next": "q3_sensitive_split"
+        },
+        {
+          "text": "Kiszámíthatatlanul, több dologra is reagál",
+          "next": "profile_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "q3_sensitive_split",
+      "title": "Mi segít rajta inkább?",
+      "text": [],
+      "choices": [
+        {
+          "text": "Egy nyugtatóbb, hidratáló krémmel jobb lesz",
+          "next": "profile_dry_sensitive"
+        },
+        {
+          "text": "Hidratálás mellett is könnyen reagál",
+          "next": "profile_sensitive"
+        }
+      ]
+    },
+    {
+      "id": "profile_combination",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan, hogy egy fényvédő után:\n\nitt-ott fényes lett a bőröd\nmáshol viszont teljesen oké maradt\n\nés nehéz volt eltalálni, mi működik?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez gyakran ilyen",
+          "next": "end_product_eucerin"
+        },
+        {
+          "text": "Nem ennyire, inkább az összérzet zavar",
+          "next": "spf_combination_q2"
+        }
+      ]
+    },
+    {
+      "id": "spf_combination_q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Amikor rajtad van egy termék, mi zavar hamarabb?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Ha elkezd fényleni",
+          "next": "end_product_eucerin"
+        },
+        {
+          "text": "Ha érzem, hogy rajtam van",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "profile_dry",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan, hogy egy fényvédő után a bőröd:\n\nhúzódott\nkiemelte a száraz részeket\nrosszabbul nézett ki, mint előtte?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez gyakran előfordul",
+          "next": "end_product_boj"
+        },
+        {
+          "text": "Nem ez a fő gond, inkább az érzete",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "profile_dehydrated",
+      "title": "",
+      "text": [
+        {
+          "text": "Ismerős az az érzés, amikor a bőröd:\n\nnem feltétlen száraz\ninkább fakó, „szomjas”\nés gyorsan elveszíti a komfortját?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, pontosan ez",
+          "next": "end_product_boj"
+        },
+        {
+          "text": "Nem, inkább az SPF-ek érzete zavar",
+          "next": "spf_dehydrated_q2"
+        }
+      ]
+    },
+    {
+      "id": "spf_dehydrated_q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Amikor használsz valamit az arcodon, mi a zavaróbb?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Ha nem ad elég komfortot",
+          "next": "end_product_boj"
+        },
+        {
+          "text": "Ha érzem, hogy rajtam van",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "profile_sensitive",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan termék, amitől:\n\ncsípett\négetett\nkipirosodtál\n\nés inkább nem is akartál újra próbálkozni?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, sokszor",
+          "next": "end_product_avene"
+        },
+        {
+          "text": "Néha előfordul",
+          "next": "spf_sensitive_q2"
+        }
+      ]
+    },
+    {
+      "id": "spf_sensitive_q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Ha választani kell:"
+        }
+      ],
+      "choices": [
+        {
+          "text": "inkább legyen biztos, még ha nem is a legjobb érzet",
+          "next": "end_product_avene"
+        },
+        {
+          "text": "inkább legyen kényelmesebb, ha nem okoz gondot",
+          "next": "end_product_boj"
+        }
+      ]
+    },
+    {
+      "id": "profile_dry_sensitive",
+      "title": "",
+      "text": [
+        {
+          "text": "Ismerős az, hogy a bőröd egyszerre:\n\nhúzódik\nés közben könnyen reagál is dolgokra?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez gyakori",
+          "next": "end_product_avene"
+        },
+        {
+          "text": "Inkább csak húzódik",
+          "next": "end_product_boj"
+        }
+      ]
+    },
+    {
+      "id": "profile_oily",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan, hogy egy fényvédő után a bőröd:\n\nfényesebb lett\nnehezebb lett\nmintha „nem tudna lélegezni”\n\nés inkább rontott a helyzeten?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez ismerős",
+          "next": "end_product_eucerin"
+        },
+        {
+          "text": "Nem igazán, inkább az érzete zavar",
+          "next": "spf_oily_q2"
+        }
+      ]
+    },
+    {
+      "id": "spf_oily_q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Amikor rajtad van valami az arcodon, mikor zavar jobban?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Ha meleg van, mozgok, izzadok",
+          "next": "end_product_isdin"
+        },
+        {
+          "text": "Átlagos napokon is",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "profile_textured",
+      "title": "",
+      "text": [
+        {
+          "text": "Amikor belenézel a tükörbe, mi zavar jobban?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Az, hogy nem teljesen sima a felszín",
+          "next": "end_product_lrp"
+        },
+        {
+          "text": "A pórusok és a fénylés együtt",
+          "next": "end_product_eucerin"
+        }
+      ]
+    },
+    {
+      "id": "profile_comedonal",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan érzésed, hogy egy termék után:\n\nmintha „be lenne zárva” a bőröd\nés könnyebben jelennek meg apró eltömődések?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez előfordul",
+          "next": "end_product_eucerin"
+        },
+        {
+          "text": "Nem, inkább az zavar, ha nehéz",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "profile_acne",
+      "title": "",
+      "text": [
+        {
+          "text": "Volt már olyan, hogy egy fényvédő után:\n\nrosszabb lett a bőröd állapota\nkönnyebben begyulladt\nvagy több lett a pattanás?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Igen, ez megtörtént",
+          "next": "end_product_eucerin"
+        },
+        {
+          "text": "Nem feltétlen, inkább az állaga zavar",
+          "next": "spf_acne_q2"
+        }
+      ]
+    },
+    {
+      "id": "spf_acne_q2",
+      "title": "",
+      "text": [
+        {
+          "text": "Mikor zavar jobban egy termék az arcodon?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Ha meleg van, mozgok, izzadok",
+          "next": "end_product_isdin"
+        },
+        {
+          "text": "Átlagos napokon is",
+          "next": "end_product_lrp"
+        }
+      ]
+    },
+    {
+      "id": "end_product_lrp",
+      "type": "end",
+      "title": "La Roche-Posay Anthelios UVMune 400 Invisible Fluid SPF50+",
+      "text": [
+        {
+          "text": "Normál / kombinált bőr – vagy amikor a fő gond az, hogy a fényvédő nem komfortos, ezért kimarad."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_product_eucerin",
+      "type": "end",
+      "title": "Eucerin Oil Control Sun Gel-Cream SPF50+",
+      "text": [
+        {
+          "text": "Zsíros, aknés, fénylő bőr – amikor a túl nehéz SPF csak ront a helyzeten."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_product_boj",
+      "type": "end",
+      "title": "Beauty of Joseon Relief Sun SPF50+",
+      "text": [
+        {
+          "text": "Száraz, vízhiányos bőr – amikor a fényvédelemnek komfortot is kell adnia."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_product_avene",
+      "type": "end",
+      "title": "Avène Mineral Fluid SPF50+",
+      "text": [
+        {
+          "text": "Érzékeny, reaktív bőr – amikor a tolerálhatóság az első szempont."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    },
+    {
+      "id": "end_product_isdin",
+      "type": "end",
+      "title": "ISDIN Fusion Water MAGIC SPF50",
+      "text": [
+        {
+          "text": "Aktív életmód, izzadás, sok kültéri idő – amikor a könnyű érzet és mozgás közbeni viselhetőség számít."
+        }
+      ],
+      "endMeta": {
+        "cta": "default"
+      }
+    }
+  ]
+}

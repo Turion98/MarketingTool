@@ -1,0 +1,387 @@
+{
+  "schemaVersion": "1.0.0",
+  "storyId": "arc_bor_tipus_teszt_hu",
+  "locale": "hu",
+  "meta": {
+    "id": "arc_bor_tipus_teszt_hu",
+    "title": "Arcbőr-profil",
+    "description": "Nem lineáris, 4 lépéses út: egy nyitó kérdés négy ágra bont, második kérdés áganként, majd egy rövid választós puzzle és automatikus eredmény.",
+    "startPageId": "intro",
+    "campaignId": "arc_bor_tipus_teszt_hu",
+    "ctaPresets": {
+      "default": {
+        "kind": "link",
+        "label": "Tovább",
+        "urlTemplate": "https://example.com"
+      }
+    },
+    "endDefaultCta": "default"
+  },
+  "pages": [
+    {
+      "id": "intro",
+      "title": "Kezdés",
+      "text": [
+        {
+          "text": "Néhány rövid, hétköznapi kérdés — nem teszt, inkább profil. A végén egy „melyik kettő illik rád?” lépés következik. Összesen négy érintés, plusz az eredmény."
+        }
+      ],
+      "choices": [
+        {
+          "text": "Rendben",
+          "next": "q1_root"
+        }
+      ]
+    },
+    {
+      "id": "q1_root",
+      "title": "Napközben",
+      "text": [
+        {
+          "text": "Ha egy hétköznapi pillanatban megállsz egy tükör előtt, mi az, ami leginkább eszedbe jut az arcbőröddel kapcsolatban?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Inkább az, hogy réteg vagy fény jön elő rajta",
+          "next": "q2_glow",
+          "reward": {
+            "unlockFragments": ["p1_glow"]
+          }
+        },
+        {
+          "text": "Inkább húzódás, feszesség vagy komfort",
+          "next": "q2_comfort",
+          "reward": {
+            "unlockFragments": ["p1_comfort"]
+          }
+        },
+        {
+          "text": "Inkább pirosság, csípés vagy „túl reaktív” érzés",
+          "next": "q2_reactive",
+          "reward": {
+            "unlockFragments": ["p1_reactive"]
+          }
+        },
+        {
+          "text": "Semmi drámai — inkább finomságok, textúra",
+          "next": "q2_even",
+          "reward": {
+            "unlockFragments": ["p1_even"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2_glow",
+      "title": "Délután",
+      "text": [
+        {
+          "text": "Délután, amikor már „benne vagy a napban”, hol érzed leginkább a változást?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Homlok, orrnyereg és áll — ott él meg először",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2f_tzone"]
+          }
+        },
+        {
+          "text": "Inkább az egész arc egyben",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2f_full"]
+          }
+        },
+        {
+          "text": "Az orcákon kevésbé, máshol inkább",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2f_cheeks"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2_comfort",
+      "title": "Lemosás után",
+      "text": [
+        {
+          "text": "Arclemosás után, kb. negyedórával: mi a jellemző?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Gyorsan jobb a komfortérzet",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2h_better"]
+          }
+        },
+        {
+          "text": "Még mindig feszesnek vagy száraznak érzem",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2h_tight"]
+          }
+        },
+        {
+          "text": "Naponta mást mond — nehéz egy szabályt mondani",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2h_mixed"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2_reactive",
+      "title": "Külső hatások",
+      "text": [
+        {
+          "text": "Új arcápoló, szél, hideg vagy erősebb összetevő után mi jellemző rád?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "Gyakran csíp, ég vagy „tilos zóna” érzés",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2r_strong"]
+          }
+        },
+        {
+          "text": "Néha előjön, de nem mindig",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2r_sometimes"]
+          }
+        },
+        {
+          "text": "Ritkán vagy szinte soha",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2r_rare"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2_even",
+      "title": "Apróságok",
+      "text": [
+        {
+          "text": "Ha egy dolgot választhatnál, hogy kevésbé legyen jelen az arcodon, mi lenne az?"
+        }
+      ],
+      "choices": [
+        {
+          "text": "A fényes, „réteges” érzet",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2n_shine"]
+          }
+        },
+        {
+          "text": "A hámlás vagy száraz foltok",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2n_flake"]
+          }
+        },
+        {
+          "text": "A pirosság vagy foltok",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2n_red"]
+          }
+        },
+        {
+          "text": "A mitesszer / eltömődött pórus érzet",
+          "next": "puz_runes",
+          "reward": {
+            "unlockFragments": ["q2n_clogged"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "puz_runes",
+      "type": "puzzle",
+      "kind": "runes",
+      "mode": "set",
+      "minPick": 2,
+      "maxPick": 2,
+      "optionFlagsBase": "F_",
+      "title": "Két jel, ami leginkább igaz",
+      "text": "Válaszd ki azt a kettőt, ami a legtöbbször igaz rád — sorrend nem számít.",
+      "options": [
+        "Napközben gyorsan kifényesedik vagy „olajosabb” lesz az érzet",
+        "Gyakran húzódik, feszesnek érzem",
+        "A T-vonal és az orcák másképp viselkednek",
+        "Gyorsan kipirosodik, vagy foltok jönnek elő",
+        "Általában rendben van, kevés a dráma",
+        "Nehéz egyértelműen mondani — inkább vegyes"
+      ],
+      "answer": [],
+      "onSuccess": {
+        "goto": "logic_resolve"
+      }
+    },
+    {
+      "id": "logic_resolve",
+      "type": "logic",
+      "title": "",
+      "text": [
+        {
+          "text": ""
+        }
+      ],
+      "logic": [
+        {
+          "if": ["p1_comfort", "q2h_better", "F_1", "F_2"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_comfort", "q2h_better", "F_1", "F_3"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_comfort", "q2h_tight", "F_1", "F_3"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_glow", "q2f_cheeks", "F_2", "F_3"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_reactive", "q2r_rare", "F_4", "F_1"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_reactive", "q2r_rare", "F_4", "F_5"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_even", "q2n_red", "F_1", "F_4"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_glow", "q2f_full", "F_2", "F_5"],
+          "goto": "end_zsiros"
+        },
+        {
+          "if": ["p1_comfort", "q2h_tight", "F_2", "F_4"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_glow", "q2f_tzone"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_glow", "q2f_full"],
+          "goto": "end_zsiros"
+        },
+        {
+          "if": ["p1_glow", "q2f_cheeks"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_comfort", "q2h_tight"],
+          "goto": "end_szaraz"
+        },
+        {
+          "if": ["p1_comfort", "q2h_better"],
+          "goto": "end_kiegy"
+        },
+        {
+          "if": ["p1_comfort", "q2h_mixed"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "if": ["p1_reactive", "q2r_strong"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_reactive", "q2r_sometimes"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_reactive", "q2r_rare"],
+          "goto": "end_kiegy"
+        },
+        {
+          "if": ["p1_even", "q2n_shine"],
+          "goto": "end_zsiros"
+        },
+        {
+          "if": ["p1_even", "q2n_flake"],
+          "goto": "end_szaraz"
+        },
+        {
+          "if": ["p1_even", "q2n_red"],
+          "goto": "end_erzekeny"
+        },
+        {
+          "if": ["p1_even", "q2n_clogged"],
+          "goto": "end_kombinalt"
+        },
+        {
+          "default": "end_kiegy"
+        }
+      ]
+    },
+    {
+      "id": "end_zsiros",
+      "type": "end",
+      "title": "Zsíros / fényes irány",
+      "text": [
+        {
+          "default": "A válaszaid alapján a profilod inkább a fokozott fényesség és a napközbeni „réteg” felé mutat. Érdemes könnyű, nem komedogén rutint és célzott mattítást keresni — a részleteket (termékek, összetevők) a márka szakmai anyagaihoz érdemes igazítani."
+        }
+      ]
+    },
+    {
+      "id": "end_szaraz",
+      "type": "end",
+      "title": "Száraz irány",
+      "text": [
+        {
+          "default": "A válaszaid alapján a barrier és a komfort (húzódás, tartós feszesség) felé billen a mérleg. A hidratálás és a gyengéd tisztítás általában fontosabb, mint az erős mattítás — finom, rétegezhető ápolással érdemes továbbmenni."
+        }
+      ]
+    },
+    {
+      "id": "end_kombinalt",
+      "type": "end",
+      "title": "Kombinált irány",
+      "text": [
+        {
+          "default": "A válaszaid alapján a T-vonal és az arc többi része nem ugyanazt mondja — tipikus kombinált mintázat. Zónánként eltérő textúrákkal és ritmussal szokott működni a legjobban a mindennapi rutin."
+        }
+      ]
+    },
+    {
+      "id": "end_erzekeny",
+      "type": "end",
+      "title": "Érzékeny / reaktív irány",
+      "text": [
+        {
+          "default": "A válaszaid alapján a reaktivitás (pirosság, csípés, gyors reakció külső hatásokra) kerül előtérbe. Itt a kevesebb, egyszerűbb formula és a fokozatos bevezetés általában jobb stratégia, mint az agresszív aktív összetevők."
+        }
+      ]
+    },
+    {
+      "id": "end_kiegy",
+      "type": "end",
+      "title": "Kiegyensúlyozott irány",
+      "text": [
+        {
+          "default": "A válaszaid alapján nincs egy domináns extrém jel — inkább kiegyensúlyozott vagy enyhén ingadozó profil. Jó kiindulópont a stabil, követhető rutin és az időszakos finomhangolás (évszak, stressz, alvás)."
+        }
+      ]
+    }
+  ]
+}
