@@ -25,6 +25,7 @@ import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentI
 import {
   EDITOR_LAYOUT_COL_STEP_PX,
   collectEndPageIdsFromStory,
+  EDITOR_LAYOUT_REVISION,
   ensureLayout,
   mergeEditorLayoutIntoStory,
   recomputeEditorLayoutForStory,
@@ -489,6 +490,21 @@ export default function StoryCanvas({
     return { w: maxX, h: maxY };
   }, [worldMetrics]);
 
+  /** Kártyák tényleges befoglalója (beleértve negatív X-et is) — zoom „beleillesztéshez”. */
+  const fitContentBounds = useMemo(() => {
+    let minX = 0;
+    let minY = 0;
+    let maxX = 400;
+    let maxY = 300;
+    for (const m of worldMetrics.values()) {
+      minX = Math.min(minX, m.x - 40);
+      minY = Math.min(minY, m.y - 40);
+      maxX = Math.max(maxX, m.x + m.w + 40);
+      maxY = Math.max(maxY, m.y + m.h + 40);
+    }
+    return { minX, minY, maxX, maxY };
+  }, [worldMetrics]);
+
   const endZoneSeparatorWorldX = useMemo(() => {
     if (!endPageIds.length) return null;
     let minX = Infinity;
@@ -523,6 +539,23 @@ export default function StoryCanvas({
     onStoryChange,
     interactionLocked,
   ]);
+
+  const onFitGraphInView = useCallback(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const vw = el.clientWidth;
+    const vh = el.clientHeight;
+    if (vw < 8 || vh < 8) return;
+    const pad = 28;
+    const bw = Math.max(fitContentBounds.maxX - fitContentBounds.minX, 1);
+    const bh = Math.max(fitContentBounds.maxY - fitContentBounds.minY, 1);
+    let z = Math.min((vw - pad * 2) / bw, (vh - pad * 2) / bh);
+    z = clamp(Number(z.toFixed(3)), ZOOM_MIN, ZOOM_MAX);
+    const cx = (fitContentBounds.minX + fitContentBounds.maxX) / 2;
+    const cy = (fitContentBounds.minY + fitContentBounds.maxY) / 2;
+    setZoom(z);
+    setPan({ x: vw / 2 - z * cx, y: vh / 2 - z * cy });
+  }, [fitContentBounds]);
 
   const onCardDragStart = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
@@ -852,6 +885,8 @@ export default function StoryCanvas({
       };
       const nextLayout: EditorLayoutState = {
         version: 1,
+        layoutRevision:
+          layoutRef.current.layoutRevision ?? EDITOR_LAYOUT_REVISION,
         nodes: { ...layoutRef.current.nodes, [id]: position },
       };
       onStoryChange(applyEditorLayout(storyWithPage, nextLayout));
@@ -1106,6 +1141,14 @@ export default function StoryCanvas({
           }}
         >
           Központ
+        </button>
+        <button
+          type="button"
+          onClick={onFitGraphInView}
+          title="Nagyítás és pásztázás: minden kártya beleférjen a vászonba"
+          aria-label="Gráf beleillesztése a vászonba"
+        >
+          Beleillesztés
         </button>
         <button
           type="button"

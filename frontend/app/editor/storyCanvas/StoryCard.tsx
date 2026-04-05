@@ -11,11 +11,7 @@ import {
 } from "react";
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
-import {
-  CATEGORY_LABELS,
-  type EditorPageCategory,
-  isEditorLogicPage,
-} from "@/app/lib/editor/storyPagesFlatten";
+import { isEditorLogicPage } from "@/app/lib/editor/storyPagesFlatten";
 import {
   choiceFragmentVisibilityTitle,
   choiceHasConditionalDisplay,
@@ -98,10 +94,8 @@ export default function StoryCard({
   const isStart = node.pageId === STORY_GRAPH_START_NODE_ID;
 
   const raw = node.raw;
-  const catLabel =
-    node.category === "end"
-      ? "Végoldal"
-      : CATEGORY_LABELS[node.category as EditorPageCategory] ?? node.category;
+  const titleStr =
+    typeof raw.title === "string" ? raw.title.trim() : "";
   const hasRes = !isStart && pageHasResolvableFragments(raw);
   const choices = Array.isArray(raw.choices) ? raw.choices : [];
 
@@ -137,6 +131,11 @@ export default function StoryCard({
     !isStart && !isEditorLogicPage(raw) && milestoneOn;
 
   const pendingPage = !isStart && isEditorPendingPageId(node.pageId);
+  const headerDisplayText = pendingPage ? "" : titleStr || node.pageId;
+  const headerHoverLabel =
+    titleStr && titleStr !== node.pageId
+      ? `${titleStr} · ${node.pageId}`
+      : node.pageId;
 
   useEffect(() => {
     if (!idEdit || !idInputRef.current) return;
@@ -306,11 +305,13 @@ export default function StoryCard({
               className={s.cardIdZone}
               data-card-id-zone="1"
               title={
-                onRenamePageId
-                  ? pendingPage
+                pendingPage
+                  ? onRenamePageId
                     ? "Kattints vagy dupla katt — egyedi ID megadása (kötelező)"
-                    : "Dupla kattintás: oldalazonosító szerkesztése"
-                  : undefined
+                    : undefined
+                  : onRenamePageId
+                    ? `${headerHoverLabel} — dupla katt: azonosító szerkesztése`
+                    : headerHoverLabel
               }
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
@@ -358,11 +359,10 @@ export default function StoryCard({
                 <span
                   className={`${s.cardId} ${pendingPage ? s.cardIdMuted : ""}`}
                 >
-                  {pendingPage ? "új oldal — ID kötelező" : node.pageId}
+                  {pendingPage ? "új oldal — ID kötelező" : headerDisplayText}
                 </span>
               )}
             </div>
-            <span className={s.cardCat}>{catLabel}</span>
             {onRequestDelete ? (
               <div className={s.cardHeaderRight}>
                 <button
