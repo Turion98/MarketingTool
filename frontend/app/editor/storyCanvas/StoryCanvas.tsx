@@ -616,7 +616,7 @@ export default function StoryCanvas({
   const onCanvasCardBodyPointerDown = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
       if (pageId === STORY_GRAPH_START_NODE_ID) {
-        onSelectPageIds([]);
+        onSelectPageIds([STORY_GRAPH_START_NODE_ID]);
         return;
       }
       if (e.shiftKey) {

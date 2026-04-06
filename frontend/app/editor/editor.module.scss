@@ -1090,6 +1090,54 @@
   cursor: not-allowed;
 }
 
+.bootstrapMetaCtaCard {
+  margin-top: 0.55rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.bootstrapMetaCtaCard:first-of-type {
+  margin-top: 0.35rem;
+}
+
+.bootstrapMetaCtaToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.bootstrapMetaBtnSm {
+  padding: 0.28rem 0.55rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8ecf4;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bootstrapMetaBtnSm:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bootstrapMetaBtnSm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bootstrapMetaLogoPreview {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: rgba(196, 181, 253, 0.9);
+  word-break: break-all;
+}
+
 .bootstrapPanelRoot {
   border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);

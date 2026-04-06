@@ -222,3 +222,51 @@ export async function saveStoryDocumentJson(
   return (payload || { ok: true }) as ImportOk;
 }
 
+export type UploadStoryAssetOk = {
+  ok: true;
+  path: string;
+};
+
+/**
+ * Kampány logó / brand kép feltöltése: `assets/stories/{storyId}/logo.{ext}`.
+ */
+export async function uploadStoryBrandAsset(
+  storyId: string,
+  file: File
+): Promise<UploadStoryAssetOk> {
+  const id = storyId.trim();
+  if (!id) throw new Error("Hiányzó sztori azonosító a feltöltéshez.");
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const url = buildUrl(`/api/stories/${encodeURIComponent(id)}/upload-asset`);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: fd,
+    cache: "no-store",
+  });
+
+  const payload = (await parseResponse(res)) as unknown;
+
+  if (!res.ok) {
+    const errPayload: ImportErrPayload =
+      typeof payload === "object" && payload !== null
+        ? (payload as ImportErrPayload)
+        : { detail: typeof payload === "string" ? payload : undefined };
+    const msg = humanizeImportError(errPayload, res.status);
+    throw new Error(msg);
+  }
+
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof (payload as UploadStoryAssetOk).path === "string"
+  ) {
+    return payload as UploadStoryAssetOk;
+  }
+
+  throw new Error("Érvénytelen válasz a feltöltéshez.");
+}
+

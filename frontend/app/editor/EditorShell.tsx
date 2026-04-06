@@ -8,8 +8,7 @@ import { useEditorSessionAdmin } from "./useEditorSessionAdmin";
 
 export default function EditorShell() {
   const router = useRouter();
-  const { user, ready, logout, tierLabel, canUsePaidFeatures, isAdmin } =
-    useAuth();
+  const { user, ready, tierLabel, canUsePaidFeatures, isAdmin } = useAuth();
   const sessionEditorAdmin = useEditorSessionAdmin();
   const editorActsAsAdmin = isAdmin || sessionEditorAdmin;
 
@@ -65,7 +64,7 @@ export default function EditorShell() {
       tierLabel={tierLabel}
       tierColor={tierColor}
       isAdmin={editorActsAsAdmin}
-      onLogout={() => void logout().then(() => router.replace("/"))}
+      onLogout={() => router.push("/dashboard")}
     />
   );
 }

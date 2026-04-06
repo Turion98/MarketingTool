@@ -34,6 +34,7 @@ import {
   renameStoryPageIdInStory,
 } from "@/app/lib/editor/storyPagePatch";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
+import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import NewStoryMetaPanel from "./NewStoryMetaPanel";
@@ -736,9 +737,11 @@ function EditorStudioRightColumn({
                     : s.stackPanelToggleSub
                 }
               >
-                {isEditorPendingPageId(selectedPageId)
-                  ? "Új oldal — add meg az ID-t"
-                  : selectedPageId}
+                {selectedPageId === STORY_GRAPH_START_NODE_ID
+                  ? "Sztori meta (kezdőpont)"
+                  : isEditorPendingPageId(selectedPageId)
+                    ? "Új oldal — add meg az ID-t"
+                    : selectedPageId}
               </span>
             ) : (
               <span className={s.stackPanelToggleSubMuted}>

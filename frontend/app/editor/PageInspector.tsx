@@ -35,6 +35,8 @@ import {
   upsertStoryFragmentText,
 } from "@/app/lib/editor/storyPagePatch";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
+import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
+import StoryMetaInspector from "./StoryMetaInspector";
 import s from "./pageInspector.module.scss";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -1527,6 +1529,15 @@ export default function PageInspector({
           </p>
         </div>
       </div>
+    );
+  }
+
+  if (selectedPageId === STORY_GRAPH_START_NODE_ID) {
+    return (
+      <StoryMetaInspector
+        draftStory={draftStory}
+        onStoryChange={onStoryChange}
+      />
     );
   }
 

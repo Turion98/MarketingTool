@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { saveStoryDocumentJson } from "@/app/lib/api/stories";
+import { saveStoryDocumentJson, uploadStoryBrandAsset } from "@/app/lib/api/stories";
 import {
   buildStoryDocumentForFirstSave,
+  defaultStoryMetaFormModel,
   type NewStoryBootstrapForm,
-  validateCtaHttpsUrl,
-  validateStartPageId,
+  type StoryMetaFormModel,
+  validateMetaFormBasics,
   validateStorySlug,
 } from "@/app/lib/editor/newStoryBootstrap";
+import { StoryMetaFormFields } from "./StoryMetaForm";
 import s from "./editor.module.scss";
 
 export type NewStoryMetaPanelProps = {
@@ -17,17 +19,44 @@ export type NewStoryMetaPanelProps = {
 
 export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps) {
   const [storySlug, setStorySlug] = useState("");
-  const [title, setTitle] = useState("");
-  const [startPageId, setStartPageId] = useState("start");
-  const [ctaLabel, setCtaLabel] = useState("");
-  const [ctaUrl, setCtaUrl] = useState("https://");
-  const [logo, setLogo] = useState("");
-  const [description, setDescription] = useState("");
-  const [author, setAuthor] = useState("");
-  const [coverImage, setCoverImage] = useState("");
-  const [locale, setLocale] = useState("");
+  const [model, setModel] = useState<StoryMetaFormModel>(() =>
+    defaultStoryMetaFormModel()
+  );
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [logoUploadBusy, setLogoUploadBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const slugErr = validateStorySlug(storySlug);
+  const logoUploadDisabledReason =
+    slugErr && storySlug.trim()
+      ? slugErr
+      : !storySlug.trim()
+        ? "A logo feltöltéshez add meg a sztori azonosítót (slug)."
+        : null;
+
+  const onUploadLogo = useCallback(async () => {
+    setFormError(null);
+    const err = validateStorySlug(storySlug);
+    if (err) {
+      setFormError(err);
+      return;
+    }
+    if (!logoFile) {
+      setFormError("Válassz képfájlt a feltöltéshez.");
+      return;
+    }
+    setLogoUploadBusy(true);
+    try {
+      const res = await uploadStoryBrandAsset(storySlug.trim(), logoFile);
+      setModel((m) => ({ ...m, logoPath: res.path }));
+      setLogoFile(null);
+    } catch (e: unknown) {
+      setFormError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLogoUploadBusy(false);
+    }
+  }, [logoFile, storySlug]);
 
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -39,41 +68,37 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
         setFormError(errSlug);
         return;
       }
-      if (!title.trim()) {
-        setFormError("Kötelező a megjelenített cím (meta.title).");
-        return;
-      }
-      const errStart = validateStartPageId(startPageId);
-      if (errStart) {
-        setFormError(errStart);
-        return;
-      }
-      if (!ctaLabel.trim()) {
-        setFormError("Kötelező az alapértelmezett CTA felirata.");
-        return;
-      }
-      const errUrl = validateCtaHttpsUrl(ctaUrl);
-      if (errUrl) {
-        setFormError(errUrl);
+      const errMeta = validateMetaFormBasics(model);
+      if (errMeta) {
+        setFormError(errMeta);
         return;
       }
 
       const form: NewStoryBootstrapForm = {
         storySlug,
-        title: title.trim(),
-        startPageId: startPageId.trim(),
-        ctaLabel: ctaLabel.trim(),
-        ctaUrl: ctaUrl.trim(),
-        logo: logo.trim() || undefined,
-        description: description.trim() || undefined,
-        author: author.trim() || undefined,
-        coverImage: coverImage.trim() || undefined,
-        locale: locale.trim() || undefined,
+        title: model.title.trim(),
+        startPageId: model.startPageId.trim(),
+        ctaRows: model.ctaRows,
+        endDefaultCta: model.endDefaultCta.trim(),
+        description: model.description.trim() || undefined,
+        author: model.author.trim() || undefined,
+        locale: model.locale.trim() || undefined,
       };
 
-      const doc = buildStoryDocumentForFirstSave(form);
       setBusy(true);
       try {
+        let logoPath: string | undefined =
+          model.logoPath.trim() || undefined;
+        if (logoFile) {
+          const res = await uploadStoryBrandAsset(storySlug.trim(), logoFile);
+          logoPath = res.path;
+          setModel((m) => ({ ...m, logoPath: res.path }));
+          setLogoFile(null);
+        }
+        const doc = buildStoryDocumentForFirstSave({
+          ...form,
+          logo: logoPath,
+        });
         const res = await saveStoryDocumentJson(doc, {
           overwrite: false,
           mode: "strict",
@@ -96,26 +121,15 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
         setBusy(false);
       }
     },
-    [
-      storySlug,
-      title,
-      startPageId,
-      ctaLabel,
-      ctaUrl,
-      logo,
-      description,
-      author,
-      coverImage,
-      locale,
-      onCreated,
-    ]
+    [logoFile, model, onCreated, storySlug]
   );
 
   return (
     <form className={s.bootstrapMetaForm} onSubmit={(e) => void onSubmit(e)}>
       <p className={s.bootstrapMetaLead}>
         Add meg a kötelező mezőket, majd mentsd — a szerveren létrejön az új JSON
-        fájl. Ezután szerkesztheted a vászont és az oldalakat.
+        fájl. A logót feltöltheted előbb, vagy a mentés feltölti, ha van kiválasztott
+        fájl.
       </p>
 
       <fieldset className={s.bootstrapMetaFieldset}>
@@ -132,103 +146,20 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
             disabled={busy}
           />
         </label>
-        <label className={s.bootstrapMetaLabel}>
-          Megjelenített cím
-          <input
-            className={s.bootstrapMetaInput}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="pl. Interaktív kampány"
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Kezdő oldal ID
-          <input
-            className={s.bootstrapMetaInput}
-            value={startPageId}
-            onChange={(e) => setStartPageId(e.target.value)}
-            placeholder="start"
-            spellCheck={false}
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Alapértelmezett CTA felirat
-          <input
-            className={s.bootstrapMetaInput}
-            value={ctaLabel}
-            onChange={(e) => setCtaLabel(e.target.value)}
-            placeholder="pl. Nyisd meg a jutalmat"
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Alapértelmezett CTA URL (https)
-          <input
-            className={s.bootstrapMetaInput}
-            value={ctaUrl}
-            onChange={(e) => setCtaUrl(e.target.value)}
-            placeholder="https://example.com"
-            spellCheck={false}
-            disabled={busy}
-          />
-        </label>
       </fieldset>
 
       <fieldset className={s.bootstrapMetaFieldset}>
-        <legend className={s.bootstrapMetaLegend}>Opcionális</legend>
-        <label className={s.bootstrapMetaLabel}>
-          Logo (útvonal)
-          <input
-            className={s.bootstrapMetaInput}
-            value={logo}
-            onChange={(e) => setLogo(e.target.value)}
-            placeholder="pl. assets/my_logo.png"
-            spellCheck={false}
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Leírás
-          <textarea
-            className={s.bootstrapMetaTextarea}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Szerző
-          <input
-            className={s.bootstrapMetaInput}
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Borítókép (útvonal)
-          <input
-            className={s.bootstrapMetaInput}
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="/assets/covers/…"
-            disabled={busy}
-          />
-        </label>
-        <label className={s.bootstrapMetaLabel}>
-          Locale (pl. hu, en)
-          <input
-            className={s.bootstrapMetaInput}
-            value={locale}
-            onChange={(e) => setLocale(e.target.value)}
-            placeholder="en"
-            spellCheck={false}
-            disabled={busy}
-          />
-        </label>
+        <legend className={s.bootstrapMetaLegend}>Meta és CTA-k</legend>
+        <StoryMetaFormFields
+          model={model}
+          onChange={setModel}
+          disabled={busy}
+          logoFile={logoFile}
+          onLogoFileChange={setLogoFile}
+          onUploadLogo={() => void onUploadLogo()}
+          logoUploadBusy={logoUploadBusy}
+          logoUploadDisabledReason={logoUploadDisabledReason}
+        />
       </fieldset>
 
       {formError ? (
