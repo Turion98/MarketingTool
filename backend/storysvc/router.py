@@ -12,8 +12,10 @@
 from __future__ import annotations
 
 import os
+import re
 import json
 import logging
+from pathlib import Path
 from typing import Callable, cast
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Body, Query
@@ -34,6 +36,10 @@ CORE_SCHEMA_PATH = os.getenv(
 
 # ENV default bugfix: int() cannot parse "5_000_000" on some environments
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", "5000000"))  # ~5MB default
+
+# Story-scoped brand assets (served under /assets via StaticFiles)
+MAX_STORY_ASSET_BYTES = int(os.getenv("MAX_STORY_ASSET_BYTES", "2097152"))  # 2 MiB
+_STORY_ASSET_EXT = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
 
 # ---------- Runtime getters (avoid import-time racing with env) ----------
 def _get_stories_dir() -> str:
@@ -571,6 +577,73 @@ def _process_and_save_story(
         "meta": meta_info,
         "errors": errors if mode == "warnOnly" else [],
     }
+
+
+def _validate_story_id_asset_path(story_id: str) -> str:
+    s = (story_id or "").strip()
+    if not s or len(s) > 80:
+        raise HTTPException(status_code=400, detail="Invalid story id")
+    if not re.match(r"^[a-zA-Z0-9_-]+$", s):
+        raise HTTPException(
+            status_code=400,
+            detail="story id must be alphanumeric, underscore or hyphen only",
+        )
+    return s
+
+
+def _story_assets_dir(story_id: str) -> Path:
+    base = Path("assets") / "stories" / story_id
+    base.mkdir(parents=True, exist_ok=True)
+    resolved = base.resolve()
+    root = Path("assets").resolve() / "stories"
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid asset path") from None
+    return base
+
+
+@router.post("/stories/{story_id}/upload-asset")
+async def upload_story_asset(
+    story_id: str,
+    file: UploadFile = File(...),
+):
+    """
+    Saves a brand image under assets/stories/{story_id}/logo.{ext}.
+    Returns a path suitable for meta.logo (e.g. assets/stories/my_slug/logo.png).
+    """
+    sid = _validate_story_id_asset_path(story_id)
+    raw = await file.read()
+    if len(raw) > MAX_STORY_ASSET_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large (max {MAX_STORY_ASSET_BYTES} bytes)",
+        )
+
+    orig_name = (file.filename or "logo.png").replace("\\", "/").split("/")[-1]
+    ext = Path(orig_name).suffix.lower()
+    if ext not in _STORY_ASSET_EXT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type; allowed: {', '.join(sorted(_STORY_ASSET_EXT))}",
+        )
+
+    dest_dir = _story_assets_dir(sid)
+    dest_path = dest_dir / f"logo{ext}"
+    try:
+        dest_path.write_bytes(raw)
+    except OSError as e:
+        logger.exception("upload-asset write failed")
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}") from e
+
+    rel = f"assets/stories/{sid}/logo{ext}"
+    try:
+        if callable(_clear_story_cache):
+            _clear_story_cache()
+    except Exception as e:
+        print("[storysvc] Error clearing caches after upload-asset:", e)
+
+    return {"ok": True, "path": rel}
 
 
 # ---------- Endpoints ----------

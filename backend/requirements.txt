@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+PyJWT>=2.8.0
 # Explicit: Pydantic 2.12 + Python < 3.12 needs TypedDict from here (see services/contracts.py)
 typing-extensions>=4.12.0
 requests

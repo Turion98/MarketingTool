@@ -12,6 +12,7 @@ from router.white_label import router as white_label_router
 from routers.admin import router as admin_router
 from routers.analytics import router as analytics_router
 from routers.media import router as media_router
+from routers.embed_access import router as embed_access_router
 from routers.reports import router as reports_router
 from routers.runtime import router as runtime_router
 from services.reports import start_report_scheduler
@@ -53,6 +54,7 @@ app.include_router(runtime_router)
 app.include_router(media_router)
 app.include_router(analytics_router)
 app.include_router(reports_router)
+app.include_router(embed_access_router, prefix="/api")
 
 if os.path.isdir("assets"):
     app.mount("/assets", StaticFiles(directory="assets"), name="assets")
