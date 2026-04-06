@@ -1,0 +1,235 @@
+.topRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  &:hover {
+    background: rgba(148, 163, 184, 0.1);
+    color: #f1f5f9;
+  }
+}
+
+.section {
+  margin-bottom: 1.75rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sectionLead {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  max-width: 48rem;
+}
+
+.codeBlockWrap {
+  position: relative;
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 1rem;
+  padding-bottom: 2.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.65);
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.copyRow {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+}
+
+.copyBtn {
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.12);
+  color: #bae6fd;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.22);
+  }
+}
+
+.note {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: rgba(251, 191, 36, 0.06);
+  color: #fde68a;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  max-width: 48rem;
+}
+
+.note code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #fef3c7;
+}
+
+.error {
+  color: #fca5a5;
+}
+
+.detailsBox {
+  margin-bottom: 1.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.35);
+  overflow: hidden;
+}
+
+.detailsSummary {
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  list-style: none;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-size: 0.65rem;
+    opacity: 0.7;
+    transition: transform 0.15s ease;
+  }
+}
+
+.detailsBox[open] .detailsSummary::before {
+  transform: rotate(90deg);
+}
+
+.detailsBody {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.fieldLabel {
+  display: block;
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.textInput {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(2, 6, 23, 0.65);
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.5);
+  }
+}
+
+.genPrimary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 0.75rem;
+
+  &:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.28);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.genMeta {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.hint {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.revealBlock {
+  margin-bottom: 1rem;
+}
+
+.revealToggle {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    background: rgba(148, 163, 184, 0.12);
+  }
+}

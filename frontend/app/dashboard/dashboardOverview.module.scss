@@ -1,0 +1,209 @@
+/* Csak az áttekintő oldal — komponálva dashboardPage.module.scss osztályokkal */
+
+.page {
+  position: relative;
+  isolation: isolate;
+  margin: -0.35rem -0.25rem 0;
+  padding: 0.35rem 0.25rem 1.25rem;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -1rem 0;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse 95% 70% at 50% -35%, rgba(56, 189, 248, 0.11), transparent 58%),
+    radial-gradient(ellipse 55% 50% at 100% 5%, rgba(129, 140, 248, 0.1), transparent 45%),
+    radial-gradient(ellipse 45% 40% at 0% 25%, rgba(14, 165, 233, 0.06), transparent 42%);
+}
+
+.hero {
+  margin-bottom: 1.65rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.heroTitle {
+  background: linear-gradient(127deg, #f8fafc 0%, #e2e8f0 38%, #93c5fd 72%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@supports not (background-clip: text) {
+  .heroTitle {
+    color: #f1f5f9;
+  }
+}
+
+.heroLead {
+  color: #aab8d0;
+  line-height: 1.65;
+  max-width: 38rem;
+}
+
+.surfaceCard {
+  position: relative;
+  overflow: visible;
+  border-color: rgba(125, 211, 252, 0.12);
+  background: linear-gradient(
+    168deg,
+    rgba(22, 33, 58, 0.78) 0%,
+    rgba(15, 23, 42, 0.6) 48%,
+    rgba(12, 19, 38, 0.72) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.045) inset,
+    0 16px 44px -32px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(2, 6, 23, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.surfaceCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(56, 189, 248, 0.5) 22%,
+    rgba(129, 140, 248, 0.42) 55%,
+    rgba(56, 189, 248, 0.35) 78%,
+    transparent 100%
+  );
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.surfaceCard:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 22px 50px -28px rgba(0, 0, 0, 0.9),
+    0 0 48px -36px rgba(56, 189, 248, 0.18);
+}
+
+.statStack {
+  margin-top: 0.35rem;
+}
+
+.statLabel {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
+}
+
+.statFigure {
+  font-size: 2.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #f8fafc 30%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@supports not (background-clip: text) {
+  .statFigure {
+    color: #e2e8f0;
+  }
+}
+
+.btnAccent {
+  background: linear-gradient(175deg, rgba(56, 189, 248, 0.35) 0%, rgba(14, 165, 233, 0.2) 100%);
+  border-color: rgba(125, 211, 252, 0.55);
+  color: #ecfeff;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.12) inset,
+    0 4px 24px -10px rgba(56, 189, 248, 0.45);
+
+  &:hover {
+    background: linear-gradient(175deg, rgba(56, 189, 248, 0.45) 0%, rgba(14, 165, 233, 0.3) 100%);
+    border-color: rgba(165, 243, 252, 0.65);
+    box-shadow:
+      0 0 0 1px rgba(125, 211, 252, 0.2) inset,
+      0 8px 28px -8px rgba(56, 189, 248, 0.55);
+  }
+}
+
+.btnGhostSoft {
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #cbd5e1;
+
+  &:hover {
+    background: rgba(148, 163, 184, 0.08);
+    border-color: rgba(186, 230, 253, 0.35);
+    color: #f1f5f9;
+  }
+}
+
+.liveSectionHead {
+  margin-bottom: 0.85rem;
+}
+
+.liveSectionTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
+  margin-bottom: 0.45rem;
+}
+
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 0 20px -12px rgba(52, 211, 153, 0.6);
+}
+
+.liveCardTitle {
+  margin: 0;
+}
+
+.liveLead {
+  margin: 0;
+  color: #9eb0c9;
+  max-width: 40rem;
+}
+
+.liveList {
+  gap: 0.5rem;
+}
+
+.liveDetailsGlow {
+  border-color: rgba(125, 211, 252, 0.14);
+  background: linear-gradient(180deg, rgba(8, 14, 32, 0.58) 0%, rgba(6, 10, 24, 0.52) 100%);
+  box-shadow: 0 6px 28px -22px rgba(0, 0, 0, 0.7);
+
+  &[open] {
+    border-color: rgba(56, 189, 248, 0.32);
+    box-shadow:
+      0 6px 32px -20px rgba(0, 0, 0, 0.75),
+      0 0 36px -28px rgba(56, 189, 248, 0.2);
+  }
+}

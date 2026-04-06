@@ -1,0 +1,119 @@
+.root {
+  display: flex;
+  min-height: 100vh;
+  background: #0b0f18;
+  color: #e8ecf4;
+  font-family: var(--font-heading-present), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.sidebar {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.85);
+  padding: 1.25rem 0;
+}
+
+.brand {
+  padding: 0 1rem 1.25rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.brandTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.brandSub {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.5rem 0.65rem;
+  flex: 1;
+}
+
+.navLink {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: rgba(148, 163, 184, 0.12);
+    color: #f8fafc;
+  }
+}
+
+.navLinkActive {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.navLinkExternal {
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-top: 0.75rem;
+}
+
+.footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.user {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  word-break: break-all;
+  margin-bottom: 0.65rem;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #fecaca;
+  }
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.loading {
+  composes: root;
+  align-items: center;
+  justify-content: center;
+}

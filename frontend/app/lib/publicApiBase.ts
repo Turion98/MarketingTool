@@ -16,6 +16,19 @@ export function getPublicApiBase(): string {
 }
 
 /**
+ * Csak Next szerver (Route Handlers): dashboard embed token generálás ide POST-ol.
+ * Ha NEXT_PUBLIC_API_BASE éles, de a grantek / új végpontok lokális FastAPI-n vannak,
+ * állítsd: EMBED_ACCESS_VERIFY_API_BASE=vagy DASHBOARD_EMBED_API_BASE (ugyanaz a minta, mint a middleware verify-nél).
+ */
+export function getServerDashboardEmbedApiBase(): string {
+  const dash = process.env.DASHBOARD_EMBED_API_BASE?.trim();
+  if (dash) return dash.replace(/\/+$/, "");
+  const verify = process.env.EMBED_ACCESS_VERIFY_API_BASE?.trim();
+  if (verify) return verify.replace(/\/+$/, "");
+  return getPublicApiBase();
+}
+
+/**
  * Böngészős fetch() alapbázis: dev-ben, ha az API más origin, a Next proxy (same-origin).
  * Szerveren mindig a tényleges API URL (nincs CORS).
  */
