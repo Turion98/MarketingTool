@@ -10,105 +10,18 @@ import ReportScheduleForm from "../components/ReportScheduleForm/ReportScheduleF
 import { loadTokens } from "@/app/lib/tokenLoader";
 import { clearSkinCache } from "@/app/lib/utils/skinCacheDebug";
 import CampaignCard, { type RuneChoice } from "./components/CampaignCard";
+import {
+  deriveStoryId,
+  fetchStoriesWithMultiFallback,
+  type StoryListItem,
+} from "@/app/lib/storiesListing";
 
-type StoryMeta = {
-  id: string;
-  title: string;
-  description?: string;
-  coverImage?: string;
-  createdAt?: string;
-  jsonSrc: string;
-  startPageId?: string;
-};
+type StoryMeta = StoryListItem;
 
 type SkinMeta = { id: string; title: string; preview?: string };
 
 const SKIN_LS_KEY = "skinByCampaignId";
 const RUNE_LS_KEY = "runePackByCampaignId";
-
-/* =========================
-   Többlépcsős történetlista betöltés
-   ========================= */
-
-function envBase() {
-  const v = process.env.NEXT_PUBLIC_API_BASE || "";
-  return v ? v.replace(/\/+$/, "") : "";
-}
-function curOrigin() {
-  return typeof window !== "undefined" ? window.location.origin.replace(/\/+$/, "") : "";
-}
-
-function buildStoryCandidates(): string[] {
-  const env = envBase();
-  const origin = curOrigin();
-  const dev = "http://127.0.0.1:8000";
-
-  const urls: string[] = [];
-  if (env) urls.push(`${env}/api/stories`);             // 1) explicit backend
-  if (origin) urls.push(`${origin}/api/stories`);       // 2) same-origin API (ha van proxy)
-  urls.push(`/stories/registry.json`);                  // 3) statikus fallback ugyanazon originről
-  urls.push(`${dev}/api/stories`);                      // 4) DEV backend
-  return Array.from(new Set(urls));
-}
-
-function normalizeStories(payload: any): StoryMeta[] | null {
-  // forma A: tömb
-  if (Array.isArray(payload)) return payload as StoryMeta[];
-  // forma B: { stories: [...] }
-  if (payload && Array.isArray(payload.stories)) return payload.stories as StoryMeta[];
-  return null;
-}
-
-async function tryFetch(url: string): Promise<StoryMeta[] | null> {
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) return null;
-  const j = await r.json();
-  const norm = normalizeStories(j);
-  if (!norm) return null;
-
-  // registry.json-ból hiányozhat a jsonSrc → képezzük le
-  return norm.map((s: any) => {
-    const id = s?.id || deriveStoryId(s);
-    const jsonSrc =
-      s?.jsonSrc ||
-      (typeof id === "string" && id ? `/stories/${id}.json` : undefined);
-    return { ...s, id, jsonSrc } as StoryMeta;
-  });
-}
-
-async function fetchStoriesWithMultiFallback(): Promise<StoryMeta[]> {
-  const urls = buildStoryCandidates();
-  let lastErr: any = null;
-  for (const u of urls) {
-    try {
-      const res = await tryFetch(u);
-      if (res && res.length) {
-        if (u.includes("127.0.0.1")) console.info("[Adventures] DEV fallback @", u);
-        if (u.endsWith("/stories/registry.json")) console.info("[Adventures] Static registry @", u);
-        return res;
-      }
-      console.warn("[Adventures] no data @", u);
-    } catch (e) {
-      lastErr = e;
-      console.warn("[Adventures] fetch error @", u, e);
-    }
-  }
-  throw lastErr || new Error("No story source succeeded");
-}
-
-/* =========================
-   Segédek
-   ========================= */
-
-function deriveStoryId(a: Partial<StoryMeta> & Record<string, any>): string {
-  if (a?.id) return String(a.id);
-  const src = a?.jsonSrc;
-  if (typeof src === "string") {
-    const base = (src.split("/").pop() || "").replace(/\.[^.]+$/, "");
-    if (base) return base;
-  }
-  return "unknown";
-}
 
 /* =========================
    Komponens
@@ -166,7 +79,7 @@ export default function AdventuresPage() {
       try {
         setErr(null);
         setLoading(true);
-        const list = await fetchStoriesWithMultiFallback();
+        const list = await fetchStoriesWithMultiFallback("Adventures");
         setItems(Array.isArray(list) ? list : []);
       } catch (e: any) {
         setErr(e?.message || "Nem sikerült betölteni a sztorikat.");

@@ -11,6 +11,8 @@ export type BuildEmbedOpts = {
   runemode?: "single" | "triple";
   /** Átlátszó, chrome nélküli beágyazás (query: ghost=1) */
   ghost?: boolean;
+  /** Signed embed (REQUIRE_SIGNED_EMBED) */
+  accessToken?: string;
 };
 
 /**
@@ -30,6 +32,7 @@ export function buildEmbedUrl({
   runes,
   runemode,
   ghost,
+  accessToken,
 }: BuildEmbedOpts) {
   const origin =
     typeof window !== "undefined" && window.location?.origin
@@ -54,6 +57,7 @@ export function buildEmbedUrl({
   if (runes) q.set("runes", runes);
   if (runemode) q.set("runemode", runemode);
   if (ghost) q.set("ghost", "1");
+  if (accessToken) q.set("token", accessToken);
 
   // TELJES URL-t adjunk vissza (ne csak pathname+query-t)
   return u.toString();

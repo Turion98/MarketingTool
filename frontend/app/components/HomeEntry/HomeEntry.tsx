@@ -3,11 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { buildLiveEmbeddedRows } from "@/app/lib/buildLiveEmbeddedRows";
 import {
   buildMarketingEmbedUrl,
   buildHomeGhostEmbedUrl,
   type SkinEntry,
 } from "@/app/lib/embedSiteConfig";
+import { fetchLiveEmbeddedConfig } from "@/app/lib/liveEmbeddedConfig";
+import { fetchStoriesWithMultiFallback } from "@/app/lib/storiesListing";
 import { useEmbedParentIframeHeight } from "@/app/lib/useEmbedParentIframeHeight";
 import s from "./HomeEntry.module.scss";
 import ls from "@/app/login/login.module.scss";
@@ -32,6 +35,30 @@ export default function HomeEntry() {
     questellHomeEmbedOrigin,
     120
   );
+
+  const [liveRows, setLiveRows] = useState<
+    ReturnType<typeof buildLiveEmbeddedRows>
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [catalog, liveCfg] = await Promise.all([
+          fetchStoriesWithMultiFallback("HomeEntry"),
+          fetchLiveEmbeddedConfig(),
+        ]);
+        if (!cancelled) {
+          setLiveRows(buildLiveEmbeddedRows(catalog, liveCfg));
+        }
+      } catch {
+        if (!cancelled) setLiveRows([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,15 +165,15 @@ export default function HomeEntry() {
 
             <section className={s.block}>
               <p className={s.blurb}>
-                A szerkesztőbe való belépéshez használd az e-mailt és a jelszót.
-                Ez a rész <strong>még fejlesztés alatt</strong> áll — a jogosultságok
-                és a folyamat változhat.
+                A dashboardon látod a sztorikat, az előnézetet és a beágyazáshoz
+                szükséges linkeket; onnan nyithatod meg a szerkesztőt is — bejelentkezés
+                után érhető el.
               </p>
               <Link
-                href="/login?next=/editor"
+                href="/dashboard"
                 className={`${s.btn} ${s.btnPrimary}`}
               >
-                Belépés a szerkesztőbe
+                Dashboard
               </Link>
             </section>
 
@@ -159,6 +186,39 @@ export default function HomeEntry() {
                 Present oldal megtekintése
               </Link>
             </section>
+
+            {liveRows.length > 0 ? (
+              <section
+                className={s.block}
+                aria-label="Élő beágyazás — kampányok"
+              >
+                <h2 className={s.liveCampTitle}>Élő kampányok</h2>
+                <p className={s.blurb}>
+                  Ügyféloldalon futó beágyazások — kattintásra megnyílik az élő
+                  oldal. A cím a sztorikatalógus alapján jelenik meg.
+                </p>
+                <ul className={s.liveCampList}>
+                  {liveRows.map((row) => (
+                    <li key={row.storyId}>
+                      {row.livePageUrl ? (
+                        <a
+                          href={row.livePageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={s.liveCampItem}
+                        >
+                          <span className={s.liveCampName}>{row.displayTitle}</span>
+                        </a>
+                      ) : (
+                        <div className={s.liveCampItem}>
+                          <span className={s.liveCampName}>{row.displayTitle}</span>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
             <section className={s.block}>
               <p className={s.blurb}>

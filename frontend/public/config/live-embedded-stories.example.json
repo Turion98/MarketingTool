@@ -1,0 +1,9 @@
+{
+  "stories": [
+    {
+      "storyId": "pelda_kampany_slug",
+      "livePageUrl": "https://ugyfel.hu/termek-oldal",
+      "title": "Opcionális cím, ha nincs a katalógusban"
+    }
+  ]
+}

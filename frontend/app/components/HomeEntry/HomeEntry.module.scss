@@ -302,6 +302,48 @@ section.block:last-of-type {
   opacity: 0.84;
 }
 
+.liveCampTitle {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8c4ff;
+  opacity: 0.95;
+}
+
+.liveCampList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.liveCampItem {
+  display: block;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+a.liveCampItem:hover {
+  background: rgba(158, 197, 255, 0.1);
+  border-color: rgba(158, 197, 255, 0.35);
+}
+
+.liveCampName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e8ecf4;
+  line-height: 1.35;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

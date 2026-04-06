@@ -8,6 +8,7 @@
  *
  * Opcionális: data-mode="ghost" → ghost=1; data-skin, data-title, data-c, data-runes, data-runemode, data-analytics
  * data-gmin / data-gmax → URL query (min. küldött magasság + ghost max + belső görgetés)
+ * data-access-token → token=... (signed embed gate, ha REQUIRE_SIGNED_EMBED=true)
  */
 (function () {
   var MSG_SOURCE = "adventure-embed";
@@ -72,6 +73,9 @@
     iframeUrl.searchParams.set("analytics", "1");
   }
   if (isGhost) iframeUrl.searchParams.set("ghost", "1");
+
+  var accessToken = attr(scriptEl, "data-access-token", "");
+  if (accessToken) iframeUrl.searchParams.set("token", accessToken);
 
   var wrap = document.createElement("div");
   wrap.className = "adventure-embed-wrap";
