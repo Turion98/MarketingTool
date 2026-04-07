@@ -307,7 +307,38 @@ def rollup_range(
     _to: str,
     terminal: str | None = None,
 ) -> dict[str, JSONValue]:
+    dropoff_after_ms = 180_000
+    now_ms = int(datetime.utcnow().timestamp() * 1000)
+    # #region agent log
+    def _debug_log(message: str, data: dict[str, object], hypothesis_id: str) -> None:
+        try:
+            with open(r"c:\Users\csorg\Desktop\MarketingTool\debug-84b9bb.log", "a", encoding="utf-8") as lf:
+                lf.write(
+                    json.dumps(
+                        {
+                            "sessionId": "84b9bb",
+                            "runId": "pre-fix",
+                            "hypothesisId": hypothesis_id,
+                            "location": "backend/services/analytics.py:rollup_range",
+                            "message": message,
+                            "data": data,
+                            "timestamp": int(datetime.utcnow().timestamp() * 1000),
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+    # #endregion
     d = story_analytics_dir(story_id)
+    # #region agent log
+    _debug_log(
+        "rollup_range invoked",
+        {"storyId": story_id, "from": _from, "to": _to, "terminal": terminal, "analyticsDir": d},
+        "H2",
+    )
+    # #endregion
     try:
         start = datetime.strptime(_from, "%Y-%m-%d")
         end = datetime.strptime(_to, "%Y-%m-%d")
@@ -496,9 +527,15 @@ def rollup_range(
                 elif t == "choice_select":
                     totals["choices"] += 1
                     dom_agg["totals"]["choices"] += 1
-                    cid = str(props.get("choiceId") or props.get("id") or "")
-                    if pid and cid:
-                        pid_s = str(pid)
+                    cid_raw = props.get("choiceId") or props.get("id") or props.get("choice_id")
+                    cid = str(cid_raw).strip() if cid_raw is not None else ""
+                    if not cid:
+                        nxt = props.get("nextPageId") or props.get("next")
+                        if nxt is not None and str(nxt).strip():
+                            cid = f"next:{str(nxt).strip()}"
+                    pid_use = pid or obj.get("refPageId")
+                    if pid_use and cid:
+                        pid_s = str(pid_use)
                         choice_counts.setdefault(pid_s, {})
                         choice_counts[pid_s][cid] = choice_counts[pid_s].get(cid, 0) + 1
                 elif t == "puzzle_try":
@@ -606,6 +643,7 @@ def rollup_range(
             session_run_counts[sk] = session_run_counts.get(sk, 0) + 1
 
     session_restart_ts: dict[str, list[int]] = {}
+    restart_from_run_ids: set[str] = set()
     for sid_s, sess_evs in per_session_events.items():
         for e in sess_evs:
             if e.get("t") != "ui_click":
@@ -614,6 +652,9 @@ def rollup_range(
             if not isinstance(props, dict):
                 continue
             ctrl = str(props.get("control") or "").lower()
+            rfrom = props.get("restartFromRunId")
+            if rfrom:
+                restart_from_run_ids.add(str(rfrom))
             if "restart" not in ctrl:
                 continue
             ts_val = e.get("ts") or 0
@@ -627,6 +668,8 @@ def rollup_range(
     restart_runs_with = 0
     restart_completed_with = 0
     restart_completed_without = 0
+    stale_non_completed_runs = 0
+    missing_drop_page_runs = 0
     path_conv: dict[str, dict[str, object]] = {}
     end_type_dist: dict[str, dict[str, object]] = {}
 
@@ -705,7 +748,24 @@ def rollup_range(
                 first_ts_run = min(int(e.get("ts") or 0) for e in evs)
             except (TypeError, ValueError):
                 first_ts_run = 0
+        has_restart_click_in_run = any(
+            e.get("t") == "ui_click"
+            and isinstance(e.get("props"), dict)
+            and "restart" in str((e.get("props") or {}).get("control") or "").lower()
+            for e in evs
+        )
+        has_restart_run_start_marker = any(
+            e.get("t") == "ui_click"
+            and isinstance(e.get("props"), dict)
+            and str((e.get("props") or {}).get("control") or "").lower() == "run_start"
+            and str((e.get("props") or {}).get("trigger") or "").lower() == "restart"
+            for e in evs
+        )
         run_has_restart = bool(
+            str(rid) in restart_from_run_ids
+            or has_restart_click_in_run
+            or has_restart_run_start_marker
+        ) or bool(
             sid_run
             and any(restart_ts < first_ts_run for restart_ts in session_restart_ts.get(str(sid_run), []))
         )
@@ -717,7 +777,8 @@ def rollup_range(
             if completed:
                 restart_completed_without += 1
 
-        cta_shown_run = sum(1 for e in evs if e.get("t") == "cta_shown")
+        cta_shown_events_run = sum(1 for e in evs if e.get("t") == "cta_shown")
+        cta_shown_run = 1 if cta_shown_events_run > 0 else 0
         cta_click_run = sum(1 for e in evs if e.get("t") == "cta_click")
         is_terminal_end = bool(final_page_id and terminal_pages and str(final_page_id) in terminal_pages)
         is_outcome = bool(outcome_id and (completed or is_terminal_end))
@@ -813,9 +874,32 @@ def rollup_range(
             if e.get("t") == "page_enter" and e.get("pageId"):
                 last_enter = str(e["pageId"])
                 break
-        is_terminal = (last_enter in terminal_pages) if (last_enter and terminal_pages) else False
-        if last_enter and (not completed) and (not is_terminal):
-            dd = drop_offs.setdefault(last_enter, {"pageId": last_enter, "runsSet": set()})
+        last_page_any = None
+        for e in reversed(evs):
+            pid_any = e.get("pageId")
+            if pid_any:
+                last_page_any = str(pid_any)
+                break
+
+        last_ts_run = 0
+        for e in evs:
+            ts_val = e.get("ts")
+            try:
+                ts_i = int(ts_val) if ts_val is not None else 0
+            except (TypeError, ValueError):
+                ts_i = 0
+            if ts_i > last_ts_run:
+                last_ts_run = ts_i
+
+        is_terminal = bool(final_is_end or (last_enter and terminal_pages and last_enter in terminal_pages))
+        is_stale_run = bool(last_ts_run and (now_ms - last_ts_run >= dropoff_after_ms))
+        drop_page = last_enter or last_page_any
+        if (not completed) and is_stale_run:
+            stale_non_completed_runs += 1
+            if not drop_page:
+                missing_drop_page_runs += 1
+        if drop_page and (not completed) and (not is_terminal) and is_stale_run:
+            dd = drop_offs.setdefault(drop_page, {"pageId": drop_page, "runsSet": set()})
             dd["runsSet"].add(str(rid))
 
     session_count = len(sessions_all)
@@ -852,6 +936,8 @@ def rollup_range(
 
     choices_out = []
     for pid, counters in choice_counts.items():
+        if not counters:
+            continue
         choices_out.append(
             {
                 "pageId": pid,
@@ -861,6 +947,7 @@ def rollup_range(
                 ],
             }
         )
+    choices_out.sort(key=lambda x: sum(c["count"] for c in x["choices"]), reverse=True)
 
     end_pages_out = []
     for pid, v in end_pages.items():
@@ -947,6 +1034,22 @@ def rollup_range(
             }
         )
     path_conversion_out.sort(key=lambda x: x["runs"], reverse=True)
+    # #region agent log
+    _debug_log(
+        "rollup_range computed summary",
+        {
+            "storyId": story_id,
+            "runCount": run_count,
+            "completedRuns": completed_runs,
+            "outcomesCount": len(outcomes_out),
+            "dropOffCount": len(drop_offs_out),
+            "staleNonCompletedRuns": stale_non_completed_runs,
+            "missingDropPageRuns": missing_drop_page_runs,
+            "dropoffAfterMs": dropoff_after_ms,
+        },
+        "H3",
+    )
+    # #endregion
 
     no_restart_runs = restart_total_runs - restart_runs_with
     completion_with_restart = restart_completed_with / restart_runs_with if restart_runs_with else 0.0
@@ -1029,5 +1132,7 @@ def rollup_range(
             "completion": "completionRate run-alapú (game_complete / game:complete alapján). Terminal listát a dropoff/exit értelmezéshez használjuk.",
             "exitAfterPage": "Az adott időszakban session-önként az utolsó page_enter oldalt számoljuk exitként.",
             "paths": "Paths/steps/endPages/outcomes run-on belüli page_enter sorrendből épülnek.",
+            "ctaShown": "endPages/outcomes/paths ctaShown mező run-szintű (egy run-ban max 1), a totals.ctaShown esemény-szintű marad.",
+            "dropOffs": "Drop-off akkor számolódik, ha a run nem completed, nem terminal, és az utolsó run-esemény óta legalább 180 mp eltelt. Page fallback: utolsó page_enter, különben utolsó pageId-es event.",
         },
     }
