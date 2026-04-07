@@ -218,6 +218,10 @@ $gold: #f2b85b;
   padding-inline: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
 }
 
+.endCtaTakeoverNoMedia {
+  justify-content: center;
+}
+
 .endCtaTakeoverRootGhost {
   position: relative;
   inset: auto;
@@ -278,7 +282,7 @@ $gold: #f2b85b;
 
 /* Desktop: a média + CTA blokk feljebb (action bar alá igazítva), nem középen */
 @media (min-width: 768px) {
-  .endCtaTakeoverRoot:not(.endCtaTakeoverRootGhost) {
+  .endCtaTakeoverRoot:not(.endCtaTakeoverRootGhost):not(.endCtaTakeoverNoMedia) {
     justify-content: flex-start;
     padding-top: max(100px, calc(env(safe-area-inset-top, 0px) + 72px));
   }

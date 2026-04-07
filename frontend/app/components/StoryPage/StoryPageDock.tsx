@@ -199,6 +199,7 @@ export function StoryPageDock({
   };
 
   const endTakeoverActive = isEndNode && !!resolvedEndCta;
+  const hasEndCtaMedia = Boolean(endCtaMedia);
 
   return (
     <div
@@ -219,6 +220,7 @@ export function StoryPageDock({
           <div
             className={[
               style.endCtaTakeoverRoot,
+              !hasEndCtaMedia ? style.endCtaTakeoverNoMedia : "",
               embedGhost ? style.endCtaTakeoverRootGhost : "",
               isFadingOut ? style.endCtaTakeoverFading : "",
             ]
