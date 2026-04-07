@@ -9,19 +9,21 @@ import { isEmbedParentResizeMessage } from "./embedParentMessaging";
  */
 export function useEmbedParentIframeHeight(
   playerOrigin: string,
-  initialPx = 120
+  initialPx = 120,
+  sourceWindow?: Window | null
 ): number {
   const [height, setHeight] = useState(initialPx);
 
   useEffect(() => {
     const onMsg = (ev: MessageEvent) => {
       if (ev.origin !== playerOrigin) return;
+      if (sourceWindow && ev.source !== sourceWindow) return;
       if (!isEmbedParentResizeMessage(ev.data)) return;
       setHeight(Math.max(0, Math.ceil(ev.data.height) + 2));
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, [playerOrigin]);
+  }, [playerOrigin, sourceWindow]);
 
   return height;
 }

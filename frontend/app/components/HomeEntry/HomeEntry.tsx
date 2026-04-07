@@ -31,9 +31,11 @@ export default function HomeEntry() {
     () => new URL(questellHomeEmbedUrl).origin,
     [questellHomeEmbedUrl]
   );
+  const homeEmbedIframeRef = useRef<HTMLIFrameElement | null>(null);
   const homeEmbedIframeHeight = useEmbedParentIframeHeight(
     questellHomeEmbedOrigin,
-    120
+    120,
+    homeEmbedIframeRef.current?.contentWindow ?? null
   );
 
   const [liveRows, setLiveRows] = useState<
@@ -147,6 +149,7 @@ export default function HomeEntry() {
           >
             <div className={s.leftMainFrameInner}>
               <iframe
+                ref={homeEmbedIframeRef}
                 src={questellHomeEmbedUrl}
                 title="Questell — interaktív döntési élmény"
                 className={s.homeEmbedIframe}
