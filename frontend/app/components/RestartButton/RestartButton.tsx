@@ -7,7 +7,7 @@ import style from "./RestartButton.module.scss";
 import { createSessionSeeds } from "../../lib/sessionSeeds";
 import { clearAllCache } from "../../lib/clearAllCache";
 import { useGameState } from "../../lib/GameStateContext";
-import { trackUiClick, startNewRunSession } from "../../lib/analytics";
+import { trackUiClick, startNewRunId } from "../../lib/analytics";
 
 type RestartButtonProps = {
   seedCount?: number;
@@ -25,7 +25,7 @@ const RestartButton: React.FC<RestartButtonProps> = ({
   label = "Restart",
 }) => {
   const router = useRouter();
-  const { resetGame, setCurrentPageId, storyId, sessionId, currentPageId } =
+  const { resetGame, setCurrentPageId, storyId, sessionId, currentPageId, runId } =
     useGameState();
 
   // --- kliens oldali admin-detektálás (ugyanazt a logikát használjuk, amit a UI-ban is fogsz)
@@ -117,7 +117,7 @@ const RestartButton: React.FC<RestartButtonProps> = ({
 
     const admin = isAdminClient();
 
-    // analitika
+    // analitika: restart kattintás a jelenlegi runhoz kötve
     try {
       if (storyId && sessionId) {
         const page = String(currentPageId ?? "unknown");
@@ -125,6 +125,8 @@ const RestartButton: React.FC<RestartButtonProps> = ({
           seedCount,
           startPageId,
           admin: admin ? "1" : "0",
+          runId: runId || undefined,
+          restartFromRunId: runId || undefined,
         });
       }
     } catch {}
@@ -151,11 +153,19 @@ const RestartButton: React.FC<RestartButtonProps> = ({
       console.error("Restart error:", err);
     }
 
-    // ✅ Restart = egy új session + egy új runId (cache/session független, csak itt)
+    // ✅ Restart = ugyanabban a session-ben új run (nem nyitunk új session-t)
     const scopeKey =
       typeof window !== "undefined" ? window.location.host : "default";
+    let newRunId: string | undefined;
     try {
-      if (storyId) startNewRunSession(String(storyId), scopeKey);
+      if (storyId) newRunId = startNewRunId(String(storyId), scopeKey);
+      if (storyId && sessionId && newRunId) {
+        trackUiClick(String(storyId), String(sessionId), String(startPageId), "run_start", {
+          runId: newRunId,
+          trigger: "restart",
+          restartFromRunId: runId || undefined,
+        });
+      }
     } catch {}
 
     // redirect – ha admin volt, vigyük tovább az admin=1-et

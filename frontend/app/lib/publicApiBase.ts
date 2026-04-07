@@ -43,3 +43,18 @@ export function getClientFetchApiBase(): string {
   }
   return QUESTELL_DEV_API_PROXY_PATH;
 }
+
+/**
+ * Dashboard analytics (rollup-range) célzott kliens bázis.
+ * Ha meg van adva, ezzel felülírható a globális NEXT_PUBLIC_API_BASE anélkül,
+ * hogy a production default útvonalat eldobnánk.
+ */
+export function getClientDashboardAnalyticsApiBase(): string {
+  const raw = process.env.NEXT_PUBLIC_DASHBOARD_ANALYTICS_API_BASE?.trim();
+  if (!raw) return getClientFetchApiBase();
+
+  const remote = raw.replace(/\/+$/, "");
+  // Dashboard analytics override esetén direkt a megadott hostot használjuk,
+  // hogy devben ne a NEXT_PUBLIC_API_BASE-hez kötött proxy célra menjen.
+  return remote;
+}

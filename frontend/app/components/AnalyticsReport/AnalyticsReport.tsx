@@ -6,143 +6,12 @@ import {
   exportStoryJSON,
   clearStoryAnalytics,
 } from "@/app/lib/analytics";
+import { fetchRollupRange, type RollupRangePayload } from "@/app/lib/dashboardAnalytics";
 import styles from "./AnalyticsReport.module.scss";
 
 type Range = "last7d" | "last30d";
 
-type RangeRollup = {
-  storyId: string;
-  from: string;
-  to: string;
-  sessions: number;
-  users: number;
-  runs?: number;
-  totals: {
-    pageViews: number;
-    choices: number;
-    puzzles: {
-      tries: number;
-      solved: number;
-      byKind?: Record<string, { tries: number; solved: number }>;
-    };
-    runes: number;
-    mediaStarts: number;
-    mediaStops: number;
-    // opcionális: ha később hozzáadod
-    ctaShown?: number;
-    ctaClicks?: number;
-  };
-  kpis: {
-    completionRate: number;
-    avgSessionDurationMs: number;
-    puzzleSuccessRate: number;
-
-    ctaCtr?: number;
-    avgRunsPerUser?: number;
-  };
-
-  // ❗ DAU/pages/choices maradhat a backend válaszban, de UI-ból kivesszük
-  dau?: Array<{ day: string; users: number; sessions: number }>;
-  pages?: Array<{
-    pageId: string;
-    views: number;
-    uniqueSessions: number;
-    exitsAfterPage: number;
-  }>;
-  choices?: Array<{
-    pageId: string;
-    choices: Array<{ choiceId: string; count: number }>;
-  }>;
-
-
-outcomes?: Array<{
-  outcomeKey?: string;          // ✅ új (üzleti)
-  outcomeLabel?: string;        // ✅ új (emberi címke)
-  // kompatibilitás:
-  outcomeId?: string;           // régi (end page id / legacy)
-  runs?: number;                // ✅ új
-  sessions?: number;            // régi
-  users?: number;
-  ctaShown?: number;
-  ctaClicks?: number;
-
-  // extra üzleti insight:
-  endPagesCount?: number;       // ✅ hány end page tartozik ide
-  topEndPageId?: string;        // ✅ opcionális: leggyakoribb end page
-}>;
-
-// End pages: run-alap + share + ctr (UI számolja)
-endPages?: Array<{
-  pageId: string;
-  runs?: number;                // ✅ új
-  sessions?: number;            // régi
-  users?: number;
-  ctaShown?: number;
-  ctaClicks?: number;
-}>;
-
-// Drop-offs: ideális backend mező (ha van)
-dropOffs?: Array<{
-  pageId: string;               // nem end page
-  dropOffRuns: number;          // ✅ run-alap
-  users?: number;
-  dropOffPct?: number;          // opcionális (UI is számolja)
-}>;
-
-
-  paths?: Array<{
-    pathId: string; // pl. "Q1:A > Q2:B > ROT:gold/dark"
-    sessions: number;
-    users?: number;
-    topOutcomeId?: string;
-    ctaShown?: number;
-    ctaClicks?: number;
-  }>;
-
-  // ÚJ: Path conversion (run-alap, backend számolja)
-  pathConversion?: Array<{
-    pathId: string;
-    runs: number;
-    endRuns: number;
-    conversionRate: number; // 0..1
-  }>;
-
-  // ÚJ: Restart statisztikák (run-alap)
-  restartStats?: {
-    totalRuns: number;
-    runsWithRestart: number;
-    completionRateWithRestart: number;      // 0..1
-    completionRateWithoutRestart: number;   // 0..1
-  };
-
-  // ÚJ: End-type distribution
-  endDistribution?: Array<{
-    id: string;        // endType vagy pageId
-    count: number;
-    share: number;     // 0..1
-  }>;
-
-  // Puzzle (Runes): top 2 választott opció + hányadik próbára sikerül
-  puzzleRunesTopOptions?: Array<{ label: string; count: number }>;
-  puzzleRunesStats?: {
-    avgAttemptWhenSolved: number | null;
-    solvedByAttempt: Array<{ attempt: number; count: number }>;
-  };
-  // Riddle: run-szintű statok (átlag újrapróbálás, hibás kérdések)
-  riddleStats?: {
-    avgRetriesPerRun: number;
-    runsWithRiddle: number;
-    wrongByQuestion: Array<{ pageId: string; count: number; pct: number }>;
-  };
-
-  steps?: Array<{
-    stepId: string; // pl. "Q1", "taste_profile", "rotate_style"
-    stepType: "choice" | "rotate" | "puzzle" | "logic";
-    options: Array<{ value: string; sessions: number }>;
-  }>;
-
-  notes?: Record<string, string>;
-};
+type RangeRollup = RollupRangePayload;
 
 export type AnalyticsReportProps = {
   storyId: string;
@@ -225,25 +94,13 @@ export default function AnalyticsReport({
       setLoadingRange(true);
       setRangeError(null);
       try {
-        const params = new URLSearchParams({ storyId, from, to });
-        if (terminal.trim()) params.set("terminal", terminal.trim());
-
-       const base =
-  (typeof window !== "undefined" &&
-  (window.location.hostname === "www.thequestell.com" ||
-    window.location.hostname.endsWith(".thequestell.com")))
-    ? "https://api.thequestell.com"
-    : "http://127.0.0.1:8000";
-
-
-const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
-
-        const res = await fetch(url, { signal: ac.signal });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`HTTP ${res.status} – ${text || "rollup-range error"}`);
-        }
-        const json = (await res.json()) as RangeRollup;
+        const json = (await fetchRollupRange({
+          storyId,
+          from,
+          to,
+          terminal,
+          signal: ac.signal,
+        })) as RangeRollup;
         console.log("[report] rollup ok", {
   storyId: json.storyId,
   users: json.users,
@@ -726,7 +583,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                   <thead>
                     <tr>
                       <th>Path</th>
-                      <th>Sessions</th>
+                      <th>Runs</th>
                       <th>Users</th>
                       <th>Top outcome</th>
                       <th>CTA shown</th>
@@ -737,7 +594,7 @@ const url = `${base}/api/analytics/rollup-range?${params.toString()}`;
                     {rangeData.paths.map((p) => (
                       <tr key={p.pathId}>
                         <td className={styles.cellTruncatePath} title={p.pathId}>{p.pathId}</td>
-                        <td>{p.sessions}</td>
+                        <td>{p.runs}</td>
                         <td>{p.users ?? "—"}</td>
                         <td>{p.topOutcomeId ?? "—"}</td>
                         <td>{p.ctaShown ?? "—"}</td>

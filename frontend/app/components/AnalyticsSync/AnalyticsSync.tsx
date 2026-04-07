@@ -8,14 +8,14 @@ type Props = {
   intervalMs?: number; // alap: 30s
 };
 
-// ✅ egyetlen igazság: NEXT_PUBLIC_API_BASE
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  (process.env.NODE_ENV === "development"
-    ? "http://127.0.0.1:8000"
-    : "https://api.thequestell.com");
-
-const ENDPOINT = `${API_BASE.replace(/\/$/, "")}/api/analytics/batch`;
+// ✅ Analytics endpoint: ha meg van adva, ez az elsődleges (dev/local override).
+// Fallback: NEXT_PUBLIC_API_BASE + /api/analytics/batch
+const ENDPOINT =
+  process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT?.trim() ||
+  `${(process.env.NEXT_PUBLIC_API_BASE ??
+    (process.env.NODE_ENV === "development"
+      ? "http://127.0.0.1:8000"
+      : "https://api.thequestell.com")).replace(/\/$/, "")}/api/analytics/batch`;
 
 export default function AnalyticsSync({
   storyId,

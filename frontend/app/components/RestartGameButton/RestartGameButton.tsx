@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useGameState } from "@/app/lib/GameStateContext";
 import { clearAllCache } from "@/app/lib/clearAllCache";
 import { createSessionSeeds } from "@/app/lib/sessionSeeds";
+import { startNewRunId, trackUiClick } from "@/app/lib/analytics";
 import type { GameStateGlobals, PageData } from "@/app/lib/gameStateTypes";
 type Props = {
   className?: string;
@@ -50,12 +51,40 @@ const RestartGameButton: React.FC<Props> = ({ className }) => {
     resetGame,
     setStorySrc,
     storyId,
+    sessionId,
+    currentPageId,
+    runId,
   } = useGameState();
 
   const handleRestart = () => {
     if (typeof window === "undefined") return;
 
     const startPageId = resolveStartPageId(currentPageData, globals);
+    const scopeKey = window.location.host || "default";
+
+    // Restart esemény a régi runhoz
+    try {
+      if (storyId && sessionId) {
+        trackUiClick(String(storyId), String(sessionId), String(currentPageId ?? "unknown"), "restart_click", {
+          runId: runId || undefined,
+          restartFromRunId: runId || undefined,
+          startPageId,
+        });
+      }
+    } catch {}
+
+    // Új run ugyanabban a sessionben
+    let nextRunId: string | undefined;
+    try {
+      if (storyId) nextRunId = startNewRunId(String(storyId), scopeKey);
+      if (storyId && sessionId && nextRunId) {
+        trackUiClick(String(storyId), String(sessionId), String(startPageId), "run_start", {
+          runId: nextRunId,
+          trigger: "restart",
+          restartFromRunId: runId || undefined,
+        });
+      }
+    } catch {}
 
     // 🔹 Jelenlegi query (src, skin, runemode, runes, stb.) megtartása
     const search = window.location.search || "";

@@ -845,6 +845,11 @@ export async function uploadBatch(storyId: string, endpoint?: string) {
   if (!payload.events.length) return { ok: true, written: 0 };
 
   // --- Endpoint feloldás (prioritási sorrendben) ---
+  const explicitAnalyticsEndpoint =
+    (typeof process !== "undefined" &&
+      (process as unknown as { env?: Record<string, unknown> }).env?.[
+        "NEXT_PUBLIC_ANALYTICS_ENDPOINT"
+      ]) as string | undefined;
   const apiBase =
   (typeof process !== "undefined" &&
     (process as unknown as { env?: Record<string, unknown> }).env?.[
@@ -863,6 +868,7 @@ const devFastApi = "http://127.0.0.1:8000/api/analytics/batch";
 
 const endpoints = [
   endpoint,
+  explicitAnalyticsEndpoint, // dedikált analytics endpoint (dev/local override)
   envBatch,          // NEXT_PUBLIC_API_BASE alapján
   prodApi,           // biztos fallback prodra
   ...(process.env.NODE_ENV === "development" ? [devFastApi] : []),
