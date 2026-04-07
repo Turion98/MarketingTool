@@ -84,6 +84,7 @@ export async function POST(req: Request) {
 
   const text = await r.text();
   if (!r.ok) {
+    const endpoint = `${api}/api/embed-access/dashboard-generate`;
     let detail = text;
     try {
       const j = JSON.parse(text) as { detail?: unknown };
@@ -92,7 +93,11 @@ export async function POST(req: Request) {
       /* keep text */
     }
     return NextResponse.json(
-      { error: detail || `Backend HTTP ${r.status}` },
+      {
+        error:
+          detail ||
+          `Backend HTTP ${r.status} at ${endpoint} (check API base + backend deploy)`,
+      },
       { status: r.status >= 400 && r.status < 600 ? r.status : 502 }
     );
   }
