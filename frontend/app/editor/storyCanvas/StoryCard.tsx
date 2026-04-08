@@ -48,6 +48,10 @@ type StoryCardProps = {
   stackZ?: number;
   /** Csak nem-kezdő kártyán; megerősítés a szülőben. */
   onRequestDelete?: () => void;
+  /** Kártya tartalmának alaphelyzetbe állítása (ID marad). */
+  onRequestClean?: () => void;
+  /** Kártya másolása egyedi ID-val. */
+  onRequestDuplicate?: () => void;
   onBodyPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onSelectSingleForA11y?: () => void;
   onDragStart: (e: ReactPointerEvent<HTMLDivElement>) => void;
@@ -74,6 +78,8 @@ export default function StoryCard({
   milestoneActive,
   stackZ,
   onRequestDelete,
+  onRequestClean,
+  onRequestDuplicate,
   onBodyPointerDown,
   onSelectSingleForA11y,
   onDragStart,
@@ -86,7 +92,9 @@ export default function StoryCard({
   const [idEdit, setIdEdit] = useState(false);
   const [draftId, setDraftId] = useState("");
   const [renameErr, setRenameErr] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const idInputRef = useRef<HTMLInputElement>(null);
+  const cardRootRef = useRef<HTMLDivElement | null>(null);
 
   const ord = orderedOutgoingEdges(node.pageId, outgoing);
   const { w, h } = cardDimensions(node, ord);
@@ -94,8 +102,6 @@ export default function StoryCard({
   const isStart = node.pageId === STORY_GRAPH_START_NODE_ID;
 
   const raw = node.raw;
-  const titleStr =
-    typeof raw.title === "string" ? raw.title.trim() : "";
   const hasRes = !isStart && pageHasResolvableFragments(raw);
   const choices = Array.isArray(raw.choices) ? raw.choices : [];
 
@@ -131,17 +137,33 @@ export default function StoryCard({
     !isStart && !isEditorLogicPage(raw) && milestoneOn;
 
   const pendingPage = !isStart && isEditorPendingPageId(node.pageId);
-  const headerDisplayText = pendingPage ? "" : titleStr || node.pageId;
-  const headerHoverLabel =
-    titleStr && titleStr !== node.pageId
-      ? `${titleStr} · ${node.pageId}`
-      : node.pageId;
+  const headerDisplayText = pendingPage ? "" : node.pageId;
+  const headerHoverLabel = node.pageId;
 
   useEffect(() => {
     if (!idEdit || !idInputRef.current) return;
     idInputRef.current.focus();
     if (!pendingPage) idInputRef.current.select();
   }, [idEdit, pendingPage]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDocPointerDown = (ev: PointerEvent) => {
+      const t = ev.target as Node | null;
+      if (!t) return;
+      if (cardRootRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    };
+    const onDocKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onDocPointerDown);
+    document.addEventListener("keydown", onDocKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onDocPointerDown);
+      document.removeEventListener("keydown", onDocKeyDown);
+    };
+  }, [menuOpen]);
 
   const cancelIdEdit = useCallback(() => {
     setIdEdit(false);
@@ -209,7 +231,15 @@ export default function StoryCard({
 
   return (
     <div
-      ref={domRef}
+      ref={(el) => {
+        cardRootRef.current = el;
+        if (!domRef) return;
+        if (typeof domRef === "function") {
+          domRef(el);
+          return;
+        }
+        (domRef as { current: HTMLDivElement | null }).current = el;
+      }}
       className={`${s.card} ${node.category === "end" ? s.cardEnd : ""} ${selected ? s.cardSelected : ""} ${issues.length ? s.cardInvalid : ""} ${pendingPage ? s.cardNeedsPageId : ""}`}
       style={{
         left: x,
@@ -220,8 +250,11 @@ export default function StoryCard({
           ? editorEndCardAccentStyle(node.pageId, selected)
           : {}),
         ...(typeof stackZ === "number" && Number.isFinite(stackZ)
-          ? { zIndex: stackZ }
-          : {}),
+          ? { zIndex: menuOpen ? Math.max(stackZ, 9999) : stackZ }
+          : menuOpen
+            ? { zIndex: 9999 }
+            : {}),
+        ...(menuOpen ? { overflow: "visible" } : {}),
       }}
       role={idEdit ? undefined : "button"}
       tabIndex={idEdit ? -1 : 0}
@@ -234,6 +267,20 @@ export default function StoryCard({
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
+      }}
+      onPointerDown={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("[data-no-card-drag='1']")) {
+          e.stopPropagation();
+          return;
+        }
+        e.stopPropagation();
+        if (e.shiftKey) {
+          onBodyPointerDown(e);
+          return;
+        }
+        e.preventDefault();
+        onDragStart(e);
       }}
     >
       {showMilestoneOrb ? (
@@ -266,22 +313,6 @@ export default function StoryCard({
             ? "Dupla katt az ID mezőn — kötelező. Máshol húzd az áthelyezéshez."
             : "Húzd az áthelyezéshez (az ID sávon dupla katt: szerkesztés)"
         }
-        onPointerDown={(e) => {
-          if (
-            (e.target as HTMLElement).closest("[data-card-id-zone]")
-          ) {
-            e.stopPropagation();
-            if (e.shiftKey) onBodyPointerDown(e);
-            return;
-          }
-          e.stopPropagation();
-          if (e.shiftKey) {
-            onBodyPointerDown(e);
-            return;
-          }
-          e.preventDefault();
-          onDragStart(e);
-        }}
       >
         {isStart ? (
           <div className={s.cardStartInner}>
@@ -304,6 +335,7 @@ export default function StoryCard({
             <div
               className={s.cardIdZone}
               data-card-id-zone="1"
+              data-no-card-drag="1"
               title={
                 pendingPage
                   ? onRenamePageId
@@ -328,6 +360,7 @@ export default function StoryCard({
                 <input
                   ref={idInputRef}
                   className={s.cardIdInput}
+                  data-no-card-drag="1"
                   value={draftId}
                   aria-label="Oldalazonosító"
                   aria-invalid={renameErr ? true : undefined}
@@ -367,33 +400,85 @@ export default function StoryCard({
               <div className={s.cardHeaderRight}>
                 <button
                   type="button"
-                  className={s.cardDeleteBtn}
-                  aria-label="Oldal törlése"
-                  title="Oldal törlése"
+                  className={s.cardMenuBtn}
+                  data-no-card-drag="1"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="Kártya műveletek"
+                  title="Kártya műveletek"
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRequestDelete();
+                    setMenuOpen((open) => !open);
                   }}
                 >
-                  ×
+                  ⋯
                 </button>
+                {menuOpen ? (
+                  <div
+                    className={s.cardMenuPanel}
+                    data-no-card-drag="1"
+                    role="menu"
+                    aria-label="Kártya műveletek"
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    {onRequestClean ? (
+                      <button
+                        type="button"
+                        className={s.cardMenuItem}
+                        role="menuitem"
+                        data-no-card-drag="1"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onRequestClean();
+                        }}
+                      >
+                        Clean
+                      </button>
+                    ) : null}
+                    {onRequestDuplicate ? (
+                      <button
+                        type="button"
+                        className={s.cardMenuItem}
+                        role="menuitem"
+                        data-no-card-drag="1"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onRequestDuplicate();
+                        }}
+                      >
+                        Duplicate
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className={`${s.cardMenuItem} ${s.cardMenuDelete}`}
+                      role="menuitem"
+                      data-no-card-drag="1"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onRequestDelete();
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
         )}
       </div>
 
-      <div
-        className={s.cardBody}
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          onBodyPointerDown(e);
-        }}
-      >
+      <div className={s.cardBody}>
         {isStart ? (
           <span className={s.cardStartSub}>start →</span>
         ) : (

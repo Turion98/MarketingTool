@@ -148,6 +148,10 @@ type StoryCanvasProps = {
   embedded?: boolean;
   /** Kártya / inspektor törlés — megerősítés a hívóban. */
   onDeletePage?: (pageId: string) => void;
+  /** Kártya tartalom alaphelyzetbe (ID marad). */
+  onCleanPage?: (pageId: string) => void;
+  /** Kártya duplikálás új, egyedi ID-val. */
+  onDuplicatePage?: (pageId: string) => void;
   /** Dupla kattintásos oldal-ID a kártyán; `null` = siker. */
   onRenamePageId?: (fromId: string, toId: string) => string | null;
   /** Új függő oldal létrejöttekor (pl. jobb panel megnyitása). */
@@ -174,6 +178,8 @@ export default function StoryCanvas({
   metaIssues,
   embedded = false,
   onDeletePage,
+  onCleanPage,
+  onDuplicatePage,
   onRenamePageId,
   onPendingPageCreated,
   visualBarLeading,
@@ -1032,6 +1038,20 @@ export default function StoryCanvas({
                     !onDeletePage
                       ? undefined
                       : () => onDeletePage(n.pageId)
+                  }
+                  onRequestClean={
+                    interactionLocked ||
+                    n.pageId === STORY_GRAPH_START_NODE_ID ||
+                    !onCleanPage
+                      ? undefined
+                      : () => onCleanPage(n.pageId)
+                  }
+                  onRequestDuplicate={
+                    interactionLocked ||
+                    n.pageId === STORY_GRAPH_START_NODE_ID ||
+                    !onDuplicatePage
+                      ? undefined
+                      : () => onDuplicatePage(n.pageId)
                   }
                   onRenamePageId={
                     interactionLocked ||

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -18,8 +19,12 @@ import {
   useGameState,
 } from "@/app/lib/GameStateContext";
 import { collectStoryPageIds } from "@/app/lib/editor/findPageInStory";
+import { findPageInStoryDocument } from "@/app/lib/editor/findPageInStory";
 import { validateStoryPages as validateEditorPages } from "@/app/lib/editor/pageInspectorValidation";
-import type { EditorPageCategory } from "@/app/lib/editor/storyPagesFlatten";
+import {
+  classifyEditorPage,
+  type EditorPageCategory,
+} from "@/app/lib/editor/storyPagesFlatten";
 import { saveStoryDocumentJson } from "@/app/lib/api/stories";
 import {
   NEW_STORY_SRC_SENTINEL,
@@ -31,10 +36,22 @@ import { loadTokens } from "@/app/lib/tokenLoader";
 import { normalizeLegacyMilestoneFragmentIdsInStory } from "@/app/lib/milestoneFragmentId";
 import {
   removePageFromStory,
+  replacePageInStory,
   renameStoryPageIdInStory,
 } from "@/app/lib/editor/storyPagePatch";
-import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
+import {
+  appendPageToStory,
+  buildEmptyPageForCategory,
+  isEditorPendingPageId,
+} from "@/app/lib/editor/storyTemplateInsert";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
+import {
+  EDITOR_LAYOUT_REVISION,
+  mergeEditorLayoutIntoStory,
+  readEditorLayoutFromStory,
+  type EditorLayoutNode,
+  type EditorLayoutState,
+} from "@/app/lib/editor/storyGraphLayout";
 import { validateStory } from "@/app/lib/schema/validator";
 import EditorOutline from "./EditorOutline";
 import NewStoryMetaPanel from "./NewStoryMetaPanel";
@@ -821,6 +838,7 @@ export default function EditorStudio({
   const [activeStorySrc, setActiveStorySrc] =
     useState<string>(SEED_STORY_SRC);
   const [isNewStoryBootstrap, setIsNewStoryBootstrap] = useState(false);
+  const [leftRailOpen, setLeftRailOpen] = useState(true);
   const previousActiveStorySrcRef = useRef<string>(SEED_STORY_SRC);
   const [serverStoryList, setServerStoryList] = useState<ListedStory[]>([]);
   const [storyListLoading, setStoryListLoading] = useState(false);
@@ -1256,6 +1274,77 @@ export default function EditorStudio({
     [draftStory, onStoryChangeFromCanvas]
   );
 
+  const onCleanPage = useCallback(
+    (pageId: string) => {
+      const pid = pageId.trim();
+      const cur = draftStoryRef.current;
+      if (!pid || !cur) return;
+      const page = findPageInStoryDocument(cur, pid);
+      if (!page) return;
+      const cls = classifyEditorPage(page);
+      if (cls === "end") return;
+      const blank = buildEmptyPageForCategory(cls, cur);
+      const blankWithSameId = { ...blank, id: pid };
+      const next = replacePageInStory(cur, pid, blankWithSameId);
+      onStoryChangeFromCanvas(next);
+      setSelectedPageIds([pid]);
+    },
+    [onStoryChangeFromCanvas]
+  );
+
+  const onDuplicatePage = useCallback(
+    (pageId: string) => {
+      const pid = pageId.trim();
+      const cur = draftStoryRef.current;
+      if (!pid || !cur) return;
+      const src = findPageInStoryDocument(cur, pid);
+      if (!src) return;
+
+      const used = new Set(collectStoryPageIds(cur));
+      const stem = `${pid}_copy`;
+      let nextId = stem;
+      let i = 2;
+      while (used.has(nextId)) {
+        nextId = `${stem}${i}`;
+        i += 1;
+      }
+
+      const clone: Record<string, unknown> =
+        typeof structuredClone === "function"
+          ? (structuredClone(src) as Record<string, unknown>)
+          : (JSON.parse(JSON.stringify(src)) as Record<string, unknown>);
+      clone.id = nextId;
+
+      let nextStory = appendPageToStory(cur, clone);
+      const savedLayout = readEditorLayoutFromStory(cur);
+      const srcPos = savedLayout?.nodes[pid];
+      if (savedLayout && srcPos) {
+        let maxZ = 0;
+        for (const n of Object.values(savedLayout.nodes)) {
+          if (typeof n.z === "number" && Number.isFinite(n.z)) {
+            maxZ = Math.max(maxZ, n.z);
+          }
+        }
+        const dupPos: EditorLayoutNode = {
+          x: srcPos.x + 40,
+          y: srcPos.y + 28,
+          z: Math.max(maxZ + 1, (srcPos.z ?? 1) + 1),
+        };
+        const nextLayout: EditorLayoutState = {
+          version: 1,
+          layoutRevision:
+            savedLayout.layoutRevision ?? EDITOR_LAYOUT_REVISION,
+          nodes: { ...savedLayout.nodes, [nextId]: dupPos },
+        };
+        nextStory = mergeEditorLayoutIntoStory(nextStory, nextLayout);
+      }
+
+      onStoryChangeFromCanvas(nextStory);
+      setSelectedPageIds([nextId]);
+    },
+    [onStoryChangeFromCanvas]
+  );
+
   const onStoryReplaced = useCallback(
     (nextStory: Record<string, unknown>, _json: string) => {
       const normalized = normalizeLegacyMilestoneFragmentIdsInStory(nextStory);
@@ -1330,14 +1419,20 @@ export default function EditorStudio({
     return opts;
   }, [activeStorySrc, visibleStoryList]);
 
+  useEffect(() => {
+    if (!leftRailOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLeftRailOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [leftRailOpen]);
+
   return (
     <div className={s.root}>
       <div className={s.shell}>
       <div className={s.topBar}>
         <h1 className={s.title}>Szerkesztő</h1>
-        <button type="button" className={s.btnGhost} onClick={onLogout}>
-          Kilépés
-        </button>
       </div>
       <p className={s.userLine}>
         Bejelentkezve: <strong>{userEmail ?? userId}</strong>
@@ -1349,11 +1444,118 @@ export default function EditorStudio({
         ) : null}
       </p>
 
+      <button
+        type="button"
+        className={s.sidePanelTrigger}
+        aria-expanded={leftRailOpen}
+        aria-label={leftRailOpen ? "Close side panel" : "Open side panel"}
+        title={leftRailOpen ? "Close panel" : "Open panel"}
+        onClick={() => setLeftRailOpen((v) => !v)}
+      >
+        {leftRailOpen ? "←" : "→"}
+      </button>
+      {leftRailOpen ? (
+        <button
+          type="button"
+          aria-label="Close side panel backdrop"
+          className={s.sidePanelBackdrop}
+          onClick={() => setLeftRailOpen(false)}
+        />
+      ) : null}
+      <aside
+        className={`${s.sidePanel} ${leftRailOpen ? s.sidePanelOpen : ""}`}
+        aria-label="Editor controls"
+      >
+        <div className={s.sidePanelLogoWrap} aria-hidden>
+          <div className={s.sidePanelLogoMark}>
+            <Image
+              src="/assets/my_logo.png"
+              alt="Questell logo"
+              width={40}
+              height={40}
+              className={s.sidePanelLogoImg}
+              priority
+            />
+          </div>
+        </div>
+        <div className={s.sidePanelActions}>
+          <button type="button" className={s.sidePanelActionBtn} onClick={onLogout}>
+            Logout
+          </button>
+          <button
+            type="button"
+            className={s.sidePanelActionBtn}
+            onClick={beginNewStory}
+            title="Create a new story (meta bootstrap first)."
+          >
+            New Story
+          </button>
+          <button
+            type="button"
+            className={s.sidePanelActionBtn}
+            disabled={saveServerBusy || isNewStoryBootstrap}
+            onClick={() => void onSaveDraftToServer()}
+            title="Save draft changes to server (strict validation)."
+          >
+            {saveServerBusy ? "Saving..." : "Save Changes"}
+          </button>
+          {isNewStoryBootstrap ? (
+            <button
+              type="button"
+              className={s.sidePanelActionBtn}
+              onClick={cancelNewStory}
+              title="Back to previous story"
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+      </aside>
       <div
         className={`${s.workspace} ${draftStory ? "" : s.workspaceCanvasOnly}`}
       >
         <div className={s.leftColumn}>
           <div ref={visualWorkbenchRef} className={s.visualWorkbench}>
+            <button
+              type="button"
+              className={s.visualFullscreenCornerBtn}
+              onClick={() => void toggleEditorFullscreen()}
+              aria-pressed={isFullscreen}
+              aria-label={
+                isFullscreen
+                  ? "Kilépés a teljes képernyőből"
+                  : "Vizuális szerkesztő teljes képernyőre"
+              }
+              title={isFullscreen ? "Kilépés (Esc)" : "Teljes képernyő (vászon)"}
+            >
+              {isFullscreen ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                </svg>
+              ) : (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              )}
+            </button>
             <div className={s.visualWorkbenchBody}>
               {draftStory ? (
                 <StoryCanvas
@@ -1367,6 +1569,8 @@ export default function EditorStudio({
                   metaIssues={metaEditorIssues}
                   embedded
                   onDeletePage={onDeletePage}
+                  onCleanPage={onCleanPage}
+                  onDuplicatePage={onDuplicatePage}
                   canvasFullscreen={isFullscreen}
                   interactionLocked={isNewStoryBootstrap}
                   fullscreenSideSlot={
@@ -1394,149 +1598,79 @@ export default function EditorStudio({
                   }
                   visualBarLeading={
                     <>
-                      <button
-                        type="button"
-                        className={s.fullscreenToggleBtn}
-                        onClick={() => void toggleEditorFullscreen()}
-                        aria-pressed={isFullscreen}
-                        aria-label={
-                          isFullscreen
-                            ? "Kilépés a teljes képernyőből"
-                            : "Vizuális szerkesztő teljes képernyőre"
-                        }
-                        title={
-                          isFullscreen
-                            ? "Kilépés (Esc)"
-                            : "Teljes képernyő (vászon)"
-                        }
-                      >
-                        {isFullscreen ? (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            aria-hidden
-                          >
-                            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            aria-hidden
-                          >
-                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                          </svg>
-                        )}
-                      </button>
-                      <div className={s.storyPickerWrap}>
-                        <span
-                          className={`${s.storyPickerLabel} ${
-                            isAdmin
-                              ? s.storyPickerLabelAdmin
-                              : s.storyPickerLabelUser
-                          }`}
-                          id="editor-story-src-label"
-                        >
-                          Sztori
-                        </span>
-                        <select
-                          id="editor-story-select"
-                          className={`${s.pageSelect} ${s.storyPickerSelect}`}
-                          aria-labelledby="editor-story-src-label"
-                          disabled={isNewStoryBootstrap}
-                          aria-busy={storyListLoading}
-                          title={
-                            storyListError
-                              ? storyListError
-                              : storyListLoading && visibleStoryList.length === 0
-                                ? "Sztori lista betöltése…"
-                                : isAdmin
-                                  ? `${serverStoryList.length} sztori a szerveren`
-                                  : `${visibleStoryList.length} elérhető sztori`
-                          }
-                          value={normalizeEditorStorySrc(activeStorySrc)}
-                          onChange={(e) => {
-                            const next = normalizeEditorStorySrc(
-                              e.target.value
-                            );
-                            setActiveStorySrc(next);
-                            handleSelectPageIds([]);
-                            writePersistedEditorStorySrc(next);
-                          }}
-                        >
-                          {editorStorySelectOptions}
-                        </select>
-                        {storyListError ? (
-                          <span className={s.storyPickerErr}>
-                            {storyListError}
-                          </span>
-                        ) : null}
-                        {!isAdmin &&
-                        (!editorStoryAllowlist ||
-                          editorStoryAllowlist.length === 0) &&
-                        !storyListError ? (
-                          <span className={s.storyPickerHint}>
-                            Előfizetői mód: add meg a{" "}
-                            <code className={s.storyPickerCode}>
-                              NEXT_PUBLIC_EDITOR_STORY_ALLOWLIST
-                            </code>{" "}
-                            env változót (story id-k, vesszővel). Fejlesztéshez:
-                            egyetlen{" "}
-                            <code className={s.storyPickerCode}>*</code> = összes
-                            sztori.
-                          </span>
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        className={s.newStoryBtn}
-                        onClick={beginNewStory}
-                        title="Új üres sztori: előbb kötelező meta a jobb panelen."
-                      >
-                        Új sztori
-                      </button>
-                      {isNewStoryBootstrap ? (
-                        <button
-                          type="button"
-                          className={s.cancelBootstrapBtn}
-                          onClick={cancelNewStory}
-                          title="Vissza az előző forráshoz"
-                        >
-                          Mégse
-                        </button>
-                      ) : null}
-                      <div className={s.visualBarSaveCluster}>
-                        <button
-                          type="button"
-                          className={s.saveToServerBtn}
-                          disabled={saveServerBusy || isNewStoryBootstrap}
-                          onClick={() => void onSaveDraftToServer()}
-                          title="A vázlat felülírja a szerveren a storyId szerinti JSON fájlt (strict validáció)."
-                        >
-                          {saveServerBusy ? "Mentés…" : "Változások mentése"}
-                        </button>
-                        {saveServerHint ? (
+                      <div className={s.visualStoryPickerRow}>
+                        <div className={`${s.storyPickerWrap} ${s.storyPickerWrapInCanvas}`}>
                           <span
-                            className={
-                              saveServerTone === "ok"
-                                ? s.saveServerHintOk
-                                : s.saveServerHintErr
-                            }
+                            className={`${s.storyPickerLabel} ${
+                              isAdmin
+                                ? s.storyPickerLabelAdmin
+                                : s.storyPickerLabelUser
+                            }`}
+                            id="editor-story-src-label"
                           >
-                            {saveServerHint}
+                            Sztori
                           </span>
-                        ) : null}
+                          <select
+                            id="editor-story-select"
+                            className={`${s.pageSelect} ${s.storyPickerSelect}`}
+                            aria-labelledby="editor-story-src-label"
+                            disabled={isNewStoryBootstrap}
+                            aria-busy={storyListLoading}
+                            title={
+                              storyListError
+                                ? storyListError
+                                : storyListLoading &&
+                                    visibleStoryList.length === 0
+                                  ? "Sztori lista betöltése…"
+                                  : isAdmin
+                                    ? `${serverStoryList.length} sztori a szerveren`
+                                    : `${visibleStoryList.length} elérhető sztori`
+                            }
+                            value={normalizeEditorStorySrc(activeStorySrc)}
+                            onChange={(e) => {
+                              const next = normalizeEditorStorySrc(
+                                e.target.value
+                              );
+                              setActiveStorySrc(next);
+                              handleSelectPageIds([]);
+                              writePersistedEditorStorySrc(next);
+                            }}
+                          >
+                            {editorStorySelectOptions}
+                          </select>
+                          {storyListError ? (
+                            <span className={s.storyPickerErr}>
+                              {storyListError}
+                            </span>
+                          ) : null}
+                          {!isAdmin &&
+                          (!editorStoryAllowlist ||
+                            editorStoryAllowlist.length === 0) &&
+                          !storyListError ? (
+                            <span className={s.storyPickerHint}>
+                              Előfizetői mód: add meg a{" "}
+                              <code className={s.storyPickerCode}>
+                                NEXT_PUBLIC_EDITOR_STORY_ALLOWLIST
+                              </code>{" "}
+                              env változót (story id-k, vesszővel). Fejlesztéshez:
+                              egyetlen{" "}
+                              <code className={s.storyPickerCode}>*</code> =
+                              összes sztori.
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
+                      {saveServerHint ? (
+                        <span
+                          className={
+                            saveServerTone === "ok"
+                              ? s.saveServerHintOk
+                              : s.saveServerHintErr
+                          }
+                        >
+                          {saveServerHint}
+                        </span>
+                      ) : null}
                     </>
                   }
                 />
