@@ -291,6 +291,23 @@
   border-radius: 10px;
 }
 
+.activitySplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(180px, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.activityMain {
+  min-width: 0;
+}
+
+.activityStats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+}
+
 .activityBg {
   fill: rgba(2, 6, 23, 0.45);
 }
@@ -326,6 +343,10 @@
 }
 
 @media (max-width: 900px) {
+  .activitySplit {
+    grid-template-columns: 1fr;
+  }
+
   .twoCol {
     grid-template-columns: 1fr;
   }

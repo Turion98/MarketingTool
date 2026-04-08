@@ -12,7 +12,7 @@ import o from "./dashboardOverview.module.scss";
 const LIVE_SECTION_LEAD =
   "Minden sor egy ügyféloldalon futó beágyazás. Ide kerül a teljesítmény és az események összefoglalója — hogy egy pillantással lásd, mi történik az élő linkeken.";
 
-type SeriesKey = "users" | "sessions" | "runs";
+type SeriesKey = "users" | "sessions";
 type RangePreset = "last7d" | "last30d";
 
 function isEndLike(id: string) {
@@ -97,7 +97,6 @@ function ActivityChart({
   const maxVal = Math.max(
     1,
     ...dau.map((d) => d.users),
-    ...dau.map((d) => d.sessions),
     ...dau.map((d) => d.sessions)
   );
 
@@ -113,7 +112,6 @@ function ActivityChart({
   const series = {
     users: dau.map((d) => d.users),
     sessions: dau.map((d) => d.sessions),
-    runs: dau.map((d) => d.sessions),
   };
 
   return (
@@ -125,7 +123,6 @@ function ActivityChart({
       })}
       {visible.users ? <polyline points={toPoints(series.users)} className={o.seriesUsers} /> : null}
       {visible.sessions ? <polyline points={toPoints(series.sessions)} className={o.seriesSessions} /> : null}
-      {visible.runs ? <polyline points={toPoints(series.runs)} className={o.seriesRuns} /> : null}
     </svg>
   );
 }
@@ -138,7 +135,6 @@ function LiveAnalyticsSection({ storyId }: { storyId: string }) {
   const [visible, setVisible] = useState<Record<SeriesKey, boolean>>({
     users: true,
     sessions: true,
-    runs: true,
   });
 
   useEffect(() => {
@@ -165,6 +161,8 @@ function LiveAnalyticsSection({ storyId }: { storyId: string }) {
       : 0);
 
   const topPages = useMemo(() => (data?.pages ?? []).slice(0, 8), [data]);
+  const sessionsPerUser = data?.users ? data.sessions / data.users : 0;
+  const runsPerSession = data?.sessions ? (data.runs ?? 0) / data.sessions : 0;
   const maxPageViews = Math.max(1, ...topPages.map((x) => x.views));
   const dropOffs = useMemo(() => {
     if (!data) return [];
@@ -246,25 +244,47 @@ function LiveAnalyticsSection({ storyId }: { storyId: string }) {
 
       <section className={o.section}>
         <h4 className={o.sectionTitle}>2) Traffic & Activity</h4>
-        {data.dau && data.dau.length > 1 ? (
-          <>
-            <div className={o.seriesToggle}>
-              {(["users", "sessions", "runs"] as SeriesKey[]).map((k) => (
-                <label key={k}>
-                  <input
-                    type="checkbox"
-                    checked={visible[k]}
-                    onChange={(e) => setVisible((s) => ({ ...s, [k]: e.target.checked }))}
-                  />
-                  {k}
-                </label>
-              ))}
+        <div className={o.activitySplit}>
+          <div className={o.activityMain}>
+            {data.dau && data.dau.length > 1 ? (
+              <>
+                <div className={o.seriesToggle}>
+                  {(["users", "sessions"] as SeriesKey[]).map((k) => (
+                    <label key={k}>
+                      <input
+                        type="checkbox"
+                        checked={visible[k]}
+                        onChange={(e) => setVisible((s) => ({ ...s, [k]: e.target.checked }))}
+                      />
+                      {k}
+                    </label>
+                  ))}
+                </div>
+                <ActivityChart dau={data.dau} visible={visible} />
+              </>
+            ) : (
+              <p className={o.panelInfo}>Nincs elég idősoros adat a grafikonhoz.</p>
+            )}
+          </div>
+          <div className={o.activityStats}>
+            <div className={o.miniStat}>
+              <span className={o.miniLabel}>Users</span>
+              <strong className={o.miniValue}>{data.users}</strong>
             </div>
-            <ActivityChart dau={data.dau} visible={visible} />
-          </>
-        ) : (
-          <p className={o.panelInfo}>Nincs elég idősoros adat a grafikonhoz.</p>
-        )}
+            <div className={o.miniStat}>
+              <span className={o.miniLabel}>Sessions</span>
+              <strong className={o.miniValue}>{data.sessions}</strong>
+            </div>
+            <div className={o.miniStat}>
+              <span className={o.miniLabel}>Sessions / user</span>
+              <strong className={o.miniValue}>{sessionsPerUser.toFixed(2)}</strong>
+            </div>
+            <div className={o.miniStat}>
+              <span className={o.miniLabel}>Runs / session</span>
+              <strong className={o.miniValue}>{runsPerSession.toFixed(2)}</strong>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className={o.section}>
