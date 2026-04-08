@@ -257,8 +257,12 @@
     },
     {
       "id": "q2_dry_timing",
-      "title": "Mikor érzed leginkább ezt?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mikor érzed leginkább ezt?"
+        }
+      ],
       "choices": [
         {
           "text": "Mosakodás után szinte rögtön feszül",
@@ -276,8 +280,12 @@
     },
     {
       "id": "q3_dry_reaction",
-      "title": "Mi történik, ha gazdagabb hidratálót használsz?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mi történik, ha gazdagabb hidratálót használsz?"
+        }
+      ],
       "choices": [
         {
           "text": "Megnyugszik, kényelmesebb lesz",
@@ -291,8 +299,12 @@
     },
     {
       "id": "q3_dehydrated_split",
-      "title": "Melyik igazabb?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Melyik igazabb?"
+        }
+      ],
       "choices": [
         {
           "text": "Inkább fakó, élettelen, „szomjas” a bőröm",
@@ -306,8 +318,12 @@
     },
     {
       "id": "q2_oily_pattern",
-      "title": "Hogyan jelenik meg a zsírosodás?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Hogyan jelenik meg a zsírosodás?"
+        }
+      ],
       "choices": [
         {
           "text": "Reggel még rendben van, később fényesedik ki",
@@ -325,8 +341,12 @@
     },
     {
       "id": "q3_oily_zone",
-      "title": "Hol jelenik meg leginkább?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Hol jelenik meg leginkább?"
+        }
+      ],
       "choices": [
         {
           "text": "Főleg a T-zónában",
@@ -340,8 +360,12 @@
     },
     {
       "id": "q3_oily_irritation",
-      "title": "Mi társul hozzá inkább?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mi társul hozzá inkább?"
+        }
+      ],
       "choices": [
         {
           "text": "Csak fényesedik, de nem igazán irritált",
@@ -355,8 +379,12 @@
     },
     {
       "id": "q2_texture_type",
-      "title": "Milyen típusú egyenetlenséget látsz inkább?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Milyen típusú egyenetlenséget látsz inkább?"
+        }
+      ],
       "choices": [
         {
           "text": "Apró dudorok / nem sima felszín",
@@ -374,8 +402,12 @@
     },
     {
       "id": "q3_texture_split",
-      "title": "Mit látsz emellett?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mit látsz emellett?"
+        }
+      ],
       "choices": [
         {
           "text": "Inkább csak egyenetlen, érdes felszín",
@@ -389,8 +421,12 @@
     },
     {
       "id": "q3_acne_split",
-      "title": "Van gyulladt pattanás is?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Van gyulladt pattanás is?"
+        }
+      ],
       "choices": [
         {
           "text": "Igen, időnként gyulladt is",
@@ -404,8 +440,12 @@
     },
     {
       "id": "q3_texture_vs_oily",
-      "title": "Melyik a főbb élmény?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Melyik a főbb élmény?"
+        }
+      ],
       "choices": [
         {
           "text": "Inkább a fénylés és zsíros érzet",
@@ -419,8 +459,12 @@
     },
     {
       "id": "q4_texture_finish_split",
-      "title": "Mi áll közelebb ahhoz, amit látsz?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mi áll közelebb ahhoz, amit látsz?"
+        }
+      ],
       "choices": [
         {
           "text": "Inkább érdes, egyenetlen felszín",
@@ -434,8 +478,12 @@
     },
     {
       "id": "q2_sensitive_trigger",
-      "title": "Mi váltja ki leginkább?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mi váltja ki leginkább?"
+        }
+      ],
       "choices": [
         {
           "text": "Új termékeknél, aktívabb összetevőknél jelentkezik",
@@ -453,8 +501,12 @@
     },
     {
       "id": "q3_sensitive_split",
-      "title": "Mi segít rajta inkább?",
-      "text": [],
+      "title": "",
+      "text": [
+        {
+          "text": "Mi segít rajta inkább?"
+        }
+      ],
       "choices": [
         {
           "text": "Egy nyugtatóbb, hidratáló krémmel jobb lesz",
