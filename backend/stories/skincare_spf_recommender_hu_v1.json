@@ -50,210 +50,40 @@
     },
     {
       "id": "q1_router",
-      "type": "logic",
+      "type": "poolRoute",
       "title": "",
-      "text": [],
-      "logic": [
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_2"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_6"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_6"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_3",
-            "skin_opt_4"
-          ],
-          "goto": "q2_oily_pattern"
-        },
-        {
-          "if": [
-            "skin_opt_5",
-            "skin_opt_6"
-          ],
-          "goto": "q2_texture_type"
-        },
-        {
-          "if": [
-            "skin_opt_5",
-            "skin_opt_3"
-          ],
-          "goto": "q2_texture_type"
-        },
-        {
-          "if": [
-            "skin_opt_6",
-            "skin_opt_3"
-          ],
-          "goto": "q2_texture_type"
-        },
-        {
-          "if": [
-            "skin_opt_6",
-            "skin_opt_4"
-          ],
-          "goto": "q2_texture_type"
-        },
-        {
-          "if": [
-            "skin_opt_5",
-            "skin_opt_4"
-          ],
-          "goto": "q2_texture_type"
-        },
-        {
-          "if": [
-            "skin_opt_7",
-            "skin_opt_8"
-          ],
-          "goto": "q2_sensitive_trigger"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_8"
-          ],
-          "goto": "q2_sensitive_trigger"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_7"
-          ],
-          "goto": "q2_sensitive_trigger"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_8"
-          ],
-          "goto": "q2_sensitive_trigger"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_7"
-          ],
-          "goto": "q2_sensitive_trigger"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_3"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_4"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_1",
-            "skin_opt_5"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_3"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_4"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_2",
-            "skin_opt_5"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_3",
-            "skin_opt_7"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_3",
-            "skin_opt_8"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_4",
-            "skin_opt_7"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_4",
-            "skin_opt_8"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_5",
-            "skin_opt_7"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_5",
-            "skin_opt_8"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_6",
-            "skin_opt_7"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "if": [
-            "skin_opt_6",
-            "skin_opt_8"
-          ],
-          "goto": "q2_dry_timing"
-        },
-        {
-          "default": "q2_dry_timing"
-        }
-      ]
+      "poolId": "q1_skin_profile",
+      "routeAssignments": {
+        "1,2": "q2_dry_timing",
+        "1,3": "q2_dry_timing",
+        "1,4": "q2_dry_timing",
+        "1,5": "q2_dry_timing",
+        "1,6": "q2_dry_timing",
+        "1,7": "q2_sensitive_trigger",
+        "1,8": "q2_sensitive_trigger",
+        "2,3": "q2_dry_timing",
+        "2,4": "q2_dry_timing",
+        "2,5": "q2_dry_timing",
+        "2,6": "q2_dry_timing",
+        "2,7": "q2_sensitive_trigger",
+        "2,8": "q2_sensitive_trigger",
+        "3,4": "q2_oily_pattern",
+        "3,5": "q2_texture_type",
+        "3,6": "q2_texture_type",
+        "3,7": "q2_dry_timing",
+        "3,8": "q2_dry_timing",
+        "4,5": "q2_texture_type",
+        "4,6": "q2_texture_type",
+        "4,7": "q2_dry_timing",
+        "4,8": "q2_dry_timing",
+        "5,6": "q2_texture_type",
+        "5,7": "q2_dry_timing",
+        "5,8": "q2_dry_timing",
+        "6,7": "q2_dry_timing",
+        "6,8": "q2_dry_timing",
+        "7,8": "q2_sensitive_trigger"
+      },
+      "defaultGoto": "q2_dry_timing"
     },
     {
       "id": "q2_dry_timing",

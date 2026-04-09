@@ -11,6 +11,7 @@ import {
   readEditorLayoutFromStory,
   type EditorLayoutState,
 } from "./storyGraphLayout";
+import { classifyEditorPage } from "./storyPagesFlatten";
 import { isEditorPendingPageId } from "./storyTemplateInsert";
 
 function clone<T>(v: T): T {
@@ -233,6 +234,29 @@ export function patchOutgoingNavRefsInPage(
         if (nr[k] === from) nr[k] = to;
       }
       next.routeAssignments = nr;
+    }
+  }
+  if (classifyEditorPage(next) === "poolRoute") {
+    if (typeof next.defaultGoto === "string" && next.defaultGoto === from) {
+      next.defaultGoto = to;
+    }
+    if (typeof next.defaultNext === "string" && next.defaultNext === from) {
+      next.defaultNext = to;
+    }
+    const ra =
+      asRecord(next.routeAssignments) ??
+      asRecord(next.routes) ??
+      asRecord(next.nextByPoolKey) ??
+      asRecord(next.routeMap);
+    if (ra) {
+      const nr: Record<string, unknown> = { ...ra };
+      for (const k of Object.keys(nr)) {
+        if (nr[k] === from) nr[k] = to;
+      }
+      if (asRecord(next.routeAssignments)) next.routeAssignments = nr;
+      else if (asRecord(next.routes)) next.routes = nr;
+      else if (asRecord(next.nextByPoolKey)) next.nextByPoolKey = nr;
+      else next.routeAssignments = nr;
     }
   }
 

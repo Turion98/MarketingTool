@@ -128,7 +128,7 @@ export default function StoryCard({
 
   const inYs = inputPortYs(incomingPortCount, h, {
     logicLayout:
-      node.isLogicPage || node.category === "puzzleRoute",
+      node.isLogicPage || node.category === "puzzleRoute" || node.category === "poolRoute",
   });
 
   const milestoneOn =
@@ -275,8 +275,8 @@ export default function StoryCard({
           return;
         }
         e.stopPropagation();
+        onBodyPointerDown(e);
         if (e.shiftKey) {
-          onBodyPointerDown(e);
           return;
         }
         e.preventDefault();
@@ -486,6 +486,8 @@ export default function StoryCard({
             <div className={s.cardRow2}>
               {node.category === "puzzleRoute" ? (
                 <span className={s.cardTagRoute}>route</span>
+              ) : node.category === "poolRoute" ? (
+                <span className={s.cardTagRoute}>pool route</span>
               ) : node.isLogicPage ? (
                 <span className={s.cardTag}>logic</span>
               ) : node.isPuzzlePage && !riddle ? (
@@ -547,6 +549,41 @@ export default function StoryCard({
                           ) : (
                             <>
                               <span className={s.cardRouteComboMark}>kombó</span>
+                              <span
+                                className={s.cardLogicFragTight}
+                                title={comboLab}
+                              >
+                                {comboLab || "?"}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                        <span className={s.cardOptStripGoto} title={e.to}>
+                          → {e.to}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : node.category === "poolRoute" ? (
+              <div className={s.cardOptStripStack}>
+                {ord.length === 0 ? (
+                  <span className={s.cardOptMuted}>nincs kimenet</span>
+                ) : (
+                  ord.map((e) => {
+                    const rawLab = String(e.label ?? "");
+                    const comboLab = rawLab.startsWith("pool:")
+                      ? rawLab.slice(5)
+                      : rawLab;
+                    return (
+                      <div key={e.id} className={s.cardOptStrip}>
+                        <span className={s.cardOptStripMain}>
+                          {e.kind === "logicElse" ? (
+                            <span className={s.cardRouteElseMark}>default</span>
+                          ) : (
+                            <>
+                              <span className={s.cardRouteComboMark}>pool</span>
                               <span
                                 className={s.cardLogicFragTight}
                                 title={comboLab}

@@ -278,6 +278,20 @@ export function buildStoryGraph(story: Record<string, unknown>): {
       const def = readString(rec.defaultGoto);
       add(n.pageId, def, "logicElse");
     }
+    if (n.category === "poolRoute") {
+      const ra =
+        asRecord(rec.routeAssignments) ??
+        asRecord(rec.routes) ??
+        asRecord(rec.nextByPoolKey) ??
+        asRecord(rec.routeMap) ??
+        {};
+      Object.entries(ra).forEach(([key, v]) => {
+        const goTo = typeof v === "string" ? v : "";
+        add(n.pageId, goTo, "logicIf", `pool:${key}`);
+      });
+      const def = readString(rec.defaultGoto) ?? readString(rec.defaultNext);
+      add(n.pageId, def, "logicElse");
+    }
 
     if (rec.type === "puzzle") {
       if (rec.kind === "riddle") {

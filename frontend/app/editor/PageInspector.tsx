@@ -21,6 +21,10 @@ import {
   generatePuzzleRouteKeys,
   suggestPageIdForRouteKey,
 } from "@/app/lib/editor/puzzleRouteCombinations";
+import {
+  listPoolIdsFromStory,
+  listPoolKeysForPoolId,
+} from "@/app/lib/editor/poolRoutePools";
 import { hydrateRouteFieldsFromStoryPage } from "@/app/lib/editor/legacyPuzzleRouteHydrate";
 import {
   classifyEditorPage,
@@ -572,6 +576,11 @@ export default function PageInspector({
   const [routeAssignments, setRouteAssignments] = useState<
     Record<string, string>
   >({});
+  const [poolRoutePoolId, setPoolRoutePoolId] = useState("");
+  const [poolRouteDefaultGoto, setPoolRouteDefaultGoto] = useState("");
+  const [poolRouteAssignments, setPoolRouteAssignments] = useState<
+    Record<string, string>
+  >({});
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
@@ -657,6 +666,9 @@ export default function PageInspector({
       setRouteSourcePageId("");
       setRouteDefaultGoto("");
       setRouteAssignments({});
+      setPoolRoutePoolId("");
+      setPoolRouteDefaultGoto("");
+      setPoolRouteAssignments({});
       setSaveMilestone(false);
       setEndCtaPresetKey("");
       setEndCtaInlineLocked(false);
@@ -795,10 +807,40 @@ export default function PageInspector({
       setRouteSourcePageId(h.sourceId);
       setRouteDefaultGoto(h.defaultGoto);
       setRouteAssignments(h.assignments);
+    } else if (
+      page &&
+      classifyEditorPage(page as Record<string, unknown>) === "poolRoute"
+    ) {
+      const poolId =
+        (typeof page.poolId === "string" && page.poolId.trim()) ||
+        (typeof page.pool === "string" && page.pool.trim()) ||
+        (typeof page.poolKey === "string" && page.poolKey.trim()) ||
+        "";
+      const def =
+        (typeof page.defaultGoto === "string" && page.defaultGoto.trim()) ||
+        (typeof page.defaultNext === "string" && page.defaultNext.trim()) ||
+        "";
+      const assignments =
+        asRecord(page.routeAssignments) ??
+        asRecord(page.routes) ??
+        asRecord(page.nextByPoolKey) ??
+        asRecord(page.routeMap) ??
+        {};
+      const cleanAssignments: Record<string, string> = {};
+      for (const [k, v] of Object.entries(assignments)) {
+        if (typeof v !== "string") continue;
+        cleanAssignments[k] = v;
+      }
+      setPoolRoutePoolId(poolId);
+      setPoolRouteDefaultGoto(def);
+      setPoolRouteAssignments(cleanAssignments);
     } else {
       setRouteSourcePageId("");
       setRouteDefaultGoto("");
       setRouteAssignments({});
+      setPoolRoutePoolId("");
+      setPoolRouteDefaultGoto("");
+      setPoolRouteAssignments({});
     }
 
     if (page.type === "end") {
@@ -956,6 +998,8 @@ export default function PageInspector({
       page.type === "puzzle" && !isRiddle && !isRunes;
     const isEditorRoutePage =
       classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
+    const isEditorPoolRoutePage =
+      classifyEditorPage(page as Record<string, unknown>) === "poolRoute";
     let nextP: Record<string, unknown>;
 
     if (isRiddle) {
@@ -1119,6 +1163,25 @@ export default function PageInspector({
       delete nextP.choices;
       delete nextP.logic;
       delete nextP.text;
+    } else if (isEditorPoolRoutePage) {
+      const out: Record<string, string> = {};
+      for (const [k, raw] of Object.entries(poolRouteAssignments)) {
+        const key = k.trim();
+        const val = raw.trim();
+        if (!key || !val) continue;
+        out[key] = val;
+      }
+      nextP = {
+        ...page,
+        title,
+        type: "poolRoute",
+        poolId: poolRoutePoolId.trim(),
+        routeAssignments: out,
+        defaultGoto: poolRouteDefaultGoto.trim(),
+      };
+      delete nextP.choices;
+      delete nextP.logic;
+      delete nextP.text;
     } else if (isOtherPuzzle) {
       nextP = { ...page, title, text: primaryText };
     } else if (page.type === "end") {
@@ -1215,6 +1278,9 @@ export default function PageInspector({
     routeSourcePageId,
     routeDefaultGoto,
     routeAssignments,
+    poolRoutePoolId,
+    poolRouteDefaultGoto,
+    poolRouteAssignments,
     logicIfRows,
     logicElseGoTo,
     saveMilestone,
@@ -1268,6 +1334,18 @@ export default function PageInspector({
       }),
     [draftStory, knownPageIds]
   );
+  const poolRoutePoolIds = useMemo(
+    () => listPoolIdsFromStory(draftStory),
+    [draftStory]
+  );
+  const poolRouteExpectedKeys = useMemo(
+    () => listPoolKeysForPoolId(draftStory, poolRoutePoolId),
+    [draftStory, poolRoutePoolId]
+  );
+  const poolRouteKeysSig = useMemo(
+    () => JSON.stringify(poolRouteExpectedKeys),
+    [poolRouteExpectedKeys]
+  );
 
   const routeExpectedKeys = useMemo(() => {
     const sid = routeSourcePageId.trim();
@@ -1316,6 +1394,27 @@ export default function PageInspector({
       return next;
     });
   }, [routeKeysSig]);
+
+  useEffect(() => {
+    let keys: string[] = [];
+    try {
+      keys = JSON.parse(poolRouteKeysSig) as string[];
+      if (!Array.isArray(keys)) keys = [];
+    } catch {
+      keys = [];
+    }
+    if (keys.length === 0) return;
+    setPoolRouteAssignments((prev) => {
+      const next: Record<string, string> = { ...prev };
+      let changed = false;
+      for (const k of keys) {
+        if (next[k] !== undefined) continue;
+        next[k] = "";
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [poolRouteKeysSig]);
 
   const isRiddlePageForChain = Boolean(
     page?.type === "puzzle" && page?.kind === "riddle"
@@ -1562,7 +1661,10 @@ export default function PageInspector({
     page.type === "puzzle" && !isRiddlePage && !isRunesPage;
   const isEditorPuzzleRoutePage =
     classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
-  const isLogic = Boolean(logic) && !isEditorPuzzleRoutePage;
+  const isEditorPoolRoutePage =
+    classifyEditorPage(page as Record<string, unknown>) === "poolRoute";
+  const isLogic =
+    Boolean(logic) && !isEditorPuzzleRoutePage && !isEditorPoolRoutePage;
   const isEndPage = page.type === "end";
   const milestoneEligible =
     !isEditorLogicPage(page as Record<string, unknown>) && !isEndPage;
@@ -1654,7 +1756,8 @@ export default function PageInspector({
         !isRiddlePage &&
         !isRunesPage &&
         !isOtherPuzzle &&
-        !isEditorPuzzleRoutePage ? (
+        !isEditorPuzzleRoutePage &&
+        !isEditorPoolRoutePage ? (
           <>
             <label className={s.field}>
               <span>Fő szöveg</span>
@@ -2532,6 +2635,71 @@ export default function PageInspector({
               label="Default → cél (ismeretlen kombináció / első betöltés)"
               value={routeDefaultGoto}
               onChange={setRouteDefaultGoto}
+              story={draftStory}
+              knownPageIds={knownPageIds}
+              idSet={idSet}
+            />
+          </>
+        ) : isEditorPoolRoutePage ? (
+          <>
+            <p className={s.hintSmall}>
+              Ez az oldal globális pool alapján route-ol. A pool tartalma máshol
+              szerkeszthető, itt csak a pool azonosítót és a céloldal mappinget adod meg.
+            </p>
+            <label className={s.field}>
+              <span>Pool azonosító (globális)</span>
+              <select
+                className={s.input}
+                value={poolRoutePoolId}
+                onChange={(e) => setPoolRoutePoolId(e.target.value)}
+              >
+                <option value="">— válassz pool-t —</option>
+                {poolRoutePoolIds.map((id) => (
+                  <option key={id} value={id}>
+                    {id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {poolRoutePoolIds.length === 0 ? (
+              <p className={s.hintSmall}>
+                Nincs globális pool definiálva a story-ban (`pools` vagy `meta.pools`).
+              </p>
+            ) : null}
+            {poolRoutePoolId.trim() && poolRouteExpectedKeys.length === 0 ? (
+              <p className={s.hintSmall}>
+                A kiválasztott poolhoz nem találtam kulcsokat.
+              </p>
+            ) : null}
+            {poolRouteExpectedKeys.length > 0 ? (
+              <p className={s.hintSmall}>
+                Pool kulcsok: {poolRouteExpectedKeys.length}; kitöltött útvonal:{" "}
+                {
+                  poolRouteExpectedKeys.filter(
+                    (k) => (poolRouteAssignments[k] ?? "").trim() !== ""
+                  ).length
+                }
+                .
+              </p>
+            ) : null}
+            {poolRouteExpectedKeys.map((key) => (
+              <div key={key} className={s.choiceCard}>
+                <RiddleScoreDestinationSelect
+                  label={`Kulcs: ${key}`}
+                  value={poolRouteAssignments[key] ?? ""}
+                  onChange={(v) =>
+                    setPoolRouteAssignments((prev) => ({ ...prev, [key]: v }))
+                  }
+                  story={draftStory}
+                  knownPageIds={knownPageIds}
+                  idSet={idSet}
+                />
+              </div>
+            ))}
+            <RiddleScoreDestinationSelect
+              label="Default → cél (ha nincs kulcs egyezés)"
+              value={poolRouteDefaultGoto}
+              onChange={setPoolRouteDefaultGoto}
               story={draftStory}
               knownPageIds={knownPageIds}
               idSet={idSet}
