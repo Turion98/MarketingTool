@@ -7,7 +7,7 @@ export type EditorPageCategory =
   | "puzzleRiddle"
   | "puzzleRunes"
   | "puzzleRoute"
-  | "poolRoute"
+  | "decision"
   | "logic"
   | "conditionalRouting"
   | "transition"
@@ -36,12 +36,11 @@ function looksLikePuzzleRoutePage(page: Record<string, unknown>): boolean {
 }
 
 /**
- * Questell-kompatibilis pool route felismerés:
- * - explicit `type: "poolRoute"`, VAGY
- * - decision jelleg + pool azonosító + route mapping mezők.
+ * Decision = pool route felismerés:
+ * - kizárólag `type: "decision"` + pool azonosító + route mapping mezők.
  */
-function looksLikePoolRoutePage(page: Record<string, unknown>): boolean {
-  if (page.type === "poolRoute") return true;
+export function isDecisionPoolRoutePage(page: Record<string, unknown>): boolean {
+  if (page.type !== "decision") return false;
   const poolId =
     (typeof page.poolId === "string" && page.poolId.trim()) ||
     (typeof page.pool === "string" && page.pool.trim()) ||
@@ -61,6 +60,7 @@ export function classifyEditorPage(
 ): EditorPageCategory | "end" {
   const t = typeof page.type === "string" ? page.type : "default";
   if (t === "end") return "end";
+  if (t === "decision") return "decision";
   if (t === "logic") {
     const log = page.logic;
     /** SkinCare stílus: `type: "logic"` + tömbös szabályok (flag kombináció → útvonal). */
@@ -69,9 +69,8 @@ export function classifyEditorPage(
   }
   if (t === "conditionalRouting") return "conditionalRouting";
   if (t === "puzzleRoute") return "puzzleRoute";
-  if (t === "poolRoute") return "poolRoute";
   if (t === "transition") return "transition";
-  if (looksLikePoolRoutePage(page)) return "poolRoute";
+  if (isDecisionPoolRoutePage(page)) return "decision";
   if (t === "puzzle") {
     const k = page.kind;
     if (k === "riddle") return "puzzleRiddle";
@@ -132,7 +131,7 @@ export function groupPagesByCategory(
     puzzleRiddle: [],
     puzzleRunes: [],
     puzzleRoute: [],
-    poolRoute: [],
+    decision: [],
     logic: [],
     conditionalRouting: [],
     transition: [],
@@ -151,7 +150,7 @@ export const CATEGORY_LABELS: Record<EditorPageCategory, string> = {
   puzzleRiddle: "Puzzle — riddle",
   puzzleRunes: "Puzzle — runes",
   puzzleRoute: "Puzzle route (kombináció → oldal)",
-  poolRoute: "Pool route",
+  decision: "Decision",
   logic: "Logic",
   conditionalRouting: "Feltételes / routing",
   transition: "Átvezetés",
@@ -165,7 +164,7 @@ export const EDITOR_CATEGORY_ORDER: EditorPageCategory[] = [
   "puzzleRiddle",
   "puzzleRunes",
   "puzzleRoute",
-  "poolRoute",
+  "decision",
   "logic",
   "conditionalRouting",
   "transition",

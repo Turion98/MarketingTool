@@ -11,11 +11,17 @@ import {
 } from "react";
 import {
   STORY_GRAPH_START_NODE_ID,
+  buildPathFlowClusters,
   buildStoryGraph,
   bundleIncomingEdgesForTarget,
   type StoryGraphEdge,
   type StoryGraphNode,
 } from "@/app/lib/editor/storyGraph";
+import {
+  buildMetroMapLayout,
+  collectDownstreamNodeIds,
+  nodeIdsForMetroSegment,
+} from "@/app/lib/editor/metroMapLayout";
 import {
   clusterMemberIdsToDrag,
   clusterMemberIdsToDragUnion,
@@ -74,6 +80,14 @@ import s from "./storyCanvas.module.scss";
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
+}
+
+function metroHueFromId(id: string): number {
+  let h = 216;
+  for (let i = 0; i < id.length; i++) {
+    h = (h * 33 + id.charCodeAt(i)) >>> 0;
+  }
+  return h % 360;
 }
 
 const ZOOM_MIN = 0.45;
@@ -169,6 +183,8 @@ type StoryCanvasProps = {
   fullscreenSideSlot?: ReactNode;
 };
 
+type EditorViewMode = "graph" | "pathFlow" | "metro";
+
 export default function StoryCanvas({
   draftStory,
   onStoryChange,
@@ -187,12 +203,85 @@ export default function StoryCanvas({
   canvasFullscreen = false,
   fullscreenSideSlot,
 }: StoryCanvasProps) {
+  const [viewMode] = useState<EditorViewMode>("graph");
+  const [focusedPathClusterId, setFocusedPathClusterId] = useState<string | null>(
+    null
+  );
+  const [graphPathFilterClusterId, setGraphPathFilterClusterId] = useState<
+    string | null
+  >(null);
+  const [graphPathFilterNodeIdsOverride, setGraphPathFilterNodeIdsOverride] =
+    useState<Set<string> | null>(null);
+  const [expandedPathBubbleId, setExpandedPathBubbleId] = useState<string | null>(
+    null
+  );
+  const [metroDrillNodeSet, setMetroDrillNodeSet] = useState<Set<string> | null>(
+    null
+  );
   const { nodes, edges, startPageId } = useMemo(
     () => buildStoryGraph(draftStory),
     [draftStory]
   );
+  const pathFlowClusters = useMemo(
+    () => buildPathFlowClusters(nodes, edges),
+    [nodes, edges]
+  );
+  useEffect(() => {
+    if (viewMode !== "pathFlow") {
+      setFocusedPathClusterId(null);
+      setExpandedPathBubbleId(null);
+    } else {
+      setGraphPathFilterClusterId(null);
+      setGraphPathFilterNodeIdsOverride(null);
+    }
+    if (viewMode !== "metro") {
+      setMetroDrillNodeSet(null);
+    }
+  }, [viewMode]);
 
   const pageIds = useMemo(() => nodes.map((n) => n.pageId), [nodes]);
+  const pathClusterById = useMemo(
+    () => new Map(pathFlowClusters.map((c) => [c.id, c])),
+    [pathFlowClusters]
+  );
+  const pathBubbleGroups = useMemo(() => {
+    const m = new Map<string, { id: string; name: string; nodeIds: Set<string> }>();
+    for (const c of pathFlowClusters) {
+      const k = c.startNodeId;
+      const got = m.get(k);
+      if (got) {
+        for (const n of c.nodeIds) got.nodeIds.add(n);
+      } else {
+        m.set(k, {
+          id: `bubble_${k}`,
+          name: `Path · ${k}`,
+          nodeIds: new Set(c.nodeIds),
+        });
+      }
+    }
+    return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [pathFlowClusters]);
+  const pathBubbleById = useMemo(
+    () => new Map(pathBubbleGroups.map((b) => [b.id, b])),
+    [pathBubbleGroups]
+  );
+  const expandedPathNodeSet = useMemo(() => {
+    if (!expandedPathBubbleId) return null;
+    const b = pathBubbleById.get(expandedPathBubbleId);
+    if (!b) return null;
+    return new Set(b.nodeIds);
+  }, [expandedPathBubbleId, pathBubbleById]);
+  const graphFilterNodeIds = useMemo(() => {
+    if (graphPathFilterNodeIdsOverride) return graphPathFilterNodeIdsOverride;
+    if (!graphPathFilterClusterId) return null;
+    const c = pathClusterById.get(graphPathFilterClusterId);
+    if (!c) return null;
+    return new Set(c.nodeIds);
+  }, [
+    graphPathFilterClusterId,
+    pathClusterById,
+    graphPathFilterNodeIdsOverride,
+  ]);
 
   const canvasClusters = useMemo(
     () => getEditorCanvasClustersEffective(draftStory),
@@ -308,19 +397,37 @@ export default function StoryCanvas({
     return [START_SYNTH, ...nodes];
   }, [nodes, edges]);
 
+  const graphRenderNodesWithStart = useMemo(() => {
+    if (!graphFilterNodeIds) return nodesWithStart;
+    return nodesWithStart.filter(
+      (n) =>
+        n.pageId === STORY_GRAPH_START_NODE_ID || graphFilterNodeIds.has(n.pageId)
+    );
+  }, [nodesWithStart, graphFilterNodeIds]);
+
+  const graphRenderEdges = useMemo(() => {
+    if (!graphFilterNodeIds) return edges;
+    return edges.filter((e) => {
+      if (e.from === STORY_GRAPH_START_NODE_ID) {
+        return graphFilterNodeIds.has(e.to);
+      }
+      return graphFilterNodeIds.has(e.from) && graphFilterNodeIds.has(e.to);
+    });
+  }, [edges, graphFilterNodeIds]);
+
   const outgoingByPage = useMemo(() => {
     const m = new Map<string, StoryGraphEdge[]>();
-    for (const e of edges) {
+    for (const e of graphRenderEdges) {
       const list = m.get(e.from) ?? [];
       list.push(e);
       m.set(e.from, list);
     }
     return m;
-  }, [edges]);
+  }, [graphRenderEdges]);
 
   const incomingEdgesByTarget = useMemo(() => {
     const m = new Map<string, StoryGraphEdge[]>();
-    for (const e of edges) {
+    for (const e of graphRenderEdges) {
       const list = m.get(e.to) ?? [];
       list.push(e);
       m.set(e.to, list);
@@ -329,7 +436,7 @@ export default function StoryCanvas({
       list.sort((a, b) => a.id.localeCompare(b.id));
     }
     return m;
-  }, [edges]);
+  }, [graphRenderEdges]);
 
   const endPageIds = useMemo(
     () => collectEndPageIdsFromStory(draftStory),
@@ -338,6 +445,21 @@ export default function StoryCanvas({
   const endPageIdSet = useMemo(
     () => new Set(endPageIds),
     [endPageIds]
+  );
+
+  const metroLayout = useMemo(
+    () =>
+      buildMetroMapLayout({
+        edges,
+        endPageIds,
+        labelForPageId: (id) => id,
+      }),
+    [edges, endPageIds]
+  );
+
+  const metroEdgePairs = useMemo(
+    () => edges.map((e) => ({ from: e.from, to: e.to })),
+    [edges]
   );
 
   const worldMetrics = useMemo(() => {
@@ -353,7 +475,7 @@ export default function StoryCanvas({
       }
     >();
 
-    for (const n of nodesWithStart) {
+    for (const n of graphRenderNodesWithStart) {
       const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
       const out = outgoingByPage.get(n.pageId) ?? [];
       const ord = orderedOutgoingEdges(n.pageId, out);
@@ -404,17 +526,117 @@ export default function StoryCanvas({
     }
 
     return world;
-  }, [nodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
+  }, [graphRenderNodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
 
   const { localOps: edgeOps, distantBundles, endIngressBundles } = useMemo(
     () =>
       buildEdgeLayers({
-        edges,
+        edges: graphRenderEdges,
         world: worldMetrics,
         clusters: canvasClusters,
         endTargetPageIds: endPageIdSet,
       }),
-    [edges, worldMetrics, canvasClusters, endPageIdSet]
+    [graphRenderEdges, worldMetrics, canvasClusters, endPageIdSet]
+  );
+
+  const pathExpandedEdges = useMemo(() => {
+    if (!expandedPathNodeSet) return [] as StoryGraphEdge[];
+    return edges.filter((e) => {
+      if (e.from === STORY_GRAPH_START_NODE_ID) return expandedPathNodeSet.has(e.to);
+      return expandedPathNodeSet.has(e.from) && expandedPathNodeSet.has(e.to);
+    });
+  }, [expandedPathNodeSet, edges]);
+
+  const pathExpandedNodesWithStart = useMemo(() => {
+    if (!expandedPathNodeSet) return [] as StoryGraphNode[];
+    return nodesWithStart.filter(
+      (n) => n.pageId === STORY_GRAPH_START_NODE_ID || expandedPathNodeSet.has(n.pageId)
+    );
+  }, [expandedPathNodeSet, nodesWithStart]);
+
+  const pathExpandedOutgoingByPage = useMemo(() => {
+    const m = new Map<string, StoryGraphEdge[]>();
+    for (const e of pathExpandedEdges) {
+      const list = m.get(e.from) ?? [];
+      list.push(e);
+      m.set(e.from, list);
+    }
+    return m;
+  }, [pathExpandedEdges]);
+
+  const pathExpandedIncomingByTarget = useMemo(() => {
+    const m = new Map<string, StoryGraphEdge[]>();
+    for (const e of pathExpandedEdges) {
+      const list = m.get(e.to) ?? [];
+      list.push(e);
+      m.set(e.to, list);
+    }
+    for (const [, list] of m) list.sort((a, b) => a.id.localeCompare(b.id));
+    return m;
+  }, [pathExpandedEdges]);
+
+  const { localOps: pathExpandedEdgeOps } = useMemo(
+    () =>
+      buildEdgeLayers({
+        edges: pathExpandedEdges,
+        world: worldMetrics,
+        clusters: canvasClusters,
+        endTargetPageIds: endPageIdSet,
+      }),
+    [pathExpandedEdges, worldMetrics, canvasClusters, endPageIdSet]
+  );
+
+  const metroExpandedEdges = useMemo(() => {
+    if (!metroDrillNodeSet) return [] as StoryGraphEdge[];
+    return edges.filter((e) => {
+      if (e.from === STORY_GRAPH_START_NODE_ID) {
+        return metroDrillNodeSet.has(e.to);
+      }
+      return metroDrillNodeSet.has(e.from) && metroDrillNodeSet.has(e.to);
+    });
+  }, [metroDrillNodeSet, edges]);
+
+  const metroExpandedNodesWithStart = useMemo(() => {
+    if (!metroDrillNodeSet) return [] as StoryGraphNode[];
+    return nodesWithStart.filter(
+      (n) =>
+        n.pageId === STORY_GRAPH_START_NODE_ID ||
+        metroDrillNodeSet.has(n.pageId)
+    );
+  }, [metroDrillNodeSet, nodesWithStart]);
+
+  const metroExpandedOutgoingByPage = useMemo(() => {
+    const m = new Map<string, StoryGraphEdge[]>();
+    for (const e of metroExpandedEdges) {
+      const list = m.get(e.from) ?? [];
+      list.push(e);
+      m.set(e.from, list);
+    }
+    return m;
+  }, [metroExpandedEdges]);
+
+  const metroExpandedIncomingByTarget = useMemo(() => {
+    const m = new Map<string, StoryGraphEdge[]>();
+    for (const e of metroExpandedEdges) {
+      const list = m.get(e.to) ?? [];
+      list.push(e);
+      m.set(e.to, list);
+    }
+    for (const [, list] of m) {
+      list.sort((a, b) => a.id.localeCompare(b.id));
+    }
+    return m;
+  }, [metroExpandedEdges]);
+
+  const { localOps: metroExpandedEdgeOps } = useMemo(
+    () =>
+      buildEdgeLayers({
+        edges: metroExpandedEdges,
+        world: worldMetrics,
+        clusters: canvasClusters,
+        endTargetPageIds: endPageIdSet,
+      }),
+    [metroExpandedEdges, worldMetrics, canvasClusters, endPageIdSet]
   );
 
   const [hoveredDistantKey, setHoveredDistantKey] = useState<string | null>(
@@ -460,7 +682,7 @@ export default function StoryCanvas({
 
   const incomingPortDotVisibleByPageId = useMemo(() => {
     const m = new Map<string, boolean[]>();
-    for (const n of nodesWithStart) {
+    for (const n of graphRenderNodesWithStart) {
       const pid = n.pageId;
       if (pid === STORY_GRAPH_START_NODE_ID) continue;
       const inc = incomingEdgesByTarget.get(pid) ?? [];
@@ -481,7 +703,7 @@ export default function StoryCanvas({
     }
     return m;
   }, [
-    nodesWithStart,
+    graphRenderNodesWithStart,
     incomingEdgesByTarget,
     distantOrEndIngressEdgeIdSet,
   ]);
@@ -510,6 +732,61 @@ export default function StoryCanvas({
     }
     return { minX, minY, maxX, maxY };
   }, [worldMetrics]);
+
+
+  const pathBubbleLayout = useMemo(() => {
+    const boxes = new Map<string, { x: number; y: number; w: number; h: number }>();
+    for (const bubble of pathBubbleGroups) {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const id of bubble.nodeIds) {
+        const m = worldMetrics.get(id);
+        if (!m) continue;
+        minX = Math.min(minX, m.x);
+        minY = Math.min(minY, m.y);
+        maxX = Math.max(maxX, m.x + m.w);
+        maxY = Math.max(maxY, m.y + m.h);
+      }
+      if (Number.isFinite(minX) && Number.isFinite(minY)) {
+        const padX = 22;
+        const padY = 16;
+        boxes.set(bubble.id, {
+          x: minX - padX,
+          y: minY - padY,
+          w: Math.max(180, maxX - minX + padX * 2),
+          h: Math.max(72, maxY - minY + padY * 2),
+        });
+      }
+    }
+    return boxes;
+  }, [pathBubbleGroups, worldMetrics]);
+
+  const pathBubbleEdges = useMemo(() => {
+    const ownerByNode = new Map<string, string>();
+    for (const b of pathBubbleGroups) {
+      for (const n of b.nodeIds) ownerByNode.set(n, b.id);
+    }
+    const counts = new Map<string, number>();
+    for (const e of edges) {
+      if (e.from === STORY_GRAPH_START_NODE_ID) continue;
+      const from = ownerByNode.get(e.from);
+      const to = ownerByNode.get(e.to);
+      if (!from || !to || from === to) continue;
+      const k = `${from}\0${to}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([k, c], idx) => {
+      const i = k.indexOf("\0");
+      return {
+        id: `pbe_${idx}`,
+        fromBubbleId: k.slice(0, i),
+        toBubbleId: k.slice(i + 1),
+        count: c,
+      };
+    });
+  }, [pathBubbleGroups, edges]);
 
   const endZoneSeparatorWorldX = useMemo(() => {
     if (!endPageIds.length) return null;
@@ -553,15 +830,19 @@ export default function StoryCanvas({
     const vh = el.clientHeight;
     if (vw < 8 || vh < 8) return;
     const pad = 28;
-    const bw = Math.max(fitContentBounds.maxX - fitContentBounds.minX, 1);
-    const bh = Math.max(fitContentBounds.maxY - fitContentBounds.minY, 1);
+    const bounds =
+      viewMode === "metro" && !metroDrillNodeSet
+        ? { minX: 0, minY: 0, maxX: metroLayout.width, maxY: metroLayout.height }
+        : fitContentBounds;
+    const bw = Math.max(bounds.maxX - bounds.minX, 1);
+    const bh = Math.max(bounds.maxY - bounds.minY, 1);
     let z = Math.min((vw - pad * 2) / bw, (vh - pad * 2) / bh);
     z = clamp(Number(z.toFixed(3)), ZOOM_MIN, ZOOM_MAX);
-    const cx = (fitContentBounds.minX + fitContentBounds.maxX) / 2;
-    const cy = (fitContentBounds.minY + fitContentBounds.maxY) / 2;
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
     setZoom(z);
     setPan({ x: vw / 2 - z * cx, y: vh / 2 - z * cy });
-  }, [fitContentBounds]);
+  }, [fitContentBounds, viewMode, metroDrillNodeSet, metroLayout]);
 
   const onCardDragStart = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
@@ -732,7 +1013,7 @@ export default function StoryCanvas({
             bottom: Math.max(m.cy0, m.cy1),
           };
           const hit = new Set<string>();
-          for (const n of nodesWithStart) {
+          for (const n of graphRenderNodesWithStart) {
             if (n.pageId === STORY_GRAPH_START_NODE_ID) continue;
             const el = cardRootRefs.current.get(n.pageId);
             if (!el) continue;
@@ -758,7 +1039,7 @@ export default function StoryCanvas({
         e.currentTarget.releasePointerCapture(e.pointerId);
       }
     },
-    [nodesWithStart, onSelectPageIds, selectedPageIds]
+    [graphRenderNodesWithStart, onSelectPageIds, selectedPageIds]
   );
 
   const singleSelectedScrollTarget =
@@ -971,119 +1252,434 @@ export default function StoryCanvas({
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           }}
         >
-          <StoryEdges ops={edgeOps} />
-          <StoryDistantEdgeLines
-            bundles={distantBundles}
-            selectedPageIds={selectedPageIds}
-            hoveredKey={hoveredDistantKey}
-            inboundYByKey={distantInboundYByKey}
-          />
-          <StoryEndIngressLines
-            bundles={endIngressBundles}
-            selectedPageIds={selectedPageIds}
-            hoveredKey={hoveredEndIngressKey}
-            inboundYByKey={endIngressInboundYByKey}
-          />
-          {nodesWithStart.map((n) => {
-            const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
-            const out = outgoingByPage.get(n.pageId) ?? [];
-            const inc = incomingEdgesByTarget.get(n.pageId) ?? [];
-            const incomingPortCount = bundleIncomingEdgesForTarget(inc).length;
-            const issues =
-              n.pageId === STORY_GRAPH_START_NODE_ID
-                ? []
-                : issuesByPage.get(n.pageId) ?? [];
-            const stackZ = localLayout.nodes[n.pageId]?.z;
-            return (
-              <div key={n.pageId} data-story-card="1">
-                <StoryCard
-                  node={n}
-                  x={pos.x}
-                  y={pos.y}
-                  outgoing={out}
-                  incomingPortCount={incomingPortCount}
-                  incomingPortDotVisible={incomingPortDotVisibleByPageId.get(
-                    n.pageId
-                  )}
-                  distantOutgoingEdgeIds={distantOrEndIngressEdgeIdSet}
-                  selected={selectedPageIds.includes(n.pageId)}
-                  domRef={getCardRootRef(n.pageId)}
-                  issues={issues}
-                  stackZ={
-                    typeof stackZ === "number" && Number.isFinite(stackZ)
-                      ? stackZ
-                      : undefined
-                  }
-                  milestoneActive={
-                    n.pageId === STORY_GRAPH_START_NODE_ID
-                      ? undefined
-                      : editorPageMilestoneActive(draftStory, n.pageId)
-                  }
-                  bootstrapStartHint={
-                    interactionLocked &&
-                    n.pageId === STORY_GRAPH_START_NODE_ID
-                  }
-                  onBodyPointerDown={(e) =>
-                    onCanvasCardBodyPointerDown(n.pageId, e)
-                  }
-                  onSelectSingleForA11y={() =>
-                    n.pageId === STORY_GRAPH_START_NODE_ID
-                      ? onSelectPageIds([])
-                      : onSelectPageIds([n.pageId])
-                  }
-                  onDragStart={(e) => onCardDragStart(n.pageId, e)}
-                  onRequestDelete={
-                    interactionLocked ||
-                    n.pageId === STORY_GRAPH_START_NODE_ID ||
-                    !onDeletePage
-                      ? undefined
-                      : () => onDeletePage(n.pageId)
-                  }
-                  onRequestClean={
-                    interactionLocked ||
-                    n.pageId === STORY_GRAPH_START_NODE_ID ||
-                    !onCleanPage
-                      ? undefined
-                      : () => onCleanPage(n.pageId)
-                  }
-                  onRequestDuplicate={
-                    interactionLocked ||
-                    n.pageId === STORY_GRAPH_START_NODE_ID ||
-                    !onDuplicatePage
-                      ? undefined
-                      : () => onDuplicatePage(n.pageId)
-                  }
-                  onRenamePageId={
-                    interactionLocked ||
-                    n.pageId === STORY_GRAPH_START_NODE_ID ||
-                    !onRenamePageId
-                      ? undefined
-                      : onRenamePageId
-                  }
+          {viewMode === "graph" ? (
+            <>
+              <StoryEdges ops={edgeOps} />
+              <StoryDistantEdgeLines
+                bundles={distantBundles}
+                selectedPageIds={selectedPageIds}
+                hoveredKey={hoveredDistantKey}
+                inboundYByKey={distantInboundYByKey}
+              />
+              <StoryEndIngressLines
+                bundles={endIngressBundles}
+                selectedPageIds={selectedPageIds}
+                hoveredKey={hoveredEndIngressKey}
+                inboundYByKey={endIngressInboundYByKey}
+              />
+              {graphRenderNodesWithStart.map((n) => {
+                const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
+                const out = outgoingByPage.get(n.pageId) ?? [];
+                const inc = incomingEdgesByTarget.get(n.pageId) ?? [];
+                const incomingPortCount = bundleIncomingEdgesForTarget(inc).length;
+                const issues =
+                  n.pageId === STORY_GRAPH_START_NODE_ID
+                    ? []
+                    : issuesByPage.get(n.pageId) ?? [];
+                const stackZ = localLayout.nodes[n.pageId]?.z;
+                return (
+                  <div key={n.pageId} data-story-card="1">
+                    <StoryCard
+                      node={n}
+                      x={pos.x}
+                      y={pos.y}
+                      outgoing={out}
+                      incomingPortCount={incomingPortCount}
+                      incomingPortDotVisible={incomingPortDotVisibleByPageId.get(
+                        n.pageId
+                      )}
+                      distantOutgoingEdgeIds={distantOrEndIngressEdgeIdSet}
+                      selected={selectedPageIds.includes(n.pageId)}
+                      domRef={getCardRootRef(n.pageId)}
+                      issues={issues}
+                      stackZ={
+                        typeof stackZ === "number" && Number.isFinite(stackZ)
+                          ? stackZ
+                          : undefined
+                      }
+                      milestoneActive={
+                        n.pageId === STORY_GRAPH_START_NODE_ID
+                          ? undefined
+                          : editorPageMilestoneActive(draftStory, n.pageId)
+                      }
+                      bootstrapStartHint={
+                        interactionLocked &&
+                        n.pageId === STORY_GRAPH_START_NODE_ID
+                      }
+                      onBodyPointerDown={(e) =>
+                        onCanvasCardBodyPointerDown(n.pageId, e)
+                      }
+                      onSelectSingleForA11y={() =>
+                        n.pageId === STORY_GRAPH_START_NODE_ID
+                          ? onSelectPageIds([])
+                          : onSelectPageIds([n.pageId])
+                      }
+                      onDragStart={(e) => onCardDragStart(n.pageId, e)}
+                      onRequestDelete={
+                        interactionLocked ||
+                        n.pageId === STORY_GRAPH_START_NODE_ID ||
+                        !onDeletePage
+                          ? undefined
+                          : () => onDeletePage(n.pageId)
+                      }
+                      onRequestClean={
+                        interactionLocked ||
+                        n.pageId === STORY_GRAPH_START_NODE_ID ||
+                        !onCleanPage
+                          ? undefined
+                          : () => onCleanPage(n.pageId)
+                      }
+                      onRequestDuplicate={
+                        interactionLocked ||
+                        n.pageId === STORY_GRAPH_START_NODE_ID ||
+                        !onDuplicatePage
+                          ? undefined
+                          : () => onDuplicatePage(n.pageId)
+                      }
+                      onRenamePageId={
+                        interactionLocked ||
+                        n.pageId === STORY_GRAPH_START_NODE_ID ||
+                        !onRenamePageId
+                          ? undefined
+                          : onRenamePageId
+                      }
+                    />
+                  </div>
+                );
+              })}
+              {endZoneSeparatorWorldX != null ? (
+                <div
+                  className={s.endZoneSeparator}
+                  style={{
+                    left: endZoneSeparatorWorldX,
+                    height: bbox.h,
+                  }}
+                  aria-hidden
                 />
-              </div>
-            );
-          })}
-          {endZoneSeparatorWorldX != null ? (
-            <div
-              className={s.endZoneSeparator}
-              style={{
-                left: endZoneSeparatorWorldX,
-                height: bbox.h,
-              }}
-              aria-hidden
-            />
-          ) : null}
-          <StoryEndIngressChips
-            bundles={endIngressBundles}
-            onHoverKey={setHoveredEndIngressKey}
-            inboundYByKey={endIngressInboundYByKey}
-          />
-          <StoryDistantEdgeChips
-            bundles={distantBundles}
-            onHoverKey={setHoveredDistantKey}
-            inboundYByKey={distantInboundYByKey}
-          />
+              ) : null}
+              <StoryEndIngressChips
+                bundles={endIngressBundles}
+                onHoverKey={setHoveredEndIngressKey}
+                inboundYByKey={endIngressInboundYByKey}
+              />
+              <StoryDistantEdgeChips
+                bundles={distantBundles}
+                onHoverKey={setHoveredDistantKey}
+                inboundYByKey={distantInboundYByKey}
+              />
+            </>
+          ) : viewMode === "pathFlow" ? (
+            <div className={s.pathFlowLayer}>
+              {expandedPathNodeSet ? (
+                <>
+                  <StoryEdges ops={pathExpandedEdgeOps} />
+                  {pathExpandedNodesWithStart.map((n) => {
+                    const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
+                    const out = pathExpandedOutgoingByPage.get(n.pageId) ?? [];
+                    const inc = pathExpandedIncomingByTarget.get(n.pageId) ?? [];
+                    const incomingPortCount = bundleIncomingEdgesForTarget(inc).length;
+                    const issues =
+                      n.pageId === STORY_GRAPH_START_NODE_ID
+                        ? []
+                        : issuesByPage.get(n.pageId) ?? [];
+                    const stackZ = localLayout.nodes[n.pageId]?.z;
+                    return (
+                      <div key={n.pageId} data-story-card="1">
+                        <StoryCard
+                          node={n}
+                          x={pos.x}
+                          y={pos.y}
+                          outgoing={out}
+                          incomingPortCount={incomingPortCount}
+                          selected={selectedPageIds.includes(n.pageId)}
+                          domRef={getCardRootRef(n.pageId)}
+                          issues={issues}
+                          stackZ={
+                            typeof stackZ === "number" && Number.isFinite(stackZ)
+                              ? stackZ
+                              : undefined
+                          }
+                          milestoneActive={
+                            n.pageId === STORY_GRAPH_START_NODE_ID
+                              ? undefined
+                              : editorPageMilestoneActive(draftStory, n.pageId)
+                          }
+                          onBodyPointerDown={(e) =>
+                            onCanvasCardBodyPointerDown(n.pageId, e)
+                          }
+                          onSelectSingleForA11y={() =>
+                            n.pageId === STORY_GRAPH_START_NODE_ID
+                              ? onSelectPageIds([])
+                              : onSelectPageIds([n.pageId])
+                          }
+                          onDragStart={(e) => onCardDragStart(n.pageId, e)}
+                          onRequestDelete={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onDeletePage
+                              ? undefined
+                              : () => onDeletePage(n.pageId)
+                          }
+                          onRequestClean={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onCleanPage
+                              ? undefined
+                              : () => onCleanPage(n.pageId)
+                          }
+                          onRequestDuplicate={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onDuplicatePage
+                              ? undefined
+                              : () => onDuplicatePage(n.pageId)
+                          }
+                          onRenamePageId={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onRenamePageId
+                              ? undefined
+                              : onRenamePageId
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  <svg className={s.pathFlowEdgesSvg} aria-hidden>
+                    {pathBubbleEdges.map((e) => {
+                      const from = pathBubbleLayout.get(e.fromBubbleId);
+                      const to = pathBubbleLayout.get(e.toBubbleId);
+                      if (!from || !to) return null;
+                      const x1 = from.x + from.w;
+                      const y1 = from.y + from.h / 2;
+                      const x2 = to.x;
+                      const y2 = to.y + to.h / 2;
+                      const c1x = x1 + 40;
+                      const c2x = x2 - 40;
+                      return (
+                        <g key={e.id}>
+                          <path
+                            d={`M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`}
+                            className={`${s.pathFlowEdge} ${s.pathFlowEdgeDim}`}
+                          />
+                          {e.count > 1 ? (
+                            <text
+                              x={(x1 + x2) / 2}
+                              y={(y1 + y2) / 2 - 4}
+                              className={s.pathFlowEdgeCount}
+                            >
+                              {e.count}
+                            </text>
+                          ) : null}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  {pathBubbleGroups.map((bubble) => {
+                    const box = pathBubbleLayout.get(bubble.id);
+                    if (!box) return null;
+                    const focused = focusedPathClusterId === bubble.id;
+                    return (
+                      <button
+                        key={bubble.id}
+                        type="button"
+                        className={`${s.pathBand} ${s.pathBandFlow} ${focused ? s.pathBandFocused : ""}`}
+                        style={{
+                          left: box.x,
+                          top: box.y,
+                          width: box.w,
+                          height: box.h,
+                        }}
+                        onClick={() => {
+                          setFocusedPathClusterId((prev) =>
+                            prev === bubble.id ? null : bubble.id
+                          );
+                          setExpandedPathBubbleId(bubble.id);
+                          onSelectPageIds([]);
+                        }}
+                        title="Katt: buborék megnyitása"
+                      >
+                        <span className={s.pathBandLabel}>{bubble.name}</span>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className={s.metroLayer}>
+              {metroDrillNodeSet ? (
+                <>
+                  <StoryEdges ops={metroExpandedEdgeOps} />
+                  {metroExpandedNodesWithStart.map((n) => {
+                    const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
+                    const out = metroExpandedOutgoingByPage.get(n.pageId) ?? [];
+                    const inc =
+                      metroExpandedIncomingByTarget.get(n.pageId) ?? [];
+                    const incomingPortCount =
+                      bundleIncomingEdgesForTarget(inc).length;
+                    const issues =
+                      n.pageId === STORY_GRAPH_START_NODE_ID
+                        ? []
+                        : issuesByPage.get(n.pageId) ?? [];
+                    const stackZ = localLayout.nodes[n.pageId]?.z;
+                    return (
+                      <div key={n.pageId} data-story-card="1">
+                        <StoryCard
+                          node={n}
+                          x={pos.x}
+                          y={pos.y}
+                          outgoing={out}
+                          incomingPortCount={incomingPortCount}
+                          selected={selectedPageIds.includes(n.pageId)}
+                          domRef={getCardRootRef(n.pageId)}
+                          issues={issues}
+                          stackZ={
+                            typeof stackZ === "number" && Number.isFinite(stackZ)
+                              ? stackZ
+                              : undefined
+                          }
+                          milestoneActive={
+                            n.pageId === STORY_GRAPH_START_NODE_ID
+                              ? undefined
+                              : editorPageMilestoneActive(draftStory, n.pageId)
+                          }
+                          onBodyPointerDown={(e) =>
+                            onCanvasCardBodyPointerDown(n.pageId, e)
+                          }
+                          onSelectSingleForA11y={() =>
+                            n.pageId === STORY_GRAPH_START_NODE_ID
+                              ? onSelectPageIds([])
+                              : onSelectPageIds([n.pageId])
+                          }
+                          onDragStart={(e) => onCardDragStart(n.pageId, e)}
+                          onRequestDelete={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onDeletePage
+                              ? undefined
+                              : () => onDeletePage(n.pageId)
+                          }
+                          onRequestClean={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onCleanPage
+                              ? undefined
+                              : () => onCleanPage(n.pageId)
+                          }
+                          onRequestDuplicate={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onDuplicatePage
+                              ? undefined
+                              : () => onDuplicatePage(n.pageId)
+                          }
+                          onRenamePageId={
+                            interactionLocked ||
+                            n.pageId === STORY_GRAPH_START_NODE_ID ||
+                            !onRenamePageId
+                              ? undefined
+                              : onRenamePageId
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </>
+              ) : metroLayout.stations.length === 0 ? (
+                <p className={s.metroEmpty}>
+                  Nincs megjeleníthető metróvonal (hiányzik a kezdő oldal vagy nincs
+                  él a virtuális starttól).
+                </p>
+              ) : (
+                <>
+                  <svg
+                    className={s.metroSvg}
+                    width={bbox.w}
+                    height={bbox.h}
+                    aria-hidden
+                  >
+                    {metroLayout.segments.map((seg) => {
+                      const a = metroLayout.stationById.get(seg.from);
+                      const b = metroLayout.stationById.get(seg.to);
+                      if (!a || !b) return null;
+                      const x1 = a.x;
+                      const y1 = a.y;
+                      const x2 = b.x;
+                      const y2 = b.y;
+                      const span = Math.max(40, x2 - x1);
+                      const pull = Math.min(100, span * 0.45);
+                      const c1x = x1 + pull;
+                      const c2x = x2 - pull;
+                      const d = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+                      const hue = metroHueFromId(seg.from);
+                      const sw = 2.25 + Math.min(9, seg.branchWidth * 2.2);
+                      return (
+                        <g key={seg.id}>
+                          <path
+                            d={d}
+                            className={s.metroTrackHit}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMetroDrillNodeSet(nodeIdsForMetroSegment(seg));
+                              onSelectPageIds([]);
+                            }}
+                          />
+                          <path
+                            d={d}
+                            className={s.metroTrack}
+                            style={{
+                              stroke: `hsla(${hue}, 72%, 58%, 0.92)`,
+                              strokeWidth: sw,
+                            }}
+                          />
+                          {seg.branchWidth > 1 ? (
+                            <text
+                              x={(x1 + x2) / 2}
+                              y={(y1 + y2) / 2 - 6}
+                              className={s.metroBranchCount}
+                            >
+                              ×{seg.branchWidth}
+                            </text>
+                          ) : null}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  <div className={s.metroStationOverlay}>
+                    {metroLayout.stations.map((st) => (
+                      <button
+                        key={st.id}
+                        type="button"
+                        className={s.metroStation}
+                        data-metro-kind={st.kind}
+                        style={{
+                          left: st.x,
+                          top: st.y,
+                        }}
+                        title="Katt: részgráf megnyitása"
+                        aria-label={`${st.label} állomás, részgráf megnyitása`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMetroDrillNodeSet(
+                            collectDownstreamNodeIds(metroEdgePairs, st.id)
+                          );
+                          onSelectPageIds([]);
+                        }}
+                      >
+                        <span className={s.metroStationLabel}>{st.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         {marqueeRect ? (
           <div className={s.marqueeOverlay} aria-hidden>

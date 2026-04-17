@@ -116,7 +116,7 @@ export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): n
     return Math.max(2, nOpt);
   }
   if (node.isPuzzlePage) return 2;
-  if (node.category === "puzzleRoute" || node.category === "poolRoute") {
+  if (node.category === "puzzleRoute" || node.category === "decision") {
     return Math.max(1, orderedOut.length);
   }
   if (node.isLogicPage) {

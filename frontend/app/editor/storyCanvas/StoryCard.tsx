@@ -128,7 +128,7 @@ export default function StoryCard({
 
   const inYs = inputPortYs(incomingPortCount, h, {
     logicLayout:
-      node.isLogicPage || node.category === "puzzleRoute" || node.category === "poolRoute",
+      node.isLogicPage || node.category === "puzzleRoute" || node.category === "decision",
   });
 
   const milestoneOn =
@@ -486,8 +486,8 @@ export default function StoryCard({
             <div className={s.cardRow2}>
               {node.category === "puzzleRoute" ? (
                 <span className={s.cardTagRoute}>route</span>
-              ) : node.category === "poolRoute" ? (
-                <span className={s.cardTagRoute}>pool route</span>
+              ) : node.category === "decision" ? (
+                <span className={s.cardTagRoute}>decision</span>
               ) : node.isLogicPage ? (
                 <span className={s.cardTag}>logic</span>
               ) : node.isPuzzlePage && !riddle ? (
@@ -566,7 +566,7 @@ export default function StoryCard({
                   })
                 )}
               </div>
-            ) : node.category === "poolRoute" ? (
+            ) : node.category === "decision" ? (
               <div className={s.cardOptStripStack}>
                 {ord.length === 0 ? (
                   <span className={s.cardOptMuted}>nincs kimenet</span>
@@ -583,7 +583,7 @@ export default function StoryCard({
                             <span className={s.cardRouteElseMark}>default</span>
                           ) : (
                             <>
-                              <span className={s.cardRouteComboMark}>pool</span>
+                              <span className={s.cardRouteComboMark}>decision</span>
                               <span
                                 className={s.cardLogicFragTight}
                                 title={comboLab}

@@ -35,6 +35,27 @@ export type StoryGraphNode = {
   choiceCount: number;
 };
 
+export type PathFlowClusterKind = "flow" | "end";
+
+export type PathFlowCluster = {
+  id: string;
+  kind: PathFlowClusterKind;
+  name: string;
+  nodeIds: string[];
+  startNodeId: string;
+  endNodeId: string;
+  entryNodeIds: string[];
+  exitNodeIds: string[];
+  dominantCategory: StoryGraphNode["category"];
+};
+
+export type PathFlowClusterEdge = {
+  id: string;
+  fromClusterId: string;
+  toClusterId: string;
+  count: number;
+};
+
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
   return v as Record<string, unknown>;
@@ -278,7 +299,7 @@ export function buildStoryGraph(story: Record<string, unknown>): {
       const def = readString(rec.defaultGoto);
       add(n.pageId, def, "logicElse");
     }
-    if (n.category === "poolRoute") {
+    if (n.category === "decision") {
       const ra =
         asRecord(rec.routeAssignments) ??
         asRecord(rec.routes) ??
@@ -357,4 +378,179 @@ export function outgoingTargetsForPage(
     out.push(e.to);
   }
   return out;
+}
+
+function pathFlowBucketForNode(node: StoryGraphNode): string {
+  if (node.category === "end") return "end";
+  if (node.category === "logic") return "logic";
+  if (node.category === "decision") return "decision";
+  if (node.category === "puzzleRoute") return "puzzleRoute";
+  if (node.category === "puzzleRiddle" || node.category === "puzzleRunes") {
+    return "puzzle";
+  }
+  if (node.category === "narrative1" || node.category === "narrativeN") {
+    return "narrative";
+  }
+  return "other";
+}
+
+export function buildPathFlowClusters(
+  nodes: StoryGraphNode[],
+  edges: StoryGraphEdge[]
+): PathFlowCluster[] {
+  const nodeById = new Map(nodes.map((n) => [n.pageId, n]));
+  const out = new Map<string, string[]>();
+  const incoming = new Map<string, string[]>();
+  for (const n of nodes) {
+    out.set(n.pageId, []);
+    incoming.set(n.pageId, []);
+  }
+  for (const e of edges) {
+    if (e.from === STORY_GRAPH_START_NODE_ID) continue;
+    if (!nodeById.has(e.from) || !nodeById.has(e.to)) continue;
+    out.get(e.from)?.push(e.to);
+    incoming.get(e.to)?.push(e.from);
+  }
+
+  const isBoundary = (id: string): boolean => {
+    const inD = (incoming.get(id) ?? []).length;
+    const outD = (out.get(id) ?? []).length;
+    if (inD !== 1 || outD !== 1) return true;
+    const nextId = (out.get(id) ?? [])[0];
+    if (!nextId) return true;
+    const n = nodeById.get(id);
+    const next = nodeById.get(nextId);
+    if (!n || !next) return true;
+    return pathFlowBucketForNode(n) !== pathFlowBucketForNode(next);
+  };
+
+  const boundaryIds = [...nodeById.keys()].filter(isBoundary).sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const clusters: PathFlowCluster[] = [];
+  const usedTransition = new Set<string>();
+
+  for (const startId of boundaryIds) {
+    const startOut = (out.get(startId) ?? []).slice().sort((a, b) => a.localeCompare(b));
+    for (const firstHop of startOut) {
+      const transKey = `${startId}\0${firstHop}`;
+      if (usedTransition.has(transKey)) continue;
+      usedTransition.add(transKey);
+
+      const nodeIds: string[] = [startId];
+      let prev = startId;
+      let cur = firstHop;
+      let endId = firstHop;
+      while (true) {
+        endId = cur;
+        const atBoundary = isBoundary(cur);
+        const curNode = nodeById.get(cur);
+        if (!atBoundary || (curNode && curNode.category === "end")) {
+          if (!nodeIds.includes(cur)) nodeIds.push(cur);
+        }
+        if (atBoundary) break;
+        const nexts = out.get(cur) ?? [];
+        if (nexts.length !== 1) break;
+        const next = nexts[0]!;
+        prev = cur;
+        cur = next;
+        usedTransition.add(`${prev}\0${cur}`);
+      }
+
+      const startNode = nodeById.get(startId);
+      const endNode = nodeById.get(endId);
+      const kind: PathFlowClusterKind =
+        endNode?.category === "end" ? "end" : "flow";
+      const dominantCategory =
+        startNode?.category ?? endNode?.category ?? "other";
+      clusters.push({
+        id: `pf_${clusters.length + 1}`,
+        name: `Path ${clusters.length + 1}`,
+        kind,
+        nodeIds,
+        startNodeId: startId,
+        endNodeId: endId,
+        entryNodeIds: [startId],
+        exitNodeIds: [endId],
+        dominantCategory,
+      });
+    }
+  }
+
+  if (clusters.length === 0) {
+    const sorted = [...nodeById.keys()].sort((a, b) => a.localeCompare(b));
+    if (sorted.length) {
+      const first = sorted[0]!;
+      clusters.push({
+        id: "pf_1",
+        name: "Path 1",
+        kind: nodeById.get(first)?.category === "end" ? "end" : "flow",
+        nodeIds: sorted,
+        startNodeId: first,
+        endNodeId: sorted[sorted.length - 1]!,
+        entryNodeIds: [first],
+        exitNodeIds: [sorted[sorted.length - 1]!],
+        dominantCategory: nodeById.get(first)?.category ?? "other",
+      });
+    }
+  }
+
+  return clusters;
+}
+
+export function buildPathFlowClusterEdges(
+  clusters: PathFlowCluster[],
+  edges: StoryGraphEdge[]
+): PathFlowClusterEdge[] {
+  const counts = new Map<string, number>();
+  const byStart = new Map<string, PathFlowCluster[]>();
+  for (const c of clusters) {
+    const arr = byStart.get(c.startNodeId) ?? [];
+    arr.push(c);
+    byStart.set(c.startNodeId, arr);
+  }
+  for (const c of clusters) {
+    const next = byStart.get(c.endNodeId) ?? [];
+    for (const target of next) {
+      if (target.id === c.id) continue;
+      const key = `${c.id}\0${target.id}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+  // Fallback: retain weak coupling from raw edges if start/end linking misses transitions.
+  if (counts.size === 0) {
+    const owners = new Map<string, string[]>();
+    for (const c of clusters) {
+      for (const id of c.nodeIds) {
+        const arr = owners.get(id) ?? [];
+        arr.push(c.id);
+        owners.set(id, arr);
+      }
+    }
+    for (const e of edges) {
+      if (e.from === STORY_GRAPH_START_NODE_ID) continue;
+      const fromOwners = owners.get(e.from) ?? [];
+      const toOwners = owners.get(e.to) ?? [];
+      for (const fromId of fromOwners) {
+        for (const toId of toOwners) {
+          if (fromId === toId) continue;
+          const key = `${fromId}\0${toId}`;
+          counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+      }
+    }
+  }
+  return [...counts.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, count], idx) => {
+      const sep = key.indexOf("\0");
+      const fromClusterId = key.slice(0, sep);
+      const toClusterId = key.slice(sep + 1);
+      return {
+        id: `pfe_${idx}`,
+        fromClusterId,
+        toClusterId,
+        count,
+      };
+    });
 }

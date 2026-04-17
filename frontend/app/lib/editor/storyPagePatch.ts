@@ -236,7 +236,7 @@ export function patchOutgoingNavRefsInPage(
       next.routeAssignments = nr;
     }
   }
-  if (classifyEditorPage(next) === "poolRoute") {
+  if (classifyEditorPage(next) === "decision") {
     if (typeof next.defaultGoto === "string" && next.defaultGoto === from) {
       next.defaultGoto = to;
     }

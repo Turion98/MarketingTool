@@ -148,11 +148,11 @@ export function buildEmptyPageForCategory(
         text: "Új feltételes routing (szerkeszd a nextSwitch szabályokat).",
         nextSwitch: [{ ifNone: [], goto: next }],
       };
-    case "poolRoute":
+    case "decision":
       return {
         id: nid,
-        type: "poolRoute",
-        title: "Pool route",
+        type: "decision",
+        title: "Decision",
         poolId: "",
         routeAssignments: {},
         defaultGoto: next,

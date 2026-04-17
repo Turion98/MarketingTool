@@ -79,6 +79,25 @@
   cursor: not-allowed;
 }
 
+.viewModeGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.viewModeBtn {
+  min-width: 3.25rem;
+}
+
+.viewModeBtnActive {
+  border-color: rgba(139, 168, 255, 0.78) !important;
+  background: rgba(42, 62, 118, 0.82) !important;
+}
+
 .toolbarZoomGroup {
   display: inline-flex;
   align-items: center;
@@ -393,6 +412,210 @@
   top: 0;
   transform-origin: 0 0;
   will-change: transform;
+}
+
+.pathFlowLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.pathFlowEdgesSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pathFlowEdge {
+  fill: none;
+  stroke-width: 2.25;
+}
+
+.pathFlowEdgeHot {
+  stroke: rgba(248, 113, 113, 0.78);
+}
+
+.pathFlowEdgeDim {
+  stroke: rgba(248, 113, 113, 0.28);
+}
+
+.pathFlowEdgeCount {
+  fill: rgba(250, 204, 21, 0.95);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.pathBand {
+  position: absolute;
+  border-radius: 999px;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.18rem;
+  padding: 0.2rem 0.8rem;
+  box-sizing: border-box;
+  color: #e8ecf4;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.pathBandFlow {
+  border-color: rgba(96, 165, 250, 0.62);
+  background: linear-gradient(
+    90deg,
+    rgba(17, 24, 39, 0.98),
+    rgba(30, 58, 138, 0.34)
+  );
+}
+
+.pathBandEnd {
+  border-color: rgba(16, 185, 129, 0.72);
+  background: linear-gradient(
+    90deg,
+    rgba(17, 24, 39, 0.98),
+    rgba(16, 185, 129, 0.28)
+  );
+}
+
+.pathBandFocused {
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.46);
+  border-color: rgba(251, 191, 36, 0.85);
+}
+
+.pathBandLabel {
+  font-size: 0.64rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.metroLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.metroSvg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.metroTrackHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 22;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.metroTrack {
+  fill: none;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.metroBranchCount {
+  fill: rgba(254, 249, 231, 0.95);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.metroStationOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.metroStation {
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 4.5rem;
+  max-width: 9.5rem;
+  padding: 0.22rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 2px solid rgba(148, 163, 184, 0.75);
+  background: rgba(15, 23, 42, 0.94);
+  color: #e8ecf4;
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.metroStation:hover {
+  border-color: rgba(251, 191, 36, 0.85);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35);
+}
+
+.metroStation[data-metro-kind="start"] {
+  border-color: rgba(52, 211, 153, 0.85);
+}
+
+.metroStation[data-metro-kind="terminal"] {
+  border-color: rgba(244, 114, 182, 0.85);
+}
+
+.metroStation[data-metro-kind="split"],
+.metroStation[data-metro-kind="hub"] {
+  border-color: rgba(96, 165, 250, 0.88);
+}
+
+.metroStation[data-metro-kind="merge"] {
+  border-color: rgba(167, 139, 250, 0.88);
+}
+
+.metroStationLabel {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metroEmpty {
+  margin: 0;
+  padding: 2.5rem 1.5rem;
+  max-width: 28rem;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.pathBandSub {
+  font-size: 0.56rem;
+  opacity: 0.82;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pathBandDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.pathBandDots i {
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 50%;
+  background: rgba(226, 232, 240, 0.78);
 }
 
 /* A kártyák után, chip-ek előtt: látszik a vonal, pointer-events: none — nem fogja a húzást. */

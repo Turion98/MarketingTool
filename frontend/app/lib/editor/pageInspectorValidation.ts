@@ -200,50 +200,33 @@ export function validatePage(
         });
       }
     }
-  } else if (classifyEditorPage(page as Record<string, unknown>) === "poolRoute") {
-    const poolId =
-      (typeof page.poolId === "string" && page.poolId.trim()) ||
-      (typeof page.pool === "string" && page.pool.trim()) ||
-      (typeof page.poolKey === "string" && page.poolKey.trim()) ||
-      "";
-    const def =
-      readString(page.defaultGoto)?.trim() ??
-      readString(page.defaultNext)?.trim() ??
-      "";
-    const ra =
-      asRecord(page.routeAssignments) ??
-      asRecord(page.routes) ??
-      asRecord(page.nextByPoolKey) ??
-      asRecord(page.routeMap) ??
-      {};
-    if (!poolId) {
+  } else if (classifyEditorPage(page as Record<string, unknown>) === "decision") {
+    if (choices.length < 2 || choices.length % 2 !== 0) {
       issues.push({
-        path: "poolId",
-        message: "Pool route: válassz globális pool azonosítót.",
-      });
-    }
-    const hasAnyAssignment = Object.values(ra).some(
-      (v) => typeof v === "string" && v.trim().length > 0
-    );
-    if (!def && !hasAnyAssignment) {
-      issues.push({
-        path: "defaultGoto",
+        path: "choices",
         message:
-          "Pool route: adj meg default célt, vagy legalább egy kulcshoz céloldalt.",
+          "Decision: páros számú opció szükséges (primary/fallback párok).",
       });
     }
-    if (def && !knownIds.has(def)) {
-      issues.push({
-        path: "defaultGoto",
-        message: `Ismeretlen oldal: "${def}".`,
-      });
-    }
-    for (const [k, raw] of Object.entries(ra)) {
-      const t = typeof raw === "string" ? raw.trim() : "";
-      if (t && !knownIds.has(t)) {
+    for (let i = 0; i < choices.length; i++) {
+      const c = asRecord(choices[i]);
+      const label = readString(c?.text) ?? readString(c?.label) ?? `#${i + 1}`;
+      const next = readString(c?.next)?.trim() ?? "";
+      if (!(readString(c?.text)?.trim() ?? "")) {
         issues.push({
-          path: `routeAssignments.${k}`,
-          message: `Ismeretlen oldal: "${t}".`,
+          path: `choices[${i}].text`,
+          message: `Decision opció "${label}": hiányzó szöveg.`,
+        });
+      }
+      if (!next) {
+        issues.push({
+          path: `choices[${i}].next`,
+          message: `Decision opció "${label}": hiányzó következő oldal.`,
+        });
+      } else if (!knownIds.has(next)) {
+        issues.push({
+          path: `choices[${i}].next`,
+          message: `Decision opció "${label}": ismeretlen oldal "${next}".`,
         });
       }
     }
@@ -392,7 +375,7 @@ export function validatePage(
       !isPuzzle &&
       !logic &&
       classifyEditorPage(page as Record<string, unknown>) !== "puzzleRoute" &&
-      classifyEditorPage(page as Record<string, unknown>) !== "poolRoute"
+      classifyEditorPage(page as Record<string, unknown>) !== "decision"
     ) {
       const hasEnd = page.type === "end";
       if (!hasEnd) {

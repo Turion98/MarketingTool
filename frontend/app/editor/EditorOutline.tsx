@@ -35,7 +35,7 @@ const CATEGORY_ORDER: EditorPageCategory[] = [
   "puzzleRiddle",
   "puzzleRunes",
   "puzzleRoute",
-  "poolRoute",
+  "decision",
   "logic",
   "conditionalRouting",
   "transition",

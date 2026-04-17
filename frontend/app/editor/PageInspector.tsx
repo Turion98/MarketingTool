@@ -21,10 +21,6 @@ import {
   generatePuzzleRouteKeys,
   suggestPageIdForRouteKey,
 } from "@/app/lib/editor/puzzleRouteCombinations";
-import {
-  listPoolIdsFromStory,
-  listPoolKeysForPoolId,
-} from "@/app/lib/editor/poolRoutePools";
 import { hydrateRouteFieldsFromStoryPage } from "@/app/lib/editor/legacyPuzzleRouteHydrate";
 import {
   classifyEditorPage,
@@ -260,6 +256,23 @@ type LogicIfForm = { fragment: string; goTo: string };
 type RunesOptionForm = { text: string; correct: boolean };
 
 const EMPTY_RUNES_OPTION: RunesOptionForm = { text: "", correct: false };
+
+function emptyChoiceForm(): ChoiceForm {
+  return {
+    text: "",
+    next: "",
+    unlockIds: "",
+    visibilityMode: "none",
+    visibilityFragment: "",
+  };
+}
+
+function normalizeDecisionChoices(rows: ChoiceForm[]): ChoiceForm[] {
+  const out = [...rows];
+  while (out.length < 6) out.push(emptyChoiceForm());
+  if (out.length % 2 !== 0) out.push(emptyChoiceForm());
+  return out;
+}
 
 function loadRunesOptionRows(page: Record<string, unknown>): RunesOptionForm[] {
   const ro = Array.isArray(page.options) ? page.options : [];
@@ -576,11 +589,6 @@ export default function PageInspector({
   const [routeAssignments, setRouteAssignments] = useState<
     Record<string, string>
   >({});
-  const [poolRoutePoolId, setPoolRoutePoolId] = useState("");
-  const [poolRouteDefaultGoto, setPoolRouteDefaultGoto] = useState("");
-  const [poolRouteAssignments, setPoolRouteAssignments] = useState<
-    Record<string, string>
-  >({});
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
@@ -666,9 +674,6 @@ export default function PageInspector({
       setRouteSourcePageId("");
       setRouteDefaultGoto("");
       setRouteAssignments({});
-      setPoolRoutePoolId("");
-      setPoolRouteDefaultGoto("");
-      setPoolRouteAssignments({});
       setSaveMilestone(false);
       setEndCtaPresetKey("");
       setEndCtaInlineLocked(false);
@@ -809,38 +814,13 @@ export default function PageInspector({
       setRouteAssignments(h.assignments);
     } else if (
       page &&
-      classifyEditorPage(page as Record<string, unknown>) === "poolRoute"
+      classifyEditorPage(page as Record<string, unknown>) === "decision"
     ) {
-      const poolId =
-        (typeof page.poolId === "string" && page.poolId.trim()) ||
-        (typeof page.pool === "string" && page.pool.trim()) ||
-        (typeof page.poolKey === "string" && page.poolKey.trim()) ||
-        "";
-      const def =
-        (typeof page.defaultGoto === "string" && page.defaultGoto.trim()) ||
-        (typeof page.defaultNext === "string" && page.defaultNext.trim()) ||
-        "";
-      const assignments =
-        asRecord(page.routeAssignments) ??
-        asRecord(page.routes) ??
-        asRecord(page.nextByPoolKey) ??
-        asRecord(page.routeMap) ??
-        {};
-      const cleanAssignments: Record<string, string> = {};
-      for (const [k, v] of Object.entries(assignments)) {
-        if (typeof v !== "string") continue;
-        cleanAssignments[k] = v;
-      }
-      setPoolRoutePoolId(poolId);
-      setPoolRouteDefaultGoto(def);
-      setPoolRouteAssignments(cleanAssignments);
+      setChoices(normalizeDecisionChoices(readChoices(page)));
     } else {
       setRouteSourcePageId("");
       setRouteDefaultGoto("");
       setRouteAssignments({});
-      setPoolRoutePoolId("");
-      setPoolRouteDefaultGoto("");
-      setPoolRouteAssignments({});
     }
 
     if (page.type === "end") {
@@ -998,8 +978,8 @@ export default function PageInspector({
       page.type === "puzzle" && !isRiddle && !isRunes;
     const isEditorRoutePage =
       classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
-    const isEditorPoolRoutePage =
-      classifyEditorPage(page as Record<string, unknown>) === "poolRoute";
+    const isEditorDecisionPage =
+      classifyEditorPage(page as Record<string, unknown>) === "decision";
     let nextP: Record<string, unknown>;
 
     if (isRiddle) {
@@ -1163,25 +1143,25 @@ export default function PageInspector({
       delete nextP.choices;
       delete nextP.logic;
       delete nextP.text;
-    } else if (isEditorPoolRoutePage) {
-      const out: Record<string, string> = {};
-      for (const [k, raw] of Object.entries(poolRouteAssignments)) {
-        const key = k.trim();
-        const val = raw.trim();
-        if (!key || !val) continue;
-        out[key] = val;
-      }
+    } else if (isEditorDecisionPage) {
+      const oldChoices = Array.isArray(page.choices) ? page.choices : [];
+      const normalized = normalizeDecisionChoices(choices);
       nextP = {
         ...page,
         title,
-        type: "poolRoute",
-        poolId: poolRoutePoolId.trim(),
-        routeAssignments: out,
-        defaultGoto: poolRouteDefaultGoto.trim(),
+        type: "decision",
+        choices: normalized.map((row, i) => buildChoiceRecord(row, oldChoices[i])),
       };
-      delete nextP.choices;
       delete nextP.logic;
-      delete nextP.text;
+      delete nextP.poolId;
+      delete nextP.pool;
+      delete nextP.poolKey;
+      delete nextP.routeAssignments;
+      delete nextP.routes;
+      delete nextP.nextByPoolKey;
+      delete nextP.routeMap;
+      delete nextP.defaultGoto;
+      delete nextP.defaultNext;
     } else if (isOtherPuzzle) {
       nextP = { ...page, title, text: primaryText };
     } else if (page.type === "end") {
@@ -1278,9 +1258,6 @@ export default function PageInspector({
     routeSourcePageId,
     routeDefaultGoto,
     routeAssignments,
-    poolRoutePoolId,
-    poolRouteDefaultGoto,
-    poolRouteAssignments,
     logicIfRows,
     logicElseGoTo,
     saveMilestone,
@@ -1325,6 +1302,10 @@ export default function PageInspector({
   }, []);
 
   const idSet = useMemo(() => new Set(knownPageIds), [knownPageIds]);
+  const decisionChoices = useMemo(
+    () => normalizeDecisionChoices(choices),
+    [choices]
+  );
 
   const runesSourcePageIds = useMemo(
     () =>
@@ -1334,19 +1315,6 @@ export default function PageInspector({
       }),
     [draftStory, knownPageIds]
   );
-  const poolRoutePoolIds = useMemo(
-    () => listPoolIdsFromStory(draftStory),
-    [draftStory]
-  );
-  const poolRouteExpectedKeys = useMemo(
-    () => listPoolKeysForPoolId(draftStory, poolRoutePoolId),
-    [draftStory, poolRoutePoolId]
-  );
-  const poolRouteKeysSig = useMemo(
-    () => JSON.stringify(poolRouteExpectedKeys),
-    [poolRouteExpectedKeys]
-  );
-
   const routeExpectedKeys = useMemo(() => {
     const sid = routeSourcePageId.trim();
     if (!sid) return [] as string[];
@@ -1394,27 +1362,6 @@ export default function PageInspector({
       return next;
     });
   }, [routeKeysSig]);
-
-  useEffect(() => {
-    let keys: string[] = [];
-    try {
-      keys = JSON.parse(poolRouteKeysSig) as string[];
-      if (!Array.isArray(keys)) keys = [];
-    } catch {
-      keys = [];
-    }
-    if (keys.length === 0) return;
-    setPoolRouteAssignments((prev) => {
-      const next: Record<string, string> = { ...prev };
-      let changed = false;
-      for (const k of keys) {
-        if (next[k] !== undefined) continue;
-        next[k] = "";
-        changed = true;
-      }
-      return changed ? next : prev;
-    });
-  }, [poolRouteKeysSig]);
 
   const isRiddlePageForChain = Boolean(
     page?.type === "puzzle" && page?.kind === "riddle"
@@ -1661,10 +1608,10 @@ export default function PageInspector({
     page.type === "puzzle" && !isRiddlePage && !isRunesPage;
   const isEditorPuzzleRoutePage =
     classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
-  const isEditorPoolRoutePage =
-    classifyEditorPage(page as Record<string, unknown>) === "poolRoute";
+  const isEditorDecisionPage =
+    classifyEditorPage(page as Record<string, unknown>) === "decision";
   const isLogic =
-    Boolean(logic) && !isEditorPuzzleRoutePage && !isEditorPoolRoutePage;
+    Boolean(logic) && !isEditorPuzzleRoutePage && !isEditorDecisionPage;
   const isEndPage = page.type === "end";
   const milestoneEligible =
     !isEditorLogicPage(page as Record<string, unknown>) && !isEndPage;
@@ -1757,7 +1704,7 @@ export default function PageInspector({
         !isRunesPage &&
         !isOtherPuzzle &&
         !isEditorPuzzleRoutePage &&
-        !isEditorPoolRoutePage ? (
+        !isEditorDecisionPage ? (
           <>
             <label className={s.field}>
               <span>Fő szöveg</span>
@@ -2640,70 +2587,155 @@ export default function PageInspector({
               idSet={idSet}
             />
           </>
-        ) : isEditorPoolRoutePage ? (
+        ) : isEditorDecisionPage ? (
           <>
             <p className={s.hintSmall}>
-              Ez az oldal globális pool alapján route-ol. A pool tartalma máshol
-              szerkeszthető, itt csak a pool azonosítót és a céloldal mappinget adod meg.
+              Decision node: slotonként primary/fallback opciópár. Ha a primary
+              céloldal már látogatott, a fallback kerül előre.
             </p>
             <label className={s.field}>
-              <span>Pool azonosító (globális)</span>
-              <select
-                className={s.input}
-                value={poolRoutePoolId}
-                onChange={(e) => setPoolRoutePoolId(e.target.value)}
-              >
-                <option value="">— válassz pool-t —</option>
-                {poolRoutePoolIds.map((id) => (
-                  <option key={id} value={id}>
-                    {id}
-                  </option>
-                ))}
-              </select>
+              <span>Fő szöveg (opcionális)</span>
+              <textarea
+                className={s.textarea}
+                rows={3}
+                value={primaryText}
+                onChange={(e) => setPrimaryText(e.target.value)}
+              />
             </label>
-            {poolRoutePoolIds.length === 0 ? (
-              <p className={s.hintSmall}>
-                Nincs globális pool definiálva a story-ban (`pools` vagy `meta.pools`).
-              </p>
-            ) : null}
-            {poolRoutePoolId.trim() && poolRouteExpectedKeys.length === 0 ? (
-              <p className={s.hintSmall}>
-                A kiválasztott poolhoz nem találtam kulcsokat.
-              </p>
-            ) : null}
-            {poolRouteExpectedKeys.length > 0 ? (
-              <p className={s.hintSmall}>
-                Pool kulcsok: {poolRouteExpectedKeys.length}; kitöltött útvonal:{" "}
-                {
-                  poolRouteExpectedKeys.filter(
-                    (k) => (poolRouteAssignments[k] ?? "").trim() !== ""
-                  ).length
+            <div className={s.blockHead}>
+              <span>Slotok száma: {Math.floor(decisionChoices.length / 2)}</span>
+              <button
+                type="button"
+                className={s.btnSm}
+                onClick={() =>
+                  setChoices((prev) => {
+                    const n = normalizeDecisionChoices(prev);
+                    const pairCount = Math.floor(n.length / 2);
+                    n.splice(pairCount, 0, emptyChoiceForm()); // új primary a primary blokk végére
+                    n.push(emptyChoiceForm()); // új fallback a fallback blokk végére
+                    return n;
+                  })
                 }
-                .
-              </p>
+              >
+                + slot
+              </button>
+            </div>
+            {Math.floor(decisionChoices.length / 2) > 1 ? (
+              <button
+                type="button"
+                className={s.btnGhost}
+                onClick={() =>
+                  setChoices((prev) => {
+                    const n = normalizeDecisionChoices(prev);
+                    const pairCount = Math.floor(n.length / 2);
+                    if (pairCount <= 1) return n;
+                    n.splice(pairCount - 1, 1); // utolsó primary törlés
+                    n.pop(); // utolsó fallback törlés
+                    return n;
+                  })
+                }
+              >
+                Utolsó slot törlése
+              </button>
             ) : null}
-            {poolRouteExpectedKeys.map((key) => (
-              <div key={key} className={s.choiceCard}>
-                <RiddleScoreDestinationSelect
-                  label={`Kulcs: ${key}`}
-                  value={poolRouteAssignments[key] ?? ""}
-                  onChange={(v) =>
-                    setPoolRouteAssignments((prev) => ({ ...prev, [key]: v }))
-                  }
-                  story={draftStory}
-                  knownPageIds={knownPageIds}
-                  idSet={idSet}
-                />
-              </div>
-            ))}
-            <RiddleScoreDestinationSelect
-              label="Default → cél (ha nincs kulcs egyezés)"
-              value={poolRouteDefaultGoto}
-              onChange={setPoolRouteDefaultGoto}
-              story={draftStory}
-              knownPageIds={knownPageIds}
-              idSet={idSet}
-            />
+            {Array.from({ length: Math.floor(decisionChoices.length / 2) }, (_, slot) => {
+              const primaryIdx = slot;
+              const pairCount = Math.floor(decisionChoices.length / 2);
+              const fallbackIdx = slot + pairCount;
+              const primary = decisionChoices[primaryIdx]!;
+              const fallback = decisionChoices[fallbackIdx]!;
+              return (
+                <div key={slot} className={s.choiceCard}>
+                  <p className={s.optionCardTitle}>Slot {slot + 1}</p>
+                  <button
+                    type="button"
+                    className={s.btnSm}
+                    onClick={() =>
+                      setChoices((prev) => {
+                        const next = normalizeDecisionChoices(prev);
+                        const nPairs = Math.floor(next.length / 2);
+                        const pIdx = slot;
+                        const fIdx = slot + nPairs;
+                        const keep = next[pIdx]!;
+                        next[pIdx] = next[fIdx]!;
+                        next[fIdx] = keep;
+                        return next;
+                      })
+                    }
+                  >
+                    Primary / fallback csere
+                  </button>
+                  <label className={s.field}>
+                    <span>Primary szöveg</span>
+                    <input
+                      className={s.input}
+                      value={primary.text}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const pIdx = slot;
+                          next[pIdx] = { ...next[pIdx]!, text: v };
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                  <label className={s.field}>
+                    <span>Primary céloldal (id)</span>
+                    <input
+                      className={`${s.input} ${primary.next.trim() && !idSet.has(primary.next.trim()) ? s.inputWarn : ""}`}
+                      value={primary.next}
+                      list="editor-known-page-ids"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const pIdx = slot;
+                          next[pIdx] = { ...next[pIdx]!, next: v };
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                  <label className={s.field}>
+                    <span>Fallback szöveg</span>
+                    <input
+                      className={s.input}
+                      value={fallback.text}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const nPairs = Math.floor(next.length / 2);
+                          const fIdx = slot + nPairs;
+                          next[fIdx] = { ...next[fIdx]!, text: v };
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                  <label className={s.field}>
+                    <span>Fallback céloldal (id)</span>
+                    <input
+                      className={`${s.input} ${fallback.next.trim() && !idSet.has(fallback.next.trim()) ? s.inputWarn : ""}`}
+                      value={fallback.next}
+                      list="editor-known-page-ids"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const nPairs = Math.floor(next.length / 2);
+                          const fIdx = slot + nPairs;
+                          next[fIdx] = { ...next[fIdx]!, next: v };
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                </div>
+              );
+            })}
           </>
         ) : isOtherPuzzle ? (
           <label className={s.field}>
