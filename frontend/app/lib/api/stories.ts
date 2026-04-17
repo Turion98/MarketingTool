@@ -98,6 +98,110 @@ async function parseResponse(res: Response): Promise<any> {
   }
 }
 
+function asRecord(v: unknown): Record<string, unknown> | null {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+  return v as Record<string, unknown>;
+}
+
+function ensureHttpUrlLike(raw: unknown): string {
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (!s) return "https://";
+  if (s.startsWith("//")) return `https:${s}`;
+  return `https://${s.replace(/^\/+/, "")}`;
+}
+
+function legacyRoutePageToConditionalRouting(
+  page: Record<string, unknown>
+): Record<string, unknown> {
+  const next = { ...page, type: "conditionalRouting" };
+  const assignments =
+    asRecord(page.routeAssignments) ??
+    asRecord(page.routes) ??
+    asRecord(page.nextByPoolKey) ??
+    asRecord(page.routeMap) ??
+    {};
+  const cases: Record<string, string> = {};
+  for (const [k, v] of Object.entries(assignments)) {
+    const key = String(k).trim();
+    const target = typeof v === "string" ? v.trim() : "";
+    if (key && target) cases[key] = target;
+  }
+  const rawSource =
+    page.puzzleSourcePageId ?? page.poolId ?? page.pool ?? page.poolKey;
+  const source = typeof rawSource === "string" && rawSource.trim()
+    ? rawSource.trim()
+    : "poolPick";
+  const rawDefault = page.defaultGoto ?? page.defaultNext;
+  const fallback = typeof rawDefault === "string" ? rawDefault.trim() : "";
+  next.next = fallback
+    ? { switch: source, cases, default: fallback }
+    : { switch: source, cases };
+
+  delete next.routeAssignments;
+  delete next.routes;
+  delete next.nextByPoolKey;
+  delete next.routeMap;
+  delete next.defaultGoto;
+  delete next.defaultNext;
+  delete next.puzzleSourcePageId;
+  delete next.poolId;
+  delete next.pool;
+  delete next.poolKey;
+  delete next.nextSwitch;
+  return next;
+}
+
+function sanitizeStoryDocumentForStrictImport(
+  input: Record<string, unknown>
+): Record<string, unknown> {
+  const doc =
+    typeof structuredClone === "function"
+      ? (structuredClone(input) as Record<string, unknown>)
+      : (JSON.parse(JSON.stringify(input)) as Record<string, unknown>);
+
+  const meta = asRecord(doc.meta);
+  if (meta) {
+    delete meta.editorLayout;
+    const ctaPresets = asRecord(meta.ctaPresets);
+    if (ctaPresets) {
+      for (const [key, value] of Object.entries(ctaPresets)) {
+        const preset = asRecord(value);
+        if (!preset) continue;
+        if (typeof preset.subtitle === "string" && preset["x-subtitle"] == null) {
+          preset["x-subtitle"] = preset.subtitle;
+        }
+        delete preset.subtitle;
+        preset.urlTemplate = ensureHttpUrlLike(preset.urlTemplate);
+        ctaPresets[key] = preset;
+      }
+      meta.ctaPresets = ctaPresets;
+    }
+    doc.meta = meta;
+  }
+
+  if (Array.isArray(doc.pages)) {
+    doc.pages = doc.pages.map((pageLike) => {
+      const page = asRecord(pageLike);
+      if (!page) return pageLike;
+
+      const type = typeof page.type === "string" ? page.type : "";
+      let nextPage = page;
+      if (type === "poolRoute" || type === "puzzleRoute") {
+        nextPage = legacyRoutePageToConditionalRouting(nextPage);
+      }
+
+      const answer = nextPage.answer;
+      if (Array.isArray(answer) && answer.length === 0) {
+        nextPage.answer = "";
+      }
+      return nextPage;
+    });
+  }
+
+  return doc;
+}
+
 // ---- API függvények ----
 
 /**
@@ -186,8 +290,9 @@ export async function validateStoryServer(
 }
 
 /**
- * Sztori mentése JSON body-val (szerkesztő vázlat → szerver `STORIES_DIR`).
- * Ugyanaz a pipeline, mint a fájl importnál (`/api/stories/import`).
+ * Sztori mentése szerkesztőből a szerverre (`STORIES_DIR`).
+ * Fontos: multipart/file mezővel küldjük, mert az import endpoint
+ * file + body fallbackot kezel, és production-ben a JSON body olykor nem kötődik be.
  */
 export async function saveStoryDocumentJson(
   document: Record<string, unknown>,
@@ -197,11 +302,16 @@ export async function saveStoryDocumentJson(
   const mode = options?.mode ?? "strict";
 
   const url = buildUrl("/api/stories/import", { overwrite, mode });
+  const fd = new FormData();
+  const sanitized = sanitizeStoryDocumentForStrictImport(document);
+  const blob = new Blob([JSON.stringify(sanitized)], {
+    type: "application/json",
+  });
+  fd.append("file", blob, "story.json");
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(document),
+    body: fd,
     cache: "no-store",
   });
 
