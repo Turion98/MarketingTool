@@ -7,6 +7,7 @@ from typing import Any
 import jwt
 
 _ALGO = "HS256"
+_MAX_TOKEN_TTL_SECONDS = 86400 * 365
 
 
 def _signing_secret() -> str | None:
@@ -36,7 +37,7 @@ def mint_embed_access_token(
         "grant_id": grant_id,
         "story_id": story_id,
         "iat": now,
-        "exp": now + max(60, min(ttl_seconds, 86400 * 30)),
+        "exp": now + max(60, min(ttl_seconds, _MAX_TOKEN_TTL_SECONDS)),
     }
     if extra_claims:
         payload.update(extra_claims)

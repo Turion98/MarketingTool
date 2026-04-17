@@ -15,6 +15,7 @@ import s from "./StoryEmbedClient.module.scss";
 const DEFAULT_SKIN = "contract_default";
 const DEFAULT_RUNES = "ring";
 const DEFAULT_RUNEMODE = "single" as const;
+const DEFAULT_TTL_SECONDS = 86400 * 365;
 
 /** Példa blokk: nem élő kampány, minden sztorihoz ugyanaz. */
 const EXAMPLE_SLUG = "pelda_kampany_slug";
@@ -29,6 +30,7 @@ type GenResponse = {
   ttl_seconds: number;
   standard_url: string;
   ghost_url: string;
+  grant_action?: "created" | "reused";
 };
 
 type RevealKey = "standard" | "ghost" | "iframe" | "embedjs";
@@ -233,7 +235,7 @@ export default function StoryEmbedClient() {
           start: resolved.startPageId,
           title: resolved.title,
           playerOrigin: typeof window !== "undefined" ? window.location.origin : undefined,
-          ttlSeconds: 3600,
+          ttlSeconds: DEFAULT_TTL_SECONDS,
           livePageUrl: livePageUrl.trim() || undefined,
         }),
       });
@@ -377,10 +379,9 @@ export default function StoryEmbedClient() {
       <section className={s.section}>
         <h2 className={s.sectionTitle}>Linkek generálása</h2>
         <p className={s.sectionLead}>
-          Aktív <strong>grant</strong> és Next szerver <code className={p.mono}>ADMIN_KEY</code>{" "}
-          / <code className={p.mono}>DASHBOARD_EMBED_ADMIN_KEY</code> szükséges. A token a
-          generálás pillanatában éles; a sztori bekerül az áttekintés „élő beágyazás” listájába
-          (frissítsd az áttekintőt).
+          Generáláskor a rendszer automatikusan <strong>active grantet</strong> készít vagy újrahasznál
+          a sztorihoz, majd hosszú élettartamú tokent ad. A hozzáférés fő kapcsolója a grant
+          állapota (<code className={p.mono}>active/revoked</code>), nem az URL cseréje.
         </p>
         <label className={s.fieldLabel}>
           Élő ügyféloldal URL (opcionális, a dashboard listához)
@@ -406,6 +407,12 @@ export default function StoryEmbedClient() {
             <p>
               Grant: <code className={p.mono}>{genResult.grant_id}</code> · TTL:{" "}
               {genResult.ttl_seconds}s
+            </p>
+            <p>
+              Grant művelet:{" "}
+              <code className={p.mono}>
+                {genResult.grant_action === "created" ? "auto-created" : "reused-existing"}
+              </code>
             </p>
             <p className={s.hint}>
               Linkek megjelenítése gombbal — másolás után vigyázz, a token a queryben látszik.

@@ -21,6 +21,7 @@
 
 - `POST /api/embed-access/verify` — body: `token`, `path_campaign_id`, `parent_referrer?`. Used by Next middleware.
 - `POST /api/embed-access/issue-token` — header `x-admin-key`; body: `grant_id`, `ttl_seconds`. Returns JWT for local testing.
+- `POST /api/embed-access/dashboard-generate` — admin dashboard flow: auto-creates/reuses `active` grant per `story_id`, issues token, returns standard/ghost URLs.
 
 ## embed.js
 
@@ -55,3 +56,9 @@ Cases:
 - **Revoked**: set `status: "revoked"` in JSON; expect 403 without reissuing token.
 - **Wrong story**: open `/embed/other_slug?token=same`; expect `path_mismatch` → 403.
 - **Origin**: set `allowed_parent_origins` to e.g. `["http://localhost:3000"]` and load embed from another Referer; expect 403.
+
+## Current policy
+
+- Dashboard generate uses long-lived token default (`365d`).
+- Grant is the primary access switch: if grant turns `revoked`, existing tokenized URLs stop immediately.
+- Auto-grant default is open origin (`allowed_parent_origins = null`) unless later tightened per customer.

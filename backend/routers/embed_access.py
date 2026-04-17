@@ -18,6 +18,7 @@ from services.embed_access.repository import get_embed_grant_repository
 from services.embed_access.verify import EmbedAccessDenied, verify_embed_access
 
 router = APIRouter(prefix="/embed-access", tags=["embed-access"])
+LONG_LIVED_TOKEN_TTL_SECONDS = 86400 * 365
 
 
 class VerifyEmbedBody(BaseModel):
@@ -62,7 +63,7 @@ def verify_embed(body: VerifyEmbedBody) -> VerifyEmbedResponse:
 
 class IssueTokenBody(BaseModel):
     grant_id: str
-    ttl_seconds: int = Field(default=3600, ge=60, le=86400 * 30)
+    ttl_seconds: int = Field(default=3600, ge=60, le=86400 * 365)
 
 
 class IssueTokenResponse(BaseModel):
@@ -142,7 +143,7 @@ class DashboardGenerateBody(BaseModel):
     start: str
     title: str
     player_origin: str = Field(..., description="Pl. https://localhost:3000 — teljes embed URL alap")
-    ttl_seconds: int = Field(default=3600, ge=60, le=86400 * 30)
+    ttl_seconds: int = Field(default=LONG_LIVED_TOKEN_TTL_SECONDS, ge=60, le=86400 * 365)
     live_page_url: str | None = Field(default=None, description="Ügyfél oldal URL — dashboard lista")
     skin: str = "contract_default"
     runes: str = "ring"
@@ -156,6 +157,7 @@ class DashboardGenerateResponse(BaseModel):
     ttl_seconds: int
     standard_url: str
     ghost_url: str
+    grant_action: str | None = None
 
 
 @router.post(
@@ -177,12 +179,12 @@ def dashboard_generate(
         for g in repo.list_by_story_id(sid)
         if g.status == "active" and not g.is_expired_wall_clock()
     ]
-    if not candidates:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No active grant for this story_id — add one to embed_access_grants.json",
-        )
-    grant = candidates[0]
+    grant_action = "reused" if candidates else "created"
+    grant = repo.upsert_active_grant_for_story(
+        story_id=sid,
+        allowed_parent_origins=None,
+        note="Auto-managed by dashboard-generate",
+    )
     token = mint_embed_access_token(
         grant_id=grant.id,
         story_id=grant.story_id,
@@ -212,6 +214,7 @@ def dashboard_generate(
         ttl_seconds=body.ttl_seconds,
         standard_url=standard_url,
         ghost_url=ghost_url,
+        grant_action=grant_action,
     )
 
 

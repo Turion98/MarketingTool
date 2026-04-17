@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerDashboardEmbedApiBase } from "@/app/lib/publicApiBase";
+const DEFAULT_EMBED_TTL_SECONDS = 86400 * 365;
 
 /**
  * Dashboard: admin kulcs csak szerveren — a böngésző nem látja.
@@ -56,8 +57,8 @@ export async function POST(req: Request) {
     typeof body.ttlSeconds === "number" &&
     Number.isFinite(body.ttlSeconds) &&
     body.ttlSeconds >= 60
-      ? Math.min(Math.floor(body.ttlSeconds), 86400 * 30)
-      : 3600;
+      ? Math.min(Math.floor(body.ttlSeconds), DEFAULT_EMBED_TTL_SECONDS)
+      : DEFAULT_EMBED_TTL_SECONDS;
 
   const livePageUrl =
     typeof body.livePageUrl === "string" && body.livePageUrl.trim()
