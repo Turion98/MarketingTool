@@ -114,7 +114,10 @@ function ensureHttpUrlLike(raw: unknown): string {
 function legacyRoutePageToConditionalRouting(
   page: Record<string, unknown>
 ): Record<string, unknown> {
-  const next = { ...page, type: "conditionalRouting" };
+  const next: Record<string, unknown> = {
+    ...page,
+    type: "conditionalRouting",
+  };
   const assignments =
     asRecord(page.routeAssignments) ??
     asRecord(page.routes) ??
