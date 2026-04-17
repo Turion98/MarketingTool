@@ -175,6 +175,31 @@ export function StoryPageDock({
       if (routeKey) {
         setGlobal(puzzleRoutePickGlobalKey(page.id), routeKey);
       }
+      // #region agent log
+      if (page.id === "q1_skin_profile") {
+        fetch("http://127.0.0.1:7672/ingest/6a94a54d-1f1d-4f7c-b733-51215673e5ef", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "1f7ff1",
+          },
+          body: JSON.stringify({
+            sessionId: "1f7ff1",
+            runId: "pre-fix",
+            hypothesisId: "H4",
+            location: "StoryPageDock.tsx:handleRunesResult",
+            message: "runes success open mode route",
+            data: {
+              ok,
+              routeKey,
+              globalKey: puzzleRoutePickGlobalKey(page.id),
+              pickedCount: pickedIds.length,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+      }
+      // #endregion
     }
 
     const branch = ok ? page.onSuccess : page.onFail;

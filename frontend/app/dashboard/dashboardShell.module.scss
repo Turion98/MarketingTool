@@ -1,20 +1,86 @@
 .root {
-  display: flex;
   min-height: 100vh;
   background: #0b0f18;
   color: #e8ecf4;
   font-family: var(--font-heading-present), system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.45;
+  position: relative;
 }
 
 .sidebar {
-  flex: 0 0 220px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 130;
+  width: min(220px, 84vw);
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(10px);
   padding: 1.25rem 0;
+  transform: translateX(calc(-100% - 12px));
+  transition: transform 220ms ease;
+  box-shadow: 10px 0 26px rgba(0, 0, 0, 0.28);
+}
+
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+.sidebarClosed {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.sidePanelTrigger {
+  position: fixed;
+  left: 0.35rem;
+  top: clamp(0.9rem, 2.8vw, 1.55rem);
+  z-index: 140;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.55rem;
+  background: rgba(11, 15, 24, 0.72);
+  backdrop-filter: blur(6px);
+  color: rgba(232, 236, 244, 0.9);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.sidePanelTrigger:hover {
+  background: rgba(24, 32, 52, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidePanelTrigger:focus-visible {
+  outline: 2px solid rgba(139, 168, 255, 0.45);
+  outline-offset: 2px;
+}
+
+.sidePanelTrigger[aria-expanded="false"] {
+  left: -0.35rem;
+  width: 1.35rem;
+  height: 2.15rem;
+  border-left: none;
+  border-radius: 0 0.48rem 0.48rem 0;
+  background: rgba(11, 15, 24, 0.58);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.sidePanelTrigger[aria-expanded="false"]:hover {
+  background: rgba(24, 32, 52, 0.72);
+}
+
+.sidePanelBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  border: none;
+  background: rgba(2, 6, 14, 0.48);
+  cursor: pointer;
 }
 
 .brand {
@@ -106,7 +172,7 @@
 }
 
 .main {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   overflow: auto;
   padding: clamp(1.25rem, 3vw, 2rem);

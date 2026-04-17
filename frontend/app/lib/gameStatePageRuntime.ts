@@ -20,6 +20,32 @@ function readStringArray(value: unknown): string[] {
   return value.filter((entry): entry is string => typeof entry === "string" && !!entry);
 }
 
+function readPoolRouteLikeFields(page: Record<string, unknown>): {
+  source: string;
+  assignments: Record<string, unknown>;
+  defaultGoto: string;
+} | null {
+  const source =
+    (typeof page.puzzleSourcePageId === "string" && page.puzzleSourcePageId.trim()) ||
+    (typeof page.poolId === "string" && page.poolId.trim()) ||
+    (typeof page.pool === "string" && page.pool.trim()) ||
+    (typeof page.poolKey === "string" && page.poolKey.trim()) ||
+    "";
+  const assignments =
+    asRecord(page.routeAssignments) ??
+    asRecord(page.routes) ??
+    asRecord(page.nextByPoolKey) ??
+    asRecord(page.routeMap) ??
+    {};
+  const defaultGoto =
+    (typeof page.defaultGoto === "string" && page.defaultGoto.trim()) ||
+    (typeof page.defaultNext === "string" && page.defaultNext.trim()) ||
+    "";
+  if (!source) return null;
+  if (!Object.keys(assignments).length && !defaultGoto) return null;
+  return { source, assignments, defaultGoto };
+}
+
 function flattenFragmentBank(value: unknown): FragmentBank {
   const srcBank = asRecord(value);
   if (!srcBank) return {};
@@ -65,10 +91,14 @@ export function resolvePageRuntimeDecision(
   const page = asRecord(raw);
   if (!page) return { kind: "ok" };
 
-  if (page.type === "puzzleRoute") {
-    const source = typeof page.puzzleSourcePageId === "string" ? page.puzzleSourcePageId : "";
-    const assignments = asRecord(page.routeAssignments) ?? {};
-    const def = typeof page.defaultGoto === "string" ? page.defaultGoto : "";
+  const poolRouteLike =
+    page.type === "puzzleRoute" || page.type === "decision" || page.type === "poolRoute"
+      ? readPoolRouteLikeFields(page)
+      : null;
+  if (poolRouteLike) {
+    const source = poolRouteLike.source;
+    const assignments = poolRouteLike.assignments;
+    const def = poolRouteLike.defaultGoto;
     if (source && globals) {
       const gk = puzzleRoutePickGlobalKey(source);
       const rawPick = globals[gk];

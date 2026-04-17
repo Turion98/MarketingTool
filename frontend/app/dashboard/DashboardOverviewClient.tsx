@@ -605,6 +605,12 @@ export default function DashboardOverviewClient() {
             Összes sztori
           </Link>
           <Link
+            href="/dashboard/video-page"
+            className={`${p.btn} ${p.btnGhost} ${o.btnGhostSoft}`}
+          >
+            Video Landing (Temp)
+          </Link>
+          <Link
             href="/editor"
             className={`${p.btn} ${p.btnGhost} ${o.btnGhostSoft}`}
           >

@@ -70,8 +70,9 @@ function isChoiceFragmentVisible(
 }
 
 /**
- * Decision pool: always 3 dock slots. Slot i uses choice i (primary) unless
- * `primary.next` is already in `visitedPages`, then choice i+3 (fallback).
+ * Decision pool: slotok száma = floor(choices.length / 2).
+ * Slot i uses choice i (primary) unless `primary.next` is already in
+ * `visitedPages`, then choice i+pairCount (fallback).
  * Fragment show/hide is applied; if the preferred option is hidden, the pair's other option is tried.
  */
 function buildDecisionPoolDockEntries(
@@ -81,9 +82,10 @@ function buildDecisionPoolDockEntries(
 ): { choice: StoryPageChoiceRecord; id: string }[] {
   const out: { choice: StoryPageChoiceRecord; id: string }[] = [];
 
-  for (let slot = 0; slot < 3; slot++) {
+  const pairCount = Math.floor(allChoices.length / 2);
+  for (let slot = 0; slot < pairCount; slot++) {
     const primaryIdx = slot;
-    const fallbackIdx = slot + 3;
+    const fallbackIdx = slot + pairCount;
     const primary = allChoices[primaryIdx];
     const fallback = allChoices[fallbackIdx];
     if (!primary) continue;
@@ -129,7 +131,7 @@ export function buildDockChoices({
     const unlockedSet = new Set(unlockedFragments);
     const visited = visitedPages ?? new Set<string>();
 
-    if (pageType === "decision" && allChoices.length === 6) {
+    if (pageType === "decision" && allChoices.length >= 2 && allChoices.length % 2 === 0) {
       const poolEntries = buildDecisionPoolDockEntries(
         allChoices,
         visited,

@@ -840,16 +840,23 @@ useEffect(() => {
         setIsLoading(false);
         return;
       }
-      const runtimeDecision = resolvePageRuntimeDecision(
-        rawPage,
-        unlockedFragments,
-        globals
-      );
-      // Szerkesztő élő preview: ne kövessük a runtime redirectet (puzzleRoute,
-      // logic elseGoTo, stb.) — különben a vászon kijelölés ↔ preview összeveszik
-      // és végtelen setCurrentPageId ciklus keletkezik.
-      // Redirect és blocked is figyelmen kívül: ugyanaz a bridge-ciklus elkerülése.
-      void runtimeDecision;
+      const runtimeDecision = resolvePageRuntimeDecision(rawPage, unlockedFragments, globals);
+      // Szerkesztő élő preview: általában ne kövessük a runtime redirecteket,
+      // mert vászon kijelölés ↔ preview között ciklust okozhat.
+      // Kivétel: a pool-route jellegű "decision" oldalak (puzzle/pool router),
+      // mert ezek tartalom nélküliek, redirect nélkül a preview itt "megáll".
+      if (
+        runtimeDecision.kind === "redirect" &&
+        runtimeDecision.pageId &&
+        runtimeDecision.pageId !== currentPageId &&
+        typeof (rawPage as { type?: unknown }).type === "string" &&
+        (rawPage as { type?: string }).type === "decision"
+      ) {
+        setCurrentPageIdState(runtimeDecision.pageId);
+        writeStorageValue(ls.page, runtimeDecision.pageId);
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       const normalized = normalizeFetchedPage(rawPage);
       setCurrentPageData(normalized);
@@ -889,6 +896,26 @@ useEffect(() => {
 
         const response = await fetch(url, { signal: ac.signal });
         if (!response.ok) {
+          // #region agent log
+          if (currentPageId === "q1_router") {
+            fetch("http://127.0.0.1:7672/ingest/6a94a54d-1f1d-4f7c-b733-51215673e5ef", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "1f7ff1",
+              },
+              body: JSON.stringify({
+                sessionId: "1f7ff1",
+                runId: "pre-fix",
+                hypothesisId: "H2",
+                location: "GameStateContext.tsx:pageFetch",
+                message: "q1_router fetch not ok",
+                data: { currentPageId, status: response.status },
+                timestamp: Date.now(),
+              }),
+            }).catch(() => {});
+          }
+          // #endregion
           setGlobalError(`Nem sikerült lekérni az oldalt (${currentPageId}).`);
           setCurrentPageData(null);
           return;
@@ -900,6 +927,53 @@ useEffect(() => {
           unlockedRef.current,
           globalsRef.current
         );
+        // #region agent log
+        try {
+          const rid = (raw as { id?: string })?.id;
+          if (rid === "q1_router" || currentPageId === "q1_router") {
+            const gk = "puzzleRoutePick__q1_skin_profile";
+            fetch("http://127.0.0.1:7672/ingest/6a94a54d-1f1d-4f7c-b733-51215673e5ef", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "1f7ff1",
+              },
+              body: JSON.stringify({
+                sessionId: "1f7ff1",
+                runId: "pre-fix",
+                hypothesisId: "H1-H3-H5",
+                location: "GameStateContext.tsx:pageFetch",
+                message: "q1_router fetch decision",
+                data: {
+                  currentPageId,
+                  rawId: rid,
+                  rawType: (raw as { type?: string })?.type,
+                  hasDefaultGoto: !!(raw as { defaultGoto?: string }).defaultGoto,
+                  hasPoolId: !!(raw as { poolId?: string }).poolId,
+                  assignmentKeys:
+                    typeof (raw as { routeAssignments?: unknown }).routeAssignments ===
+                      "object" &&
+                    (raw as { routeAssignments?: Record<string, unknown> }).routeAssignments
+                      ? Object.keys(
+                          (raw as { routeAssignments: Record<string, unknown> })
+                            .routeAssignments
+                        ).length
+                      : 0,
+                  decisionKind: runtimeDecision.kind,
+                  redirectTo:
+                    runtimeDecision.kind === "redirect"
+                      ? runtimeDecision.pageId
+                      : null,
+                  pickPresent: String(!!globalsRef.current?.[gk]),
+                },
+                timestamp: Date.now(),
+              }),
+            }).catch(() => {});
+          }
+        } catch {
+          /* ignore */
+        }
+        // #endregion
         if (runtimeDecision.kind === "redirect") {
           setCurrentPageId(runtimeDecision.pageId);
           return;
