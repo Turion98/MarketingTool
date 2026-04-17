@@ -45,16 +45,16 @@
       "maxAttempts": 1,
       "optionFlagsBase": "skin_opt_",
       "onSuccess": {
-        "goto": "q1_router"
+        "goto": "logic"
       }
     },
     {
-      "id": "q1_router",
+      "id": "logic",
       "type": "logic",
-      "title": "",
+      "title": "Elemzés...",
       "text": [
         {
-          "text": ""
+          "text": "A válaszaid alapján meghatározzuk, melyik SPF-profil passzol hozzád."
         }
       ],
       "logic": [
