@@ -425,12 +425,23 @@ const stringGlobals = useMemo<Record<string, string>>(
   // 🔹 LOGIC típusú oldalak automatikus futtatása (L3_route_switch, Route_E_result_logic, stb.)
   useEffect(() => {
     if (isEditorDraftPreview) return;
-    if (!pageData || pageData.type !== "logic") return;
+    if (!pageData) return;
+    const logicArr = pageData.logic;
+    const isArrayRules = Array.isArray(logicArr);
+    const isScorecardPage = pageData.type === "scorecard";
+    const isLegacyLogicArray =
+      pageData.type === "logic" && isArrayRules;
+    if (!isScorecardPage && !isLegacyLogicArray) return;
 
-    const rules: StoryLogicRule[] = Array.isArray(pageData.logic)
-      ? (pageData.logic as StoryLogicRule[])
+    const rules: StoryLogicRule[] = isArrayRules
+      ? (logicArr as StoryLogicRule[])
       : [];
-    if (!rules.length) return;
+    const fallbackRaw =
+      typeof pageData.scorecardFallback === "string"
+        ? pageData.scorecardFallback.trim()
+        : "";
+    const fallback =
+      fallbackRaw && fallbackRaw !== pageData.id ? fallbackRaw : "";
 
     const chosen = (() => {
       for (const rule of rules) {
@@ -465,11 +476,18 @@ const stringGlobals = useMemo<Record<string, string>>(
       return null;
     })();
 
-    if (chosen && chosen !== pageData.id) {
+    const target =
+      chosen && chosen !== pageData.id
+        ? chosen
+        : !chosen && fallback
+          ? fallback
+          : null;
+
+    if (target) {
       try {
-        localStorage.setItem("currentPageId", chosen);
+        localStorage.setItem("currentPageId", target);
       } catch {}
-      goToNextPage(chosen);
+      goToNextPage(target);
     }
   }, [pageData, unlockedPlus, goToNextPage, isEditorDraftPreview]);
 
@@ -970,7 +988,7 @@ const dockChoicesForThisPage = useMemo(() => {
   // handle "no text => show choices immediately"
   useEffect(() => {
     if (!pageData?.id) return;
-    if (pageData.type === "logic") return;
+    if (pageData.type === "logic" || pageData.type === "scorecard") return;
 
     // 🔹 Puzzle oldalak (riddle + runes): ne blokkoljuk őket a prevWasChoice guarddal
     const isPuzzlePage = isRiddlePage || isRunesPage;

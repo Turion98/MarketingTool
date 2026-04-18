@@ -147,6 +147,7 @@ export function StoryPageDock({
     answer: string[]
   ) => {
     const isOpenPuzzle = answer.length === 0;
+    if (!ok && isOpenPuzzle) return;
 
     if (
       isOpenPuzzle &&
