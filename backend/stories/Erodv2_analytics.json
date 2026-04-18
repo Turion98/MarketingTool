@@ -448,7 +448,7 @@
         "mainNarration": "/assets/audio/ch2_pg3.mp3"
       },
       "sfxPlaylist": [],
-      "type": "decision",
+      
       "choices": [
         {
           "id": "pull_sword",
@@ -673,7 +673,7 @@
         "mainNarration": "/assets/audio/ch2_pg5.mp3"
       },
       "sfxPlaylist": [],
-      "type": "decision",
+      
       "choices": [
         {
           "id": "sneak",
@@ -1179,7 +1179,7 @@
         "mainNarration": "/assets/audio/ch3_pg3.mp3"
       },
       "sfxPlaylist": [],
-      "type": "decision",
+      
       "choices": [
         {
           "id": "keep_sword",
