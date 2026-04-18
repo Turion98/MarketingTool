@@ -5,3 +5,6 @@ node_modules/
 .env
 frontend/.next/
 .env.local
+
+# Runtime analytics (JSONL written by the backend locally / on server)
+backend/data/analytics/

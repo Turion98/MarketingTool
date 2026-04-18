@@ -150,10 +150,15 @@
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
           "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "conditionalRouting"],
+          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "scorecard", "conditionalRouting"],
           "default": "default"
         },
         "title": { "type": "string" },
+        "scorecardFallback": {
+          "description": "Ha egyik scorecard/logic tömbös szabály sem illeszkedik, ide ugrik (opcionális).",
+          "type": "string",
+          "minLength": 1
+        },
         "logic": {
           "description": "Logic routing: array of if/goto rules (coffee style) or ifHasFragment/elseGoTo object (Mrk6 style).",
           "oneOf": [
