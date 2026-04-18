@@ -314,20 +314,20 @@ export function renameStoryPageIdInStory(
 ): RenameStoryPageIdResult {
   const from = fromId.trim();
   const trimmed = toId.trim();
-  if (!from) return { ok: false, error: "Hiányzó régi azonosító." };
-  if (!trimmed) return { ok: false, error: "Az oldalazonosító nem lehet üres." };
+  if (!from) return { ok: false, error: "Add meg a régi oldal-ID-t, amit át szeretnél nevezni." };
+  if (!trimmed) return { ok: false, error: "Az új oldal-ID nem maradhat üresen." };
   if (trimmed === STORY_GRAPH_START_NODE_ID) {
-    return { ok: false, error: "Ez az azonosító foglalt (vászon kezdő csomópont)." };
+    return { ok: false, error: "Ez a név a virtuális START csomópontot jelenti — válassz másik ID-t." };
   }
   if (isEditorPendingPageId(trimmed)) {
-    return { ok: false, error: "Érvénytelen célazonosító (szerkesztői előtag)." };
+    return { ok: false, error: "Ez az ID szerkesztői előtagot használ — nem lehet végleges név." };
   }
   if (!findPageInStoryDocument(story, from)) {
-    return { ok: false, error: "Az oldal nem található a sztoriban." };
+    return { ok: false, error: "Nincs ilyen oldal a sztoriban — ellenőrizd az ID-t." };
   }
   const existing = collectStoryPageIds(story);
   if (existing.includes(trimmed) && trimmed !== from) {
-    return { ok: false, error: "Már van ilyen azonosítójú oldal." };
+    return { ok: false, error: "Ez az ID már foglalt — válassz másik nevet." };
   }
   if (trimmed === from) return { ok: true, story: clone(story) };
 
@@ -337,7 +337,7 @@ export function renameStoryPageIdInStory(
   if (pages && typeof pages === "object" && !Array.isArray(pages)) {
     const d = { ...(pages as Record<string, unknown>) };
     const src = asRecord(d[from]);
-    if (!src) return { ok: false, error: "Az oldal nem található a sztoriban." };
+    if (!src) return { ok: false, error: "Nincs ilyen oldal a sztoriban — ellenőrizd az ID-t." };
     const newD: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(d)) {
       if (k === from) continue;
@@ -362,7 +362,7 @@ export function renameStoryPageIdInStory(
       return patched;
     });
   } else {
-    return { ok: false, error: "Ismeretlen pages szerkezet." };
+    return { ok: false, error: "A pages mező formátuma nem ismert — várd meg a teljes betöltést, vagy javítsd a JSON-t." };
   }
 
   const start = getStartPageIdFromStory(next);

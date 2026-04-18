@@ -169,19 +169,25 @@ function columnVerticalCenter(
 }
 
 /**
- * Piramis / kompakt réteg: X = BFS mélység oszlop; Y = azonos mélységen belül változó magasságú sorlépcső.
- * Oszloponként a blokk függőlegesen középre igazít a szomszéd oszlophoz képest.
+ * BFS mélység + mélységenkénti laplista (DFS preorder szerinti sorrend),
+ * ugyanaz mint a strukturált auto-layout belső sorrendje.
  */
-export function computeStructuredLayoutPositions(
-  input: {
-    pageIds: string[];
-    edges: StoryGraphEdge[];
-    startPageId: string | null;
-  },
-  dims: StructuredLayoutDims = DEFAULT_DIMS
-): Record<string, { x: number; y: number }> {
-  const { pageIds, edges, startPageId } = input;
-  if (pageIds.length === 0) return {};
+export function computeStructuredLayoutDepthMetadata(
+  pageIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null
+): {
+  depth: Map<string, number>;
+  byDepth: Map<number, string[]>;
+  depthValues: number[];
+} {
+  if (pageIds.length === 0) {
+    return {
+      depth: new Map(),
+      byDepth: new Map(),
+      depthValues: [],
+    };
+  }
 
   const idSet = new Set(pageIds);
   const mainRoot =
@@ -226,6 +232,42 @@ export function computeStructuredLayoutPositions(
     });
   }
 
+  const depthValues = [...new Set(pageIds.map((id) => depth.get(id) ?? 0))].sort(
+    (a, b) => a - b
+  );
+
+  return { depth, byDepth, depthValues };
+}
+
+export type StructuredColumnVerticalMode =
+  /** Oszlopok függőleges középpontja igazodik a szomszéd oszlophoz (alapértelmezett). */
+  | "neighborColumnCenters"
+  /** Oszlopok önállóan felülről épülnek; nincs oszlop–oszlop középpont-eltolás. */
+  | "columnsFromTop";
+
+/**
+ * Piramis / kompakt réteg: X = BFS mélység oszlop; Y = azonos mélységen belül változó magasságú sorlépcső.
+ * `neighborColumnCenters`: oszloponként a blokk függőlegesen középre igazít a szomszéd oszlophoz képest.
+ */
+export function computeStructuredLayoutPositions(
+  input: {
+    pageIds: string[];
+    edges: StoryGraphEdge[];
+    startPageId: string | null;
+    columnVerticalMode?: StructuredColumnVerticalMode;
+  },
+  dims: StructuredLayoutDims = DEFAULT_DIMS
+): Record<string, { x: number; y: number }> {
+  const { pageIds, edges, startPageId, columnVerticalMode } = input;
+  const colVert = columnVerticalMode ?? "neighborColumnCenters";
+  if (pageIds.length === 0) return {};
+
+  const { depth, byDepth, depthValues } = computeStructuredLayoutDepthMetadata(
+    pageIds,
+    edges,
+    startPageId
+  );
+
   const getH = (id: string) => resolveCardH(dims, id);
   const yPos = new Map<string, number>();
   for (const [, list] of byDepth) {
@@ -236,22 +278,20 @@ export function computeStructuredLayoutPositions(
     }
   }
 
-  const depthValues = [...new Set(pageIds.map((id) => depth.get(id) ?? 0))].sort(
-    (a, b) => a - b
-  );
-
   const yWorking = new Map(yPos);
-  for (let i = 1; i < depthValues.length; i++) {
-    const d = depthValues[i]!;
-    const list = byDepth.get(d) ?? [];
-    if (list.length === 0) continue;
-    const dPrev = depthValues[i - 1]!;
-    const listPrev = byDepth.get(dPrev) ?? [];
-    const cPrev = columnVerticalCenter(listPrev, yWorking, getH);
-    const cCurr = columnVerticalCenter(list, yWorking, getH);
-    const delta = cPrev - cCurr;
-    for (const id of list) {
-      yWorking.set(id, (yWorking.get(id) ?? 0) + delta);
+  if (colVert === "neighborColumnCenters") {
+    for (let i = 1; i < depthValues.length; i++) {
+      const d = depthValues[i]!;
+      const list = byDepth.get(d) ?? [];
+      if (list.length === 0) continue;
+      const dPrev = depthValues[i - 1]!;
+      const listPrev = byDepth.get(dPrev) ?? [];
+      const cPrev = columnVerticalCenter(listPrev, yWorking, getH);
+      const cCurr = columnVerticalCenter(list, yWorking, getH);
+      const delta = cPrev - cCurr;
+      for (const id of list) {
+        yWorking.set(id, (yWorking.get(id) ?? 0) + delta);
+      }
     }
   }
 
@@ -281,22 +321,50 @@ export function computeStructuredLayoutPositions(
   return nodes;
 }
 
+/** Felső határ (world px) a „felülről” nézethez — a tartalom teteje ehhez igazodik. */
+export const GRAPH_TOP_ANCHOR_PAD_PX = 28;
+
+export type GraphVerticalAnchorMode =
+  /** Virtuális start a tartalomhoz képest függőlegesen középre (régi viselkedés). */
+  | "balanceWithStart"
+  /** Fix felső sáv: oszlopok felülről, start is a sávhoz igazítva. */
+  | "topBand";
+
 export function computeStructuredLayoutWithStartNode(input: {
   pageIds: string[];
   edges: StoryGraphEdge[];
   startPageId: string | null;
   dims?: StructuredLayoutDims;
+  graphVerticalAnchor?: GraphVerticalAnchorMode;
 }): Record<string, { x: number; y: number }> {
   const dims = input.dims ?? DEFAULT_DIMS;
+  const anchor = input.graphVerticalAnchor ?? "balanceWithStart";
   const getH = (id: string) => resolveCardH(dims, id);
+  const columnVerticalMode: StructuredColumnVerticalMode =
+    anchor === "topBand" ? "columnsFromTop" : "neighborColumnCenters";
   const nodes = computeStructuredLayoutPositions(
     {
       pageIds: input.pageIds,
       edges: input.edges,
       startPageId: input.startPageId,
+      columnVerticalMode,
     },
     dims
   );
+
+  if (anchor === "topBand") {
+    const pad = GRAPH_TOP_ANCHOR_PAD_PX;
+    for (const id of input.pageIds) {
+      const n = nodes[id];
+      if (n) nodes[id] = { x: n.x, y: n.y + pad };
+    }
+    const startY = pad;
+    nodes[STORY_GRAPH_START_NODE_ID] = {
+      x: -dims.cardW - dims.colGap,
+      y: startY,
+    };
+    return nodes;
+  }
 
   let maxBottom = 0;
   for (const id of input.pageIds) {

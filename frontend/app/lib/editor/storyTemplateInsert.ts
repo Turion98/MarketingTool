@@ -35,13 +35,13 @@ function buildTemplatePageByKey(
     case "linear":
       return {
         id: nid,
-        text: "Új lineáris oldal (szerkeszd a szöveget és a következő oldalt).",
+        text: "Lineáris oldal: írd át a szöveget, majd állítsd be a következő oldal ID-ját (next).",
         next,
       };
     case "oneChoice":
       return {
         id: nid,
-        text: "Új oldal — egy választás.",
+        text: "Egyválaszos oldal: egy gomb / opció, ami a következő lapra visz.",
         choices: [
           {
             id: `${nid}_opt1`,
@@ -53,7 +53,7 @@ function buildTemplatePageByKey(
     case "multiChoice":
       return {
         id: nid,
-        text: "Új oldal — több választás.",
+        text: "Többválaszos oldal: minden gomb más-más következő oldalra mutathat.",
         choices: [
           { id: `${nid}_a`, text: "A opció", next },
           { id: `${nid}_b`, text: "B opció", next },
@@ -63,7 +63,7 @@ function buildTemplatePageByKey(
       return {
         id: nid,
         type: "logic",
-        title: "Új routing",
+        title: "Új logic routing",
         logic: [],
       };
     case "riddle":
@@ -71,7 +71,7 @@ function buildTemplatePageByKey(
         id: nid,
         type: "puzzle",
         kind: "riddle",
-        question: "Kérdés?",
+        question: "Írd ide a kvíz kérdését.",
         options: ["Helyes", "Hibás"],
         correctIndex: 0,
         onAnswer: {
@@ -83,7 +83,7 @@ function buildTemplatePageByKey(
         id: nid,
         type: "puzzle",
         kind: "runes",
-        prompt: "Válaszd ki a helyes szimbólumokat.",
+        prompt: "Instrukció a játékosnak: mit kell kiválasztania.",
         options: ["alfa", "béta", "gamma"],
         answer: ["alfa"],
         maxPick: 1,
@@ -97,7 +97,7 @@ function buildTemplatePageByKey(
         title: "Új végoldal",
         text: [
           {
-            text: "Záró szöveg — szerkeszd az inspectorban.",
+            text: "Köszönő / záró szöveg — a jobb oldali panelben szerkesztheted.",
           },
         ],
         endMeta: {
@@ -105,7 +105,7 @@ function buildTemplatePageByKey(
         },
       };
     default:
-      return { id: nid, text: "Új oldal", next };
+      return { id: nid, text: "Új oldal — töltsd ki a tartalmat.", next };
   }
 }
 
@@ -161,7 +161,7 @@ export function buildEmptyPageForCategory(
         title: "Scorecard",
         text: [
           {
-            text: "A választások alapján kiválasztjuk a következő lépést.",
+            text: "Scorecard: itt írd le a rövid szöveget; a szabályok a logic blokkban következnek.",
           },
         ],
         logic: [],
@@ -172,7 +172,7 @@ export function buildEmptyPageForCategory(
       return {
         id: nid,
         type: "conditionalRouting",
-        text: "Új feltételes routing (szerkeszd a nextSwitch szabályokat).",
+        text: "Feltételes routing: a nextSwitch tömbben sorold fel, mikor melyik oldal következzen.",
         nextSwitch: [{ ifNone: [], goto: next }],
       };
     case "decision":
@@ -217,11 +217,11 @@ export function insertStoryTemplate(
 }
 
 export const TEMPLATE_LABELS: Record<StoryTemplateKey, string> = {
-  linear: "Lineáris (next)",
-  oneChoice: "Egy választás",
-  multiChoice: "Több választás",
-  logic: "Logic",
-  riddle: "Riddle puzzle",
-  runes: "Runes puzzle",
-  end: "Végoldal (type: end)",
+  linear: "Lineáris lap (egyenes next)",
+  oneChoice: "Egy gombos narratív",
+  multiChoice: "Több gombos narratív",
+  logic: "Logic (feltételek és ugrás)",
+  riddle: "Riddle kvíz",
+  runes: "Runes szimbólum puzzle",
+  end: "Végoldal CTA-val",
 };

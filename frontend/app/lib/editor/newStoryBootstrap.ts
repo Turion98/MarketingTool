@@ -11,35 +11,35 @@ export function isNewStorySentinel(src: string): boolean {
 /** Slug → backend fájlnév (`{slug}.json`). */
 export function validateStorySlug(slug: string): string | null {
   const t = slug.trim();
-  if (!t) return "Kötelező a sztori azonosító (slug).";
-  if (t.length > 80) return "Maximum 80 karakter.";
+  if (!t) return "Add meg a sztori fájl nevét (slug) — ez lesz a mentés alapja.";
+  if (t.length > 80) return "A slug legfeljebb 80 karakter lehet.";
   if (!/^[a-z0-9_-]+$/i.test(t)) {
-    return "Csak betű, szám, aláhúzás és kötőjel (slug).";
+    return "A slug csak betűt, számot, aláhúzást és kötőjelet tartalmazhat.";
   }
   return null;
 }
 
 export function validateStartPageId(id: string): string | null {
   const t = id.trim();
-  if (!t) return "Kötelező a kezdő oldal ID.";
-  if (t.length > 120) return "Túl hosszú kezdő oldal ID.";
+  if (!t) return "Add meg, melyik oldal legyen az első képernyő (kezdő oldal ID).";
+  if (t.length > 120) return "A kezdő oldal ID túl hosszú (max. 120 karakter).";
   if (!/^[a-zA-Z0-9_-]+$/.test(t)) {
-    return "Kezdő oldal ID: csak betű, szám, _ és -.";
+    return "A kezdő oldal ID csak betűt, számot, _ és - jelet tartalmazhat.";
   }
   return null;
 }
 
 export function validateCtaHttpsUrl(url: string): string | null {
   const t = url.trim();
-  if (!t) return "Kötelező a CTA URL.";
+  if (!t) return "Minden CTA gombhoz https://-sel kezdődő URL kell.";
   if (!/^https:\/\//i.test(t)) {
-    return "A CTA URL-nek https://-sel kell kezdődnie (szerver validáció).";
+    return "A CTA linknek https:// előtaggal kell kezdődnie (biztonságos böngészés).";
   }
   try {
     const u = new URL(t);
-    if (u.protocol !== "https:") return "Csak https URL engedélyezett.";
+    if (u.protocol !== "https:") return "Csak https protokoll engedélyezett.";
   } catch {
-    return "Érvénytelen URL.";
+    return "Ez nem érvényes URL formátum.";
   }
   return null;
 }
@@ -53,10 +53,10 @@ export type CtaPresetFormRow = {
 
 export function validateCtaPresetKey(key: string): string | null {
   const t = key.trim();
-  if (!t) return "A CTA preset kulcs nem lehet üres.";
-  if (t.length > 64) return "CTA kulcs maximum 64 karakter.";
+  if (!t) return "Minden CTA sorhoz adj meg egy rövid kulcsot (pl. default, shop).";
+  if (t.length > 64) return "A CTA kulcs legfeljebb 64 karakter lehet.";
   if (!/^[a-zA-Z0-9_-]+$/.test(t)) {
-    return "CTA kulcs: csak betű, szám, _ és -.";
+    return "A CTA kulcs csak betűt, számot, _ és - jelet tartalmazhat.";
   }
   return null;
 }
@@ -65,22 +65,22 @@ export function validateCtaRowsForm(
   rows: CtaPresetFormRow[],
   endDefaultCta: string
 ): string | null {
-  if (!rows.length) return "Legalább egy CTA preset kell.";
+  if (!rows.length) return "Legalább egy CTA sort adj meg — ez határozza meg a gombok URL-jeit.";
   const keys = new Set<string>();
   for (const row of rows) {
     const kErr = validateCtaPresetKey(row.key);
     if (kErr) return kErr;
     const k = row.key.trim();
-    if (keys.has(k)) return `Duplikált CTA kulcs: ${k}`;
+    if (keys.has(k)) return `Minden CTA kulcs egyedi legyen — a(z) „${k}” már szerepel.`;
     keys.add(k);
-    if (!row.label.trim()) return `Hiányzó felirat a(z) „${k}” CTA-hoz.`;
+    if (!row.label.trim()) return `Add meg a(z) „${k}” gomb feliratát a játékosnak.`;
     const uErr = validateCtaHttpsUrl(row.urlTemplate);
     if (uErr) return `${k}: ${uErr}`;
   }
   const end = endDefaultCta.trim();
-  if (!end) return "Válassz alapértelmezett vége CTA presetet.";
+  if (!end) return "Válaszd ki, melyik CTA legyen a végoldalak alapértelmezett gombja.";
   if (!keys.has(end)) {
-    return "Az alapértelmezett vége CTA kulcsa nem szerepel a listában.";
+    return "Az alapértelmezett vége CTA kulcsának szerepelnie kell a felsorolt presetek között.";
   }
   return null;
 }
@@ -194,7 +194,7 @@ export function draftStoryToMetaFormModel(
 }
 
 export function validateMetaFormBasics(model: StoryMetaFormModel): string | null {
-  if (!model.title.trim()) return "Kötelező a megjelenített cím (meta.title).";
+  if (!model.title.trim()) return "Adj meg megjelenített címet — ez a játékosnak látszó sztori név.";
   const st = validateStartPageId(model.startPageId);
   if (st) return st;
   return validateCtaRowsForm(model.ctaRows, model.endDefaultCta);

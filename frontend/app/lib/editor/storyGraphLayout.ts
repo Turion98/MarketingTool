@@ -5,8 +5,10 @@ import {
   buildStoryGraph,
   type StoryGraphEdge,
 } from "./storyGraph";
-import { getEditorCanvasClustersEffective } from "./editorCanvasCluster";
-import { computeStructuredLayoutWithStartNode } from "./editorGraphAutoLayout";
+import {
+  computeStructuredLayoutWithStartNode,
+  type GraphVerticalAnchorMode,
+} from "./editorGraphAutoLayout";
 import { classifyEditorPage } from "./storyPagesFlatten";
 import {
   CARD_BODY_BOTTOM_PAD,
@@ -17,6 +19,22 @@ import {
   cardDimensions,
   orderedOutgoingEdges,
 } from "@/app/editor/storyCanvas/storyCanvasGeometry";
+import { inferEndPageCategoryKey } from "./endPageIdParts";
+
+export type { GraphVerticalAnchorMode } from "./editorGraphAutoLayout";
+
+export { inferEndPageCategoryKey } from "./endPageIdParts";
+export {
+  buildEndPageId,
+  collectEndCategoryKeysFromStory,
+  countEndPagesWithCategoryPrefix,
+  isValidEndCategorySlug,
+  mergeStoryMetaEditorEndCategoryColors,
+  mergeStoryMetaEditorEndCategorySlugs,
+  parseEndPageIdSegments,
+  readEditorEndCategorySlugsFromStory,
+  resolveEndPageBodyBackground,
+} from "./endPageIdParts";
 
 export type EditorLayoutNode = { x: number; y: number; z?: number };
 export type EditorLayoutState = {
@@ -31,7 +49,7 @@ export type EditorLayoutState = {
 
 const LAYOUT_VERSION = 1 as const;
 /** Növeld, ha az auto-layout szabályai változnak és a régi mentett pozíciókat el kell dobni. */
-export const EDITOR_LAYOUT_REVISION = 2;
+export const EDITOR_LAYOUT_REVISION = 14;
 const DEFAULT_CARD_W = 200;
 const DEFAULT_CARD_H = 112;
 /** Oszlopok közötti vízszintes rés (egyezzen az editorGraphAutoLayout COL_GAP-pal). */
@@ -45,22 +63,25 @@ const END_CARD_LAYOUT_EST_H =
 /** Extra függőleges rés két végoldal között (world px). */
 const END_COLUMN_ROW_GAP_EXTRA = 24;
 /**
- * Ennyi végoldal után új vízszintes „szuboszlop” (market33: ne egy végtelen függőleges lista).
+ * Egyszerű (nem kategóriás) vég-zóna: ennyi kártya után új vízszintes szuboszlop.
  */
-const END_ZONE_SUBCOLUMN_MAX_NODES = 10;
+const END_ZONE_SUBCOLUMN_MAX_NODES = 6;
+/**
+ * Kategóriás módban (12 feletti végoldalszám): rövidebb „oszlop” — legfeljebb 4 kártya egymás alatt.
+ */
+const END_ZONE_SUBCOLUMN_MAX_NODES_GROUPED = 4;
+/**
+ * Ha a végoldalak száma **szigorúan több mint** ennyi, kategória szerint elkülönített
+ * vízszintes blokkokba pakolunk (`end_<kategória>_…` első szegmens).
+ */
+const END_ZONE_GROUPED_LAYOUT_THRESHOLD = 12;
+/** Függőleges rés két kategória-blokk (tömb) között (world px). */
+const END_ZONE_CATEGORY_BLOCK_GAP_PX = 104;
 /** Vízszintes lépés a vég-szuboszlopok között (world px). */
 const END_ZONE_SUBCOLUMN_STEP_X = DEFAULT_CARD_W + 56;
 
 /** Kártya szélesség + oszlop-rés — vászon koordináták, új oldal a start mellett stb. */
 export const EDITOR_LAYOUT_COL_STEP_PX = DEFAULT_CARD_W + COL_GAP;
-/** Egyeznie kell a vászon `CARD_W`-val (200). */
-const CLUSTER_CARD_W = 200;
-/** Riddle-csoport: kártyák között a vásznon. */
-const CLUSTER_PACK_GAP = 28;
-/** Retry kártya becsült magasság (pack); egyeztetve a vászon kártya becsléssel. */
-const CLUSTER_RETRY_EST_H = 112;
-/** Retry és a riddle-sor közötti függőleges rés. */
-const CLUSTER_GAP_ABOVE_RETRY = 28;
 
 /** Automatikus elrendezés: függőleges lépcső a valós kártyamagassággal (runes opciósávak). */
 function buildEditorLayoutCardHeightGetter(
@@ -169,7 +190,7 @@ export function computeDefaultLayout(input: {
 }
 
 /**
- * Mentett pozíciók figyelmen kívül hagyása: újraszámolás + cluster pack;
+ * Mentett pozíciók figyelmen kívül hagyása: újraszámolás;
  * a régi `z` rétegsorrend megmarad, ahol volt.
  */
 export function recomputeEditorLayoutForStory(
@@ -199,74 +220,6 @@ export function recomputeEditorLayoutForStory(
     layoutRevision: EDITOR_LAYOUT_REVISION,
     nodes: nextNodes,
   };
-}
-
-function applyClusterHorizontalPacks(
-  story: Record<string, unknown>,
-  nodes: Record<string, EditorLayoutNode>,
-  pageIds: string[]
-): Record<string, EditorLayoutNode> {
-  const clusters = getEditorCanvasClustersEffective(story);
-  if (!clusters.length) return nodes;
-  let next = { ...nodes };
-  for (const cl of clusters) {
-    if (!cl.packHorizontal) continue;
-    const row = (cl.riddleRowPageIds ?? []).filter((id) =>
-      pageIds.includes(id)
-    );
-    const retryId =
-      cl.retryPageId && pageIds.includes(cl.retryPageId)
-        ? cl.retryPageId
-        : "";
-
-    if (row.length >= 2 && !retryId) {
-      const first = row[0]!;
-      const base = next[first];
-      if (!base) continue;
-      let x = base.x;
-      const y = base.y;
-      for (const id of row) {
-        next[id] = { ...next[id], x, y };
-        x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
-      }
-      continue;
-    }
-
-    if (row.length >= 2 && retryId) {
-      const first = row[0]!;
-      const base = next[first];
-      if (!base) continue;
-      let x = base.x;
-      const y = base.y;
-      for (const id of row) {
-        next[id] = { ...next[id], x, y };
-        x += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
-      }
-      const n = row.length;
-      const rowLeft = next[row[0]!]!.x;
-      const rowRight = next[row[n - 1]!]!.x + CLUSTER_CARD_W;
-      const midX = (rowLeft + rowRight) / 2;
-      next[retryId] = {
-        ...next[retryId],
-        x: midX - CLUSTER_CARD_W / 2,
-        y: y - CLUSTER_GAP_ABOVE_RETRY - CLUSTER_RETRY_EST_H,
-      };
-      continue;
-    }
-
-    const members = cl.members.filter((id) => pageIds.includes(id));
-    if (members.length < 2) continue;
-    const firstM = members[0]!;
-    const baseM = next[firstM];
-    if (!baseM) continue;
-    let xm = baseM.x;
-    const ym = baseM.y;
-    for (const id of members) {
-      next[id] = { ...next[id], x: xm, y: ym };
-      xm += CLUSTER_CARD_W + CLUSTER_PACK_GAP;
-    }
-  }
-  return next;
 }
 
 export function collectEndPageIdsFromStory(
@@ -326,16 +279,45 @@ function pagesReachableFromStoryStart(
   return seen;
 }
 
-export function packEndNodesIntoRightColumn(
+/**
+ * Végoldalak: vízszintes szuboszlopok, oszloponként max `maxRowsPerSubcolumn` kártya.
+ * Visszaadja a blokk alsó élének becsült Y + magasság értékét (következő blokk `y` offsethez).
+ */
+function packEndIdsIntoVerticalStacks(
+  next: Record<string, EditorLayoutNode>,
+  ids: string[],
+  baseX: number,
+  yBase: number,
+  step: number,
+  maxRowsPerSubcolumn: number
+): number {
+  let col = 0;
+  let row = 0;
+  let maxBottom = yBase;
+  for (const id of ids) {
+    if (row >= maxRowsPerSubcolumn) {
+      col += 1;
+      row = 0;
+    }
+    const x = baseX + col * END_ZONE_SUBCOLUMN_STEP_X;
+    const y = yBase + row * step;
+    const prev = next[id];
+    next[id] = prev ? { ...prev, x, y } : { x, y };
+    maxBottom = Math.max(maxBottom, y + END_CARD_LAYOUT_EST_H);
+    row += 1;
+  }
+  return maxBottom;
+}
+
+/** Vég-zóna bal széle (baseX) + start kártya függőleges közepe — world px. */
+export function computeEndZoneAnchor(
   nodes: Record<string, EditorLayoutNode>,
   pageIds: string[],
   endIds: string[],
   edges: StoryGraphEdge[],
-  startPageId: string | null,
-  options?: { skipPageIds?: ReadonlySet<string> }
-): Record<string, EditorLayoutNode> {
-  if (!endIds.length) return nodes;
-  const skip = options?.skipPageIds ?? new Set<string>();
+  startPageId: string | null
+): { baseX: number; startCenterY: number } | null {
+  if (!endIds.length) return null;
   const endSet = new Set(endIds);
   const reachable = pagesReachableFromStoryStart(pageIds, edges, startPageId);
   let maxRight = 0;
@@ -347,26 +329,100 @@ export function packEndNodesIntoRightColumn(
     maxRight = Math.max(maxRight, n.x + DEFAULT_CARD_W);
   }
   const baseX = maxRight + COL_GAP + END_ZONE_GAP_PX;
-  /** Ugyanaz a sáv, mint a virtuális kezdő node (ne fix 20 px-től „lógjanak” messze a gráftól). */
   const sn = nodes[STORY_GRAPH_START_NODE_ID];
-  const yStart =
-    sn && Number.isFinite(sn.y) ? sn.y : 20;
+  const startTop = sn && Number.isFinite(sn.y) ? sn.y : 20;
+  const startCenterY = startTop + START_H / 2;
+  return { baseX, startCenterY };
+}
+
+/** A vég-blokk függőleges középpontját a virtuális start kártya középpontjához igazítja. */
+function shiftEndNodesVerticallyAroundStartCenter(
+  next: Record<string, EditorLayoutNode>,
+  activeEndIds: string[],
+  startCenterY: number
+): void {
+  if (!activeEndIds.length) return;
+  let minY = Infinity;
+  let maxBottom = -Infinity;
+  for (const id of activeEndIds) {
+    const n = next[id];
+    if (!n || !Number.isFinite(n.y)) continue;
+    minY = Math.min(minY, n.y);
+    maxBottom = Math.max(maxBottom, n.y + END_CARD_LAYOUT_EST_H);
+  }
+  if (!Number.isFinite(minY) || !Number.isFinite(maxBottom)) return;
+  const blockCenterY = (minY + maxBottom) / 2;
+  const deltaY = startCenterY - blockCenterY;
+  for (const id of activeEndIds) {
+    const n = next[id];
+    if (!n || !Number.isFinite(n.y)) continue;
+    next[id] = { ...n, y: n.y + deltaY };
+  }
+}
+
+export function packEndNodesIntoRightColumn(
+  nodes: Record<string, EditorLayoutNode>,
+  pageIds: string[],
+  endIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null,
+  options?: { skipPageIds?: ReadonlySet<string> }
+): Record<string, EditorLayoutNode> {
+  if (!endIds.length) return nodes;
+  const skip = options?.skipPageIds ?? new Set<string>();
+  const anchor = computeEndZoneAnchor(
+    nodes,
+    pageIds,
+    endIds,
+    edges,
+    startPageId
+  );
+  if (!anchor) return nodes;
+  const { baseX, startCenterY } = anchor;
   const step = END_CARD_LAYOUT_EST_H + ROW_GAP + END_COLUMN_ROW_GAP_EXTRA;
   const next = { ...nodes };
-  let col = 0;
-  let row = 0;
-  for (const id of endIds) {
-    if (skip.has(id)) continue;
-    if (row >= END_ZONE_SUBCOLUMN_MAX_NODES) {
-      col += 1;
-      row = 0;
+  const activeEnds = endIds.filter((id) => !skip.has(id));
+  if (!activeEnds.length) return next;
+
+  const useGrouped = activeEnds.length > END_ZONE_GROUPED_LAYOUT_THRESHOLD;
+
+  if (!useGrouped) {
+    packEndIdsIntoVerticalStacks(
+      next,
+      activeEnds,
+      baseX,
+      0,
+      step,
+      END_ZONE_SUBCOLUMN_MAX_NODES
+    );
+  } else {
+    const byCat = new Map<string, string[]>();
+    for (const id of activeEnds) {
+      const k = inferEndPageCategoryKey(id);
+      const list = byCat.get(k) ?? [];
+      list.push(id);
+      byCat.set(k, list);
     }
-    const x = baseX + col * END_ZONE_SUBCOLUMN_STEP_X;
-    const y = yStart + row * step;
-    const prev = next[id];
-    next[id] = prev ? { ...prev, x, y } : { x, y };
-    row += 1;
+    for (const list of byCat.values()) {
+      list.sort((a, b) => a.localeCompare(b));
+    }
+    const catKeys = [...byCat.keys()].sort((a, b) => a.localeCompare(b));
+    let yBlock = 0;
+    for (const k of catKeys) {
+      const list = byCat.get(k)!;
+      const bottom = packEndIdsIntoVerticalStacks(
+        next,
+        list,
+        baseX,
+        yBlock,
+        step,
+        END_ZONE_SUBCOLUMN_MAX_NODES_GROUPED
+      );
+      yBlock = bottom + END_ZONE_CATEGORY_BLOCK_GAP_PX;
+    }
   }
+
+  shiftEndNodesVerticallyAroundStartCenter(next, activeEnds, startCenterY);
   return next;
 }
 
@@ -375,7 +431,8 @@ function finalizeEditorLayoutNodes(
   pageIds: string[],
   edges: StoryGraphEdge[],
   startPageId: string | null,
-  structuredBase?: Record<string, EditorLayoutNode>
+  structuredBase?: Record<string, EditorLayoutNode>,
+  opts?: { graphVerticalAnchor?: GraphVerticalAnchorMode }
 ): Record<string, EditorLayoutNode> {
   const getCardH = buildEditorLayoutCardHeightGetter(story, edges);
   const structured =
@@ -391,19 +448,28 @@ function finalizeEditorLayoutNodes(
         rowGap: ROW_GAP,
         getCardH,
       },
+      graphVerticalAnchor: opts?.graphVerticalAnchor ?? "balanceWithStart",
     });
-  const clustered = applyClusterHorizontalPacks(
-    story,
-    { ...structured },
-    pageIds
-  );
   return packEndNodesIntoRightColumn(
-    clustered,
+    { ...structured },
     pageIds,
     collectEndPageIdsFromStory(story),
     edges,
     startPageId
   );
+}
+
+/** Teljes friss layout (strukturált + vég-zóna). `anchor`: start-középpont vs. fix felső sáv. */
+export function buildFreshEditorLayoutNodes(
+  story: Record<string, unknown>,
+  pageIds: string[],
+  edges: StoryGraphEdge[],
+  startPageId: string | null,
+  anchor: GraphVerticalAnchorMode
+): Record<string, EditorLayoutNode> {
+  return finalizeEditorLayoutNodes(story, pageIds, edges, startPageId, undefined, {
+    graphVerticalAnchor: anchor,
+  });
 }
 
 export function ensureLayout(
@@ -430,7 +496,6 @@ export function ensureLayout(
       ...saved.nodes[STORY_GRAPH_START_NODE_ID],
     };
   }
-  const packed = applyClusterHorizontalPacks(story, nodes, pageIds);
   const endIds = collectEndPageIdsFromStory(story);
   const skipPackedEnds = new Set(
     endIds.filter((id) => Boolean(saved.nodes[id]))
@@ -439,7 +504,7 @@ export function ensureLayout(
     version: LAYOUT_VERSION,
     layoutRevision: EDITOR_LAYOUT_REVISION,
     nodes: packEndNodesIntoRightColumn(
-      packed,
+      nodes,
       pageIds,
       endIds,
       edges,
