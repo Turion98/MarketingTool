@@ -11,6 +11,8 @@ import {
 import { StoryMetaFormFields } from "./StoryMetaForm";
 import s from "./editor.module.scss";
 import pi from "./pageInspector.module.scss";
+import { EditorInfoHoverPanel } from "./EditorInfoHoverPanel";
+import hi from "./editorInfoHoverPanel.module.scss";
 
 function storyIdForAssetUpload(draft: Record<string, unknown>): string {
   const sid = draft.storyId;
@@ -61,7 +63,9 @@ export default function StoryMetaInspector({
   const onUploadLogo = useCallback(async () => {
     setFormError(null);
     if (!storyId) {
-      setFormError("Hiányzik a sztori azonosító — ellenőrizd a storyId vagy meta.id mezőt.");
+      setFormError(
+        "Hiányzik a projekt azonosító — add meg a meta űrlapon, vagy nyiss meg egy mentett projektfájlt."
+      );
       return;
     }
     if (!logoFile) {
@@ -102,14 +106,22 @@ export default function StoryMetaInspector({
   return (
     <div className={pi.details}>
       <div className={pi.summaryRow}>
-        <h3 className={pi.summary}>Sztori meta</h3>
+        <h3 className={pi.summary}>Projekt meta</h3>
       </div>
       <div className={pi.body}>
-        <p className={s.bootstrapMetaLead}>
-          Sztori azonosító (fájlnév):{" "}
-          <strong>{storyId || "—"}</strong>. A változtatások a „Meta alkalmazása”
-          gombbal íródnak a vázlatba; a szerverre a „Változások mentése” kell.
-        </p>
+        <div className={pi.inspectorControlRow}>
+          <p className={pi.inspectorHintRowTitle}>
+            Projektfájl: <strong>{storyId || "—"}</strong>
+          </p>
+          <EditorInfoHoverPanel ariaLabel="Projekt meta: mentés és azonosító">
+            <div className={hi.section}>
+              <p className={hi.sectionBody}>
+                A „Meta alkalmazása a vázlatra” gomb a szerkesztőben lévő másolatot frissíti. A
+                szerverre a vászon fölötti „Változások mentése” írja ki.
+              </p>
+            </div>
+          </EditorInfoHoverPanel>
+        </div>
         <StoryMetaFormFields
           model={model}
           onChange={setModel}
@@ -120,7 +132,7 @@ export default function StoryMetaInspector({
           logoUploadBusy={logoUploadBusy}
           logoUploadDisabledReason={
             !storyId
-              ? "Logo feltöltéshez szükség van storyId / meta.id értékre."
+              ? "Logo feltöltéshez add meg a projekt azonosítót a meta űrlapon."
               : null
           }
         />
@@ -135,7 +147,7 @@ export default function StoryMetaInspector({
           disabled={applyBusy}
           onClick={onApply}
         >
-          {applyBusy ? "Alkalmazás…" : "Meta alkalmazása a szerkesztőben lévő sztorira"}
+          {applyBusy ? "Alkalmazás…" : "Meta alkalmazása a vázlatra"}
         </button>
       </div>
     </div>
