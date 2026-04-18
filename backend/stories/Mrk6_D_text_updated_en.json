@@ -172,9 +172,6 @@
           "text": "{fragment:A1_logic_puzzle}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "We need something more complex, with a higher level of interactivity — ideally a dedicated, decision-based game."
         }
       ]
     },
@@ -216,9 +213,6 @@
           "text": "{fragment:A1_game}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Okay, we have a rough idea of the format. Now let’s talk about the unique visual layer. We need something that isn’t generic, doesn’t repeat itself, and is still safe, controllable, and scalable at a reasonable cost."
         }
       ]
     },
@@ -272,9 +266,6 @@
           "text": "{fragment:A2_ai_safe}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Now back to the core: to get users through the experience, we need to keep their interest all the way.\nLet’s make the reward structure concrete."
         }
       ]
     },
@@ -319,9 +310,6 @@
           "text": "{fragment:A3_ai_flow}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Okay, the shape is there now: decision-based game, AI visuals, experience-based reward.\nTime to check with the dev team how we can make this work technically."
         }
       ]
     },

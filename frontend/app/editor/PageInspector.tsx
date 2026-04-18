@@ -585,7 +585,6 @@ export default function PageInspector({
   const [runesMaxPick, setRunesMaxPick] = useState("");
 
   const [routeSourcePageId, setRouteSourcePageId] = useState("");
-  const [routeDefaultGoto, setRouteDefaultGoto] = useState("");
   const [routeAssignments, setRouteAssignments] = useState<
     Record<string, string>
   >({});
@@ -672,7 +671,6 @@ export default function PageInspector({
       setRunesMinPick("");
       setRunesMaxPick("");
       setRouteSourcePageId("");
-      setRouteDefaultGoto("");
       setRouteAssignments({});
       setSaveMilestone(false);
       setEndCtaPresetKey("");
@@ -810,7 +808,6 @@ export default function PageInspector({
         page as Record<string, unknown>
       );
       setRouteSourcePageId(h.sourceId);
-      setRouteDefaultGoto(h.defaultGoto);
       setRouteAssignments(h.assignments);
     } else if (
       page &&
@@ -819,7 +816,6 @@ export default function PageInspector({
       setChoices(normalizeDecisionChoices(readChoices(page)));
     } else {
       setRouteSourcePageId("");
-      setRouteDefaultGoto("");
       setRouteAssignments({});
     }
 
@@ -1138,8 +1134,9 @@ export default function PageInspector({
         type: "puzzleRoute",
         puzzleSourcePageId: routeSourcePageId.trim(),
         routeAssignments: out,
-        defaultGoto: routeDefaultGoto.trim(),
       };
+      delete (nextP as Record<string, unknown>).defaultGoto;
+      delete (nextP as Record<string, unknown>).defaultNext;
       delete nextP.choices;
       delete nextP.logic;
       delete nextP.text;
@@ -1256,7 +1253,6 @@ export default function PageInspector({
     runesMinPick,
     runesMaxPick,
     routeSourcePageId,
-    routeDefaultGoto,
     routeAssignments,
     logicIfRows,
     logicElseGoTo,
@@ -2509,7 +2505,7 @@ export default function PageInspector({
                     (k) => !(routeAssignments[k] ?? "").trim()
                   ).length
                 }
-                . Késznek számít, ha mindegyikhez van cél és a default is megvan.
+                . Késznek számít, ha minden kombinációhoz van céloldal.
               </p>
             ) : routeSourcePageId.trim() ? (
               <p className={s.hintSmall}>
@@ -2578,14 +2574,6 @@ export default function PageInspector({
                 </div>
               );
             })}
-            <RiddleScoreDestinationSelect
-              label="Default → cél (ismeretlen kombináció / első betöltés)"
-              value={routeDefaultGoto}
-              onChange={setRouteDefaultGoto}
-              story={draftStory}
-              knownPageIds={knownPageIds}
-              idSet={idSet}
-            />
           </>
         ) : isEditorDecisionPage ? (
           <>

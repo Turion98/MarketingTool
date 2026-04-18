@@ -172,9 +172,6 @@
           "text": "{fragment:A1_logic_puzzle}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Ennél egy komplexebb, magasabb interaktivitást kínáló élményre, akár egyedi játékra van most szükségünk."
         }
       ]
     },
@@ -216,9 +213,6 @@
           "text": "{fragment:A1_game}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Oké, körvonalasan megvan a formátum. Most beszéljünk az egyedi vizuális megjelenésről. Olyan kell, ami nem tucat, nem ismétli önmagát, mégis biztonságos, kontrollálható, és olcsón skálázható."
         }
       ]
     },
@@ -272,9 +266,6 @@
           "text": "{fragment:A2_ai_safe}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Most pedig térjünk vissza a lényeghez: ahhoz, hogy a felhasználó végigmenjen az élményen, végig fenn kell tartanunk az érdeklődését.\nKonkretizáljuk, hogyan jutalmazzuk őket a részvételért."
         }
       ]
     },
@@ -319,9 +310,6 @@
           "text": "{fragment:A3_ai_flow}",
           "mode": "append_after",
           "separator": "\n\n"
-        },
-        {
-          "default": "Oké, most már kezd formát ölteni: döntésalapú játék, AI-vizuál, élmény alapú jutalum.\nEgyeztessünk a fejlesztőkkel, hogy lehet ezt technikailag megoldani."
         }
       ]
     },

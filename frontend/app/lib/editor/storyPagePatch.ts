@@ -202,7 +202,6 @@ export function patchOutgoingNavRefsInPage(
       if (!row) return entry;
       const o = { ...row };
       if (o.goto === from) o.goto = to;
-      if (o.default === from) o.default = to;
       return o;
     });
   }
@@ -223,9 +222,6 @@ export function patchOutgoingNavRefsInPage(
       next.puzzleSourcePageId === from
     ) {
       next.puzzleSourcePageId = to;
-    }
-    if (typeof next.defaultGoto === "string" && next.defaultGoto === from) {
-      next.defaultGoto = to;
     }
     const ra = asRecord(next.routeAssignments);
     if (ra) {

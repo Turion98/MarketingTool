@@ -135,11 +135,7 @@ function legacyRoutePageToConditionalRouting(
   const source = typeof rawSource === "string" && rawSource.trim()
     ? rawSource.trim()
     : "poolPick";
-  const rawDefault = page.defaultGoto ?? page.defaultNext;
-  const fallback = typeof rawDefault === "string" ? rawDefault.trim() : "";
-  next.next = fallback
-    ? { switch: source, cases, default: fallback }
-    : { switch: source, cases };
+  next.next = { switch: source, cases };
 
   delete next.routeAssignments;
   delete next.routes;
@@ -153,6 +149,34 @@ function legacyRoutePageToConditionalRouting(
   delete next.poolKey;
   delete next.nextSwitch;
   return next;
+}
+
+/**
+ * CoreSchema `LogicRule` csak `if` + `goto` (additionalProperties: false).
+ * Legacy tömbös sor: `{ "default": "pageId" }` — eltávolítjuk.
+ * Ha valaki vegyítette: `if`/`goto` mellett `default` kulcs — a `default` törlődik.
+ */
+function sanitizePageLogicArrayForStrictSchema(
+  page: Record<string, unknown>
+): void {
+  const logic = page.logic;
+  if (!Array.isArray(logic)) return;
+  const out: unknown[] = [];
+  for (const entry of logic) {
+    const row = asRecord(entry);
+    if (!row) {
+      out.push(entry);
+      continue;
+    }
+    const keys = Object.keys(row);
+    const onlyDefault =
+      keys.length === 1 && keys[0] === "default" && typeof row.default === "string";
+    if (onlyDefault) continue;
+    const next: Record<string, unknown> = { ...row };
+    delete next.default;
+    out.push(next);
+  }
+  page.logic = out;
 }
 
 function sanitizeStoryDocumentForStrictImport(
@@ -193,6 +217,8 @@ function sanitizeStoryDocumentForStrictImport(
       if (type === "poolRoute" || type === "puzzleRoute") {
         nextPage = legacyRoutePageToConditionalRouting(nextPage);
       }
+
+      sanitizePageLogicArrayForStrictSchema(nextPage);
 
       const answer = nextPage.answer;
       if (Array.isArray(answer) && answer.length === 0) {

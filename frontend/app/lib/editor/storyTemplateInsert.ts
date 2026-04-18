@@ -62,7 +62,8 @@ function buildTemplatePageByKey(
       return {
         id: nid,
         type: "logic",
-        logic: [{ default: next }],
+        title: "Új routing",
+        logic: [],
       };
     case "riddle":
       return {
@@ -137,7 +138,6 @@ export function buildEmptyPageForCategory(
         title: "Puzzle route",
         puzzleSourcePageId: "",
         routeAssignments: {},
-        defaultGoto: next,
       };
     case "logic":
       return buildTemplatePageByKey("logic", nid, next);
@@ -155,7 +155,6 @@ export function buildEmptyPageForCategory(
         title: "Decision",
         poolId: "",
         routeAssignments: {},
-        defaultGoto: next,
       };
     case "transition":
       return {
@@ -192,7 +191,7 @@ export const TEMPLATE_LABELS: Record<StoryTemplateKey, string> = {
   linear: "Lineáris (next)",
   oneChoice: "Egy választás",
   multiChoice: "Több választás",
-  logic: "Logic (default ág)",
+  logic: "Logic",
   riddle: "Riddle puzzle",
   runes: "Runes puzzle",
 };

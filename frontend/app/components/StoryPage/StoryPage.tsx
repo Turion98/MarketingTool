@@ -147,7 +147,6 @@ type Measure = {
 type StoryLogicRule = {
   if?: string[];
   goto?: string;
-  default?: string;
 };
 
 type StoryChoiceAction = {
@@ -463,9 +462,7 @@ const stringGlobals = useMemo<Record<string, string>>(
         }
       }
 
-      // default ág (pl. { "default": "Route_E_intro" })
-      const fallback = rules.find((r) => typeof r?.default === "string");
-      return fallback ? String(fallback.default) : null;
+      return null;
     })();
 
     if (chosen && chosen !== pageData.id) {

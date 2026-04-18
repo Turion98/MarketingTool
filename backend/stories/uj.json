@@ -485,9 +485,6 @@
             "Q3_3"
           ],
           "goto": "end_refiner"
-        },
-        {
-          "default": "end_synthesizer"
         }
       ]
     },

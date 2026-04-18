@@ -328,9 +328,6 @@
         {
           "if": ["p1_even", "q2n_clogged"],
           "goto": "end_kombinalt"
-        },
-        {
-          "default": "end_kiegy"
         }
       ]
     },

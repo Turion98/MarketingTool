@@ -536,7 +536,9 @@ export default function StoryCard({
                 {ord.length === 0 ? (
                   <span className={s.cardOptMuted}>nincs kimenet</span>
                 ) : (
-                  ord.map((e) => {
+                  ord
+                    .filter((e) => e.kind !== "logicElse")
+                    .map((e) => {
                     const rawLab = String(e.label ?? "");
                     const comboLab = rawLab.startsWith("rt:")
                       ? rawLab.slice(3)
@@ -544,19 +546,15 @@ export default function StoryCard({
                     return (
                       <div key={e.id} className={s.cardOptStrip}>
                         <span className={s.cardOptStripMain}>
-                          {e.kind === "logicElse" ? (
-                            <span className={s.cardRouteElseMark}>default</span>
-                          ) : (
-                            <>
-                              <span className={s.cardRouteComboMark}>kombó</span>
-                              <span
-                                className={s.cardLogicFragTight}
-                                title={comboLab}
-                              >
-                                {comboLab || "?"}
-                              </span>
-                            </>
-                          )}
+                          <>
+                            <span className={s.cardRouteComboMark}>kombó</span>
+                            <span
+                              className={s.cardLogicFragTight}
+                              title={comboLab}
+                            >
+                              {comboLab || "?"}
+                            </span>
+                          </>
                         </span>
                         <span className={s.cardOptStripGoto} title={e.to}>
                           → {e.to}

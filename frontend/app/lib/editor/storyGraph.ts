@@ -254,13 +254,12 @@ export function buildStoryGraph(story: Record<string, unknown>): {
       add(n.pageId, elseGoTo, "logicElse");
     }
 
-    /** Tömbös logic (pl. SkinCare: `{ if, goto }` + `{ default }`) — különben a gráf megszakad. */
+    /** Tömbös logic (pl. SkinCare: `{ if, goto }`). */
     if (Array.isArray(rec.logic)) {
       rec.logic.forEach((entry, idx) => {
         const row = asRecord(entry);
         if (!row) return;
         const goTo = readString(row.goto);
-        const defaultTo = readString(row.default);
         const ifArr = Array.isArray(row.if)
           ? row.if.filter(
               (x): x is string => typeof x === "string" && x.length > 0
@@ -270,11 +269,7 @@ export function buildStoryGraph(story: Record<string, unknown>): {
           add(n.pageId, goTo, "logicIf", ifArr.join(", "));
           return;
         }
-        if (defaultTo && !goTo && ifArr.length === 0) {
-          add(n.pageId, defaultTo, "logicElse");
-          return;
-        }
-        const target = goTo ?? defaultTo;
+        const target = goTo;
         if (target) {
           add(n.pageId, target, "logicIf", String(idx));
         }
@@ -296,8 +291,6 @@ export function buildStoryGraph(story: Record<string, unknown>): {
         const goTo = typeof v === "string" ? v : "";
         add(n.pageId, goTo, "logicIf", `rt:${key}`);
       });
-      const def = readString(rec.defaultGoto);
-      add(n.pageId, def, "logicElse");
     }
     if (n.category === "decision") {
       const ra =

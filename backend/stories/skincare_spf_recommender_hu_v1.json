@@ -85,8 +85,7 @@
         { "if": ["skin_opt_5", "skin_opt_8"], "goto": "q2_dry_timing" },
         { "if": ["skin_opt_6", "skin_opt_7"], "goto": "q2_dry_timing" },
         { "if": ["skin_opt_6", "skin_opt_8"], "goto": "q2_dry_timing" },
-        { "if": ["skin_opt_7", "skin_opt_8"], "goto": "q2_sensitive_trigger" },
-        { "default": "q2_dry_timing" }
+        { "if": ["skin_opt_7", "skin_opt_8"], "goto": "q2_sensitive_trigger" }
       ]
     },
     {

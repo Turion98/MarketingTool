@@ -136,9 +136,7 @@
         { "if": ["L2_opt_4", "L2_opt_5"], "goto": "insight_ginger_lime" },
         { "if": ["L2_opt_4", "L2_opt_6"], "goto": "insight_ginger_lime" },
 
-        { "if": ["L2_opt_5", "L2_opt_6"], "goto": "insight_berry_breeze" },
-
-        { "default": "insight_classic_cola" }
+        { "if": ["L2_opt_5", "L2_opt_6"], "goto": "insight_berry_breeze" }
       ]
     },
     {

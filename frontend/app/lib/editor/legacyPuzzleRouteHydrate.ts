@@ -43,7 +43,7 @@ export function inferRunesSourcePageIdForRouteTarget(
 }
 
 /**
- * Régi `type: "logic"` + tömb (`if`: optionFlagsBase + index, `goto` / `default`).
+ * Régi `type: "logic"` + tömb (`if`: optionFlagsBase + index, `goto`).
  * A játék runtime globál kulcs alapján is működik; a szerkesztő indexkulcsokra konvertál.
  */
 export function parseLegacyLogicArrayToRouteAssignments(
@@ -57,19 +57,13 @@ export function parseLegacyLogicArrayToRouteAssignments(
   if (!base.trim()) return null;
   const mode = sourcePage.mode === "ordered" ? "ordered" : "set";
   const assignments: Record<string, string> = {};
-  let defaultGoto = "";
 
   for (const entry of logicArr) {
     const r = asRecord(entry);
     if (!r) continue;
-    const def = typeof r.default === "string" ? r.default.trim() : "";
     const go = typeof r.goto === "string" ? r.goto.trim() : "";
     const ifRaw = Array.isArray(r.if) ? r.if : null;
 
-    if ((!ifRaw || ifRaw.length === 0) && def && !go) {
-      defaultGoto = def;
-      continue;
-    }
     if (!ifRaw || !go) continue;
 
     const indices: number[] = [];
@@ -87,7 +81,7 @@ export function parseLegacyLogicArrayToRouteAssignments(
     if (key) assignments[key] = go;
   }
 
-  return { assignments, defaultGoto };
+  return { assignments, defaultGoto: "" };
 }
 
 /**
@@ -153,8 +147,6 @@ export function hydrateRouteFieldsFromStoryPage(
     if (!sid) {
       sid = inferRunesSourcePageIdForRouteTarget(story, routePageId) ?? "";
     }
-    const def =
-      typeof page.defaultGoto === "string" ? page.defaultGoto.trim() : "";
     const ra = asRecord(page.routeAssignments) ?? {};
     const raw: Record<string, string> = {};
     for (const [k, v] of Object.entries(ra)) {
@@ -162,7 +154,7 @@ export function hydrateRouteFieldsFromStoryPage(
     }
     const sp = sid ? findPageInStoryDocument(story, sid) : null;
     const assignments = normalizeRouteAssignmentKeys(raw, sp);
-    return { sourceId: sid, defaultGoto: def, assignments };
+    return { sourceId: sid, defaultGoto: "", assignments };
   }
 
   const logicArr = Array.isArray(page.logic) ? page.logic : [];

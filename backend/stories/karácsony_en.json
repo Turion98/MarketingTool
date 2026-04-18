@@ -255,9 +255,7 @@
         { "if": ["Q1_C", "Q3_3"], "goto": "end_refiner" },
         { "if": ["Q1_C", "Q3_4"], "goto": "end_refiner" },
         { "if": ["Q1_A", "Q3_3"], "goto": "end_refiner" },
-        { "if": ["Q1_B", "Q3_3"], "goto": "end_refiner" },
-
-        { "default": "end_synthesizer" }
+        { "if": ["Q1_B", "Q3_3"], "goto": "end_refiner" }
       ]
     },
     {

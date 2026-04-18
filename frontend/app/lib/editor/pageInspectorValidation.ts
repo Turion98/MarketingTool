@@ -246,18 +246,6 @@ export function validatePage(
         message: `Ismeretlen forrás oldal: "${src}".`,
       });
     }
-    const def = h.defaultGoto.trim();
-    if (!def) {
-      issues.push({
-        path: "defaultGoto",
-        message: "Puzzle route: kötelező a default (maradék kombináció / hiba) céloldal.",
-      });
-    } else if (!knownIds.has(def)) {
-      issues.push({
-        path: "defaultGoto",
-        message: `Ismeretlen oldal: "${def}".`,
-      });
-    }
     const ra: Record<string, unknown> = { ...h.assignments };
     for (const [k, raw] of Object.entries(ra)) {
       const t = typeof raw === "string" ? raw.trim() : "";

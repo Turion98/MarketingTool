@@ -332,9 +332,6 @@
             "F_6"
           ],
           "goto": "CL_sensitive_vs_active"
-        },
-        {
-          "default": "END_compliance"
         }
       ]
     },

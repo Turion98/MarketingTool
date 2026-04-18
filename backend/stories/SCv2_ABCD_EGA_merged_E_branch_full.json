@@ -225,9 +225,6 @@
         "L2_opt_6"
       ],
       "goto": "Route_E_intro"
-    },
-    {
-      "default": "Route_E_intro"
     }
   ]
 },
@@ -258,11 +255,7 @@
           "text": "{fragment:routine_sensitive}",
           "mode": "append_after",
           "separator": "\n"
-        },
-        {
-          "default": "A fókuszod alapján egy hidratáló–kisimító–feszesítő irányt javaslok. Nézzük meg pontosabban, mi a legjellemzőbb most a bőrödre."
         }
-        
       ],
       "fragmentRefs": [
         {
@@ -1408,9 +1401,6 @@
             "frag:E_use_anchor"
           ],
           "goto": "Route_E_final_hydralift"
-        },
-        {
-          "default": "Route_E_final_watergel"
         }
       ]
     },

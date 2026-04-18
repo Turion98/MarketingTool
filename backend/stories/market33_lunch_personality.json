@@ -487,9 +487,6 @@
             "flag:gshveg_opt_5"
           ],
           "goto": "end_b_veg_granelli_pizza_selection"
-        },
-        {
-          "default": "end_b_veg_7even_falafel_bowl"
         }
       ]
     },
@@ -568,9 +565,6 @@
             "flag:gshmix_opt_5"
           ],
           "goto": "end_b_mix_world_pizza_korean_falafel"
-        },
-        {
-          "default": "end_b_mix_world_sushi_tacos_guac"
         }
       ]
     },
@@ -649,9 +643,6 @@
             "flag:gshnon_opt_5"
           ],
           "goto": "end_b_non_granelli_diavola_bresaola_mortadella"
-        },
-        {
-          "default": "end_b_non_world_sushi_korean"
         }
       ]
     },
@@ -730,9 +721,6 @@
             "flag:gindveg_opt_5"
           ],
           "goto": "end_b_veg_lacatrina_veggie_tacos"
-        },
-        {
-          "default": "end_b_veg_7even_falafel_bowl"
         }
       ]
     },
@@ -811,9 +799,6 @@
             "flag:gindmix_opt_5"
           ],
           "goto": "end_b_mix_cocodak_korean_fried_chicken_bibimbap"
-        },
-        {
-          "default": "end_b_mix_7even_bowls_mix"
         }
       ]
     },
@@ -892,9 +877,6 @@
             "flag:gindnon_opt_5"
           ],
           "goto": "end_b_non_mexico_barbacoa_quesadilla"
-        },
-        {
-          "default": "end_b_non_granelli_bolognese_carbonara_porchetta"
         }
       ]
     },
@@ -973,9 +955,6 @@
             "flag:gcompmix_opt_5"
           ],
           "goto": "end_b_mix_world_pizza_korean_falafel"
-        },
-        {
-          "default": "end_b_mix_world_sushi_tacos_guac"
         }
       ]
     },
@@ -1054,9 +1033,6 @@
             "flag:gcompnon_opt_5"
           ],
           "goto": "end_b_non_world_pho_padthai_dimsum"
-        },
-        {
-          "default": "end_b_non_world_sushi_snack_platter"
         }
       ]
     },
@@ -1520,9 +1496,6 @@
             "flag:veg_opt_6"
           ],
           "goto": "end_veg_vegan_burrito"
-        },
-        {
-          "default": "end_veg_falafel_bowl"
         }
       ]
     },
@@ -1636,9 +1609,6 @@
             "flag:chicken_opt_6"
           ],
           "goto": "chicken_redirect_noodle_or_handheld"
-        },
-        {
-          "default": "end_chicken_korean_fried_chicken"
         }
       ]
     },
@@ -1752,9 +1722,6 @@
             "flag:sea_opt_6"
           ],
           "goto": "end_sea_spicy_shrimp_noodles"
-        },
-        {
-          "default": "end_sea_salmon_sushi"
         }
       ]
     },
