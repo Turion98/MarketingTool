@@ -1,0 +1,113 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.22);
+  color: #c7d2fe;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover,
+.root:hover .iconBtn {
+  background: rgba(129, 140, 248, 0.38);
+  color: #eef2ff;
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid rgba(165, 180, 252, 0.85);
+  outline-offset: 2px;
+}
+
+.iconSvg {
+  width: 0.72rem;
+  height: 0.72rem;
+  display: block;
+}
+
+.panel {
+  position: absolute;
+  z-index: 80;
+  /* Enyhe átfedés az ikonnal: így az egér útja nem esik ki a hover zónából */
+  top: calc(100% - 0.2rem);
+  right: 0;
+  width: min(22rem, calc(100vw - 2.5rem));
+  max-height: min(70vh, 26rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #141822;
+  box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.55);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #e2e8f0;
+  text-align: left;
+  pointer-events: auto;
+}
+
+.panel strong {
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.panel em {
+  font-style: normal;
+  font-weight: 600;
+  color: #c7d2fe;
+}
+
+.section {
+  margin: 0 0 0.65rem;
+  padding: 0 0 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionTitle {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+}
+
+.sectionBody {
+  margin: 0;
+}
+
+.sectionBody + .sectionBody {
+  margin-top: 0.45rem;
+}
+
+.panel code {
+  font-size: 0.82em;
+  padding: 0.1rem 0.28rem;
+  border-radius: 0.22rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  color: #e0e7ff;
+}

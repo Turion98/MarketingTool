@@ -53,6 +53,8 @@ import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import StoryMetaInspector from "./StoryMetaInspector";
 import EndPageIdSegments from "./EndPageIdSegments";
 import s from "./pageInspector.module.scss";
+import { EditorInfoHoverPanel } from "./EditorInfoHoverPanel";
+import hi from "./editorInfoHoverPanel.module.scss";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -189,7 +191,8 @@ function mergeFragRowsIntoPage(
 type ChoiceForm = {
   text: string;
   next: string;
-  unlockIds: string;
+  /** `reward.unlockFragments` — külön blokk minden fragment-azonosítóhoz. */
+  unlockFragments: string[];
   /** `reward.locks` — scorecard / routing; csak automatikus ID (jelölőnégyzet). */
   lockIds: string;
 };
@@ -220,7 +223,7 @@ function readChoices(page: Record<string, unknown>): ChoiceForm[] {
     return {
       text: String(o.text ?? o.label ?? ""),
       next: String(o.next ?? ""),
-      unlockIds: uf.join(", "),
+      unlockFragments: uf.map((x) => String(x).trim()).filter(Boolean),
       lockIds: readLockIdsFromReward(r),
     };
   });
@@ -232,10 +235,7 @@ function buildChoiceRecord(row: ChoiceForm, prev: unknown): Record<string, unkno
   o.text = row.text;
   o.next = row.next;
 
-  const ids = row.unlockIds
-    .split(/[,;\s]+/)
-    .map((x) => x.trim())
-    .filter(Boolean);
+  const ids = row.unlockFragments.map((x) => x.trim()).filter(Boolean);
   const lockParts = row.lockIds
     .split(/[,;\s]+/)
     .map((x) => x.trim())
@@ -268,7 +268,7 @@ function emptyChoiceForm(): ChoiceForm {
   return {
     text: "",
     next: "",
-    unlockIds: "",
+    unlockFragments: [],
     lockIds: "",
   };
 }
@@ -577,7 +577,6 @@ export default function PageInspector({
     { ...EMPTY_RUNES_OPTION },
   ]);
   const [runesMaxAttempts, setRunesMaxAttempts] = useState("3");
-  const [runesMode, setRunesMode] = useState("set");
   const [runesFeedback, setRunesFeedback] = useState("keep");
   const [runesSuccessGoto, setRunesSuccessGoto] = useState("");
   const [runesFailGoto, setRunesFailGoto] = useState("");
@@ -627,7 +626,7 @@ export default function PageInspector({
   const fragmentPicklistSections = useMemo(() => {
     const sections = buildFragmentPicklistSections(
       draftStory,
-      choices.map((c) => c.unlockIds)
+      choices.map((c) => c.unlockFragments.filter(Boolean).join(", "))
     );
     const extra =
       saveMilestone && selectedPageId?.trim()
@@ -641,6 +640,14 @@ export default function PageInspector({
     const others = sections.others.filter((o) => !milestoneSet.has(o));
     return { milestones, others };
   }, [draftStory, choices, saveMilestone, selectedPageId]);
+
+  const fragmentIdHintOptions = useMemo(
+    () => [
+      ...fragmentPicklistSections.milestones,
+      ...fragmentPicklistSections.others,
+    ],
+    [fragmentPicklistSections]
+  );
 
   const endCategoryPicklist = useMemo(
     () => collectEndCategoryKeysFromStory(draftStory),
@@ -686,7 +693,6 @@ export default function PageInspector({
       setRunesText("");
       setRunesOptionRows([{ ...EMPTY_RUNES_OPTION }]);
       setRunesMaxAttempts("3");
-      setRunesMode("set");
       setRunesFeedback("keep");
       setRunesSuccessGoto("");
       setRunesFailGoto("");
@@ -808,7 +814,6 @@ export default function PageInspector({
           typeof page.maxAttempts === "number" ? page.maxAttempts : 3
         )
       );
-      setRunesMode(typeof page.mode === "string" ? page.mode : "set");
       setRunesFeedback(
         typeof page.feedback === "string" ? page.feedback : "keep"
       );
@@ -834,7 +839,6 @@ export default function PageInspector({
       setRunesText("");
       setRunesOptionRows([{ ...EMPTY_RUNES_OPTION }]);
       setRunesMaxAttempts("3");
-      setRunesMode("set");
       setRunesFeedback("keep");
       setRunesSuccessGoto("");
       setRunesFailGoto("");
@@ -1185,11 +1189,9 @@ export default function PageInspector({
         text: runesText,
         options,
         answer,
-        maxAttempts: Math.max(1, Number.parseInt(runesMaxAttempts, 10) || 3),
         minPick: minPickVal,
         maxPick: maxPickVal,
-        mode: runesMode,
-        feedback: runesFeedback,
+        mode: "set",
         type: "puzzle",
         kind: "runes",
         onSuccess: nextOs,
@@ -1198,6 +1200,17 @@ export default function PageInspector({
           goto: failGotoOut,
         },
       };
+      if (runesRequiresCorrect) {
+        nextP = {
+          ...nextP,
+          maxAttempts: Math.max(1, Number.parseInt(runesMaxAttempts, 10) || 3),
+          feedback: runesFeedback,
+        };
+      } else {
+        const rp = nextP as Record<string, unknown>;
+        delete rp.maxAttempts;
+        delete rp.feedback;
+      }
     } else if (isEditorRoutePage) {
       const sid = routeSourcePageId.trim();
       const sp = sid ? findPageInStoryDocument(draftStory, sid) : null;
@@ -1211,8 +1224,7 @@ export default function PageInspector({
           const { minPick, maxPick } = runesPickBounds(
             sp as Record<string, unknown>
           );
-          const mode = sp.mode === "ordered" ? "ordered" : "set";
-          keys = generatePuzzleRouteKeys(n, minPick, maxPick, mode);
+          keys = generatePuzzleRouteKeys(n, minPick, maxPick, "set");
         }
       }
       const out: Record<string, string> = {};
@@ -1379,7 +1391,6 @@ export default function PageInspector({
     runesText,
     runesOptionRows,
     runesMaxAttempts,
-    runesMode,
     runesFeedback,
     runesSuccessGoto,
     runesFailGoto,
@@ -1411,7 +1422,7 @@ export default function PageInspector({
       {
         text: "",
         next: "",
-        unlockIds: "",
+        unlockFragments: [],
         lockIds: "",
       },
     ]);
@@ -1473,8 +1484,7 @@ export default function PageInspector({
     const { minPick, maxPick } = runesPickBounds(
       sp as Record<string, unknown>
     );
-    const mode = sp.mode === "ordered" ? "ordered" : "set";
-    return generatePuzzleRouteKeys(n, minPick, maxPick, mode);
+    return generatePuzzleRouteKeys(n, minPick, maxPick, "set");
   }, [draftStory, routeSourcePageId]);
 
   const routeKeysSig = useMemo(
@@ -1722,7 +1732,7 @@ export default function PageInspector({
                     ? sel
                     : knownPageIds.length
                       ? "— Válassz oldalt —"
-                      : "Nincs oldal a sztoriban"}
+                      : "Nincs oldal a projektben"}
                 </span>
               </button>
             )}
@@ -1805,10 +1815,17 @@ export default function PageInspector({
         </div>
         <div className={s.body}>
           {renderPageIdUnifiedBar()}
-          <p className={s.hintSmall}>
-            <strong>Oldalváltás:</strong> kattints az ID sávra vagy a ▼ ikonra — megjelenik a
-            lista. Ugyanezt elérheted, ha közvetlenül a vászonon választasz kártyát.
-          </p>
+          <div className={s.inspectorControlRow}>
+            <p className={s.inspectorHintRowTitle}>Oldalváltás</p>
+            <EditorInfoHoverPanel ariaLabel="Oldalváltás: útmutató">
+              <div className={hi.section}>
+                <p className={hi.sectionBody}>
+                  <strong>Oldalváltás:</strong> kattints az ID sávra vagy a ▼ ikonra — megjelenik
+                  a lista. Ugyanezt elérheted, ha közvetlenül a vászonon választasz kártyát.
+                </p>
+              </div>
+            </EditorInfoHoverPanel>
+          </div>
         </div>
       </div>
     );
@@ -1832,8 +1849,8 @@ export default function PageInspector({
         <div className={s.body}>
           {renderPageIdUnifiedBar()}
           <p className={s.err}>
-            Ez az ID nincs a betöltött sztoriban: {selectedPageId}. Válassz másik oldalt a
-            listából, vagy hozz létre újat a vásznon.
+            Ez az oldal-ID nem található a betöltött projektben: {selectedPageId}. Válassz
+            másikat a listából, vagy hozz létre új oldalt a vásznon.
           </p>
         </div>
       </div>
@@ -1923,86 +1940,151 @@ export default function PageInspector({
               </div>
             ) : null}
             {renderPageIdUnifiedBar()}
-            {(() => {
-              const hints: string[] = [];
-              if (onSelectPageInEditor) {
-                hints.push(
-                  "Egy kattintás az ID sávra: megnyílik a lista (▼). A választás szinkronban van a vászonnal és az előnézettel."
-                );
-              }
-              if (onRenamePageId && !pageIdError) {
-                hints.push(
-                  "Dupla kattintás az ID mezőn: átnevezés. Ugyanezt megteheted a kártya fejlécében is a vásznon."
-                );
-              }
-              if (onSelectPageInEditor && pageIdError) {
-                hints.push("Ha elakadtál, válassz másik oldalt a listából vagy a ▼ menüből.");
-              }
-              if (!hints.length) return null;
-              return <p className={s.hintSmall}>{hints.join(" ")}</p>;
-            })()}
+            <div className={s.inspectorControlRow}>
+              <p className={s.inspectorHintRowTitle}>Oldal-ID és átnevezés</p>
+              <EditorInfoHoverPanel ariaLabel="Oldal-ID: részletes útmutató">
+                {onSelectPageInEditor ? (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Lista és szinkron</h4>
+                    <p className={hi.sectionBody}>
+                      Egy kattintás az ID sávra: megnyílik a lista (▼). A választás szinkronban van
+                      a vászonnal és az előnézettel.
+                    </p>
+                  </div>
+                ) : null}
+                {onRenamePageId && !pageIdError ? (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Átnevezés</h4>
+                    <p className={hi.sectionBody}>
+                      Dupla kattintás az ID mezőn: átnevezés. Ugyanezt megteheted a kártya
+                      fejlécében is a vásznon.
+                    </p>
+                  </div>
+                ) : null}
+                {onSelectPageInEditor && pageIdError ? (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Ha elakadtál</h4>
+                    <p className={hi.sectionBody}>
+                      Válassz másik oldalt a listából vagy a ▼ menüből.
+                    </p>
+                  </div>
+                ) : null}
+              </EditorInfoHoverPanel>
+            </div>
           </div>
         ) : null}
 
         {milestoneEligible ? (
           <>
-            <label className={s.saveMilestoneRow}>
-              <input
-                type="checkbox"
-                checked={saveMilestone}
-                onChange={(e) => setSaveMilestone(e.target.checked)}
-              />
-              <span>Milestone (haladás mentése)</span>
-              {saveMilestone && selectedPageId ? (
-                <span className={s.saveMilestoneHint}>
-                  Automatikus fragment:{" "}
-                  <code>{canonicalMilestoneFragmentId(`${selectedPageId}_DONE`)}</code> —
-                  amikor a játékos ide ér, feloldódik ez a szövegblokk. Mentéskor a milestone
-                  flag és a fragment bank is frissül.
-                </span>
-              ) : null}
-            </label>
-            {choiceLockBulkEligible ? (
-              <label className={s.saveMilestoneRow}>
+            <div className={s.inspectorControlRow}>
+              <label
+                className={`${s.saveMilestoneRow} ${s.saveMilestoneRowCompact}`}
+              >
                 <input
                   type="checkbox"
-                  ref={(el) => {
-                    if (el) {
-                      el.indeterminate =
-                        anyChoiceLocks && !allChoiceLocksOn && choices.length > 0;
-                    }
-                  }}
-                  checked={allChoiceLocksOn}
-                  onChange={(e) => {
-                    const on = e.target.checked;
-                    if (on) {
-                      setChoices((rows) =>
-                        rows.map((row, j) => {
-                          const has =
-                            row.text.trim().length > 0 ||
-                            row.next.trim().length > 0;
-                          if (!has) return { ...row, lockIds: "" };
-                          return {
-                            ...row,
-                            lockIds: defaultChoiceLockId(lockIdBase, j),
-                          };
-                        })
-                      );
-                    } else {
-                      setChoices((rows) =>
-                        rows.map((row) => ({ ...row, lockIds: "" }))
-                      );
-                    }
-                  }}
+                  checked={saveMilestone}
+                  onChange={(e) => setSaveMilestone(e.target.checked)}
                 />
-                <span>Lock all option ID</span>
-                <span className={s.saveMilestoneHint}>
-                  Bekapcsolva minden választáshoz generálunk stabil{" "}
-                  <code>reward.locks</code> azonosítót (<code>{lockIdBase}_L1</code> …), hogy
-                  később scorecard / routing szabályokra hivatkozhass. Kikapcsolva minden lock
-                  törlődik; opciónként lent külön is ki/be kapcsolhatod (az ID-k fixek maradnak).
-                </span>
+                <span>Milestone (haladás mentése)</span>
               </label>
+              <EditorInfoHoverPanel ariaLabel="Milestone: részletes útmutató">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Mire való?</h4>
+                  <p className={hi.sectionBody}>
+                    Ha bekapcsolod, ez az oldal <strong>haladási pontnak</strong> számít: a
+                    rendszer jelezheti, hogy a látogató elérte. A folyamat többi része (például
+                    feltételes szöveg vagy pontozó) erre a jelre éphet.
+                  </p>
+                  <p className={hi.sectionBody}>
+                    Bekapcsolás után a látogató megérkezésekor megjelenhet egy rövid{" "}
+                    <strong>kész-jelző</strong> szöveg is — ha a projektben ehhez az azonosítóhoz
+                    tartalom tartozik. Mentéskor a pipa együtt mentődik a projekttel.
+                  </p>
+                </div>
+                {selectedPageId?.trim() ? (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Kész-jelző azonosító</h4>
+                    <p className={hi.sectionBody}>
+                      Ehhez az oldalhoz tartozó név:{" "}
+                      <code>
+                        {canonicalMilestoneFragmentId(`${selectedPageId.trim()}_DONE`)}
+                      </code>
+                      . Ezt az azonosítót használhatod fragment-feltételeknél vagy a lap „Fragment
+                      feloldás” blokkjainál.
+                    </p>
+                  </div>
+                ) : (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Kész-jelző azonosító</h4>
+                    <p className={hi.sectionBody}>
+                      Adj ennek az oldalnak egy végleges azonosítót — utána itt látszik majd a
+                      hozzá tartozó <code>…_DONE</code> név is.
+                    </p>
+                  </div>
+                )}
+              </EditorInfoHoverPanel>
+            </div>
+            {choiceLockBulkEligible ? (
+              <div className={s.inspectorControlRow}>
+                <label
+                  className={`${s.saveMilestoneRow} ${s.saveMilestoneRowCompact}`}
+                >
+                  <input
+                    type="checkbox"
+                    ref={(el) => {
+                      if (el) {
+                        el.indeterminate =
+                          anyChoiceLocks && !allChoiceLocksOn && choices.length > 0;
+                      }
+                    }}
+                    checked={allChoiceLocksOn}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      if (on) {
+                        setChoices((rows) =>
+                          rows.map((row, j) => {
+                            const has =
+                              row.text.trim().length > 0 ||
+                              row.next.trim().length > 0;
+                            if (!has) return { ...row, lockIds: "" };
+                            return {
+                              ...row,
+                              lockIds: defaultChoiceLockId(lockIdBase, j),
+                            };
+                          })
+                        );
+                      } else {
+                        setChoices((rows) =>
+                          rows.map((row) => ({ ...row, lockIds: "" }))
+                        );
+                      }
+                    }}
+                  />
+                  <span>Minden opcióhoz saját választás-címke</span>
+                </label>
+                <EditorInfoHoverPanel ariaLabel="Választás-címkék tömegben: útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mire való?</h4>
+                    <p className={hi.sectionBody}>
+                      Bekapcsolva minden <strong>kitöltött</strong> választáshoz kapsz egy rögzített
+                      nevet — például <code>{lockIdBase}_L1</code>, majd sorban a következő gombokhoz
+                      hasonló végződéssel.
+                    </p>
+                    <p className={hi.sectionBody}>
+                      Ezeket a neveket a <strong>pontozó</strong> lépés szabályai ismerik fel: így
+                      meg tudod mondani, „ha ezt a gombot nyomták, akkor ez a szabály teljesül”,
+                      és merre vigye tovább a folyamatot.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Kikapcsolás és egyenként</h4>
+                    <p className={hi.sectionBody}>
+                      Ha kikapcsolod a tömeges pipát, az összes ilyen név törlődik. Lent, az egyes
+                      opcióknál továbbra is be- vagy kikapcsolhatod a címkét egyenként.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+              </div>
             ) : null}
           </>
         ) : null}
@@ -2035,16 +2117,44 @@ export default function PageInspector({
             </label>
 
             <div className={s.blockHead}>
-              <span>Fragment feloldás (szövegblokkok)</span>
-              <button type="button" className={s.btnSm} onClick={addFragRow}>
-                + blokk
-              </button>
+              <span className={s.blockHeadGrow}>
+                Fragment feloldás (szövegblokkok)
+              </span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Fragment feloldás: részletes útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mi a fragment?</h4>
+                    <p className={hi.sectionBody}>
+                      <strong>Fragment</strong> = elmentett szövegrészlet, amit egy rövid név (ID)
+                      azonosít. Ha a látogatónál „fel van oldva” ez az ID (például egy választás
+                      után vagy egy lépés elérésekor), a szöveg megjelenhet ezen az oldalon: a fő
+                      szöveg után, vagy helyette — attól függően, mit állítasz be lent.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Hogyan töltöm ki?</h4>
+                    <p className={hi.sectionBody}>
+                      Adj blokkot (+ blokk), válassz ID-t a listából (olyat, ami már létezik a
+                      projektben, vagy amit az opciók „Feloldandó fragmentek” blokkjaiban adsz
+                      meg). A „Tartalom” mezőbe írd a szöveget; mentéskor a szerkesztő elmenti a
+                      projektbe.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mód: hozzáfűzés / felülírás</h4>
+                    <p className={hi.sectionBody}>
+                      <em>Hozzáfűzés</em> (append after) = a fő szöveg után jön a plusz szöveg; az
+                      „Elválasztó” mezőbe írhatsz sortörést vagy rövid kötőszöveget.{" "}
+                      <em>Felülírás</em> (override) = ha aktív a fragment, csak ez a szöveg látszik a
+                      fő helyen.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button type="button" className={s.btnSm} onClick={addFragRow}>
+                  + blokk
+                </button>
+              </div>
             </div>
-            <p className={s.hintSmall}>
-              <strong>Fragmentek:</strong> csak olyan ID-t válassz, ami már szerepel a
-              történetben vagy most hozod létre az opciók „Mentett fragment id-k” mezőjében.
-              Így elkerülöd az elgépelést, és a mentés ugyanoda írja a szöveget.
-            </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
                 <p className={s.optionCardTitle}>Blokk {idx + 1}</p>
@@ -2087,7 +2197,7 @@ export default function PageInspector({
                     className={s.textarea}
                     rows={2}
                     value={row.text}
-                    placeholder="Itt szerkeszted a fragment szövegét — mentéskor a story.fragments[id].text mezőbe kerül."
+                    placeholder="A fragment szövege — mentéskor a projektbe kerül."
                     onChange={(e) => {
                       const v = e.target.value;
                       setFragRows((r) =>
@@ -2126,10 +2236,55 @@ export default function PageInspector({
             {!isEndPage ? (
               <>
             <div className={s.blockHead}>
-              <span>Opciók (kötelező: szöveg + következő oldal)</span>
-              <button type="button" className={s.btnSm} onClick={addChoice}>
-                + opció
-              </button>
+              <span className={s.blockHeadGrow}>
+                Opciók (kötelező: szöveg + következő oldal)
+              </span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Opciók és választás-címke: részletes útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Opciók</h4>
+                    <p className={hi.sectionBody}>
+                      Minden sor egy gomb a látogatónak. Az <strong>Opció szöveg</strong> a gomb
+                      felirata. A <strong>Következő oldal</strong> mezőbe annak a lépésnek az
+                      azonosítóját írd, amerre továbbmegy a folyamat — legyen ilyen oldal a
+                      projektben (vagy hozd létre a vásznon), különben az előnézet hibára futhat.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Feloldandó fragmentek (blokkonként)</h4>
+                    <p className={hi.sectionBody}>
+                      Minden <strong>+ fragment</strong> egy külön mezőt ad: ide{" "}
+                      <strong>szabadon begépelheted</strong> a fragment azonosítót, vagy a
+                      böngésző javaslatai közül választhatsz, ha már szerepel a projektben. Több
+                      fragmenthez több blokk — nem kell vesszővel egy sorba írni.
+                    </p>
+                    <p className={hi.sectionBody}>
+                      A szöveg magát a lap felső „Fragment feloldás” részén szerkesztheted; a
+                      Haladó nézetben is kiegészíthető. Mentéskor a megadott azonosítók ehhez a
+                      választáshoz kerülnek — a látogató kattintása után a következő lépéseken ezek
+                      válhatnak elérhetővé.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Választás címkéje</h4>
+                    <p className={hi.sectionBody}>
+                      A <strong>pontozó</strong> lépésnél gyakran azt szeretnéd: „ha a látogató ezt
+                      a gombot választotta, akkor ez a szabály teljesül”. Ehhez a rendszernek egy{" "}
+                      <strong>állandó nevet</strong> kell adnia minden ilyen gombnak — ezt hívjuk
+                      választás-címkének. Ha bekapcsolod a jelölőnégyzetet, megkapod ezt a nevet
+                      (lent a kártyán látszik is). A pontozó szabályainál ezt a nevet választhatod
+                      feltételnek.
+                    </p>
+                    <p className={hi.sectionBody}>
+                      Ha nincs pontozó a projektben, és csak továbbnavigálsz más oldalakra,
+                      általában <strong>nem kell</strong> címke — elég a következő oldal mező.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button type="button" className={s.btnSm} onClick={addChoice}>
+                  + opció
+                </button>
+              </div>
             </div>
             {choices.map((ch, idx) => (
               <div key={idx} className={s.choiceCard}>
@@ -2161,23 +2316,83 @@ export default function PageInspector({
                     }}
                   />
                 </label>
-                <label className={s.field}>
-                  <span>Mentett fragment id-k (vesszővel)</span>
-                  <input
-                    className={s.input}
-                    value={ch.unlockIds}
-                    placeholder="pl. A1_DONE, B_DONE"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setChoices((c) =>
-                        c.map((x, j) => (j === idx ? { ...x, unlockIds: v } : x))
-                      );
-                    }}
-                  />
-                </label>
-                <p className={s.hintSmall}>
-                  Jutalom: <code>reward.unlockFragments</code> (szabad szöveg).
-                </p>
+                <div className={s.choiceUnlockBlock}>
+                  <div className={s.blockHead}>
+                    <span>Feloldandó fragmentek</span>
+                    <button
+                      type="button"
+                      className={s.btnSm}
+                      onClick={() =>
+                        setChoices((c) =>
+                          c.map((x, j) =>
+                            j === idx
+                              ? { ...x, unlockFragments: [...x.unlockFragments, ""] }
+                              : x
+                          )
+                        )
+                      }
+                    >
+                      + fragment
+                    </button>
+                  </div>
+                  {ch.unlockFragments.length === 0 ? (
+                    <p className={s.hintSmall}>
+                      Ha ehhez a gombhoz szeretnél szövegrészletet feloldani, adj hozzá legalább
+                      egy fragment blokkot.
+                    </p>
+                  ) : null}
+                  {ch.unlockFragments.map((fragId, fragIdx) => (
+                    <div key={fragIdx} className={s.fragCard}>
+                      <p className={s.optionCardTitle}>Fragment {fragIdx + 1}</p>
+                      <label className={s.field}>
+                        <span>Fragment azonosító</span>
+                        <input
+                          className={s.input}
+                          value={fragId}
+                          list="editor-fragment-id-hints"
+                          spellCheck={false}
+                          placeholder="azonosító — gépelés vagy javaslat"
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setChoices((c) =>
+                              c.map((x, j) => {
+                                if (j !== idx) return x;
+                                const next = [...x.unlockFragments];
+                                next[fragIdx] = v;
+                                return { ...x, unlockFragments: next };
+                              })
+                            );
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className={s.btnGhost}
+                        onClick={() =>
+                          setChoices((c) =>
+                            c.map((x, j) => {
+                              if (j !== idx) return x;
+                              return {
+                                ...x,
+                                unlockFragments: x.unlockFragments.filter(
+                                  (_, fi) => fi !== fragIdx
+                                ),
+                              };
+                            })
+                          )
+                        }
+                      >
+                        Fragment blokk törlése
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {!narrativeMultiChoiceUi ? (
+                  <p className={s.hintSmall}>
+                    Mentéskor a fenti blokkokban megadott azonosítók ehhez a választáshoz
+                    kerülnek — a látogató választása után ezek a szövegek válhatnak elérhetővé.
+                  </p>
+                ) : null}
                 <label className={s.saveMilestoneRow}>
                   <input
                     type="checkbox"
@@ -2198,7 +2413,7 @@ export default function PageInspector({
                       );
                     }}
                   />
-                  <span>reward.locks (automatikus lock ID)</span>
+                  <span>Választás címkéje (automatikus név)</span>
                   {ch.lockIds.trim() ? (
                     <code className={s.choiceLockIdPreview}>{ch.lockIds.trim()}</code>
                   ) : null}
@@ -2217,17 +2432,23 @@ export default function PageInspector({
               </>
             ) : (
               <>
-                {endCtaInlineLocked ? (
-                  <p className={s.hintSmall}>
-                    Az <code>endMeta.cta</code> egy beágyazott objektum — a JSON
-                    nézetben szerkeszthető. Preset kulcs választásával felülírhatod
-                    string hivatkozásra.
-                  </p>
-                ) : null}
                 <label className={s.field}>
-                  <span>
-                    CTA preset (<code>meta.ctaPresets</code> kulcs)
-                  </span>
+                  <div className={s.blockHead}>
+                    <span className={s.blockHeadGrow}>
+                      CTA gomb (projektbe mentett előbeállítás)
+                    </span>
+                    {endCtaInlineLocked ? (
+                      <EditorInfoHoverPanel ariaLabel="Végoldal CTA: beágyazott gomb">
+                        <div className={hi.section}>
+                          <p className={hi.sectionBody}>
+                            Ennél a végoldalnál a gomb részletei be vannak ágyazva — a Haladó
+                            nézetben szerkeszthetők. Preset választással egyszerűbb, előre mentett
+                            gombot használhatsz.
+                          </p>
+                        </div>
+                      </EditorInfoHoverPanel>
+                    ) : null}
+                  </div>
                   <select
                     className={s.input}
                     value={endCtaPresetKey}
@@ -2237,9 +2458,7 @@ export default function PageInspector({
                       if (e.target.value.trim()) setEndCtaInlineLocked(false);
                     }}
                   >
-                    <option value="">
-                      — alapértelmezett (meta.endDefaultCta / motor) —
-                    </option>
+                    <option value="">— alapértelmezett vég-gomb a projekt beállításai szerint —</option>
                     {ctaPresetKeys.map((k) => (
                       <option key={k} value={k}>
                         {k}
@@ -2252,10 +2471,28 @@ export default function PageInspector({
           </>
         ) : isRiddlePage ? (
           <>
-            <p className={s.hintSmall}>
-              Riddle oldal felépítése: először a történet szövege és a fragment blokkok, alatta
-              a kvíz kérdés, válaszok és elágazások.
-            </p>
+            <div className={s.inspectorControlRow}>
+              <p className={s.inspectorHintRowTitle}>Kvíz (riddle) oldal</p>
+              <EditorInfoHoverPanel ariaLabel="Kvíz oldal: áttekintés és lánc">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Hogyan épül fel?</h4>
+                  <p className={hi.sectionBody}>
+                    Egy lapon összerakhatsz bevezető szöveget, opcionálisan feltételes plusz
+                    szövegeket (fragmentek), majd egy kérdést válaszgombokkal. A látogató először a
+                    szöveget látja, utána a kérdést. A <strong>Helyesnek jelölt</strong> sor a jó
+                    válasz; attól függően, mit állítasz be lent, más-más következő oldal következhet.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Több kérdés egymás után</h4>
+                  <p className={hi.sectionBody}>
+                    Ha egymásra kötött kvíz-lépcsőt építesz, a köztes lépéseknél minden válasz
+                    ugyanarra a következő kérdésre visz. Az utolsó lépésnél állíthatod a pontszám
+                    szerinti vagy elfogadás szerinti kimenetet.
+                  </p>
+                </div>
+              </EditorInfoHoverPanel>
+            </div>
             <label className={s.field}>
               <span>Fő szöveg (blokkok / default)</span>
               <textarea
@@ -2266,15 +2503,47 @@ export default function PageInspector({
               />
             </label>
             <div className={s.blockHead}>
-              <span>Fragment feloldás</span>
-              <button type="button" className={s.btnSm} onClick={addFragRow}>
-                + blokk
-              </button>
+              <span className={s.blockHeadGrow}>Fragment feloldás</span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Fragment feloldás (kvíz): útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mi a fragment?</h4>
+                    <p className={hi.sectionBody}>
+                      <strong>Fragment</strong> = elmentett szövegrészlet, amit egy rövid név (ID)
+                      azonosít. Ha a látogatónál „fel van oldva” ez az ID, a szöveg megjelenhet ezen
+                      az oldalon: a fő szöveg után, vagy helyette — attól függően, mit állítasz be
+                      lent.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Hogyan töltöm ki?</h4>
+                    <p className={hi.sectionBody}>
+                      Adj blokkot (+ blokk), válassz ID-t a listából. A „Tartalom” mezőbe írd a
+                      szöveget; mentéskor a szerkesztő elmenti a projektbe.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mód: hozzáfűzés / felülírás</h4>
+                    <p className={hi.sectionBody}>
+                      <em>Hozzáfűzés</em> = a fő szöveg után jön a plusz szöveg; az „Elválasztó”
+                      mezőbe írhatsz sortörést vagy rövid kötőszöveget. <em>Felülírás</em> = ha aktív
+                      a fragment, csak ez a szöveg látszik a fő helyen.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Kvízre tipikusan</h4>
+                    <p className={hi.sectionBody}>
+                      A riddle oldalon a blokkok ugyanúgy működnek, mint a narratív lapokon: a
+                      kiválasztott ID szövege jelenik meg a feltétel teljesülésekor. Ide szokták a
+                      „ha már megvan a tipp” extra bekezdéseket tenni, mielőtt a kvíz megjelenne.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button type="button" className={s.btnSm} onClick={addFragRow}>
+                  + blokk
+                </button>
+              </div>
             </div>
-            <p className={s.hintSmall}>
-              Ugyanaz a fragment-választó logika érvényes, mint a narratív oldalakon: csak
-              létező ID-kat adj meg, vagy hozd létre előbb az opciók jutalom mezőiben.
-            </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
                 <p className={s.optionCardTitle}>Blokk {idx + 1}</p>
@@ -2336,15 +2605,30 @@ export default function PageInspector({
                 </button>
               </div>
             ))}
-            <label className={s.field}>
-              <span>Kvíz kérdés</span>
+            <div className={s.blockHead}>
+              <label htmlFor="inspector-riddle-question" className={s.blockHeadGrow}>
+                Kvíz kérdés
+              </label>
+              <EditorInfoHoverPanel ariaLabel="Kvíz kérdés megfogalmazása">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Hol látszik?</h4>
+                  <p className={hi.sectionBody}>
+                    A kérdés szövege a válaszgombok <strong>felett</strong> jelenik meg. Fogalmazz
+                    egyértelműen (pl. „Melyik állítás igaz?”).
+                  </p>
+                </div>
+              </EditorInfoHoverPanel>
+            </div>
+            <div className={s.field}>
               <textarea
+                id="inspector-riddle-question"
                 className={s.textarea}
                 value={riddleQuestion}
                 onChange={(e) => setRiddleQuestion(e.target.value)}
                 rows={2}
+                aria-label="Kvíz kérdés"
               />
-            </label>
+            </div>
             {riddleChainCtx && !riddleChainCtx.isLast ? (
               <p className={s.hintSmall}>
                 Ez a lánc köztes kérdése: a kimeneteket nem lehet szétválasztani —
@@ -2356,14 +2640,28 @@ export default function PageInspector({
               </p>
             ) : null}
             <div className={s.blockHead}>
-              <span>Válaszlehetőségek (soronként, mint a több opciós oldal)</span>
-              <button
-                type="button"
-                className={s.btnSm}
-                onClick={addRiddleOptionRow}
-              >
-                + opció
-              </button>
+              <span className={s.blockHeadGrow}>
+                Válaszlehetőségek (soronként, mint a több opciós oldal)
+              </span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Válaszlehetőségek: útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Válaszok</h4>
+                    <p className={hi.sectionBody}>
+                      Minden sor egy gomb. Pontosan egy sort jelölj <strong>Helyesnek</strong> — a
+                      rendszer ezt tekinti jó válasznak. Legalább két lehetőséget adj; a felirat
+                      lehet rövid („A”, „B”) vagy hosszabb mondat.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button
+                  type="button"
+                  className={s.btnSm}
+                  onClick={addRiddleOptionRow}
+                >
+                  + opció
+                </button>
+              </div>
             </div>
             {riddleOptionRows.map((row, idx) => {
               const ci = Math.min(
@@ -2431,22 +2729,45 @@ export default function PageInspector({
                 </div>
               );
             })}
-            <label className={s.field}>
-              <span>Helyes válasz címke (visszajelzés)</span>
+            <div className={s.blockHead}>
+              <label htmlFor="inspector-riddle-correct-label" className={s.blockHeadGrow}>
+                Helyes válasz címke (visszajelzés)
+              </label>
+              <EditorInfoHoverPanel ariaLabel="Helyes válasz címke">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Opcionális üzenet</h4>
+                  <p className={hi.sectionBody}>
+                    Rövid szöveg jó válasz esetén (pl. „Köszönjük!”). Üresen hagyva az előnézet az
+                    alapértelmezett visszajelzést használhatja.
+                  </p>
+                </div>
+              </EditorInfoHoverPanel>
+            </div>
+            <div className={s.field}>
               <input
+                id="inspector-riddle-correct-label"
                 className={s.input}
                 value={riddleCorrectLabel}
                 onChange={(e) => setRiddleCorrectLabel(e.target.value)}
+                aria-label="Helyes válasz címke (visszajelzés)"
               />
-            </label>
+            </div>
             {riddleChainCtx?.isLast ? (
               <>
-                <p className={s.hintSmall}>
-                  Csak a lánc utolsó kérdésénél állítható a kimenet: összesített
-                  pont (score) szerint. „Nem elfogadva” mindig ide mutat:{" "}
-                  <code>{riddleChainCtx.retryPageId}</code>. Elfogadott ágnál egy
-                  listából választhatsz bármely oldalt vagy vég (end) oldalt.
-                </p>
+                <div className={s.blockHead}>
+                  <span className={s.blockHeadGrow}>Utolsó kérdés kimenetei</span>
+                  <EditorInfoHoverPanel ariaLabel="Utolsó kérdés kimenetei: útmutató">
+                    <div className={hi.section}>
+                      <h4 className={hi.sectionTitle}>Pontszám és elfogadás</h4>
+                      <p className={hi.sectionBody}>
+                        Pontszám szerint választhatsz céloldalt. A <strong>Nem elfogadva</strong>{" "}
+                        eset mindig erre az oldalra visz:{" "}
+                        <strong>{riddleChainCtx.retryPageId}</strong>. Az <strong>Elfogadva</strong>{" "}
+                        soroknál válassz cél lépést vagy záró oldalt.
+                      </p>
+                    </div>
+                  </EditorInfoHoverPanel>
+                </div>
                 {riddleScoreExitRows.map((row) => (
                   <div key={row.scoreLevel} className={s.riddleScoreCard}>
                     <div className={s.blockHead}>
@@ -2513,7 +2834,7 @@ export default function PageInspector({
             {!riddleChainCtx ? (
               <>
                 <label className={s.field}>
-                  <span>nextSwitch változó (pl. correct, score)</span>
+                  <span>Válasz típus neve (például: jó / rossz / pont)</span>
                   <input
                     className={s.input}
                     value={riddleSwitchKey}
@@ -2521,19 +2842,33 @@ export default function PageInspector({
                   />
                 </label>
                 <div className={s.blockHead}>
-                  <span>Ágak → cél oldal (cases)</span>
-                  <button
-                    type="button"
-                    className={s.btnSm}
-                    onClick={addRiddleCase}
-                  >
-                    + ág
-                  </button>
+                  <span className={s.blockHeadGrow}>Ágak → cél oldal (cases)</span>
+                  <div className={s.blockHeadEnd}>
+                    <EditorInfoHoverPanel ariaLabel="Önálló kvíz: ágak és következő oldal">
+                      <div className={hi.section}>
+                        <h4 className={hi.sectionTitle}>Önálló kvíz lépés</h4>
+                        <p className={hi.sectionBody}>
+                          A válasz után a rendszer egy rövid név alapján választ következő oldalt
+                          (például „jó válasz” / „rossz válasz” / pontérték). A fenti mezőbe írd ezt a
+                          nevet. Az „Ágak” táblázatban soronként add meg: milyen névhez melyik
+                          következő lépés tartozzon. Érdemes lennie egy „minden más” sorodnak is,
+                          ha nem akarsz elakadást.
+                        </p>
+                      </div>
+                    </EditorInfoHoverPanel>
+                    <button
+                      type="button"
+                      className={s.btnSm}
+                      onClick={addRiddleCase}
+                    >
+                      + ág
+                    </button>
+                  </div>
                 </div>
                 {riddleCaseRows.map((row, idx) => (
                   <div key={idx} className={s.choiceCard}>
                     <label className={s.field}>
-                      <span>Case kulcs (pl. true, false, 3, __default)</span>
+                      <span>Ág neve (például: jó, rossz, 3, alapértelmezett)</span>
                       <input
                         className={s.input}
                         value={row.key}
@@ -2577,6 +2912,68 @@ export default function PageInspector({
           </>
         ) : isRunesPage ? (
           <>
+            <div className={s.inspectorControlRow}>
+              <p className={s.inspectorHintRowTitle}>Szimbólum-választós feladat (runes)</p>
+              <EditorInfoHoverPanel ariaLabel="Runes puzzle: részletes útmutató">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Áttekintés</h4>
+                  <p className={hi.sectionBody}>
+                    A látogató több elemet jelöl ki <strong>halmaz</strong> módban: a helyes
+                    megoldás elemei tetszőleges sorrendben kijelölhetők. Ha be van kapcsolva a
+                    kötelező megoldás, a rendszer összeveti a kijelölést a helyes elemekkel, és
+                    figyelembe veszi, hány elemet lehet választani. Ha elfogynak a próbák, a
+                    beállított kudarc-lépés következik.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Ajánlott szerkesztési sorrend</h4>
+                  <p className={hi.sectionBody}>
+                    1) instrukció, 2) választható elemek listája és helyes jelölés, 3) kötelező
+                    megoldásnál: próbák száma, hibás próba utáni viselkedés, siker és kudarc ugrás.
+                    Ha később „útvonal” lépést kötsz ehhez, annál a forráslépésnél állítsd be, hogy
+                    erre az oldalra érkezzen a folyamat.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Instrukció mező</h4>
+                  <p className={hi.sectionBody}>
+                    Írd le röviden, mit csináljon a látogató (pl. „Jelöld ki a három helyes
+                    ikont.”).
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Opciók</h4>
+                  <p className={hi.sectionBody}>
+                    Minden sor egy választható elem felirata. Ha a kötelező megoldás be van
+                    kapcsolva, pipáld a helyes sorokat — ezek együtt adják a megoldást. Ha ki van
+                    kapcsolva, minden beküldés sikeresnek számít.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Min./max. választás és kombinációk</h4>
+                  <p className={hi.sectionBody}>
+                    Az „útvonal” lépés kombinációs listája a min./max. választás beállításaitól
+                    függ. Kötelező megoldásnál a beküldésnek pontosan annyi elemet kell
+                    tartalmaznia, amennyit a min./max. mezőkben megadsz.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Kötelező megoldás: hibás próba</h4>
+                  <p className={hi.sectionBody}>
+                    Csak ha be van kapcsolva a kötelező helyes megoldás, állítható a hibás próba
+                    utáni viselkedés (megtartás vagy teljes törlés), a próbák száma és a kudarc
+                    ugrás.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Open mód (kötelező megoldás nélkül)</h4>
+                  <p className={hi.sectionBody}>
+                    Nincs kötelező helyes megoldás: bármely érvényes beküldés sikeresnek számít; a
+                    próbák, a hibás próba utáni viselkedés és a kudarc-lépés nem értelmezett.
+                  </p>
+                </div>
+              </EditorInfoHoverPanel>
+            </div>
             <div className={s.runesModeBar}>
               <p className={s.runesModeBarLabel}>Puzzle működés</p>
               <div className={s.runesModeToggleRow}>
@@ -2601,8 +2998,8 @@ export default function PageInspector({
               </div>
               <p className={s.runesModeHint}>
                 {runesRequiresCorrect
-                  ? "A játékos választását a megjelölt helyes opciókhoz hasonlítjuk (answer tömb). Hibás próbánál a max. próbálkozás és az ugrások érvényesülnek."
-                  : "Nincs helyes/hibás ellenőrzés: ha a játékos beküldi a kiválasztott elemeket, sikeres ág (open mód). A sikertelen próbák utáni céloldal nem értelmezhető — nincs „hibás” beküldés. Opcionálisan használható optionFlagsBase a story JSON-ban."}
+                  ? "Bekapcsolva: a látogató választását a helyesként megjelölt elemekkel vetjük össze. Rossz próbánál csökken a próbák száma, majd a beállított kudarc-lépés következik."
+                  : "Kikapcsolva nincs „rossz” megoldás: bármilyen beküldés a sikeres lépésre visz. A kudarc-lépés ilyenkor nem használható."}
               </p>
               {runesFormError ? (
                 <p className={s.runesFormError}>{runesFormError}</p>
@@ -2674,16 +3071,20 @@ export default function PageInspector({
                 </div>
               </div>
             ))}
-            <label className={s.field}>
-              <span>Max próbálkozás</span>
-              <input
-                className={s.input}
-                type="number"
-                min={1}
-                value={runesMaxAttempts}
-                onChange={(e) => setRunesMaxAttempts(e.target.value)}
-              />
-            </label>
+            {runesRequiresCorrect ? (
+              <>
+                <label className={s.field}>
+                  <span>Max próbálkozás</span>
+                  <input
+                    className={s.input}
+                    type="number"
+                    min={1}
+                    value={runesMaxAttempts}
+                    onChange={(e) => setRunesMaxAttempts(e.target.value)}
+                  />
+                </label>
+              </>
+            ) : null}
             <label className={s.field}>
               <span>Min. választható elemszám (open mód)</span>
               <input
@@ -2706,25 +3107,9 @@ export default function PageInspector({
                 onChange={(e) => setRunesMaxPick(e.target.value)}
               />
             </label>
-            <p className={s.hintSmall}>
-              A puzzle route kombinációk a forrás puzzle min/max és mód (halmaz /
-              sorrend) alapján generálódnak. Graded (helyes válasz) módban a beküldés
-              továbbra is pontosan max elemszámot vár.
-            </p>
-            <label className={s.field}>
-              <span>Választási mód</span>
-              <select
-                className={s.input}
-                value={runesMode}
-                onChange={(e) => setRunesMode(e.target.value)}
-              >
-                <option value="set">Halmaz — helyes elemek bármilyen sorrendben</option>
-                <option value="ordered">Sorrend — a helyes válasz sorrendje számít</option>
-              </select>
-            </label>
-            {runesMode === "set" ? (
+            {runesRequiresCorrect ? (
               <label className={s.field}>
-                <span>Hibás próba után (halmaz mód)</span>
+                <span>Hibás próba után</span>
                 <select
                   className={s.input}
                   value={runesFeedback}
@@ -2739,12 +3124,7 @@ export default function PageInspector({
                   </option>
                 </select>
               </label>
-            ) : (
-              <p className={s.hintSmall}>
-                Sorrend módban a visszajelzés mindig újrapróbálható körökkel dolgozik
-                (nincs „megtartás” állapot).
-              </p>
-            )}
+            ) : null}
             <label className={s.field}>
               <span>Sikeres beküldés után → oldal (id)</span>
               <input
@@ -2754,39 +3134,42 @@ export default function PageInspector({
                 onChange={(e) => setRunesSuccessGoto(e.target.value)}
               />
             </label>
-            <label className={s.field}>
-              <span>Sikertelen / próbák elfogyása után → oldal (id)</span>
-              <input
-                className={`${s.input} ${runesRequiresCorrect && runesFailGoto && !idSet.has(runesFailGoto) ? s.inputWarn : ""}`}
-                value={runesFailGoto}
-                list="editor-known-page-ids"
-                disabled={!runesRequiresCorrect}
-                aria-disabled={!runesRequiresCorrect}
-                onChange={(e) => setRunesFailGoto(e.target.value)}
-              />
-            </label>
-            {!runesRequiresCorrect ? (
-              <p className={s.hintSmall}>
-                Open módban nincs kötelező helyes megoldás, ezért a sikertelen ág nem
-                állítható — mentéskor üres marad.
-              </p>
+            {runesRequiresCorrect ? (
+              <label className={s.field}>
+                <span>Sikertelen / próbák elfogyása után → oldal (id)</span>
+                <input
+                  className={`${s.input} ${runesFailGoto && !idSet.has(runesFailGoto) ? s.inputWarn : ""}`}
+                  value={runesFailGoto}
+                  list="editor-known-page-ids"
+                  onChange={(e) => setRunesFailGoto(e.target.value)}
+                />
+              </label>
             ) : null}
           </>
         ) : isEditorPuzzleRoutePage ? (
           <>
-            <p className={s.hintSmall}>
-              A runes puzzle <strong>sikeres</strong> beküldése után a játék eltárolja
-              a választás kombinációját, majd erre az oldalra érkezve a megfelelő cél
-              oldalra ugrik. Kösd a runes <code>onSuccess.goto</code> mezőjét erre a
-              route oldalra. Open (nincs kötelező helyes) mód + globál kulcs alapján
-              működik.
-            </p>
-            {page.type === "logic" || page.type === "puzzleOutcomeLogic" ? (
-              <p className={s.hintSmall}>
-                Mentéskor az oldal <code>puzzleRoute</code> sémára alakul (nem marad
-                tömbös <code>logic</code> JSON).
-              </p>
-            ) : null}
+            <div className={s.inspectorControlRow}>
+              <p className={s.inspectorHintRowTitle}>Puzzle útvonal (kombinációk)</p>
+              <EditorInfoHoverPanel ariaLabel="Puzzle útvonal: részletes útmutató">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Mit állítasz itt?</h4>
+                  <p className={hi.sectionBody}>
+                    Itt adod meg: a szimbólumos feladat <strong>sikeres</strong> beküldése után
+                    melyik választás-kombináció melyik következő lépésre vigyen. A forráslépésnél
+                    állítsd be, hogy a folyamat erre az „útvonal” lépésre érkezzen. Egyszerűbb
+                    feladatnál elég csak a kombinációk és célok kitöltése.
+                  </p>
+                </div>
+                {page.type === "logic" || page.type === "puzzleOutcomeLogic" ? (
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Régi forma</h4>
+                    <p className={hi.sectionBody}>
+                      Mentéskor a szerkesztő egységes „útvonal” formára rendezi ezt a lépést.
+                    </p>
+                  </div>
+                ) : null}
+              </EditorInfoHoverPanel>
+            </div>
             <label className={s.field}>
               <span>Forrás puzzle (runes oldal)</span>
               <select
@@ -2888,10 +3271,50 @@ export default function PageInspector({
           </>
         ) : isEditorDecisionPage ? (
           <>
-            <p className={s.hintSmall}>
-              Decision node: slotonként primary/fallback opciópár. Ha a primary
-              céloldal már látogatott, a fallback kerül előre.
-            </p>
+            <div className={s.inspectorControlRow}>
+              <p className={s.inspectorHintRowTitle}>Döntési pool</p>
+              <EditorInfoHoverPanel ariaLabel="Döntési pool: részletes útmutató">
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Mi ez a lépés?</h4>
+                  <p className={hi.sectionBody}>
+                    <strong>Döntési pool lépés:</strong> itt egyszerre több, egymás melletti
+                    választási „helyet” (slotot) adsz meg. A látogatónak minden slotból egy gomb
+                    jelenik meg — a gomb felirata és hova visz, az alábbi párokból jön.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Elsődleges és tartalék</h4>
+                  <p className={hi.sectionBody}>
+                    Minden slothoz <strong>két opció</strong> tartozik: egy{" "}
+                    <strong>elsődleges</strong> és egy <strong>tartalék</strong>. Alapból az
+                    elsődleges szöveg és céloldal látszik. Ha a látogató a folyamat során{" "}
+                    <strong>már járt</strong> az elsődleges céloldalon, ugyanazon a helyen a
+                    tartalék szövege és célja kerül elő — így elkerülhető, hogy ugyanazt az ágat
+                    kényszerítve ismételje a rendszer.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Gombok a helyekhez</h4>
+                  <p className={hi.sectionBody}>
+                    Az <strong>„Elsődleges / tartalék csere”</strong> gomb felcseréli a két
+                    opció szerepét egy slotban (melyik számít „alap” útvonalnak, és melyik
+                    tartaléknak). A <strong>„+ hely”</strong> új párost ad hozzá (mindig páros
+                    számú opció kell); felesleges párokat az <strong>„Utolsó hely törlése”</strong>{" "}
+                    távolítja el.
+                  </p>
+                </div>
+                <div className={hi.section}>
+                  <h4 className={hi.sectionTitle}>Választás címkéje és fő szöveg</h4>
+                  <p className={hi.sectionBody}>
+                    A <strong>választás címkéje</strong> (pipa) ugyanazt adja, mint a több opciós
+                    lépéseknél: <strong>állandó nevet</strong> a gombhoz, hogy a{" "}
+                    <strong>pontozó</strong> szabályai tudják, melyik út választódott. Ha nem
+                    építesz pontozót, általában nem kell. A „Fő szöveg” opcionális; ha kitöltöd, a
+                    látogató a választási helyek felett is olvashat rövid útmutatót.
+                  </p>
+                </div>
+              </EditorInfoHoverPanel>
+            </div>
             <label className={s.field}>
               <span>Fő szöveg (opcionális)</span>
               <textarea
@@ -2902,7 +3325,7 @@ export default function PageInspector({
               />
             </label>
             <div className={s.blockHead}>
-              <span>Slotok száma: {Math.floor(decisionChoices.length / 2)}</span>
+              <span>Választási helyek száma: {Math.floor(decisionChoices.length / 2)}</span>
               <button
                 type="button"
                 className={s.btnSm}
@@ -2916,7 +3339,7 @@ export default function PageInspector({
                   })
                 }
               >
-                + slot
+                + hely
               </button>
             </div>
             {Math.floor(decisionChoices.length / 2) > 1 ? (
@@ -2934,7 +3357,7 @@ export default function PageInspector({
                   })
                 }
               >
-                Utolsó slot törlése
+                Utolsó hely törlése
               </button>
             ) : null}
             {Array.from({ length: Math.floor(decisionChoices.length / 2) }, (_, slot) => {
@@ -2945,7 +3368,7 @@ export default function PageInspector({
               const fallback = decisionChoices[fallbackIdx]!;
               return (
                 <div key={slot} className={s.choiceCard}>
-                  <p className={s.optionCardTitle}>Slot {slot + 1}</p>
+                  <p className={s.optionCardTitle}>Választási hely {slot + 1}</p>
                   <button
                     type="button"
                     className={s.btnSm}
@@ -2962,10 +3385,10 @@ export default function PageInspector({
                       })
                     }
                   >
-                    Primary / fallback csere
+                    Elsődleges / tartalék csere
                   </button>
                   <label className={s.field}>
-                    <span>Primary szöveg</span>
+                    <span>Elsődleges felirat</span>
                     <input
                       className={s.input}
                       value={primary.text}
@@ -2981,7 +3404,7 @@ export default function PageInspector({
                     />
                   </label>
                   <label className={s.field}>
-                    <span>Primary céloldal (id)</span>
+                    <span>Elsődleges céloldal (id)</span>
                     <input
                       className={`${s.input} ${primary.next.trim() && !idSet.has(primary.next.trim()) ? s.inputWarn : ""}`}
                       value={primary.next}
@@ -3017,7 +3440,7 @@ export default function PageInspector({
                         });
                       }}
                     />
-                    <span>Primary — reward.locks (automatikus)</span>
+                    <span>Elsődleges — választás címkéje (automatikus név)</span>
                     {primary.lockIds.trim() ? (
                       <code className={s.choiceLockIdPreview}>
                         {primary.lockIds.trim()}
@@ -3025,7 +3448,7 @@ export default function PageInspector({
                     ) : null}
                   </label>
                   <label className={s.field}>
-                    <span>Fallback szöveg</span>
+                    <span>Tartalék felirat</span>
                     <input
                       className={s.input}
                       value={fallback.text}
@@ -3042,7 +3465,7 @@ export default function PageInspector({
                     />
                   </label>
                   <label className={s.field}>
-                    <span>Fallback céloldal (id)</span>
+                    <span>Tartalék céloldal (id)</span>
                     <input
                       className={`${s.input} ${fallback.next.trim() && !idSet.has(fallback.next.trim()) ? s.inputWarn : ""}`}
                       value={fallback.next}
@@ -3080,7 +3503,7 @@ export default function PageInspector({
                         });
                       }}
                     />
-                    <span>Fallback — reward.locks (automatikus)</span>
+                    <span>Tartalék — választás címkéje (automatikus név)</span>
                     {fallback.lockIds.trim() ? (
                       <code className={s.choiceLockIdPreview}>
                         {fallback.lockIds.trim()}
@@ -3093,17 +3516,11 @@ export default function PageInspector({
           </>
         ) : isEditorScorecardPageFlag ? (
           <>
-            <p className={s.hintSmall}>
-              Scorecard: a feltételek <strong>AND</strong> kapcsolóban értékelődnek.{" "}
-              <strong>Egy döntési oldalról csak egy választás</strong> adható meg szabályonként
-              (nem lehet ugyanarról az oldalról két külön flag). Kézi ID: pl.{" "}
-              <code>frag:</code>, <code>flag:</code>, vagy olyan lock, ami nincs a jegyzékben.
-            </p>
             {scorecardLockSources.length === 0 ? (
               <p className={s.hintSmall} role="status">
-                Nincs a sztoriban <code>reward.locks</code> (vagy setFlag) választás — a
-                strukturált lista üres; használj „Kézi ID” sorokat, vagy állíts be lockokat a
-                kérdés oldalakon.
+                Még nincs automatikusan felkínált <strong>választás-címke</strong> a projektben —
+                töltsd ki a szabályokat kézzel, vagy kapcsold be a „választás címkéje” mezőt a
+                döntő kérdések (több opciós) oldalain, hogy a pontozó kiválaszthassa a választást.
               </p>
             ) : null}
             <label className={s.field}>
@@ -3116,16 +3533,34 @@ export default function PageInspector({
               />
             </label>
             <div className={s.blockHead}>
-              <span>Szabályok (feltételek → céloldal)</span>
-              <button type="button" className={s.btnSm} onClick={addScorecardRuleRow}>
-                + szabály
-              </button>
+              <span className={s.blockHeadGrow}>
+                Szabályok (feltételek → céloldal)
+              </span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Pontozó: részletes útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Működés</h4>
+                    <p className={hi.sectionBody}>
+                      <strong>Pontozó / feltételes ugrás:</strong> a szabályok egyszerre
+                      teljesülő feltételekből állnak. Egy döntő kérdés oldalról szabályonként
+                      csak egy választás köthető. Ha speciális azonosítót adsz meg, azt kézzel is
+                      beírhatod a feltételhez.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Ha még nincs szabály</h4>
+                    <p className={hi.sectionBody}>
+                      Állíts be legalább egy szabályt, vagy adj meg fallback céloldalt — különben
+                      nem lesz egyértelmű, hova ugorjon a látogató.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button type="button" className={s.btnSm} onClick={addScorecardRuleRow}>
+                  + szabály
+                </button>
+              </div>
             </div>
-            {scorecardRuleRows.length === 0 ? (
-              <p className={s.hintSmall}>
-                Még nincs szabály — állíts be legalább egyet, vagy adj meg fallback céloldalt.
-              </p>
-            ) : (
+            {scorecardRuleRows.length === 0 ? null : (
               scorecardRuleRows.map((row, idx) => {
                 const conds = row.conditions ?? [];
                 const dupPages = scorecardRuleHasDuplicateSourcePages(conds);
@@ -3226,7 +3661,7 @@ export default function PageInspector({
                                   </select>
                                 </label>
                                 <label className={s.field}>
-                                  <span>Választás → lock</span>
+                                  <span>Választás (címke szerint)</span>
                                   <select
                                     className={s.input}
                                     disabled={!cond.pageId}
@@ -3253,7 +3688,7 @@ export default function PageInspector({
                                       )?.outcomes ?? []
                                     ).map((o, oi) => (
                                       <option key={oi} value={String(oi)}>
-                                        {o.choiceLabel} → {o.lockIds.join(", ")}
+                                        {o.choiceLabel} — címke: {o.lockIds.join(", ")}
                                       </option>
                                     ))}
                                   </select>
@@ -3398,39 +3833,91 @@ export default function PageInspector({
             </label>
           </>
         ) : isOtherPuzzle ? (
-          <label className={s.field}>
-            <span>Puzzle (egyéb kind) — szöveg / jegyzet</span>
-            <textarea
-              className={s.textarea}
-              value={primaryText}
-              onChange={(e) => setPrimaryText(e.target.value)}
-              rows={4}
-            />
-          </label>
+          <>
+            <label className={s.field}>
+              <div className={s.blockHead}>
+                <span className={s.blockHeadGrow}>
+                  Puzzle (egyéb kind) — szöveg / jegyzet
+                </span>
+                <EditorInfoHoverPanel ariaLabel="Egyéb puzzle: útmutató">
+                  <div className={hi.section}>
+                    <p className={hi.sectionBody}>
+                      Ezt a feladatotípust a szerkesztő még nem bontja ki külön űrlapon. A lenti
+                      mező jegyzetnek vagy rövid szövegnek használható; a részletes mezőket a
+                      Haladó nézetben érdemes szerkeszteni.
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+              </div>
+              <textarea
+                className={s.textarea}
+                value={primaryText}
+                onChange={(e) => setPrimaryText(e.target.value)}
+                rows={4}
+              />
+            </label>
+          </>
         ) : isLogic ? (
           <>
-            <p className={s.hintSmall}>
-              Logic: nincs megjelenő szöveg — a játék a birtokolt fragmentek
-              alapján választ ágat. Ha egyik feltétel sem teljesül, az{" "}
-              <strong>egyébként</strong> ág kötelező. A fragment id-k a
-              történetben opció-jutalomként definiált jegyzékből választhatók.
-            </p>
             <div className={s.blockHead}>
-              <span>Ha megvan a fragment → ugrás</span>
-              <button type="button" className={s.btnSm} onClick={addLogicIfRow}>
-                + ág
-              </button>
+              <span className={s.blockHeadGrow}>Ha megvan a fragment → ugrás</span>
+              <div className={s.blockHeadEnd}>
+                <EditorInfoHoverPanel ariaLabel="Feltételes ugrás: részletes útmutató">
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Mi történik ezen a lépésen?</h4>
+                    <p className={hi.sectionBody}>
+                      <strong>Feltételes ugrás (fragment alapján):</strong> ez a lépés a
+                      látogatónak nem tartalomként jelenik meg — rögtön továbbvisz egy másik
+                      oldalra. A rendszer megnézi, melyik <strong>feloldott szövegrészlet</strong>{" "}
+                      (fragment) tartozik már a látogatóhoz, és aszerint választ útvonalat.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Honnan jönnek a fragmentek?</h4>
+                    <p className={hi.sectionBody}>
+                      A fragmenteket korábbi lépések „adják”: például választás után, mérföldkő
+                      mentésénél vagy más lépés beállításainál. A listában olyan azonosítókat
+                      válassz, amelyek a projektben tényleg előfordulnak — így nem marad üresen
+                      egy ág.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Sorrend</h4>
+                    <p className={hi.sectionBody}>
+                      <strong>Sorrend számít:</strong> a „Ha megvan a fragment → ugrás” sorokat
+                      felülről lefelé vizsgálja a rendszer; az <strong>első</strong> olyan sor
+                      nyer, amelynél a megadott fragment már fel van oldva, és a hozzá tartozó
+                      céloldalra ugrik.
+                    </p>
+                  </div>
+                  <div className={hi.section}>
+                    <h4 className={hi.sectionTitle}>Egyébként ág</h4>
+                    <p className={hi.sectionBody}>
+                      Ha van legalább egy ilyen feltétel-sor, töltsd ki az{" "}
+                      <strong>„Egyébként → oldal”</strong> mezőt is. Ha egyik feltétel sem illik és
+                      nincs egyébként ág, a látogató <strong>beragadhat</strong> erre a lépésre.
+                      Ha nincs egyetlen feltétel-sor sem, csak az egyébként ág irányít (ha
+                      megadtad).
+                    </p>
+                  </div>
+                </EditorInfoHoverPanel>
+                <button type="button" className={s.btnSm} onClick={addLogicIfRow}>
+                  + ág
+                </button>
+              </div>
             </div>
             {logicIfRows.length === 0 ? (
               <p className={s.hintSmall}>
-                Még nincs if-ág — csak az „egyébként” cél oldal fut (ha megadod).
+                Még nincs feltétel-sor: csak az „Egyébként” irányít tovább (ha kitöltöd a cél
+                oldal azonosítóját). Ha üresen hagyod az egyébként mezőt is, ez a lépés nem
+                visz tovább automatikusan.
               </p>
             ) : (
               logicIfRows.map((row, idx) => (
                 <div key={idx} className={s.choiceCard}>
                   <p className={s.optionCardTitle}>Ág {idx + 1}</p>
                   <FragmentIdSelect
-                    label="Fragment (játékosnál feloldott)"
+                    label="Fragment (ha a látogatónál fel van oldva)"
                     value={row.fragment}
                     onChange={(v) => {
                       setLogicIfRows((r) =>
@@ -3482,6 +3969,11 @@ export default function PageInspector({
 
         <datalist id="editor-known-page-ids">
           {knownPageIds.map((id) => (
+            <option key={id} value={id} />
+          ))}
+        </datalist>
+        <datalist id="editor-fragment-id-hints">
+          {fragmentIdHintOptions.map((id) => (
             <option key={id} value={id} />
           ))}
         </datalist>

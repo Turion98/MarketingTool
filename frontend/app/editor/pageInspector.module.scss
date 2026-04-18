@@ -250,6 +250,29 @@
   color: #fca5a5;
 }
 
+.inspectorControlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.55rem;
+  width: 100%;
+}
+
+.inspectorHintRowTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e8ecf4;
+}
+
+.saveMilestoneRowCompact {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .saveMilestoneRow {
   display: flex;
   flex-wrap: wrap;
@@ -330,6 +353,25 @@
   font-size: 0.8rem;
   font-weight: 600;
   margin-top: 0.25rem;
+}
+
+.blockHeadGrow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.blockHeadEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.choiceUnlockBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
 }
 
 .btnSm,
