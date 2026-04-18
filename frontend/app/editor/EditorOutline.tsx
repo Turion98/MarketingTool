@@ -120,7 +120,7 @@ export default function EditorOutline({
     <div className={s.outlineWrap}>
       <details className={s.outlineDetails}>
         <summary className={s.outlineSummary}>
-          Oldaltípusok és JSON kiemelés
+          Oldaltípusok és kiemelés a nyers szövegben
           <span className={s.outlineBadge}>{flat.length} oldal</span>
         </summary>
         <div className={s.outlineBody}>
@@ -148,8 +148,8 @@ export default function EditorOutline({
           {activeCategory ? (
             <div className={s.highlightBar}>
               <span className={s.highlightMeta}>
-                Oktató: válassz típust, és a szerkesztő kiemeli a teljes oldal-blokkot a
-                nyers JSON-ban — {CATEGORY_LABELS[activeCategory]}
+                Válassz típust: a szerkesztő kiemeli a teljes lépés-blokkot a haladó
+                (nyers) nézetben — {CATEGORY_LABELS[activeCategory]}
                 {rangeCount === 0
                   ? " — ehhez a típushoz még nincs oldal a dokumentumban"
                   : ` — ${rangeCount} találat; az Előző / Következő gombok ugyanilyen típusú másik oldalra ugranak`}

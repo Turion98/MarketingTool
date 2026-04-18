@@ -323,7 +323,7 @@ export function renameStoryPageIdInStory(
     return { ok: false, error: "Ez az ID szerkesztői előtagot használ — nem lehet végleges név." };
   }
   if (!findPageInStoryDocument(story, from)) {
-    return { ok: false, error: "Nincs ilyen oldal a sztoriban — ellenőrizd az ID-t." };
+    return { ok: false, error: "Nincs ilyen oldal a projektben — ellenőrizd az ID-t." };
   }
   const existing = collectStoryPageIds(story);
   if (existing.includes(trimmed) && trimmed !== from) {
@@ -337,7 +337,7 @@ export function renameStoryPageIdInStory(
   if (pages && typeof pages === "object" && !Array.isArray(pages)) {
     const d = { ...(pages as Record<string, unknown>) };
     const src = asRecord(d[from]);
-    if (!src) return { ok: false, error: "Nincs ilyen oldal a sztoriban — ellenőrizd az ID-t." };
+    if (!src) return { ok: false, error: "Nincs ilyen oldal a projektben — ellenőrizd az ID-t." };
     const newD: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(d)) {
       if (k === from) continue;

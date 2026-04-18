@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import EditorShell from "./EditorShell";
 
 export const metadata: Metadata = {
-  title: "Sztori szerkesztő | Adventure App",
+  title: "Projekt szerkesztő | Adventure App",
   description:
-    "Gráf alapú sztori szerkesztő: vászon, előnézet és részletes oldal-beállítások egy helyen.",
+    "Gráf alapú projekt-szerkesztő: vászon, előnézet és részletes lépés-beállítások egy helyen.",
 };
 
 export default function EditorPage() {

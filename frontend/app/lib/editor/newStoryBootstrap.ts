@@ -11,7 +11,7 @@ export function isNewStorySentinel(src: string): boolean {
 /** Slug → backend fájlnév (`{slug}.json`). */
 export function validateStorySlug(slug: string): string | null {
   const t = slug.trim();
-  if (!t) return "Add meg a sztori fájl nevét (slug) — ez lesz a mentés alapja.";
+  if (!t) return "Add meg a projekt fájlnevét (slug) — ez lesz a mentés alapja.";
   if (t.length > 80) return "A slug legfeljebb 80 karakter lehet.";
   if (!/^[a-z0-9_-]+$/i.test(t)) {
     return "A slug csak betűt, számot, aláhúzást és kötőjelet tartalmazhat.";
@@ -73,7 +73,7 @@ export function validateCtaRowsForm(
     const k = row.key.trim();
     if (keys.has(k)) return `Minden CTA kulcs egyedi legyen — a(z) „${k}” már szerepel.`;
     keys.add(k);
-    if (!row.label.trim()) return `Add meg a(z) „${k}” gomb feliratát a játékosnak.`;
+    if (!row.label.trim()) return `Add meg a(z) „${k}” gomb feliratát a látogatónak.`;
     const uErr = validateCtaHttpsUrl(row.urlTemplate);
     if (uErr) return `${k}: ${uErr}`;
   }
@@ -194,7 +194,7 @@ export function draftStoryToMetaFormModel(
 }
 
 export function validateMetaFormBasics(model: StoryMetaFormModel): string | null {
-  if (!model.title.trim()) return "Adj meg megjelenített címet — ez a játékosnak látszó sztori név.";
+  if (!model.title.trim()) return "Adj meg megjelenített címet — ez a látogatónak látszó projektnév.";
   const st = validateStartPageId(model.startPageId);
   if (st) return st;
   return validateCtaRowsForm(model.ctaRows, model.endDefaultCta);

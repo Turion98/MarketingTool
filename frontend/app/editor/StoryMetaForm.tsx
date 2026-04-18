@@ -69,7 +69,7 @@ export function StoryMetaFormFields({
   return (
     <>
       <label className={s.bootstrapMetaLabel}>
-        Megjelenített cím (játékosnak látszik)
+        Megjelenített cím (a látogatónak látszik)
         <input
           className={s.bootstrapMetaInput}
           value={model.title}
@@ -79,7 +79,7 @@ export function StoryMetaFormFields({
         />
       </label>
       <label className={s.bootstrapMetaLabel}>
-        Kezdő oldal ID (meta.startPageId — ide lép be a játék)
+        Kezdő oldal azonosítója (erre az oldalra érkezik a látogató)
         <input
           className={s.bootstrapMetaInput}
           value={model.startPageId}
