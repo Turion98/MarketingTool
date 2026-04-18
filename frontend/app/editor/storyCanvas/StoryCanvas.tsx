@@ -89,6 +89,7 @@ import {
   StoryEndIngressLines,
 } from "./StoryEndIngressDecor";
 import StoryEdges, { buildEdgeLayers } from "./StoryEdges";
+import { EditorCanvasMinimap } from "./EditorCanvasMinimap";
 import EditorEndCategoriesPopover from "../EditorEndCategoriesPopover";
 import s from "./storyCanvas.module.scss";
 
@@ -403,6 +404,7 @@ export default function StoryCanvas({
   const canvasHRef = useRef(canvasH);
   canvasHRef.current = canvasH;
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportInnerPx, setViewportInnerPx] = useState({ w: 0, h: 0 });
   const [overlayMountEl, setOverlayMountEl] = useState<HTMLDivElement | null>(
     null
   );
@@ -465,6 +467,21 @@ export default function StoryCanvas({
       /* ignore */
     }
   }, [canvasFullscreen]);
+
+  useLayoutEffect(() => {
+    const el = viewportRef.current;
+    if (!el || typeof ResizeObserver === "undefined") {
+      setViewportInnerPx({ w: 0, h: 0 });
+      return;
+    }
+    const sync = () => {
+      setViewportInnerPx({ w: el.clientWidth, h: el.clientHeight });
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [canvasH, canvasFullscreen]);
 
   useEffect(() => {
     const onWinResize = () => {
@@ -960,6 +977,28 @@ export default function StoryCanvas({
     return { minX, minY, maxX, maxY };
   }, [worldMetrics, endClusterCanvasLayout]);
 
+  const minimapBoxes = useMemo(() => {
+    const out: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }[] = [];
+    for (const [id, m] of worldMetrics) {
+      out.push({ id, x: m.x, y: m.y, w: m.w, h: m.h });
+    }
+    for (const c of endCategoryCardMeta) {
+      out.push({
+        id: `__endcat_${c.key}`,
+        x: c.x,
+        y: c.y,
+        w: c.w,
+        h: c.h,
+      });
+    }
+    return out;
+  }, [worldMetrics, endCategoryCardMeta]);
 
   const pathBubbleLayout = useMemo(() => {
     const boxes = new Map<string, { x: number; y: number; w: number; h: number }>();
@@ -1110,6 +1149,19 @@ export default function StoryCanvas({
     setPan({ x: vw / 2 - z * cx, y: vh / 2 - z * cy });
   }, [fitContentBounds, viewMode, metroDrillNodeSet, metroLayout]);
 
+  const onMinimapCenterWorld = useCallback(
+    (worldX: number, worldY: number) => {
+      const el = viewportRef.current;
+      if (!el) return;
+      const vw = el.clientWidth;
+      const vh = el.clientHeight;
+      if (vw < 8 || vh < 8) return;
+      const z = panZoomAnchorRef.current.zoom;
+      setPan({ x: vw / 2 - worldX * z, y: vh / 2 - worldY * z });
+    },
+    []
+  );
+
   const onCardDragStart = useCallback(
     (pageId: string, e: ReactPointerEvent) => {
       if (interactionLocked) return;
@@ -1191,6 +1243,7 @@ export default function StoryCanvas({
         edgePanLoopRef.current = null;
       }
       if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
+      if ((e.target as HTMLElement).closest("[data-editor-minimap]")) return;
       if ((e.target as HTMLElement).closest("[data-distant-edge-chip]"))
         return;
       if ((e.target as HTMLElement).closest("[data-end-ingress-chip]")) return;
@@ -1757,6 +1810,21 @@ export default function StoryCanvas({
         onMouseMove={onViewportMouseMoveEdgePan}
         onMouseLeave={onViewportMouseLeaveEdgePan}
       >
+        {viewMode === "graph" &&
+        viewportInnerPx.w >= 48 &&
+        viewportInnerPx.h >= 48 ? (
+          <EditorCanvasMinimap
+            fitBounds={fitContentBounds}
+            boxes={minimapBoxes}
+            pan={pan}
+            zoom={zoom}
+            viewportW={viewportInnerPx.w}
+            viewportH={viewportInnerPx.h}
+            selectedPageIds={selectedPageIds}
+            disabled={interactionLocked}
+            onCenterWorld={onMinimapCenterWorld}
+          />
+        ) : null}
         <div
           className={s.world}
           style={{

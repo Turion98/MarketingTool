@@ -1727,3 +1727,81 @@
   -webkit-user-select: none;
   pointer-events: none;
 }
+
+/* —— Mini map (lebegő, a vászon bal felső sarkában) —— */
+.minimapRoot {
+  position: absolute;
+  z-index: 62;
+  top: 0.55rem;
+  left: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.35rem 0.4rem 0.4rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 22, 0.82);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  max-width: calc(100% - 1rem);
+}
+
+.minimapRootDisabled {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.minimapLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(180, 195, 230, 0.72);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.minimapInner {
+  position: relative;
+  border-radius: 0.28rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.minimapInner:active {
+  cursor: grabbing;
+}
+
+.minimapInner:focus-visible {
+  outline: 2px solid rgba(139, 168, 255, 0.75);
+  outline-offset: 2px;
+}
+
+.minimapCard {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 2px;
+  border: 1px solid rgba(120, 140, 190, 0.35);
+  background: rgba(100, 130, 210, 0.22);
+  pointer-events: none;
+}
+
+.minimapCardSelected {
+  border-color: rgba(251, 191, 36, 0.85);
+  background: rgba(251, 191, 36, 0.2);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25);
+}
+
+.minimapViewport {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 2px;
+  border: 1px solid rgba(52, 211, 153, 0.85);
+  background: rgba(52, 211, 153, 0.08);
+  pointer-events: none;
+  z-index: 2;
+}
