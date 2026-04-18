@@ -18,7 +18,11 @@ import {
   TEMPLATE_LABELS,
   type StoryTemplateKey,
 } from "@/app/lib/editor/storyTemplateInsert";
+import { editorEndCardAccentStyle } from "@/app/editor/storyCanvas/storyCanvasGeometry";
 import s from "./editor.module.scss";
+
+/** Stabil „oldal-id” az end sablon gomb színéhez — ugyanaz a FNV-hash, mint a vásznon a kártyáknál. */
+const END_TEMPLATE_ACCENT_PAGE_ID = "__editor_end_page_template__";
 
 type EditorOutlineProps = {
   draftStory: Record<string, unknown>;
@@ -35,11 +39,13 @@ const CATEGORY_ORDER: EditorPageCategory[] = [
   "puzzleRiddle",
   "puzzleRunes",
   "puzzleRoute",
+  "scorecard",
   "decision",
   "logic",
   "conditionalRouting",
   "transition",
   "other",
+  "end",
 ];
 
 function scrollTextareaToSelection(el: HTMLTextAreaElement, pos: number) {
@@ -104,6 +110,11 @@ export default function EditorOutline({
   };
 
   const rangeCount = activeCategory ? getRanges().length : 0;
+
+  const standardTemplateKeys = (Object.keys(TEMPLATE_LABELS) as StoryTemplateKey[]).filter(
+    (k) => k !== "end"
+  );
+  const endTemplateAccent = editorEndCardAccentStyle(END_TEMPLATE_ACCENT_PAGE_ID, false);
 
   return (
     <div className={s.outlineWrap}>
@@ -170,17 +181,32 @@ export default function EditorOutline({
           Oldal sablonok
           <span className={s.outlineHint}>+ beszúrás a pages végére</span>
         </summary>
-        <div className={s.templateScroll}>
-          {(Object.keys(TEMPLATE_LABELS) as StoryTemplateKey[]).map((k) => (
+        <div className={s.templateSections}>
+          <div className={s.templateScroll}>
+            {standardTemplateKeys.map((k) => (
+              <button
+                key={k}
+                type="button"
+                className={s.templateBtn}
+                onClick={() => onTemplate(k)}
+              >
+                {TEMPLATE_LABELS[k]}
+              </button>
+            ))}
+          </div>
+          <div className={s.templateEndZone}>
+            <span className={s.templateEndLabel} aria-hidden>
+              Vég
+            </span>
             <button
-              key={k}
               type="button"
-              className={s.templateBtn}
-              onClick={() => onTemplate(k)}
+              className={`${s.templateBtn} ${s.templateBtnEnd}`}
+              style={endTemplateAccent}
+              onClick={() => onTemplate("end")}
             >
-              {TEMPLATE_LABELS[k]}
+              {TEMPLATE_LABELS.end}
             </button>
-          ))}
+          </div>
         </div>
       </details>
     </div>

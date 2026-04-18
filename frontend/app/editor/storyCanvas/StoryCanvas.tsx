@@ -3,12 +3,14 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   STORY_GRAPH_START_NODE_ID,
   buildPathFlowClusters,
@@ -58,6 +60,7 @@ import {
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
   cardDimensions,
+  editorEndCardAccentStyle,
   inputPortYs,
   isRiddleNode,
   orderedOutgoingEdges,
@@ -78,6 +81,11 @@ import {
 import StoryEdges, { buildEdgeLayers } from "./StoryEdges";
 import s from "./storyCanvas.module.scss";
 
+/** Vég kategória csoport a csúszkán — ugyanaz a szín-hash mint az outline end sablon. */
+const CATEGORY_STRIP_END_ACCENT_ID = "__editor_end_page_template__";
+
+const CATEGORY_STRIP_POPOVER_GAP_PX = 4;
+
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
 }
@@ -90,9 +98,30 @@ function metroHueFromId(id: string): number {
   return h % 360;
 }
 
-const ZOOM_MIN = 0.45;
+const ZOOM_MIN = 0.2;
 const ZOOM_MAX = 1.8;
 const ZOOM_STEP = 0.1;
+/** Ha a régi vagy új zoom ≤ ez, a nagyítás a fókuszpont (görgő: kurzor, +/-: kép közepe) körül marad. */
+const ZOOM_CURSOR_ANCHOR_MAX = 0.45;
+
+/**
+ * `transform: translate(pan) scale(z)` + `transform-origin: 0 0` mellett:
+ * ugyanaz a világbeli pont maradjon a `focalX / focalY` viewport-pont alatt.
+ */
+function computeAnchoredPanForZoom(
+  pan0: { x: number; y: number },
+  z0: number,
+  z2: number,
+  focalX: number,
+  focalY: number
+): { x: number; y: number } | null {
+  if (Math.abs(z0) < 1e-6) return null;
+  if (z0 > ZOOM_CURSOR_ANCHOR_MAX && z2 > ZOOM_CURSOR_ANCHOR_MAX) return null;
+  return {
+    x: focalX - (focalX - pan0.x) * (z2 / z0),
+    y: focalY - (focalY - pan0.y) * (z2 / z0),
+  };
+}
 
 const CANVAS_VIEWPORT_HEIGHT_LS = "questell:editor:storyCanvasViewportPx";
 
@@ -302,6 +331,9 @@ export default function StoryCanvas({
 
   const [pan, setPan] = useState({ x: 48, y: 36 });
   const [zoom, setZoom] = useState(1);
+  const panZoomAnchorRef = useRef({ pan: { x: 48, y: 36 }, zoom: 1 });
+  panZoomAnchorRef.current = { pan, zoom };
+
   const [canvasH, setCanvasH] = useState(() =>
     Math.max(MIN_CANVAS_VIEWPORT_PX, defaultCanvasViewportPx())
   );
@@ -352,9 +384,19 @@ export default function StoryCanvas({
   }, []);
   const categoryStripRef = useRef<HTMLDivElement>(null);
   const categoryStripScrollRef = useRef<HTMLDivElement>(null);
+  const categoryStripPopoverRef = useRef<HTMLDivElement | null>(null);
+  const categoryStripAnchorRefs = useRef<
+    Partial<Record<EditorPageCategory, HTMLButtonElement | null>>
+  >({});
   const [openCategory, setOpenCategory] = useState<EditorPageCategory | null>(
     null
   );
+  const [categoryPopoverBox, setCategoryPopoverBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const [catStripNav, setCatStripNav] = useState({
     canBack: false,
     canFwd: false,
@@ -1091,25 +1133,89 @@ export default function StoryCanvas({
       if (!e.ctrlKey || !e.shiftKey) return;
       e.preventDefault();
       const dz = e.deltaY > 0 ? -0.08 : 0.08;
-      setZoom((z) =>
-        clamp(Number((z + dz).toFixed(2)), ZOOM_MIN, ZOOM_MAX)
-      );
+      const { pan: p0, zoom: z0 } = panZoomAnchorRef.current;
+      const z2 = clamp(Number((z0 + dz).toFixed(2)), ZOOM_MIN, ZOOM_MAX);
+      if (Math.abs(z2 - z0) < 1e-6) return;
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const nextPan = computeAnchoredPanForZoom(p0, z0, z2, mx, my);
+      setZoom(z2);
+      if (nextPan) setPan(nextPan);
     };
     el.addEventListener("wheel", wheel, { passive: false });
     return () => el.removeEventListener("wheel", wheel);
   }, []);
 
   const bumpZoom = useCallback((delta: number) => {
-    setZoom((z) =>
-      clamp(Number((z + delta).toFixed(2)), ZOOM_MIN, ZOOM_MAX)
-    );
+    const { pan: p0, zoom: z0 } = panZoomAnchorRef.current;
+    const z2 = clamp(Number((z0 + delta).toFixed(2)), ZOOM_MIN, ZOOM_MAX);
+    if (Math.abs(z2 - z0) < 1e-6) return;
+    const vp = viewportRef.current;
+    const rect = vp?.getBoundingClientRect();
+    const focalX = rect && rect.width > 0 ? rect.width / 2 : 0;
+    const focalY = rect && rect.height > 0 ? rect.height / 2 : 0;
+    const nextPan = computeAnchoredPanForZoom(p0, z0, z2, focalX, focalY);
+    setZoom(z2);
+    if (nextPan) setPan(nextPan);
   }, []);
+
+  const updateCategoryPopoverPosition = useCallback(() => {
+    if (openCategory === null || typeof window === "undefined") {
+      setCategoryPopoverBox(null);
+      return;
+    }
+    const btn = categoryStripAnchorRefs.current[openCategory];
+    if (!btn) {
+      setCategoryPopoverBox(null);
+      return;
+    }
+    const r = btn.getBoundingClientRect();
+    const minW = Math.max(r.width, 168);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = r.left;
+    if (left + minW > vw - 8) {
+      left = Math.max(8, vw - minW - 8);
+    }
+    const top = r.bottom + CATEGORY_STRIP_POPOVER_GAP_PX;
+    const maxHeight = Math.max(120, vh - top - 10);
+    setCategoryPopoverBox({ top, left, width: minW, maxHeight });
+  }, [openCategory]);
+
+  useLayoutEffect(() => {
+    updateCategoryPopoverPosition();
+  }, [updateCategoryPopoverPosition, pagesByCategory]);
+
+  useEffect(() => {
+    if (openCategory === null) return;
+    const ro = () => updateCategoryPopoverPosition();
+    window.addEventListener("resize", ro);
+    window.addEventListener("scroll", ro, true);
+    const scrollEl = categoryStripScrollRef.current;
+    scrollEl?.addEventListener("scroll", ro);
+    return () => {
+      window.removeEventListener("resize", ro);
+      window.removeEventListener("scroll", ro, true);
+      scrollEl?.removeEventListener("scroll", ro);
+    };
+  }, [openCategory, updateCategoryPopoverPosition]);
+
+  useEffect(() => {
+    if (openCategory === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenCategory(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openCategory]);
 
   useEffect(() => {
     if (openCategory === null) return;
     const onDoc = (e: MouseEvent) => {
       const t = e.target as Node;
       if (categoryStripRef.current?.contains(t)) return;
+      if (categoryStripPopoverRef.current?.contains(t)) return;
       setOpenCategory(null);
     };
     document.addEventListener("mousedown", onDoc);
@@ -1809,50 +1915,40 @@ export default function StoryCanvas({
           {EDITOR_CATEGORY_ORDER.map((cat) => {
             const pages = pagesByCategory[cat];
             const isOpen = openCategory === cat;
+            const isEndCat = cat === "end";
             return (
-              <div key={cat} className={s.categoryStripGroup}>
-                <details className={s.categoryStripDetails} open={isOpen}>
-                  <summary
-                    className={s.categoryStripSummary}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setOpenCategory((o) => (o === cat ? null : cat));
-                    }}
+              <div
+                key={cat}
+                className={`${s.categoryStripGroup} ${isEndCat ? s.categoryStripGroupEnd : ""}`}
+                style={
+                  isEndCat
+                    ? editorEndCardAccentStyle(CATEGORY_STRIP_END_ACCENT_ID, false)
+                    : undefined
+                }
+              >
+                <button
+                  type="button"
+                  ref={(el) => {
+                    categoryStripAnchorRefs.current[cat] = el;
+                  }}
+                  className={s.categoryStripTriggerBtn}
+                  aria-expanded={isOpen}
+                  aria-haspopup="listbox"
+                  onClick={() => {
+                    setOpenCategory((o) => (o === cat ? null : cat));
+                  }}
+                >
+                  <span className={s.categoryStripChevron} aria-hidden>
+                    {isOpen ? "▼" : "▶"}
+                  </span>
+                  <span
+                    className={s.categoryStripGroupTitle}
+                    title={CATEGORY_LABELS[cat]}
                   >
-                    <span className={s.categoryStripChevron} aria-hidden>
-                      {isOpen ? "▼" : "▶"}
-                    </span>
-                    <span
-                      className={s.categoryStripGroupTitle}
-                      title={CATEGORY_LABELS[cat]}
-                    >
-                      {CATEGORY_LABELS[cat]}
-                    </span>
-                    <span className={s.categoryStripCount}>({pages.length})</span>
-                  </summary>
-                  <div className={s.categoryStripPanel}>
-                    {pages.length === 0 ? (
-                      <span className={s.categoryStripEmpty}>
-                        Nincs ilyen típusú oldal.
-                      </span>
-                    ) : (
-                      pages.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          className={`${s.categoryStripChip} ${selectedPageIds.includes(p.id) ? s.categoryStripChipSelected : ""}`}
-                          title={p.id}
-                          onClick={() => {
-                            onSelectPageIds([p.id]);
-                            setOpenCategory(null);
-                          }}
-                        >
-                          {p.id}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </details>
+                    {CATEGORY_LABELS[cat]}
+                  </span>
+                  <span className={s.categoryStripCount}>({pages.length})</span>
+                </button>
                 <button
                   type="button"
                   className={s.categoryStripAdd}
@@ -1892,6 +1988,47 @@ export default function StoryCanvas({
       ) : (
         <div className={s.canvasStage}>{viewportColumn}</div>
       )}
+      {openCategory !== null &&
+      categoryPopoverBox &&
+      typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={categoryStripPopoverRef}
+              className={s.categoryStripPopover}
+              style={{
+                top: categoryPopoverBox.top,
+                left: categoryPopoverBox.left,
+                width: categoryPopoverBox.width,
+                maxHeight: categoryPopoverBox.maxHeight,
+              }}
+              role="listbox"
+              aria-label={`${CATEGORY_LABELS[openCategory]} — oldalak`}
+            >
+              {pagesByCategory[openCategory].length === 0 ? (
+                <span className={s.categoryStripEmpty}>
+                  Nincs ilyen típusú oldal.
+                </span>
+              ) : (
+                pagesByCategory[openCategory].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="option"
+                    className={`${s.categoryStripChip} ${selectedPageIds.includes(p.id) ? s.categoryStripChipSelected : ""}`}
+                    title={p.id}
+                    onClick={() => {
+                      onSelectPageIds([p.id]);
+                      setOpenCategory(null);
+                    }}
+                  >
+                    {p.id}
+                  </button>
+                ))
+              )}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

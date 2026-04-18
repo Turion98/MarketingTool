@@ -787,6 +787,34 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.templateSections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.templateEndZone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin-top: 0.1rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.templateEndLabel {
+  flex: 0 0 auto;
+  min-width: 1.75rem;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsla(118 38% 62% / 0.82);
+  line-height: 1.1;
+}
+
 .categoryChip {
   flex: 0 0 auto;
   display: inline-flex;
@@ -894,6 +922,20 @@
 .templateBtn:hover {
   background: rgba(139, 168, 255, 0.15);
   border-color: rgba(139, 168, 255, 0.35);
+}
+
+.templateBtnEnd {
+  color: #f4f7ff;
+  text-shadow: 0 1px 0 hsla(0 0% 0% / 0.35);
+}
+
+.templateBtnEnd:hover {
+  filter: brightness(1.08) saturate(1.04);
+}
+
+.templateBtnEnd:focus-visible {
+  outline: 2px solid rgba(139, 168, 255, 0.55);
+  outline-offset: 2px;
 }
 
 .textarea {

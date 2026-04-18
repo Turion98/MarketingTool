@@ -6,7 +6,7 @@
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.35);
-  /* visible: kategória-details lenyílója ne vágódjon le */
+  /* visible: egyéb overlay-k; kategória lista portálon jelenik meg */
   overflow: visible;
 }
 
@@ -229,7 +229,7 @@
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem 0.65rem;
   padding: 0.4rem 0.25rem;
   overflow-x: auto;
@@ -248,7 +248,7 @@
   display: inline-flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.28rem;
   flex-shrink: 0;
   padding: 0.12rem 0.35rem 0.12rem 0.12rem;
@@ -257,28 +257,60 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.categoryStripDetails {
-  margin: 0;
-  min-width: 0;
+.categoryStripGroupEnd {
+  color: #f1f5f9;
 }
 
-.categoryStripSummary {
-  list-style: none;
+.categoryStripGroupEnd .categoryStripGroupTitle {
+  opacity: 0.95;
+  text-shadow: 0 1px 0 hsla(0 0% 0% / 0.35);
+}
+
+.categoryStripGroupEnd .categoryStripCount {
+  opacity: 0.72;
+}
+
+.categoryStripGroupEnd .categoryStripTriggerBtn:hover {
+  background: hsla(0 0% 100% / 0.08);
+}
+
+.categoryStripTriggerBtn {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.28rem;
   padding: 0.18rem 0.2rem;
+  margin: 0;
+  min-width: 0;
+  border: none;
   border-radius: 0.3rem;
   user-select: none;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  text-align: left;
 }
 
-.categoryStripSummary::-webkit-details-marker {
-  display: none;
-}
-
-.categoryStripSummary:hover {
+.categoryStripTriggerBtn:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.categoryStripPopover {
+  position: fixed;
+  z-index: 10050;
+  box-sizing: border-box;
+  padding: 0.35rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 16, 28, 0.97);
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 7.5rem;
+  max-width: min(12rem, calc(100vw - 16px));
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
 }
 
 .categoryStripChevron {
@@ -303,21 +335,6 @@
   font-size: 0.65rem;
   font-weight: 600;
   opacity: 0.55;
-}
-
-.categoryStripPanel {
-  margin-top: 0.35rem;
-  padding: 0.35rem;
-  border-radius: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(12, 16, 28, 0.97);
-  display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
-  max-height: 11rem;
-  overflow-y: auto;
-  min-width: 7.5rem;
-  max-width: 12rem;
 }
 
 .categoryStripChip {

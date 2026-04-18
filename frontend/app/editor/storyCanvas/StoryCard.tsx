@@ -11,7 +11,10 @@ import {
 } from "react";
 import type { StoryGraphEdge, StoryGraphNode } from "@/app/lib/editor/storyGraph";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
-import { isEditorLogicPage } from "@/app/lib/editor/storyPagesFlatten";
+import {
+  isEditorLogicPage,
+  isEditorScorecardPage,
+} from "@/app/lib/editor/storyPagesFlatten";
 import {
   choiceFragmentVisibilityTitle,
   choiceHasConditionalDisplay,
@@ -128,13 +131,19 @@ export default function StoryCard({
 
   const inYs = inputPortYs(incomingPortCount, h, {
     logicLayout:
-      node.isLogicPage || node.category === "puzzleRoute" || node.category === "decision",
+      node.isLogicPage ||
+      node.category === "puzzleRoute" ||
+      node.category === "decision" ||
+      node.category === "scorecard",
   });
 
   const milestoneOn =
     milestoneActive ?? raw.saveMilestone === true;
   const showMilestoneOrb =
-    !isStart && !isEditorLogicPage(raw) && milestoneOn;
+    !isStart &&
+    !isEditorLogicPage(raw) &&
+    !isEditorScorecardPage(raw) &&
+    milestoneOn;
 
   const pendingPage = !isStart && isEditorPendingPageId(node.pageId);
   const headerDisplayText = pendingPage ? "" : node.pageId;
@@ -486,6 +495,8 @@ export default function StoryCard({
             <div className={s.cardRow2}>
               {node.category === "puzzleRoute" ? (
                 <span className={s.cardTagRoute}>route</span>
+              ) : node.category === "scorecard" ? (
+                <span className={s.cardTagRoute}>scorecard</span>
               ) : node.category === "decision" ? (
                 <span className={s.cardTagRoute}>decision</span>
               ) : node.isLogicPage ? (
@@ -587,6 +598,38 @@ export default function StoryCard({
                                 title={comboLab}
                               >
                                 {comboLab || "?"}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                        <span className={s.cardOptStripGoto} title={e.to}>
+                          → {e.to}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : node.category === "scorecard" ? (
+              <div className={s.cardOptStripStack}>
+                {ord.length === 0 ? (
+                  <span className={s.cardOptMuted}>nincs kimenet</span>
+                ) : (
+                  ord.map((e) => {
+                    const rawLab = String(e.label ?? "");
+                    return (
+                      <div key={e.id} className={s.cardOptStrip}>
+                        <span className={s.cardOptStripMain}>
+                          {e.kind === "logicElse" ? (
+                            <span className={s.cardRouteElseMark}>fallback</span>
+                          ) : (
+                            <>
+                              <span className={s.cardRouteComboMark}>AND</span>
+                              <span
+                                className={s.cardLogicFragTight}
+                                title={rawLab}
+                              >
+                                {rawLab || "?"}
                               </span>
                             </>
                           )}

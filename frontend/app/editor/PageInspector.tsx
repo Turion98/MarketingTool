@@ -25,6 +25,7 @@ import { hydrateRouteFieldsFromStoryPage } from "@/app/lib/editor/legacyPuzzleRo
 import {
   classifyEditorPage,
   isEditorLogicPage,
+  isEditorScorecardPage,
 } from "@/app/lib/editor/storyPagesFlatten";
 import { runesPickBounds } from "@/app/lib/puzzleRoutePick";
 import { canonicalMilestoneFragmentId } from "@/app/lib/milestoneFragmentId";
@@ -35,6 +36,14 @@ import {
   upsertStoryFragmentText,
 } from "@/app/lib/editor/storyPagePatch";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
+import {
+  buildScorecardLockSources,
+  loadScorecardRuleForms,
+  scorecardRuleConditionsToIf,
+  scorecardRuleHasDuplicateSourcePages,
+  type ScorecardRuleConditionForm,
+  type ScorecardRuleForm,
+} from "@/app/lib/editor/scorecardLockCatalog";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import StoryMetaInspector from "./StoryMetaInspector";
 import s from "./pageInspector.module.scss";
@@ -171,33 +180,27 @@ function mergeFragRowsIntoPage(
   return base;
 }
 
-type VisibilityMode = "none" | "showWhenUnlocked" | "hideWhenUnlocked";
-
 type ChoiceForm = {
   text: string;
   next: string;
   unlockIds: string;
-  visibilityMode: VisibilityMode;
-  visibilityFragment: string;
+  /** `reward.locks` — scorecard / routing; csak automatikus ID (jelölőnégyzet). */
+  lockIds: string;
 };
 
-function readChoiceVisibility(o: Record<string, unknown>): {
-  mode: VisibilityMode;
-  fragment: string;
-} {
-  const show = Array.isArray(o.showIfHasFragment)
-    ? (o.showIfHasFragment as unknown[]).filter(
-        (x): x is string => typeof x === "string" && x.trim() !== ""
-      )
-    : [];
-  const hide = Array.isArray(o.hideIfHasFragment)
-    ? (o.hideIfHasFragment as unknown[]).filter(
-        (x): x is string => typeof x === "string" && x.trim() !== ""
-      )
-    : [];
-  if (show.length) return { mode: "showWhenUnlocked", fragment: show[0]! };
-  if (hide.length) return { mode: "hideWhenUnlocked", fragment: hide[0]! };
-  return { mode: "none", fragment: "" };
+function readLockIdsFromReward(
+  reward: Record<string, unknown> | null | undefined
+): string {
+  if (!reward) return "";
+  const locks = reward.locks;
+  if (Array.isArray(locks)) {
+    return locks
+      .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+      .map((x) => x.trim())
+      .join(", ");
+  }
+  if (typeof locks === "string" && locks.trim()) return locks.trim();
+  return "";
 }
 
 function readChoices(page: Record<string, unknown>): ChoiceForm[] {
@@ -208,18 +211,16 @@ function readChoices(page: Record<string, unknown>): ChoiceForm[] {
     const uf = Array.isArray(r?.unlockFragments)
       ? (r!.unlockFragments as unknown[]).filter((x) => typeof x === "string")
       : [];
-    const vis = readChoiceVisibility(o);
     return {
       text: String(o.text ?? o.label ?? ""),
       next: String(o.next ?? ""),
       unlockIds: uf.join(", "),
-      visibilityMode: vis.mode,
-      visibilityFragment: vis.fragment,
+      lockIds: readLockIdsFromReward(r),
     };
   });
 }
 
-/** Narratív opció JSON — megőrzi a reward egyéb mezőit, frissíti a láthatóságot. */
+/** Narratív opció JSON — megőrzi a reward egyéb mezőit, frissíti a reward mezőket. */
 function buildChoiceRecord(row: ChoiceForm, prev: unknown): Record<string, unknown> {
   const o = { ...(asRecord(prev) ?? {}) };
   o.text = row.text;
@@ -229,21 +230,21 @@ function buildChoiceRecord(row: ChoiceForm, prev: unknown): Record<string, unkno
     .split(/[,;\s]+/)
     .map((x) => x.trim())
     .filter(Boolean);
+  const lockParts = row.lockIds
+    .split(/[,;\s]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
   const prevReward = asRecord(o.reward);
   const reward: Record<string, unknown> = prevReward ? { ...prevReward } : {};
   if (ids.length) reward.unlockFragments = ids;
   else delete reward.unlockFragments;
+  if (lockParts.length) reward.locks = lockParts;
+  else delete reward.locks;
   if (Object.keys(reward).length) o.reward = reward;
   else delete o.reward;
 
   delete o.showIfHasFragment;
   delete o.hideIfHasFragment;
-  const vf = row.visibilityFragment.trim();
-  if (row.visibilityMode === "showWhenUnlocked" && vf) {
-    o.showIfHasFragment = [vf];
-  } else if (row.visibilityMode === "hideWhenUnlocked" && vf) {
-    o.hideIfHasFragment = [vf];
-  }
 
   return o;
 }
@@ -262,9 +263,13 @@ function emptyChoiceForm(): ChoiceForm {
     text: "",
     next: "",
     unlockIds: "",
-    visibilityMode: "none",
-    visibilityFragment: "",
+    lockIds: "",
   };
+}
+
+function defaultChoiceLockId(pageId: string, choiceIndex: number): string {
+  const base = (pageId || "page").trim() || "page";
+  return `${base}_L${choiceIndex + 1}`;
 }
 
 function normalizeDecisionChoices(rows: ChoiceForm[]): ChoiceForm[] {
@@ -453,14 +458,6 @@ function KnownPageSelect({
   );
 }
 
-function choiceVisibilityFoldLabel(ch: ChoiceForm): string {
-  if (ch.visibilityMode === "none") return "mindig látszik";
-  const id = ch.visibilityFragment.trim() || "…";
-  if (ch.visibilityMode === "showWhenUnlocked")
-    return `megjelenik, ha megvan: ${id}`;
-  return `eltűnik, ha megvan: ${id}`;
-}
-
 type FragmentIdSelectProps = {
   label: string;
   value: string;
@@ -591,6 +588,13 @@ export default function PageInspector({
 
   const [logicIfRows, setLogicIfRows] = useState<LogicIfForm[]>([]);
   const [logicElseGoTo, setLogicElseGoTo] = useState("");
+  const [scorecardRuleRows, setScorecardRuleRows] = useState<
+    ScorecardRuleForm[]
+  >([]);
+  const [scorecardRuleOpenIndices, setScorecardRuleOpenIndices] = useState<
+    Set<number>
+  >(() => new Set());
+  const [scorecardFallbackField, setScorecardFallbackField] = useState("");
   const [saveMilestone, setSaveMilestone] = useState(false);
   const [endCtaPresetKey, setEndCtaPresetKey] = useState("");
   const [endCtaInlineLocked, setEndCtaInlineLocked] = useState(false);
@@ -644,6 +648,11 @@ export default function PageInspector({
     );
   }, [draftStory]);
 
+  const scorecardLockSources = useMemo(
+    () => buildScorecardLockSources(draftStory),
+    [draftStory]
+  );
+
   useEffect(() => {
     if (!page) {
       setTitle("");
@@ -675,11 +684,15 @@ export default function PageInspector({
       setSaveMilestone(false);
       setEndCtaPresetKey("");
       setEndCtaInlineLocked(false);
+      setScorecardRuleRows([]);
+      setScorecardRuleOpenIndices(new Set());
+      setScorecardFallbackField("");
       return;
     }
 
     const logicRec = asRecord(page.logic);
     const isObjectLogic = Boolean(logicRec);
+    const pageCategory = classifyEditorPage(page as Record<string, unknown>);
 
     setTitle(typeof page.title === "string" ? page.title : "");
     setSaveMilestone(
@@ -688,7 +701,21 @@ export default function PageInspector({
         : false
     );
 
-    if (isObjectLogic) {
+    if (pageCategory === "scorecard") {
+      setScorecardRuleRows(loadScorecardRuleForms(page, draftStory));
+      setScorecardRuleOpenIndices(new Set());
+      setScorecardFallbackField(
+        typeof page.scorecardFallback === "string" ? page.scorecardFallback : ""
+      );
+      setPrimaryText(getPrimaryText(page));
+      setFragRows([]);
+      setChoices([]);
+      setLogicIfRows([]);
+      setLogicElseGoTo("");
+    } else if (isObjectLogic) {
+      setScorecardRuleRows([]);
+      setScorecardRuleOpenIndices(new Set());
+      setScorecardFallbackField("");
       setLogicIfRows(loadLogicIfRows(page));
       setLogicElseGoTo(
         typeof logicRec?.elseGoTo === "string" ? logicRec.elseGoTo : ""
@@ -697,6 +724,9 @@ export default function PageInspector({
       setFragRows([]);
       setChoices([]);
     } else {
+      setScorecardRuleRows([]);
+      setScorecardRuleOpenIndices(new Set());
+      setScorecardFallbackField("");
       setLogicIfRows([]);
       setLogicElseGoTo("");
       setPrimaryText(getPrimaryText(page));
@@ -770,12 +800,14 @@ export default function PageInspector({
       const os = asRecord(page.onSuccess);
       const of = asRecord(page.onFail);
       setRunesSuccessGoto(typeof os?.goto === "string" ? os.goto : "");
-      setRunesFailGoto(typeof of?.goto === "string" ? of.goto : "");
       const ansArr = Array.isArray(page.answer) ? page.answer : [];
       const hasGradedAnswer = ansArr.some(
         (x) => typeof x === "string" && x.trim()
       );
       setRunesRequiresCorrect(hasGradedAnswer);
+      setRunesFailGoto(
+        hasGradedAnswer && typeof of?.goto === "string" ? of.goto : ""
+      );
       setRunesFormError(null);
       setRunesMinPick(
         typeof page.minPick === "number" ? String(page.minPick) : ""
@@ -947,7 +979,8 @@ export default function PageInspector({
       } else if (
         opts?.stripPageDoneFragment &&
         pid &&
-        !isEditorLogicPage(nextPage as Record<string, unknown>)
+        !isEditorLogicPage(nextPage as Record<string, unknown>) &&
+        !isEditorScorecardPage(nextPage as Record<string, unknown>)
       ) {
         const done = canonicalMilestoneFragmentId(`${pid}_DONE`);
         const rawKey = `${pid}_DONE`;
@@ -976,6 +1009,8 @@ export default function PageInspector({
       classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
     const isEditorDecisionPage =
       classifyEditorPage(page as Record<string, unknown>) === "decision";
+    const isScorecardSave =
+      classifyEditorPage(page as Record<string, unknown>) === "scorecard";
     let nextP: Record<string, unknown>;
 
     if (isRiddle) {
@@ -1070,6 +1105,7 @@ export default function PageInspector({
       };
       delete nextOs.setFlags;
       const prevOf = asRecord(page.onFail) ?? {};
+      const failGotoOut = runesRequiresCorrect ? runesFailGoto.trim() : "";
       const parsedMax = Number.parseInt(runesMaxPick, 10);
       const parsedMin = Number.parseInt(runesMinPick, 10);
       let maxPickVal =
@@ -1103,7 +1139,7 @@ export default function PageInspector({
         onSuccess: nextOs,
         onFail: {
           ...prevOf,
-          goto: runesFailGoto.trim(),
+          goto: failGotoOut,
         },
       };
     } else if (isEditorRoutePage) {
@@ -1159,6 +1195,44 @@ export default function PageInspector({
       delete nextP.routeMap;
       delete nextP.defaultGoto;
       delete nextP.defaultNext;
+    } else if (isScorecardSave) {
+      const rules = scorecardRuleRows
+        .map((row) => {
+          const conds = row.conditions ?? [];
+          if (scorecardRuleHasDuplicateSourcePages(conds)) return null;
+          const ifPart = scorecardRuleConditionsToIf(
+            conds,
+            scorecardLockSources
+          );
+          const go = row.goto.trim();
+          if (!ifPart.length || !go) return null;
+          return { if: ifPart, goto: go };
+        })
+        .filter(Boolean) as { if: string[]; goto: string }[];
+      const fb = scorecardFallbackField.trim();
+      const textMerged = mergeFragRowsIntoPage(
+        { ...page, title },
+        fragRows,
+        primaryText
+      ).text;
+      nextP = {
+        ...page,
+        title,
+        type: "scorecard",
+        text: textMerged,
+        logic: rules,
+      };
+      delete nextP.choices;
+      delete nextP.puzzleSourcePageId;
+      delete (nextP as Record<string, unknown>).routeAssignments;
+      delete (nextP as Record<string, unknown>).routes;
+      delete (nextP as Record<string, unknown>).nextByPoolKey;
+      delete (nextP as Record<string, unknown>).routeMap;
+      delete (nextP as Record<string, unknown>).poolId;
+      delete (nextP as Record<string, unknown>).pool;
+      delete (nextP as Record<string, unknown>).poolKey;
+      if (fb) nextP.scorecardFallback = fb;
+      else delete (nextP as Record<string, unknown>).scorecardFallback;
     } else if (isOtherPuzzle) {
       nextP = { ...page, title, text: primaryText };
     } else if (page.type === "end") {
@@ -1215,7 +1289,11 @@ export default function PageInspector({
       );
     }
 
-    if (page && isEditorLogicPage(page as Record<string, unknown>)) {
+    if (
+      page &&
+      (isEditorLogicPage(page as Record<string, unknown>) ||
+        isEditorScorecardPage(page as Record<string, unknown>))
+    ) {
       delete nextP.saveMilestone;
     } else if (saveMilestone) {
       nextP.saveMilestone = true;
@@ -1256,6 +1334,9 @@ export default function PageInspector({
     routeAssignments,
     logicIfRows,
     logicElseGoTo,
+    scorecardRuleRows,
+    scorecardLockSources,
+    scorecardFallbackField,
     saveMilestone,
     endCtaPresetKey,
     endCtaInlineLocked,
@@ -1275,8 +1356,7 @@ export default function PageInspector({
         text: "",
         next: "",
         unlockIds: "",
-        visibilityMode: "none",
-        visibilityFragment: "",
+        lockIds: "",
       },
     ]);
   }, []);
@@ -1291,6 +1371,19 @@ export default function PageInspector({
 
   const addLogicIfRow = useCallback(() => {
     setLogicIfRows((r) => [...r, { fragment: "", goTo: "" }]);
+  }, []);
+
+  const addScorecardRuleRow = useCallback(() => {
+    let newIdx = 0;
+    setScorecardRuleRows((r) => {
+      newIdx = r.length;
+      return [...r, { conditions: [], goto: "" }];
+    });
+    setScorecardRuleOpenIndices((prev) => {
+      const next = new Set(prev);
+      next.add(newIdx);
+      return next;
+    });
   }, []);
 
   const addRunesOptionRow = useCallback(() => {
@@ -1606,11 +1699,44 @@ export default function PageInspector({
     classifyEditorPage(page as Record<string, unknown>) === "puzzleRoute";
   const isEditorDecisionPage =
     classifyEditorPage(page as Record<string, unknown>) === "decision";
+  const isEditorScorecardPageFlag =
+    classifyEditorPage(page as Record<string, unknown>) === "scorecard";
   const isLogic =
     Boolean(logic) && !isEditorPuzzleRoutePage && !isEditorDecisionPage;
   const isEndPage = page.type === "end";
   const milestoneEligible =
-    !isEditorLogicPage(page as Record<string, unknown>) && !isEndPage;
+    !isEditorLogicPage(page as Record<string, unknown>) &&
+    !isEditorScorecardPage(page as Record<string, unknown>) &&
+    !isEndPage;
+
+  const narrativeMultiChoiceUi =
+    !isLogic &&
+    !isRiddlePage &&
+    !isRunesPage &&
+    !isOtherPuzzle &&
+    !isEditorPuzzleRoutePage &&
+    !isEditorDecisionPage &&
+    !isEditorScorecardPageFlag &&
+    !isEndPage &&
+    choices.length >= 2;
+
+  const choiceLockBulkEligible =
+    milestoneEligible &&
+    (isEditorDecisionPage || narrativeMultiChoiceUi);
+
+  const lockIdBase =
+    (selectedPageId?.trim() ||
+      (typeof page.id === "string" ? page.id.trim() : "")) ||
+    "page";
+
+  const allChoiceLocksOn =
+    choices.length > 0 &&
+    choices.every((c) => {
+      const has =
+        c.text.trim().length > 0 || c.next.trim().length > 0;
+      return !has || c.lockIds.trim().length > 0;
+    });
+  const anyChoiceLocks = choices.some((c) => c.lockIds.trim().length > 0);
 
   return (
     <div className={s.details}>
@@ -1669,21 +1795,65 @@ export default function PageInspector({
         ) : null}
 
         {milestoneEligible ? (
-          <label className={s.saveMilestoneRow}>
-            <input
-              type="checkbox"
-              checked={saveMilestone}
-              onChange={(e) => setSaveMilestone(e.target.checked)}
-            />
-            <span>Milestone (oldalazonosító alapú)</span>
-            {saveMilestone && selectedPageId ? (
-              <span className={s.saveMilestoneHint}>
-                Fragment: <code>{canonicalMilestoneFragmentId(`${selectedPageId}_DONE`)}</code> —
-                belépéskor feloldódik a játékban. Mentéskor a történetben is beállítjuk a flaget és a
-                bank kulcsot.
-              </span>
+          <>
+            <label className={s.saveMilestoneRow}>
+              <input
+                type="checkbox"
+                checked={saveMilestone}
+                onChange={(e) => setSaveMilestone(e.target.checked)}
+              />
+              <span>Milestone (oldalazonosító alapú)</span>
+              {saveMilestone && selectedPageId ? (
+                <span className={s.saveMilestoneHint}>
+                  Fragment:{" "}
+                  <code>{canonicalMilestoneFragmentId(`${selectedPageId}_DONE`)}</code> —
+                  belépéskor feloldódik a játékban. Mentéskor a történetben is beállítjuk a flaget és a
+                  bank kulcsot.
+                </span>
+              ) : null}
+            </label>
+            {choiceLockBulkEligible ? (
+              <label className={s.saveMilestoneRow}>
+                <input
+                  type="checkbox"
+                  ref={(el) => {
+                    if (el) {
+                      el.indeterminate =
+                        anyChoiceLocks && !allChoiceLocksOn && choices.length > 0;
+                    }
+                  }}
+                  checked={allChoiceLocksOn}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    if (on) {
+                      setChoices((rows) =>
+                        rows.map((row, j) => {
+                          const has =
+                            row.text.trim().length > 0 ||
+                            row.next.trim().length > 0;
+                          if (!has) return { ...row, lockIds: "" };
+                          return {
+                            ...row,
+                            lockIds: defaultChoiceLockId(lockIdBase, j),
+                          };
+                        })
+                      );
+                    } else {
+                      setChoices((rows) =>
+                        rows.map((row) => ({ ...row, lockIds: "" }))
+                      );
+                    }
+                  }}
+                />
+                <span>Lock all option ID</span>
+                <span className={s.saveMilestoneHint}>
+                  Bejelölve: minden opcióhoz generált <code>reward.locks</code> ID (
+                  <code>{lockIdBase}_L1</code> …). Kikapcsolva: minden opció lock törlődik. Opciónként
+                  lent jelölőnégyzettel is be/ki lehet kapcsolni (ID nem szerkeszthető).
+                </span>
+              </label>
             ) : null}
-          </label>
+          </>
         ) : null}
 
         <label className={s.field}>
@@ -1700,7 +1870,8 @@ export default function PageInspector({
         !isRunesPage &&
         !isOtherPuzzle &&
         !isEditorPuzzleRoutePage &&
-        !isEditorDecisionPage ? (
+        !isEditorDecisionPage &&
+        !isEditorScorecardPageFlag ? (
           <>
             <label className={s.field}>
               <span>Fő szöveg</span>
@@ -1853,55 +2024,34 @@ export default function PageInspector({
                     }}
                   />
                 </label>
-                <details className={s.foldBlock}>
-                  <summary className={s.foldSummary}>
-                    Láthatóság: {choiceVisibilityFoldLabel(ch)}
-                  </summary>
-                  <div className={s.foldBody}>
-                    <label className={s.field}>
-                      <span>Mód</span>
-                      <select
-                        className={s.input}
-                        value={ch.visibilityMode}
-                        onChange={(e) => {
-                          const v = e.target.value as VisibilityMode;
-                          setChoices((c) =>
-                            c.map((x, j) =>
-                              j === idx ? { ...x, visibilityMode: v } : x
-                            )
-                          );
-                        }}
-                      >
-                        <option value="none">Alap: mindig látszik</option>
-                        <option value="showWhenUnlocked">
-                          Megjelenik, ha megvan a fragment
-                        </option>
-                        <option value="hideWhenUnlocked">
-                          Eltűnik, ha megvan a fragment
-                        </option>
-                      </select>
-                    </label>
-                    <FragmentIdSelect
-                      label="Fragment (láthatóság)"
-                      value={ch.visibilityFragment}
-                      onChange={(v) => {
-                        setChoices((c) =>
-                          c.map((x, j) =>
-                            j === idx ? { ...x, visibilityFragment: v } : x
-                          )
-                        );
-                      }}
-                      sections={fragmentPicklistSections}
-                      disabled={ch.visibilityMode === "none"}
-                      emptyLabel="— válassz —"
-                    />
-                  </div>
-                </details>
                 <p className={s.hintSmall}>
                   Jutalom: <code>reward.unlockFragments</code> (szabad szöveg).
-                  Láthatóság / feloldás: csak ebből a jegyzékből választható
-                  fragment.
                 </p>
+                <label className={s.saveMilestoneRow}>
+                  <input
+                    type="checkbox"
+                    checked={ch.lockIds.trim().length > 0}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setChoices((c) =>
+                        c.map((x, j) => {
+                          if (j !== idx) return x;
+                          if (on) {
+                            return {
+                              ...x,
+                              lockIds: defaultChoiceLockId(lockIdBase, idx),
+                            };
+                          }
+                          return { ...x, lockIds: "" };
+                        })
+                      );
+                    }}
+                  />
+                  <span>reward.locks (automatikus lock ID)</span>
+                  {ch.lockIds.trim() ? (
+                    <code className={s.choiceLockIdPreview}>{ch.lockIds.trim()}</code>
+                  ) : null}
+                </label>
                 <button
                   type="button"
                   className={s.btnGhost}
@@ -2290,6 +2440,7 @@ export default function PageInspector({
                         setRunesOptionRows((r) =>
                           r.map((x) => ({ ...x, correct: false }))
                         );
+                        setRunesFailGoto("");
                       }
                     }}
                   />
@@ -2299,7 +2450,7 @@ export default function PageInspector({
               <p className={s.runesModeHint}>
                 {runesRequiresCorrect
                   ? "A játékos választását a megjelölt helyes opciókhoz hasonlítjuk (answer tömb). Hibás próbánál a max. próbálkozás és az ugrások érvényesülnek."
-                  : "Nincs helyes/hibás ellenőrzés: ha a játékos beküldi a kiválasztott elemeket, sikeres ág (open mód). Opcionálisan használható optionFlagsBase a story JSON-ban."}
+                  : "Nincs helyes/hibás ellenőrzés: ha a játékos beküldi a kiválasztott elemeket, sikeres ág (open mód). A sikertelen próbák utáni céloldal nem értelmezhető — nincs „hibás” beküldés. Opcionálisan használható optionFlagsBase a story JSON-ban."}
               </p>
               {runesFormError ? (
                 <p className={s.runesFormError}>{runesFormError}</p>
@@ -2454,12 +2605,20 @@ export default function PageInspector({
             <label className={s.field}>
               <span>Sikertelen / próbák elfogyása után → oldal (id)</span>
               <input
-                className={`${s.input} ${runesFailGoto && !idSet.has(runesFailGoto) ? s.inputWarn : ""}`}
+                className={`${s.input} ${runesRequiresCorrect && runesFailGoto && !idSet.has(runesFailGoto) ? s.inputWarn : ""}`}
                 value={runesFailGoto}
                 list="editor-known-page-ids"
+                disabled={!runesRequiresCorrect}
+                aria-disabled={!runesRequiresCorrect}
                 onChange={(e) => setRunesFailGoto(e.target.value)}
               />
             </label>
+            {!runesRequiresCorrect ? (
+              <p className={s.hintSmall}>
+                Open módban nincs kötelező helyes megoldás, ezért a sikertelen ág nem
+                állítható — mentéskor üres marad.
+              </p>
+            ) : null}
           </>
         ) : isEditorPuzzleRoutePage ? (
           <>
@@ -2686,6 +2845,33 @@ export default function PageInspector({
                       }}
                     />
                   </label>
+                  <label className={s.saveMilestoneRow}>
+                    <input
+                      type="checkbox"
+                      checked={primary.lockIds.trim().length > 0}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const pIdx = slot;
+                          const cur = next[pIdx]!;
+                          next[pIdx] = {
+                            ...cur,
+                            lockIds: on
+                              ? defaultChoiceLockId(lockIdBase, pIdx)
+                              : "",
+                          };
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>Primary — reward.locks (automatikus)</span>
+                    {primary.lockIds.trim() ? (
+                      <code className={s.choiceLockIdPreview}>
+                        {primary.lockIds.trim()}
+                      </code>
+                    ) : null}
+                  </label>
                   <label className={s.field}>
                     <span>Fallback szöveg</span>
                     <input
@@ -2721,9 +2907,343 @@ export default function PageInspector({
                       }}
                     />
                   </label>
+                  <label className={s.saveMilestoneRow}>
+                    <input
+                      type="checkbox"
+                      checked={fallback.lockIds.trim().length > 0}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setChoices((prev) => {
+                          const next = normalizeDecisionChoices(prev);
+                          const nPairs = Math.floor(next.length / 2);
+                          const fIdx = slot + nPairs;
+                          const cur = next[fIdx]!;
+                          next[fIdx] = {
+                            ...cur,
+                            lockIds: on
+                              ? defaultChoiceLockId(lockIdBase, fIdx)
+                              : "",
+                          };
+                          return next;
+                        });
+                      }}
+                    />
+                    <span>Fallback — reward.locks (automatikus)</span>
+                    {fallback.lockIds.trim() ? (
+                      <code className={s.choiceLockIdPreview}>
+                        {fallback.lockIds.trim()}
+                      </code>
+                    ) : null}
+                  </label>
                 </div>
               );
             })}
+          </>
+        ) : isEditorScorecardPageFlag ? (
+          <>
+            <p className={s.hintSmall}>
+              Scorecard: a feltételek <strong>AND</strong> kapcsolóban értékelődnek.{" "}
+              <strong>Egy döntési oldalról csak egy választás</strong> adható meg szabályonként
+              (nem lehet ugyanarról az oldalról két külön flag). Kézi ID: pl.{" "}
+              <code>frag:</code>, <code>flag:</code>, vagy olyan lock, ami nincs a jegyzékben.
+            </p>
+            {scorecardLockSources.length === 0 ? (
+              <p className={s.hintSmall} role="status">
+                Nincs a sztoriban <code>reward.locks</code> (vagy setFlag) választás — a
+                strukturált lista üres; használj „Kézi ID” sorokat, vagy állíts be lockokat a
+                kérdés oldalakon.
+              </p>
+            ) : null}
+            <label className={s.field}>
+              <span>Szöveg (opcionális, megjelenhet az ugrás előtt)</span>
+              <textarea
+                className={s.textarea}
+                value={primaryText}
+                onChange={(e) => setPrimaryText(e.target.value)}
+                rows={4}
+              />
+            </label>
+            <div className={s.blockHead}>
+              <span>Szabályok (feltételek → céloldal)</span>
+              <button type="button" className={s.btnSm} onClick={addScorecardRuleRow}>
+                + szabály
+              </button>
+            </div>
+            {scorecardRuleRows.length === 0 ? (
+              <p className={s.hintSmall}>
+                Még nincs szabály — állíts be legalább egyet, vagy adj meg fallback céloldalt.
+              </p>
+            ) : (
+              scorecardRuleRows.map((row, idx) => {
+                const conds = row.conditions ?? [];
+                const dupPages = scorecardRuleHasDuplicateSourcePages(conds);
+                const ruleOpen = scorecardRuleOpenIndices.has(idx);
+                const gotoPreview = row.goto.trim() || "—";
+                return (
+                  <details
+                    key={idx}
+                    className={s.choiceCard}
+                    open={ruleOpen}
+                  >
+                    <summary
+                      className={`${s.foldSummary} ${s.scorecardRuleFoldSummary}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setScorecardRuleOpenIndices((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(idx)) next.delete(idx);
+                          else next.add(idx);
+                          return next;
+                        });
+                      }}
+                    >
+                      <span className={s.scorecardRuleFoldChevron} aria-hidden>
+                        {ruleOpen ? "\u25bc" : "\u25b6"}
+                      </span>
+                      <span className={s.scorecardRuleFoldTitle}>
+                        Szabály {idx + 1}
+                      </span>
+                      <span className={s.scorecardRuleFoldMeta}>
+                        · {conds.length} felt. → {gotoPreview}
+                      </span>
+                      {dupPages ? (
+                        <span
+                          className={s.scorecardRuleFoldWarn}
+                          title="Ugyanabból az oldalról többször választottál kimenetet"
+                          aria-label="Figyelmeztetés: ütköző forrás oldalak"
+                        >
+                          {"\u26a0"}
+                        </span>
+                      ) : null}
+                    </summary>
+                    <div className={s.foldBody}>
+                      {dupPages ? (
+                        <p className={s.err}>
+                          Ugyanabból az oldalról többször választottál kimenetet — törölj
+                          vagy módosíts, különben a mentés hibás kombinációt írna.
+                        </p>
+                      ) : null}
+                      {conds.length === 0 ? (
+                        <p className={s.hintSmall}>
+                          Még nincs feltétel ebben a szabályban.
+                        </p>
+                      ) : (
+                        conds.map((cond, cidx) => {
+                        const taken = new Set<string>();
+                        conds.forEach((c, j) => {
+                          if (j !== cidx && c.mode === "pick" && c.pageId)
+                            taken.add(c.pageId);
+                        });
+                        return (
+                          <div key={cidx} className={s.fragCard}>
+                            {cond.mode === "pick" ? (
+                              <>
+                                <label className={s.field}>
+                                  <span>Döntési oldal (lock forrás)</span>
+                                  <select
+                                    className={s.input}
+                                    value={cond.pageId}
+                                    onChange={(e) => {
+                                      const pid = e.target.value;
+                                      setScorecardRuleRows((r) =>
+                                        r.map((x, j) => {
+                                          if (j !== idx) return x;
+                                          const next = [...(x.conditions ?? [])];
+                                          next[cidx] = {
+                                            mode: "pick",
+                                            pageId: pid,
+                                            outcomeIndex: 0,
+                                          };
+                                          return { ...x, conditions: next };
+                                        })
+                                      );
+                                    }}
+                                  >
+                                    <option value="">— válassz oldalt —</option>
+                                    {scorecardLockSources
+                                      .filter(
+                                        (src) =>
+                                          !taken.has(src.pageId) ||
+                                          src.pageId === cond.pageId
+                                      )
+                                      .map((src) => (
+                                        <option key={src.pageId} value={src.pageId}>
+                                          {src.pageTitle} ({src.pageId})
+                                        </option>
+                                      ))}
+                                  </select>
+                                </label>
+                                <label className={s.field}>
+                                  <span>Választás → lock</span>
+                                  <select
+                                    className={s.input}
+                                    disabled={!cond.pageId}
+                                    value={String(cond.outcomeIndex)}
+                                    onChange={(e) => {
+                                      const oi = Number.parseInt(e.target.value, 10) || 0;
+                                      setScorecardRuleRows((r) =>
+                                        r.map((x, j) => {
+                                          if (j !== idx) return x;
+                                          const next = [...(x.conditions ?? [])];
+                                          next[cidx] = {
+                                            mode: "pick",
+                                            pageId: cond.pageId,
+                                            outcomeIndex: oi,
+                                          };
+                                          return { ...x, conditions: next };
+                                        })
+                                      );
+                                    }}
+                                  >
+                                    {(
+                                      scorecardLockSources.find(
+                                        (s) => s.pageId === cond.pageId
+                                      )?.outcomes ?? []
+                                    ).map((o, oi) => (
+                                      <option key={oi} value={String(oi)}>
+                                        {o.choiceLabel} → {o.lockIds.join(", ")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              </>
+                            ) : (
+                              <label className={s.field}>
+                                <span>Kézi feltétel ID</span>
+                                <input
+                                  className={s.input}
+                                  value={cond.rawId}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setScorecardRuleRows((r) =>
+                                      r.map((x, j) => {
+                                        if (j !== idx) return x;
+                                        const next = [...(x.conditions ?? [])];
+                                        next[cidx] = { mode: "custom", rawId: v };
+                                        return { ...x, conditions: next };
+                                      })
+                                    );
+                                  }}
+                                />
+                              </label>
+                            )}
+                            <button
+                              type="button"
+                              className={s.btnGhost}
+                              onClick={() =>
+                                setScorecardRuleRows((r) =>
+                                  r.map((x, j) => {
+                                    if (j !== idx) return x;
+                                    return {
+                                      ...x,
+                                      conditions: (x.conditions ?? []).filter(
+                                        (_, k) => k !== cidx
+                                      ),
+                                    };
+                                  })
+                                )
+                              }
+                            >
+                              Feltétel törlése
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                    <div className={s.blockHead}>
+                      <span>Feltétel hozzáadása</span>
+                      <button
+                        type="button"
+                        className={s.btnSm}
+                        onClick={() =>
+                          setScorecardRuleRows((r) =>
+                            r.map((x, j) => {
+                              if (j !== idx) return x;
+                              const first = scorecardLockSources[0];
+                              return {
+                                ...x,
+                                conditions: [
+                                  ...(x.conditions ?? []),
+                                  {
+                                    mode: "pick",
+                                    pageId: first?.pageId ?? "",
+                                    outcomeIndex: 0,
+                                  },
+                                ],
+                              };
+                            })
+                          )
+                        }
+                      >
+                        + választás alapján
+                      </button>
+                      <button
+                        type="button"
+                        className={s.btnSm}
+                        onClick={() =>
+                          setScorecardRuleRows((r) =>
+                            r.map((x, j) => {
+                              if (j !== idx) return x;
+                              return {
+                                ...x,
+                                conditions: [
+                                  ...(x.conditions ?? []),
+                                  { mode: "custom", rawId: "" },
+                                ],
+                              };
+                            })
+                          )
+                        }
+                      >
+                        + kézi ID
+                      </button>
+                    </div>
+                    <label className={s.field}>
+                      <span>Céloldal (id)</span>
+                      <input
+                        className={`${s.input} ${row.goto.trim() && !idSet.has(row.goto.trim()) ? s.inputWarn : ""}`}
+                        value={row.goto}
+                        list="editor-known-page-ids"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setScorecardRuleRows((r) =>
+                            r.map((x, j) => (j === idx ? { ...x, goto: v } : x))
+                          );
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={s.btnGhost}
+                      onClick={() => {
+                        setScorecardRuleRows((r) => r.filter((_, j) => j !== idx));
+                        setScorecardRuleOpenIndices((prev) => {
+                          const next = new Set<number>();
+                          for (const i of prev) {
+                            if (i === idx) continue;
+                            if (i > idx) next.add(i - 1);
+                            else next.add(i);
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      Szabály törlése
+                    </button>
+                    </div>
+                  </details>
+                );
+              })
+            )}
+            <label className={s.field}>
+              <span>Fallback céloldal (ha egyik szabály sem illeszkedik)</span>
+              <input
+                className={`${s.input} ${scorecardFallbackField.trim() && !idSet.has(scorecardFallbackField.trim()) ? s.inputWarn : ""}`}
+                value={scorecardFallbackField}
+                list="editor-known-page-ids"
+                onChange={(e) => setScorecardFallbackField(e.target.value)}
+              />
+            </label>
           </>
         ) : isOtherPuzzle ? (
           <label className={s.field}>

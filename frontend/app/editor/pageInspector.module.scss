@@ -238,6 +238,15 @@
   flex-shrink: 0;
 }
 
+.choiceLockIdPreview {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .saveMilestoneHint {
   font-weight: 500;
   opacity: 0.8;
@@ -482,6 +491,36 @@
 
 .foldSummary::-webkit-details-marker {
   display: none;
+}
+
+.scorecardRuleFoldSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+}
+
+.scorecardRuleFoldChevron {
+  flex-shrink: 0;
+  width: 0.85em;
+  font-size: 0.62rem;
+  opacity: 0.78;
+}
+
+.scorecardRuleFoldTitle {
+  font-weight: 700;
+}
+
+.scorecardRuleFoldMeta {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.62;
+}
+
+.scorecardRuleFoldWarn {
+  color: #fca5a5;
+  font-size: 0.85rem;
+  line-height: 1;
 }
 
 .foldBody {
