@@ -165,7 +165,7 @@ export function StoryPageDock({
 
     if (ok && isOpenPuzzle && setGlobal && Array.isArray(page.options)) {
       const { minPick, maxPick } = runesPickBounds(page);
-      const mode = page.mode === "ordered" ? "ordered" : "set";
+      const mode = "set";
       const routeKey = buildOpenModeRoutePickKey(
         pickedIds,
         page.options,
@@ -313,7 +313,7 @@ export function StoryPageDock({
                   maxAttempts={runesPage.maxAttempts ?? 3}
                   maxPick={maxPick}
                   minPick={minPick}
-                  mode={runesPage.mode ?? "ordered"}
+                  mode="set"
                   feedback={runesPage.feedback ?? "reset"}
                   className={embedGhost ? `${dockStyles.grid} ${dockStyles.gridGhost}` : dockStyles.grid}
                   storyId={derivedStoryId || "default_story"}

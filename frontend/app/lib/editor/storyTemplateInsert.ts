@@ -83,7 +83,7 @@ function buildTemplatePageByKey(
         id: nid,
         type: "puzzle",
         kind: "runes",
-        prompt: "Instrukció a játékosnak: mit kell kiválasztania.",
+        prompt: "Instrukció a látogatónak: mit kell kiválasztania.",
         options: ["alfa", "béta", "gamma"],
         answer: ["alfa"],
         maxPick: 1,

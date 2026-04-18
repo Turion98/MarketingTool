@@ -55,7 +55,7 @@ export function parseLegacyLogicArrayToRouteAssignments(
       ? sourcePage.optionFlagsBase
       : "";
   if (!base.trim()) return null;
-  const mode = sourcePage.mode === "ordered" ? "ordered" : "set";
+  const mode = "set";
   const assignments: Record<string, string> = {};
 
   for (const entry of logicArr) {
@@ -111,7 +111,7 @@ function normalizeRouteAssignmentKeys(
   assignments: Record<string, string>,
   sourcePage: Record<string, unknown> | null | undefined
 ): Record<string, string> {
-  const mode = sourcePage?.mode === "ordered" ? "ordered" : "set";
+  const mode = "set";
   const out: Record<string, string> = {};
   for (const [k0, v] of Object.entries(assignments)) {
     const s = typeof v === "string" ? v : "";

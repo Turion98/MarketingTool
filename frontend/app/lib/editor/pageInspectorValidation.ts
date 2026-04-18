@@ -49,7 +49,7 @@ export function validatePage(
   if (!page) {
     issues.push({
       path: "id",
-      message: "Ez az oldal-ID nem szerepel a betöltött sztoriban — ellenőrizd az elírást.",
+      message: "Ez az oldal-ID nem szerepel a betöltött projektben — ellenőrizd az elírást.",
     });
     return issues;
   }
@@ -235,7 +235,7 @@ export function validatePage(
       issues.push({
         path: "choices",
         message:
-          "Decision: páros számú opció szükséges (primary/fallback párok).",
+          "Döntési pool: páros számú opció kell (minden választási helyhez elsődleges + tartalék).",
       });
     }
     for (let i = 0; i < choices.length; i++) {
@@ -245,18 +245,18 @@ export function validatePage(
       if (!(readString(c?.text)?.trim() ?? "")) {
         issues.push({
           path: `choices[${i}].text`,
-          message: `Decision opció "${label}": hiányzó szöveg.`,
+          message: `Döntési pool, opció „${label}”: hiányzó felirat.`,
         });
       }
       if (!next) {
         issues.push({
           path: `choices[${i}].next`,
-          message: `Decision opció "${label}": hiányzó következő oldal.`,
+          message: `Döntési pool, opció „${label}”: hiányzó következő oldal.`,
         });
       } else if (!knownIds.has(next)) {
         issues.push({
           path: `choices[${i}].next`,
-          message: `Decision opció "${label}": ismeretlen oldal "${next}".`,
+          message: `Döntési pool, opció „${label}”: ismeretlen oldal „${next}”.`,
         });
       }
     }
@@ -319,8 +319,7 @@ export function validatePage(
           const { minPick, maxPick } = runesPickBounds(
             srcPage as Record<string, unknown>
           );
-          const mode =
-            srcPage.mode === "ordered" ? "ordered" : "set";
+          const mode = "set";
           const expected = generatePuzzleRouteKeys(n, minPick, maxPick, mode);
           for (const ek of expected) {
             const dest = readString(ra[ek]);
@@ -431,13 +430,13 @@ export function validatePage(
       if (!frag) {
         issues.push({
           path: `logic.ifHasFragment[${i}].fragment`,
-          message: "Logic ág: hiányzó fragment.",
+          message: "Feltételes ugrás: hiányzó fragment az ágban.",
         });
       }
       if (!go) {
         issues.push({
           path: `logic.ifHasFragment[${i}].goTo`,
-          message: "Logic ág: hiányzó cél oldal.",
+          message: "Feltételes ugrás: hiányzó céloldal az ágban.",
         });
       } else if (!knownIds.has(go)) {
         issues.push({
@@ -450,7 +449,8 @@ export function validatePage(
     if (!elseGo && ifHas.length > 0) {
       issues.push({
         path: "logic.elseGoTo",
-        message: "Logic: hiányzó elseGoTo (kötelező, ha van ifHasFragment).",
+        message:
+          "Feltételes ugrás: töltsd ki az „Egyébként” céloldalt, ha van legalább egy „ha fragment → ugrás” sor.",
       });
     }
     if (elseGo && !knownIds.has(elseGo)) {

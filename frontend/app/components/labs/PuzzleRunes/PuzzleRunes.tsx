@@ -40,7 +40,7 @@ type PuzzleRunesProps = {
   buttonClassName?: string;
 
   // ⬇️ működési módok
-  mode?: PuzzleRunesMode; // "ordered" | "set" (default: "ordered")
+  mode?: PuzzleRunesMode; // mindig "set" (halmaz); a prop csak régi hívások miatt marad
   feedback?: PuzzleRunesFeedback; // "keep" | "reset" (csak set-módban értelmezett; default: "reset")
 };
 
@@ -106,7 +106,7 @@ export default function PuzzleRunes({
   puzzleId,
   className,
   buttonClassName,
-  mode = "ordered",
+  mode = "set",
   feedback = "reset",
 }: PuzzleRunesProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
