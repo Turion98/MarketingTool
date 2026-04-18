@@ -150,7 +150,7 @@
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
           "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "scorecard", "conditionalRouting"],
+          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "puzzleOutcomeLogic", "scorecard", "conditionalRouting"],
           "default": "default"
         },
         "title": { "type": "string" },

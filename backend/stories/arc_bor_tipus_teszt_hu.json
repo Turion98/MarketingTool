@@ -233,7 +233,7 @@
     },
     {
       "id": "logic_resolve",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [
         {

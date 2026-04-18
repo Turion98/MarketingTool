@@ -431,7 +431,9 @@ const stringGlobals = useMemo<Record<string, string>>(
     const isScorecardPage = pageData.type === "scorecard";
     const isLegacyLogicArray =
       pageData.type === "logic" && isArrayRules;
-    if (!isScorecardPage && !isLegacyLogicArray) return;
+    const isPuzzleOutcomeLogicArray =
+      pageData.type === "puzzleOutcomeLogic" && isArrayRules;
+    if (!isScorecardPage && !isLegacyLogicArray && !isPuzzleOutcomeLogicArray) return;
 
     const rules: StoryLogicRule[] = isArrayRules
       ? (logicArr as StoryLogicRule[])
@@ -988,7 +990,12 @@ const dockChoicesForThisPage = useMemo(() => {
   // handle "no text => show choices immediately"
   useEffect(() => {
     if (!pageData?.id) return;
-    if (pageData.type === "logic" || pageData.type === "scorecard") return;
+    if (
+      pageData.type === "logic" ||
+      pageData.type === "puzzleOutcomeLogic" ||
+      pageData.type === "scorecard"
+    )
+      return;
 
     // 🔹 Puzzle oldalak (riddle + runes): ne blokkoljuk őket a prevWasChoice guarddal
     const isPuzzlePage = isRiddlePage || isRunesPage;

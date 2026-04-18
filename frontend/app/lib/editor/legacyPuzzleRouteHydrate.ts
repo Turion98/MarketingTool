@@ -86,11 +86,15 @@ export function parseLegacyLogicArrayToRouteAssignments(
 
 /**
  * `classifyEditorPage` puzzleRoute lehet `routeAssignments` / `puzzleSourcePageId` alapján is,
- * miközben a `type` még nem `puzzleRoute`. A régi tömbös (`type: logic` + `logic[]`) ágat külön kezeljük.
+ * miközben a `type` még nem `puzzleRoute`. A tömbös (`type: logic` vagy `type: puzzleOutcomeLogic` + `logic[]`) ágat külön kezeljük.
  */
 function shouldReadPuzzleRouteRecordFields(page: Record<string, unknown>): boolean {
   const logicArr = Array.isArray(page.logic) ? page.logic : [];
-  if (page.type === "logic" && logicArr.length > 0) return false;
+  if (
+    (page.type === "logic" || page.type === "puzzleOutcomeLogic") &&
+    logicArr.length > 0
+  )
+    return false;
   if (page.type === "puzzleRoute") return true;
   const sid =
     typeof page.puzzleSourcePageId === "string"
@@ -158,7 +162,10 @@ export function hydrateRouteFieldsFromStoryPage(
   }
 
   const logicArr = Array.isArray(page.logic) ? page.logic : [];
-  if (page.type !== "logic" || logicArr.length === 0) {
+  if (
+    (page.type !== "logic" && page.type !== "puzzleOutcomeLogic") ||
+    logicArr.length === 0
+  ) {
     return { sourceId: "", defaultGoto: "", assignments: {} };
   }
 

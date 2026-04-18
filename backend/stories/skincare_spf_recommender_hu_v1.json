@@ -50,7 +50,7 @@
     },
     {
       "id": "logic",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "Elemzés...",
       "text": [
         {

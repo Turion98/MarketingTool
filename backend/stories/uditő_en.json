@@ -110,7 +110,7 @@
     },
     {
       "id": "logic",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "Analyzing...",
       "text": [
         {

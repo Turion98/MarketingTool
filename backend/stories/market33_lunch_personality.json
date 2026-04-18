@@ -414,7 +414,7 @@
     },
     {
       "id": "logic_group_sharing_veg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -492,7 +492,7 @@
     },
     {
       "id": "logic_group_sharing_mix",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -570,7 +570,7 @@
     },
     {
       "id": "logic_group_sharing_nonveg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -648,7 +648,7 @@
     },
     {
       "id": "logic_group_individual_veg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -726,7 +726,7 @@
     },
     {
       "id": "logic_group_individual_mix",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -804,7 +804,7 @@
     },
     {
       "id": "logic_group_individual_nonveg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -882,7 +882,7 @@
     },
     {
       "id": "logic_group_compromise_mix",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -960,7 +960,7 @@
     },
     {
       "id": "logic_group_compromise_nonveg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -1388,7 +1388,7 @@
     },
     {
       "id": "logic_veg",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -1501,7 +1501,7 @@
     },
     {
       "id": "logic_chicken",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [
@@ -1614,7 +1614,7 @@
     },
     {
       "id": "logic_seafood",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "title": "",
       "text": [],
       "logic": [

@@ -226,7 +226,7 @@
     },
     {
       "id": "L3_route_switch",
-      "type": "logic",
+      "type": "puzzleOutcomeLogic",
       "logic": [
         {
           "if": [

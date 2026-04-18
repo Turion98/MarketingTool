@@ -37,6 +37,11 @@ import {
 } from "@/app/lib/editor/storyPagePatch";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
 import {
+  buildEndPageId,
+  collectEndCategoryKeysFromStory,
+  parseEndPageIdSegments,
+} from "@/app/lib/editor/endPageIdParts";
+import {
   buildScorecardLockSources,
   loadScorecardRuleForms,
   scorecardRuleConditionsToIf,
@@ -46,6 +51,7 @@ import {
 } from "@/app/lib/editor/scorecardLockCatalog";
 import { STORY_GRAPH_START_NODE_ID } from "@/app/lib/editor/storyGraph";
 import StoryMetaInspector from "./StoryMetaInspector";
+import EndPageIdSegments from "./EndPageIdSegments";
 import s from "./pageInspector.module.scss";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -606,6 +612,10 @@ export default function PageInspector({
   const pageIdBarRootRef = useRef<HTMLDivElement>(null);
   const pageIdClickTimerRef = useRef<number | null>(null);
   const prevSelForBarRef = useRef<string | null | undefined>(undefined);
+  const [endSegCategory, setEndSegCategory] = useState("");
+  const [endSegTail, setEndSegTail] = useState("");
+  const [endSegLegacy, setEndSegLegacy] = useState(false);
+  const endInspectorTailRef = useRef<HTMLInputElement>(null);
 
   const clearPageIdClickTimer = useCallback(() => {
     if (pageIdClickTimerRef.current != null) {
@@ -631,6 +641,11 @@ export default function PageInspector({
     const others = sections.others.filter((o) => !milestoneSet.has(o));
     return { milestones, others };
   }, [draftStory, choices, saveMilestone, selectedPageId]);
+
+  const endCategoryPicklist = useMemo(
+    () => collectEndCategoryKeysFromStory(draftStory),
+    [draftStory]
+  );
 
   const ctaPresetKeys = useMemo(() => {
     const meta = draftStory.meta;
@@ -869,6 +884,25 @@ export default function PageInspector({
       setEndCtaPresetKey("");
       setEndCtaInlineLocked(false);
     }
+
+    if (page.type === "end" && selectedPageId) {
+      if (isEditorPendingPageId(selectedPageId)) {
+        setEndSegCategory("");
+        setEndSegTail("");
+        setEndSegLegacy(false);
+      } else {
+        const parsed = parseEndPageIdSegments(selectedPageId);
+        if (parsed) {
+          setEndSegCategory(parsed.category);
+          setEndSegTail(parsed.tail);
+          setEndSegLegacy(false);
+        } else {
+          setEndSegLegacy(true);
+        }
+      }
+    } else {
+      setEndSegLegacy(false);
+    }
   }, [page, selectedPageId, draftStory]);
 
   useEffect(() => {
@@ -883,21 +917,43 @@ export default function PageInspector({
 
   const commitInspectorPageId = useCallback(() => {
     if (!selectedPageId || !onRenamePageId) return;
-    const t = pageIdDraft.trim();
+    const isEnd = page?.type === "end";
+    let t = pageIdDraft.trim();
+    if (isEnd && !endSegLegacy) {
+      const c = endSegCategory.trim();
+      const tail = endSegTail.trim();
+      if (!c || !tail) {
+        if (isEditorPendingPageId(selectedPageId)) {
+          setPageIdError(
+            "Végoldal ID: válassz kategóriát, majd adj egyedi farok részt (pl. koszonk).",
+          );
+        }
+        return;
+      }
+      t = buildEndPageId(c, tail);
+    }
     if (t === selectedPageId) {
       setPageIdError(null);
       return;
     }
     if (!t) {
       if (isEditorPendingPageId(selectedPageId)) {
-        setPageIdError("Add meg az oldal egyedi azonosítóját.");
+        setPageIdError("Adj meg egyedi oldal-ID-t — ez alapján hivatkoznak rá más lapok.");
       }
       return;
     }
     const err = onRenamePageId(selectedPageId, t);
     if (err) setPageIdError(err);
     else setPageIdError(null);
-  }, [selectedPageId, pageIdDraft, onRenamePageId]);
+  }, [
+    selectedPageId,
+    pageIdDraft,
+    onRenamePageId,
+    page,
+    endSegLegacy,
+    endSegCategory,
+    endSegTail,
+  ]);
 
   useEffect(() => () => clearPageIdClickTimer(), [clearPageIdClickTimer]);
 
@@ -1093,7 +1149,7 @@ export default function PageInspector({
         : [];
       if (runesRequiresCorrect && options.length > 0 && answer.length === 0) {
         setRunesFormError(
-          "Jelölj legalább egy helyes opciót, vagy kapcsold ki a kötelező helyes megoldást."
+          "Ha kötelező a helyes megoldás, jelölj legalább egy helyes opciót — vagy kapcsold ki a kötelező módot."
         );
         return;
       }
@@ -1505,6 +1561,13 @@ export default function PageInspector({
       }
     };
 
+    const useEndSegmentsUi = Boolean(
+      showInput &&
+        renameOk &&
+        page?.type === "end" &&
+        !endSegLegacy
+    );
+
     return (
       <div className={s.pageIdStripOuter} ref={pageIdBarRootRef}>
         <div className={s.field}>
@@ -1515,50 +1578,131 @@ export default function PageInspector({
             }`}
           >
             {showInput ? (
-              <input
-                ref={pageIdInputRef}
-                type="text"
-                className={s.pageIdStripInput}
-                value={pageIdDraft}
-                onChange={(e) => {
-                  setPageIdDraft(e.target.value);
-                  setPageIdError(null);
-                }}
-                onBlur={() => {
-                  window.setTimeout(() => finishIdEdit(), 0);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    finishIdEdit();
-                  }
-                  if (e.key === "Escape") {
-                    e.preventDefault();
-                    if (
-                      selectedPageId &&
-                      isEditorPendingPageId(selectedPageId)
-                    ) {
-                      setPageIdDraft("");
-                    } else {
-                      setPageIdDraft(selectedPageId ?? "");
+              useEndSegmentsUi ? (
+                <div className={s.pageIdEndSegCol}>
+                  <EndPageIdSegments
+                    categories={endCategoryPicklist}
+                    category={endSegCategory}
+                    tail={endSegTail}
+                    onCategoryChange={(v) => {
+                      setEndSegCategory(v);
+                      setPageIdError(null);
+                    }}
+                    onTailChange={(v) => {
+                      setEndSegTail(v);
+                      setPageIdError(null);
+                    }}
+                    onBlurCommit={() => {
+                      window.setTimeout(() => finishIdEdit(), 0);
+                    }}
+                    onEscape={() => {
+                      if (
+                        selectedPageId &&
+                        isEditorPendingPageId(selectedPageId)
+                      ) {
+                        setEndSegCategory("");
+                        setEndSegTail("");
+                      } else if (selectedPageId) {
+                        const p = parseEndPageIdSegments(selectedPageId);
+                        if (p) {
+                          setEndSegCategory(p.category);
+                          setEndSegTail(p.tail);
+                        }
+                      }
+                      setPageIdError(null);
+                      if (
+                        selectedPageId &&
+                        !isEditorPendingPageId(selectedPageId)
+                      ) {
+                        setPageIdBarEditing(false);
+                      }
+                    }}
+                    tailInputRef={endInspectorTailRef}
+                  />
+                  <button
+                    type="button"
+                    className={s.pageIdModeLink}
+                    onClick={() => {
+                      setEndSegLegacy(true);
+                      setPageIdDraft(
+                        isEditorPendingPageId(selectedPageId ?? "")
+                          ? ""
+                          : (selectedPageId ?? "")
+                      );
+                      setPageIdError(null);
+                    }}
+                  >
+                    Teljes ID szerkesztése (haladó mód)
+                  </button>
+                </div>
+              ) : (
+                <div className={s.pageIdEndSegCol}>
+                  <input
+                    ref={pageIdInputRef}
+                    type="text"
+                    className={s.pageIdStripInput}
+                    value={pageIdDraft}
+                    onChange={(e) => {
+                      setPageIdDraft(e.target.value);
+                      setPageIdError(null);
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => finishIdEdit(), 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        finishIdEdit();
+                      }
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        if (
+                          selectedPageId &&
+                          isEditorPendingPageId(selectedPageId)
+                        ) {
+                          setPageIdDraft("");
+                          setEndSegCategory("");
+                          setEndSegTail("");
+                        } else {
+                          setPageIdDraft(selectedPageId ?? "");
+                        }
+                        setPageIdError(null);
+                        if (
+                          selectedPageId &&
+                          !isEditorPendingPageId(selectedPageId)
+                        ) {
+                          setPageIdBarEditing(false);
+                        }
+                      }
+                    }}
+                    list="editor-known-page-ids"
+                    aria-invalid={!!pageIdError}
+                    aria-describedby={
+                      pageIdError ? "inspector-page-id-err" : undefined
                     }
-                    setPageIdError(null);
-                    if (
-                      selectedPageId &&
-                      !isEditorPendingPageId(selectedPageId)
-                    ) {
-                      setPageIdBarEditing(false);
-                    }
-                  }
-                }}
-                list="editor-known-page-ids"
-                aria-invalid={!!pageIdError}
-                aria-describedby={
-                  pageIdError ? "inspector-page-id-err" : undefined
-                }
-                spellCheck={false}
-                autoComplete="off"
-              />
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                  {page?.type === "end" &&
+                  endSegLegacy &&
+                  parseEndPageIdSegments(pageIdDraft.trim()) ? (
+                    <button
+                      type="button"
+                      className={s.pageIdModeLink}
+                      onClick={() => {
+                        const p = parseEndPageIdSegments(pageIdDraft.trim());
+                        if (!p) return;
+                        setEndSegCategory(p.category);
+                        setEndSegTail(p.tail);
+                        setEndSegLegacy(false);
+                        setPageIdError(null);
+                      }}
+                    >
+                      Vissza a szegmentált nézethez
+                    </button>
+                  ) : null}
+                </div>
+              )
             ) : (
               <button
                 type="button"
@@ -1647,7 +1791,10 @@ export default function PageInspector({
     if (!onSelectPageInEditor) {
       return (
         <div className={s.wrap}>
-          <p className={s.muted}>Válassz egy oldalt a vásznon a részletekhez.</p>
+          <p className={s.muted}>
+            Kezdés: kattints egy kártyára a vásznon — a jobb oldali panelben szerkesztheted a
+            tartalmát és a következő lépéseket.
+          </p>
         </div>
       );
     }
@@ -1659,8 +1806,8 @@ export default function PageInspector({
         <div className={s.body}>
           {renderPageIdUnifiedBar()}
           <p className={s.hintSmall}>
-            Egy kattintás az ID sávra vagy a ▼ gomb: lista. Kattinthatsz egy kártyára a
-            vásznon is.
+            <strong>Oldalváltás:</strong> kattints az ID sávra vagy a ▼ ikonra — megjelenik a
+            lista. Ugyanezt elérheted, ha közvetlenül a vászonon választasz kártyát.
           </p>
         </div>
       </div>
@@ -1684,7 +1831,10 @@ export default function PageInspector({
         </div>
         <div className={s.body}>
           {renderPageIdUnifiedBar()}
-          <p className={s.err}>Az oldal nem található: {selectedPageId}</p>
+          <p className={s.err}>
+            Ez az ID nincs a betöltött sztoriban: {selectedPageId}. Válassz másik oldalt a
+            listából, vagy hozz létre újat a vásznon.
+          </p>
         </div>
       </div>
     );
@@ -1741,7 +1891,7 @@ export default function PageInspector({
   return (
     <div className={s.details}>
       <div className={s.summaryRow}>
-        <h3 className={s.summary}>Oldal részletek</h3>
+        <h3 className={s.summary}>Oldal beállítások</h3>
         {selectedPageId && onRequestDeletePage ? (
           <button
             type="button"
@@ -1767,9 +1917,9 @@ export default function PageInspector({
           <div className={s.pageChrome}>
             {selectedPageId && isEditorPendingPageId(selectedPageId) ? (
               <div className={s.pendingIdBanner} role="status">
-                <strong>Oldalazonosító szükséges.</strong> Adj meg egy egyedi ID-t
-                (pl. <code>chapter_3_shop</code>). Ha másik oldalt választasz a
-                listában vagy a vásznon, ez a vázlat eltűnik.
+                <strong>Adj meg egyedi oldal-ID-t.</strong> Példa:{" "}
+                <code>chapter_3_shop</code>. Amíg nincs név, ez egy ideiglenes lap; ha
+                másik oldalt választasz, a névtelen lap elveszik.
               </div>
             ) : null}
             {renderPageIdUnifiedBar()}
@@ -1777,16 +1927,16 @@ export default function PageInspector({
               const hints: string[] = [];
               if (onSelectPageInEditor) {
                 hints.push(
-                  "Egy kattintás az ID sávra: lista (▼ azonnal). A lista a vásznat és az előnézetet is erre állítja."
+                  "Egy kattintás az ID sávra: megnyílik a lista (▼). A választás szinkronban van a vászonnal és az előnézettel."
                 );
               }
               if (onRenamePageId && !pageIdError) {
                 hints.push(
-                  "Dupla kattintás az ID-n: átírás. A vászonon a kártya fejlécében is szerkeszthető."
+                  "Dupla kattintás az ID mezőn: átnevezés. Ugyanezt megteheted a kártya fejlécében is a vásznon."
                 );
               }
               if (onSelectPageInEditor && pageIdError) {
-                hints.push("Másik oldal: lista vagy ▼.");
+                hints.push("Ha elakadtál, válassz másik oldalt a listából vagy a ▼ menüből.");
               }
               if (!hints.length) return null;
               return <p className={s.hintSmall}>{hints.join(" ")}</p>;
@@ -1802,13 +1952,13 @@ export default function PageInspector({
                 checked={saveMilestone}
                 onChange={(e) => setSaveMilestone(e.target.checked)}
               />
-              <span>Milestone (oldalazonosító alapú)</span>
+              <span>Milestone (haladás mentése)</span>
               {saveMilestone && selectedPageId ? (
                 <span className={s.saveMilestoneHint}>
-                  Fragment:{" "}
+                  Automatikus fragment:{" "}
                   <code>{canonicalMilestoneFragmentId(`${selectedPageId}_DONE`)}</code> —
-                  belépéskor feloldódik a játékban. Mentéskor a történetben is beállítjuk a flaget és a
-                  bank kulcsot.
+                  amikor a játékos ide ér, feloldódik ez a szövegblokk. Mentéskor a milestone
+                  flag és a fragment bank is frissül.
                 </span>
               ) : null}
             </label>
@@ -1847,9 +1997,10 @@ export default function PageInspector({
                 />
                 <span>Lock all option ID</span>
                 <span className={s.saveMilestoneHint}>
-                  Bejelölve: minden opcióhoz generált <code>reward.locks</code> ID (
-                  <code>{lockIdBase}_L1</code> …). Kikapcsolva: minden opció lock törlődik. Opciónként
-                  lent jelölőnégyzettel is be/ki lehet kapcsolni (ID nem szerkeszthető).
+                  Bekapcsolva minden választáshoz generálunk stabil{" "}
+                  <code>reward.locks</code> azonosítót (<code>{lockIdBase}_L1</code> …), hogy
+                  később scorecard / routing szabályokra hivatkozhass. Kikapcsolva minden lock
+                  törlődik; opciónként lent külön is ki/be kapcsolhatod (az ID-k fixek maradnak).
                 </span>
               </label>
             ) : null}
@@ -1890,9 +2041,9 @@ export default function PageInspector({
               </button>
             </div>
             <p className={s.hintSmall}>
-              Fragment id csak a jegyzékből: az opciók „Mentett fragment id-k”
-              mezői (mentett történet + mostani szerkesztés). Új id először ott
-              adható meg.
+              <strong>Fragmentek:</strong> csak olyan ID-t válassz, ami már szerepel a
+              történetben vagy most hozod létre az opciók „Mentett fragment id-k” mezőjében.
+              Így elkerülöd az elgépelést, és a mentés ugyanoda írja a szöveget.
             </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
@@ -1936,7 +2087,7 @@ export default function PageInspector({
                     className={s.textarea}
                     rows={2}
                     value={row.text}
-                    placeholder="A story.fragments[id].text tartalma; mentéskor oda is íródik."
+                    placeholder="Itt szerkeszted a fragment szövegét — mentéskor a story.fragments[id].text mezőbe kerül."
                     onChange={(e) => {
                       const v = e.target.value;
                       setFragRows((r) =>
@@ -2102,7 +2253,8 @@ export default function PageInspector({
         ) : isRiddlePage ? (
           <>
             <p className={s.hintSmall}>
-              Riddle: narratív szöveg + fragmentek, majd kvíz mezők és ágak.
+              Riddle oldal felépítése: először a történet szövege és a fragment blokkok, alatta
+              a kvíz kérdés, válaszok és elágazások.
             </p>
             <label className={s.field}>
               <span>Fő szöveg (blokkok / default)</span>
@@ -2120,8 +2272,8 @@ export default function PageInspector({
               </button>
             </div>
             <p className={s.hintSmall}>
-              Fragment id a jegyzékből (opciók jutalom mezői), mint a narratív
-              oldalakon.
+              Ugyanaz a fragment-választó logika érvényes, mint a narratív oldalakon: csak
+              létező ID-kat adj meg, vagy hozd létre előbb az opciók jutalom mezőiben.
             </p>
             {fragRows.map((row, idx) => (
               <div key={idx} className={s.fragCard}>
@@ -2629,7 +2781,7 @@ export default function PageInspector({
               route oldalra. Open (nincs kötelező helyes) mód + globál kulcs alapján
               működik.
             </p>
-            {page.type === "logic" ? (
+            {page.type === "logic" || page.type === "puzzleOutcomeLogic" ? (
               <p className={s.hintSmall}>
                 Mentéskor az oldal <code>puzzleRoute</code> sémára alakul (nem marad
                 tömbös <code>logic</code> JSON).

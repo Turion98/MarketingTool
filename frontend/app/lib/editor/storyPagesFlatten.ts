@@ -64,6 +64,8 @@ export function classifyEditorPage(
   if (t === "end") return "end";
   if (t === "decision") return "decision";
   if (t === "scorecard") return "scorecard";
+  /** Runes/riddle utáni tömbös szabálylista — szerkesztőben mindig puzzle route kártya. */
+  if (t === "puzzleOutcomeLogic") return "puzzleRoute";
   if (t === "logic") {
     const log = page.logic;
     if (Array.isArray(log) && log.length > 0) {
@@ -166,18 +168,18 @@ export function groupPagesByCategory(
 }
 
 export const CATEGORY_LABELS: Record<EditorPageCategory, string> = {
-  narrative1: "Egy opció",
-  narrativeN: "Több opció",
-  puzzleRiddle: "Puzzle — riddle",
-  puzzleRunes: "Puzzle — runes",
-  puzzleRoute: "Puzzle route (kombináció → oldal)",
-  scorecard: "Scorecard (kombináció)",
-  decision: "Decision",
-  logic: "Logic",
-  conditionalRouting: "Feltételes / routing",
-  transition: "Átvezetés",
-  other: "Egyéb",
-  end: "Végoldal",
+  narrative1: "Narratív — egy választás (egy ág)",
+  narrativeN: "Narratív — több választás (több ág)",
+  puzzleRiddle: "Kvíz (riddle) — kérdés és helyes válasz",
+  puzzleRunes: "Szimbólum puzzle (runes) — opciók és megoldás",
+  puzzleRoute: "Útvonal puzzle — kombináció alapján következő oldal",
+  scorecard: "Scorecard — pontok / zárak alapján ugrás",
+  decision: "Döntés (pool) — primary / fallback párok",
+  logic: "Logic — fragment feltétel és ugrás",
+  conditionalRouting: "Feltételes routing — nextSwitch szabályok",
+  transition: "Átvezetés — pl. videó, majd következő oldal",
+  other: "Egyéb / kevert típus",
+  end: "Végoldal — CTA és lezárás",
 };
 
 /** Vázlat + vászon: minden szerkesztői típus fix sorrendben. */

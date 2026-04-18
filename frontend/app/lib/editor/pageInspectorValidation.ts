@@ -47,7 +47,10 @@ export function validatePage(
   const issues: PageValidationIssue[] = [];
   const page = findPageInStoryDocument(story, pageId);
   if (!page) {
-    issues.push({ path: "id", message: "Az oldal nem található a sztoriban." });
+    issues.push({
+      path: "id",
+      message: "Ez az oldal-ID nem szerepel a betöltött sztoriban — ellenőrizd az elírást.",
+    });
     return issues;
   }
 
@@ -56,7 +59,10 @@ export function validatePage(
   const isPuzzle = page.type === "puzzle";
 
   if (!readString(page.id)) {
-    issues.push({ path: "id", message: "Hiányzó oldalazonosító." });
+    issues.push({
+      path: "id",
+      message: "Minden oldalnak kell egyedi ID-ja — ez alapján köti össze a gráf a lapokat.",
+    });
   }
 
   const pageRec = page as Record<string, unknown>;
@@ -73,7 +79,7 @@ export function validatePage(
       if (!bank || (!(doneId in bank) && !(rawDone in bank))) {
         issues.push({
           path: "saveMilestone",
-          message: `${doneId}: még nincs a fragment bankban; mentéskor létrejön.`,
+          message: `${doneId}: előnézetben még nincs a fragment bankban — első mentéskor automatikusan létrejön.`,
         });
       }
     }
@@ -82,14 +88,17 @@ export function validatePage(
   if (isPuzzle && page.kind === "riddle") {
     const q = readString(page.question);
     if (!q) {
-      issues.push({ path: "question", message: "Riddle: hiányzó kérdés." });
+      issues.push({
+        path: "question",
+        message: "Riddle kvíz: írd be a kérdés szövegét, különben üres lesz a képernyő.",
+      });
     }
     const opts = Array.isArray(page.options) ? page.options : [];
     const optStrs = opts.filter((x): x is string => typeof x === "string" && !!x);
     if (optStrs.length < 2) {
       issues.push({
         path: "options",
-        message: "Riddle: legalább két választási lehetőség kell.",
+        message: "Riddle kvíz: legalább két válasz opció kell, hogy lehessen választani.",
       });
     }
     const ci = page.correctIndex;
@@ -100,7 +109,7 @@ export function validatePage(
     ) {
       issues.push({
         path: "correctIndex",
-        message: "Riddle: érvénytelen helyes válasz index.",
+        message: "Riddle kvíz: a helyes válasz indexe nem illik a megadott opciók számához.",
       });
     }
     const chainCtx = findRiddleChainContext(story, pageId);
@@ -278,7 +287,7 @@ export function validatePage(
       }
     }
     if (
-      page.type === "logic" &&
+      (page.type === "logic" || page.type === "puzzleOutcomeLogic") &&
       Array.isArray(page.logic) &&
       src &&
       knownIds.has(src)
