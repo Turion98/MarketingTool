@@ -1,17 +1,19 @@
 "use client";
 
-/** Szerkesztői kategória — `end` külön kiszűrve a listákból. */
+/** Szerkesztői kategória — `end` külön a végoldalakhoz (vászon csúszka + lista). */
 export type EditorPageCategory =
   | "narrative1"
   | "narrativeN"
   | "puzzleRiddle"
   | "puzzleRunes"
   | "puzzleRoute"
+  | "scorecard"
   | "decision"
   | "logic"
   | "conditionalRouting"
   | "transition"
-  | "other";
+  | "other"
+  | "end";
 
 export type FlatStoryPage = {
   id: string;
@@ -57,14 +59,23 @@ export function isDecisionPoolRoutePage(page: Record<string, unknown>): boolean 
 
 export function classifyEditorPage(
   page: Record<string, unknown>
-): EditorPageCategory | "end" {
+): EditorPageCategory {
   const t = typeof page.type === "string" ? page.type : "default";
   if (t === "end") return "end";
   if (t === "decision") return "decision";
+  if (t === "scorecard") return "scorecard";
   if (t === "logic") {
     const log = page.logic;
-    /** SkinCare stílus: `type: "logic"` + tömbös szabályok (flag kombináció → útvonal). */
-    if (Array.isArray(log) && log.length > 0) return "puzzleRoute";
+    if (Array.isArray(log) && log.length > 0) {
+      const src =
+        typeof page.puzzleSourcePageId === "string"
+          ? page.puzzleSourcePageId.trim()
+          : "";
+      /** Ritka hibrid: tömbös szabály + runes forrás id — szerkesztőben puzzle route. */
+      if (src) return "puzzleRoute";
+      /** Kvíz / scorecard: lock+flag kombináció → goto (coffee, creative, L3 jelleg). */
+      return "scorecard";
+    }
     return "logic";
   }
   if (t === "conditionalRouting") return "conditionalRouting";
@@ -93,9 +104,14 @@ export function classifyEditorPage(
   return "other";
 }
 
-/** Szerkesztő: logic kártya (milestone UI nincs). */
+/** Szerkesztő: logic kártya (fragment ifHasFragment; milestone UI nincs). */
 export function isEditorLogicPage(page: Record<string, unknown>): boolean {
   return classifyEditorPage(page) === "logic";
+}
+
+/** Scorecard: tömbös if/goto szabályok (milestone UI nincs). */
+export function isEditorScorecardPage(page: Record<string, unknown>): boolean {
+  return classifyEditorPage(page) === "scorecard";
 }
 
 /** `pages` tömb vagy objektum — gyökér `chapters` legacy nélkül (első körben). */
@@ -109,7 +125,10 @@ export function flattenStoryPages(story: Record<string, unknown>): FlatStoryPage
     const id = typeof rec.id === "string" ? rec.id : "";
     if (!id) return;
     const cls = classifyEditorPage(rec);
-    if (cls === "end") return;
+    if (cls === "end") {
+      out.push({ id, category: "end", raw: rec });
+      return;
+    }
     out.push({ id, category: cls, raw: rec });
   };
 
@@ -131,11 +150,13 @@ export function groupPagesByCategory(
     puzzleRiddle: [],
     puzzleRunes: [],
     puzzleRoute: [],
+    scorecard: [],
     decision: [],
     logic: [],
     conditionalRouting: [],
     transition: [],
     other: [],
+    end: [],
   });
   const g = empty();
   for (const p of pages) {
@@ -150,11 +171,13 @@ export const CATEGORY_LABELS: Record<EditorPageCategory, string> = {
   puzzleRiddle: "Puzzle — riddle",
   puzzleRunes: "Puzzle — runes",
   puzzleRoute: "Puzzle route (kombináció → oldal)",
+  scorecard: "Scorecard (kombináció)",
   decision: "Decision",
   logic: "Logic",
   conditionalRouting: "Feltételes / routing",
   transition: "Átvezetés",
   other: "Egyéb",
+  end: "Végoldal",
 };
 
 /** Vázlat + vászon: minden szerkesztői típus fix sorrendben. */
@@ -164,9 +187,11 @@ export const EDITOR_CATEGORY_ORDER: EditorPageCategory[] = [
   "puzzleRiddle",
   "puzzleRunes",
   "puzzleRoute",
+  "scorecard",
   "decision",
   "logic",
   "conditionalRouting",
   "transition",
   "other",
+  "end",
 ];

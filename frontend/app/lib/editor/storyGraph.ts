@@ -25,7 +25,7 @@ export type StoryGraphEdge = {
 
 export type StoryGraphNode = {
   pageId: string;
-  category: EditorPageCategory | "end";
+  category: EditorPageCategory;
   raw: Record<string, unknown>;
   /** `classifyEditorPage === "logic"` (egyezik az `isEditorLogicPage` szemantikával). */
   isLogicPage: boolean;
@@ -274,6 +274,11 @@ export function buildStoryGraph(story: Record<string, unknown>): {
           add(n.pageId, target, "logicIf", String(idx));
         }
       });
+    }
+
+    const scorecardFb = readString(rec.scorecardFallback);
+    if (scorecardFb) {
+      add(n.pageId, scorecardFb, "logicElse");
     }
 
     if (rec.type === "conditionalRouting") {

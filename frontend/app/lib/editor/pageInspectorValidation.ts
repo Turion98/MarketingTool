@@ -18,7 +18,13 @@ import {
 import {
   classifyEditorPage,
   isEditorLogicPage,
+  isEditorScorecardPage,
 } from "./storyPagesFlatten";
+import {
+  buildLockIdToSourcePageMap,
+  buildScorecardLockSources,
+  normalizedScorecardRuleKey,
+} from "./scorecardLockCatalog";
 import { generatePuzzleRouteKeys } from "./puzzleRouteCombinations";
 import { runesPickBounds } from "../puzzleRoutePick";
 
@@ -56,7 +62,8 @@ export function validatePage(
   const pageRec = page as Record<string, unknown>;
   if (
     pageRec.saveMilestone === true &&
-    !isEditorLogicPage(pageRec)
+    !isEditorLogicPage(pageRec) &&
+    !isEditorScorecardPage(pageRec)
   ) {
     const pid = readString(page.id);
     if (pid) {
@@ -159,6 +166,13 @@ export function validatePage(
     const onFail = asRecord(page.onFail);
     const ok = readString(onSuccess?.goto);
     const fail = readString(onFail?.goto);
+    const ansArr = Array.isArray(page.answer) ? page.answer : [];
+    const hasGradedRunesAnswer =
+      page.kind === "runes" &&
+      ansArr.some(
+        (x) => typeof x === "string" && String(x).trim().length > 0
+      );
+    const requireOnFailGoto = page.kind !== "runes" || hasGradedRunesAnswer;
     if (ok && !knownIds.has(ok)) {
       issues.push({
         path: "onSuccess.goto",
@@ -177,10 +191,17 @@ export function validatePage(
         message: "Puzzle (runes): hiányzó sikeres ugrás.",
       });
     }
-    if (!fail) {
+    if (!fail && requireOnFailGoto) {
       issues.push({
         path: "onFail.goto",
         message: "Puzzle (runes): hiányzó sikertelen / újra ugrás.",
+      });
+    }
+    if (page.kind === "runes" && !hasGradedRunesAnswer && fail) {
+      issues.push({
+        path: "onFail.goto",
+        message:
+          "Runes open mód (nincs answer): a sikertelen ugrás nem érvényes — töröld, vagy adj meg kötelező helyes megoldást.",
       });
     }
     if (page.kind === "runes") {
@@ -304,6 +325,94 @@ export function validatePage(
         }
       }
     }
+  } else if (classifyEditorPage(page as Record<string, unknown>) === "scorecard") {
+    const arr = Array.isArray(page.logic) ? page.logic : [];
+    const fb = readString((page as Record<string, unknown>).scorecardFallback);
+    const lockSources = buildScorecardLockSources(story);
+    const lockToPage = buildLockIdToSourcePageMap(lockSources);
+
+    if (arr.length === 0 && !fb) {
+      issues.push({
+        path: "logic",
+        message:
+          "Scorecard: adj meg legalább egy szabályt (if → goto) vagy fallback céloldalt.",
+      });
+    }
+    const ruleKeys = new Set<string>();
+    for (let i = 0; i < arr.length; i++) {
+      const row = asRecord(arr[i]);
+      const go = readString(row?.goto);
+      const ifArrRaw = Array.isArray(row?.if) ? row.if : [];
+      const ifArr = ifArrRaw
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim());
+      const nIf = ifArr.length;
+      if (!nIf) {
+        issues.push({
+          path: `logic[${i}].if`,
+          message: "Scorecard szabály: legalább egy feltétel-ID kell.",
+        });
+      }
+      if (nIf > 0) {
+        const byPage = new Map<string, string[]>();
+        for (const id of ifArr) {
+          const pid = lockToPage.get(id);
+          if (pid) {
+            const g = byPage.get(pid) ?? [];
+            g.push(id);
+            byPage.set(pid, g);
+          }
+        }
+        const sig = (ids: string[]) =>
+          [...new Set(ids.map((x) => x.trim()).filter(Boolean))].sort().join("\0");
+        for (const [pid, ids] of byPage) {
+          const u = [...new Set(ids)];
+          const src = lockSources.find((s) => s.pageId === pid);
+          const ok = src?.outcomes.some(
+            (o) => sig(o.lockIds) === sig(u)
+          );
+          if (!ok) {
+            issues.push({
+              path: `logic[${i}].if`,
+              message: `Ugyanarról a(z) „${pid}” oldalról több / nem egy választásnak megfelelő lock: ${u.join(", ")}.`,
+            });
+          }
+        }
+        const rk = normalizedScorecardRuleKey(ifArr);
+        if (ruleKeys.has(rk)) {
+          issues.push({
+            path: `logic[${i}]`,
+            message:
+              "Duplikált scorecard szabály: ugyanaz a feltétel-halmaz már szerepel egy másik sorban.",
+          });
+        }
+        ruleKeys.add(rk);
+      }
+      if (!go) {
+        issues.push({
+          path: `logic[${i}].goto`,
+          message: "Scorecard szabály: hiányzó céloldal (goto).",
+        });
+      } else if (!knownIds.has(go)) {
+        issues.push({
+          path: `logic[${i}].goto`,
+          message: `Ismeretlen oldal: "${go}"`,
+        });
+      }
+    }
+    if (fb && !knownIds.has(fb)) {
+      issues.push({
+        path: "scorecardFallback",
+        message: `Ismeretlen oldal: "${fb}"`,
+      });
+    }
+    if (arr.length > 0 && !fb) {
+      issues.push({
+        path: "scorecardFallback",
+        message:
+          "Ajánlott fallback céloldal, ha előfordulhat, hogy egyik szabály sem illeszkedik.",
+      });
+    }
   } else if (logic) {
     const ifHas = Array.isArray(logic.ifHasFragment) ? logic.ifHasFragment : [];
     for (let i = 0; i < ifHas.length; i++) {
@@ -363,7 +472,8 @@ export function validatePage(
       !isPuzzle &&
       !logic &&
       classifyEditorPage(page as Record<string, unknown>) !== "puzzleRoute" &&
-      classifyEditorPage(page as Record<string, unknown>) !== "decision"
+      classifyEditorPage(page as Record<string, unknown>) !== "decision" &&
+      classifyEditorPage(page as Record<string, unknown>) !== "scorecard"
     ) {
       const hasEnd = page.type === "end";
       if (!hasEnd) {

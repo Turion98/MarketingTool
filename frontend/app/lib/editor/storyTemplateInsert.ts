@@ -8,7 +8,8 @@ export type StoryTemplateKey =
   | "multiChoice"
   | "logic"
   | "riddle"
-  | "runes";
+  | "runes"
+  | "end";
 
 /** Szerkesztő: még át nem nevezett új oldal — kötelező ID megadás, különben elvetjük. */
 export const EDITOR_PENDING_PAGE_PREFIX = "__editor_pending_" as const;
@@ -89,6 +90,20 @@ function buildTemplatePageByKey(
         onSuccess: { goto: next },
         onFail: { goto: next },
       };
+    case "end":
+      return {
+        id: nid,
+        type: "end",
+        title: "Új végoldal",
+        text: [
+          {
+            text: "Záró szöveg — szerkeszd az inspectorban.",
+          },
+        ],
+        endMeta: {
+          cta: "default",
+        },
+      };
     default:
       return { id: nid, text: "Új oldal", next };
   }
@@ -139,6 +154,18 @@ export function buildEmptyPageForCategory(
         puzzleSourcePageId: "",
         routeAssignments: {},
       };
+    case "scorecard":
+      return {
+        id: nid,
+        type: "scorecard",
+        title: "Scorecard",
+        text: [
+          {
+            text: "A választások alapján kiválasztjuk a következő lépést.",
+          },
+        ],
+        logic: [],
+      };
     case "logic":
       return buildTemplatePageByKey("logic", nid, next);
     case "conditionalRouting":
@@ -172,6 +199,8 @@ export function buildEmptyPageForCategory(
           nextPageId: next,
         },
       };
+    case "end":
+      return buildTemplatePageByKey("end", nid, next);
     case "other":
     default:
       return buildTemplatePageByKey("linear", nid, next);
@@ -194,4 +223,5 @@ export const TEMPLATE_LABELS: Record<StoryTemplateKey, string> = {
   logic: "Logic",
   riddle: "Riddle puzzle",
   runes: "Runes puzzle",
+  end: "Végoldal (type: end)",
 };

@@ -206,6 +206,13 @@ export function patchOutgoingNavRefsInPage(
     });
   }
 
+  if (
+    typeof next.scorecardFallback === "string" &&
+    next.scorecardFallback === from
+  ) {
+    next.scorecardFallback = to;
+  }
+
   if (next.type === "conditionalRouting" && Array.isArray(next.nextSwitch)) {
     next.nextSwitch = next.nextSwitch.map((entry) => {
       const row = asRecord(entry);
