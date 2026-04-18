@@ -966,7 +966,7 @@ export function inferTerminalPagesFromStory(story: unknown): string[] {
     const hasLogic = Array.isArray(p?.logic) && p.logic.length > 0;
 
     // logikai/redirect page ne legyen terminal
-    if (type === "logic" || hasLogic) continue;
+    if (type === "logic" || type === "scorecard" || hasLogic) continue;
 
     // univerzális: explicit end type, vagy END_* minták
     if (
