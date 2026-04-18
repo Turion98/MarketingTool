@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
@@ -32,6 +33,7 @@ import {
 import { editorPageMilestoneActive } from "@/app/lib/editor/storyChoiceFragmentIds";
 import {
   EDITOR_LAYOUT_COL_STEP_PX,
+  buildFreshEditorLayoutNodes,
   collectEndPageIdsFromStory,
   EDITOR_LAYOUT_REVISION,
   ensureLayout,
@@ -40,6 +42,12 @@ import {
   type EditorLayoutNode,
   type EditorLayoutState,
 } from "@/app/lib/editor/storyGraphLayout";
+import { computeEndCategoryClusterCanvasLayout } from "@/app/lib/editor/endCategoryCanvasLayout";
+import {
+  collectEndCategoryKeysFromStory,
+  inferEndPageCategoryKey,
+  resolveEndPageBodyBackground,
+} from "@/app/lib/editor/endPageIdParts";
 import {
   CATEGORY_LABELS,
   EDITOR_CATEGORY_ORDER,
@@ -60,6 +68,8 @@ import {
 import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidation";
 import {
   cardDimensions,
+  editorEndCardAccentFrameStyle,
+  editorEndCardAccentHeaderStripStyle,
   editorEndCardAccentStyle,
   inputPortYs,
   isRiddleNode,
@@ -79,12 +89,17 @@ import {
   StoryEndIngressLines,
 } from "./StoryEndIngressDecor";
 import StoryEdges, { buildEdgeLayers } from "./StoryEdges";
+import EditorEndCategoriesPopover from "../EditorEndCategoriesPopover";
 import s from "./storyCanvas.module.scss";
 
 /** Vég kategória csoport a csúszkán — ugyanaz a szín-hash mint az outline end sablon. */
 const CATEGORY_STRIP_END_ACCENT_ID = "__editor_end_page_template__";
 
 const CATEGORY_STRIP_POPOVER_GAP_PX = 4;
+
+/** Teljes képernyő: szélhez húzva folyamatos pásztázás */
+const EDGE_PAN_MARGIN_PX = 26;
+const EDGE_PAN_MAX_STEP = 13;
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, n));
@@ -180,6 +195,9 @@ const START_SYNTH: StoryGraphNode = {
   choiceCount: 0,
 };
 
+/** Gráf oszlop-nézet: alap = starthez igazított függőleges egyensúly; felül = fix felső sáv. */
+type EditorGraphColumnViewMode = "startBalanced" | "topStack";
+
 type StoryCanvasProps = {
   draftStory: Record<string, unknown>;
   onStoryChange: (next: Record<string, unknown>) => void;
@@ -247,6 +265,18 @@ export default function StoryCanvas({
   const [metroDrillNodeSet, setMetroDrillNodeSet] = useState<Set<string> | null>(
     null
   );
+  /** Vég csík: + helyett lenyíló (végoldal / kategóriák). Portálon, mert a vízszintes scroll clipeli. */
+  const [endToolbarPhase, setEndToolbarPhase] = useState<
+    null | "menu" | "categories"
+  >(null);
+  const [endToolbarPopoverBox, setEndToolbarPopoverBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
+  const endToolbarMenuBtnRef = useRef<HTMLButtonElement | null>(null);
+  const endToolbarPopoverRef = useRef<HTMLDivElement | null>(null);
   const { nodes, edges, startPageId } = useMemo(
     () => buildStoryGraph(draftStory),
     [draftStory]
@@ -321,12 +351,18 @@ export default function StoryCanvas({
     () => ensureLayout(draftStory, pageIds, edges, startPageId),
     [draftStory, pageIds, edges, startPageId]
   );
+  const balancedLayoutRef = useRef(layout);
+  balancedLayoutRef.current = layout;
+
+  const [graphColumnViewMode, setGraphColumnViewMode] =
+    useState<EditorGraphColumnViewMode>("startBalanced");
 
   const [localLayout, setLocalLayout] = useState<EditorLayoutState>(layout);
   const layoutRef = useRef(localLayout);
   layoutRef.current = localLayout;
   useEffect(() => {
     setLocalLayout(layout);
+    setGraphColumnViewMode("startBalanced");
   }, [layout]);
 
   const [pan, setPan] = useState({ x: 48, y: 36 });
@@ -367,6 +403,14 @@ export default function StoryCanvas({
   const canvasHRef = useRef(canvasH);
   canvasHRef.current = canvasH;
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [overlayMountEl, setOverlayMountEl] = useState<HTMLDivElement | null>(
+    null
+  );
+  const setOverlayPortalEl = useCallback((el: HTMLDivElement | null) => {
+    setOverlayMountEl(el);
+  }, []);
+  const lastMouseClientRef = useRef({ x: 0, y: 0 });
+  const edgePanLoopRef = useRef<number | null>(null);
   const cardRootRefs = useRef(new Map<string, HTMLDivElement>());
   const cardRootRefCbByPage = useRef(
     new Map<string, (el: HTMLDivElement | null) => void>()
@@ -488,6 +532,123 @@ export default function StoryCanvas({
     () => new Set(endPageIds),
     [endPageIds]
   );
+  const endCategoryPicklist = useMemo(
+    () => collectEndCategoryKeysFromStory(draftStory),
+    [draftStory]
+  );
+
+  const [expandedEndCategoryKey, setExpandedEndCategoryKey] = useState<
+    string | null
+  >(null);
+
+  const endIdsForCluster = useMemo(() => {
+    if (!graphFilterNodeIds) return endPageIds;
+    return endPageIds.filter((id) => graphFilterNodeIds.has(id));
+  }, [endPageIds, graphFilterNodeIds]);
+
+  const endClusterCanvasLayout = useMemo(() => {
+    if (viewMode !== "graph" || !endIdsForCluster.length) return null;
+    return computeEndCategoryClusterCanvasLayout({
+      nodes: localLayout.nodes,
+      pageIds,
+      endIds: endIdsForCluster,
+      edges,
+      startPageId,
+      expandedCategoryKey: expandedEndCategoryKey,
+    });
+  }, [
+    viewMode,
+    endIdsForCluster,
+    localLayout.nodes,
+    pageIds,
+    edges,
+    startPageId,
+    expandedEndCategoryKey,
+  ]);
+
+  const endClusterSnapSig = useMemo(() => {
+    if (!endClusterCanvasLayout) return "";
+    return JSON.stringify(endClusterCanvasLayout.endPagePositions);
+  }, [endClusterCanvasLayout]);
+
+  // endClusterCanvasLayout olvasása a snaphez — a stabil aláírás: endClusterSnapSig.
+  useLayoutEffect(() => {
+    if (viewMode !== "graph" || !expandedEndCategoryKey || !endClusterCanvasLayout)
+      return;
+    const pack = endClusterCanvasLayout.endPagePositions;
+    const keys = Object.keys(pack);
+    if (!keys.length) return;
+    setLocalLayout((prev) => {
+      const nodes = { ...prev.nodes };
+      let changed = false;
+      for (const id of keys) {
+        const p = pack[id]!;
+        const cur = nodes[id];
+        if (
+          !cur ||
+          Math.abs(cur.x - p.x) > 0.5 ||
+          Math.abs(cur.y - p.y) > 0.5
+        ) {
+          nodes[id] = cur ? { ...cur, x: p.x, y: p.y } : { x: p.x, y: p.y };
+          changed = true;
+        }
+      }
+      return changed ? { ...prev, nodes } : prev;
+    });
+  }, [viewMode, expandedEndCategoryKey, endClusterSnapSig]);
+
+  useEffect(() => {
+    if (!expandedEndCategoryKey) return;
+    const keys = new Set(
+      endIdsForCluster.map((id) => inferEndPageCategoryKey(id))
+    );
+    if (!keys.has(expandedEndCategoryKey)) {
+      setExpandedEndCategoryKey(null);
+    }
+  }, [endIdsForCluster, expandedEndCategoryKey]);
+
+  const graphCanvasRenderNodes = useMemo(() => {
+    if (viewMode !== "graph") return graphRenderNodesWithStart;
+    if (!endPageIds.length) return graphRenderNodesWithStart;
+    if (!endIdsForCluster.length) {
+      return graphRenderNodesWithStart.filter((n) => n.category !== "end");
+    }
+    if (!endClusterCanvasLayout) return graphRenderNodesWithStart;
+    return graphRenderNodesWithStart.filter((n) => {
+      if (n.category !== "end") return true;
+      return inferEndPageCategoryKey(n.pageId) === expandedEndCategoryKey;
+    });
+  }, [
+    viewMode,
+    graphRenderNodesWithStart,
+    endPageIds.length,
+    endIdsForCluster,
+    endClusterCanvasLayout,
+    expandedEndCategoryKey,
+  ]);
+
+  const endCategoryCardMeta = useMemo(() => {
+    if (!endClusterCanvasLayout) return [];
+    const m = new Map<string, number>();
+    for (const id of endIdsForCluster) {
+      const k = inferEndPageCategoryKey(id);
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return endClusterCanvasLayout.categoryCards.map((c) => ({
+      ...c,
+      count: m.get(c.key) ?? 0,
+    }));
+  }, [endClusterCanvasLayout, endIdsForCluster]);
+
+  /** Kategória-kártyán (összeomlott vég): csak a „be” chip rejtve; forrás chip + vonal marad. */
+  const hideEndIngressInboundOnCategoryCard = useCallback(
+    (toPageId: string) => {
+      if (viewMode !== "graph" || !endClusterCanvasLayout) return false;
+      if (!endPageIdSet.has(toPageId)) return false;
+      return expandedEndCategoryKey !== inferEndPageCategoryKey(toPageId);
+    },
+    [viewMode, endClusterCanvasLayout, endPageIdSet, expandedEndCategoryKey]
+  );
 
   const metroLayout = useMemo(
     () =>
@@ -518,10 +679,16 @@ export default function StoryCanvas({
     >();
 
     for (const n of graphRenderNodesWithStart) {
-      const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
+      const clusterWorld = endClusterCanvasLayout?.endPageWorld[n.pageId];
+      const pos = clusterWorld?.collapsed
+        ? { x: clusterWorld.x, y: clusterWorld.y }
+        : localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
       const out = outgoingByPage.get(n.pageId) ?? [];
       const ord = orderedOutgoingEdges(n.pageId, out);
-      const { w, h } = cardDimensions(n, ord);
+      const { w, h } =
+        clusterWorld?.collapsed
+          ? { w: clusterWorld.w, h: clusterWorld.h }
+          : cardDimensions(n, ord);
 
       const outSlotY = new Map<string, number>();
       const riddlePortRows =
@@ -568,7 +735,13 @@ export default function StoryCanvas({
     }
 
     return world;
-  }, [graphRenderNodesWithStart, localLayout, outgoingByPage, incomingEdgesByTarget]);
+  }, [
+    graphRenderNodesWithStart,
+    localLayout,
+    outgoingByPage,
+    incomingEdgesByTarget,
+    endClusterCanvasLayout,
+  ]);
 
   const { localOps: edgeOps, distantBundles, endIngressBundles } = useMemo(
     () =>
@@ -704,9 +877,9 @@ export default function StoryCanvas({
   );
 
   const distantInboundWorldBox = useMemo(() => {
-    const m = new Map<string, { y: number; h: number }>();
+    const m = new Map<string, { x: number; y: number; w: number; h: number }>();
     for (const [pageId, w] of worldMetrics) {
-      m.set(pageId, { y: w.y, h: w.h });
+      m.set(pageId, { x: w.x, y: w.y, w: w.w, h: w.h });
     }
     return m;
   }, [worldMetrics]);
@@ -757,8 +930,13 @@ export default function StoryCanvas({
       maxX = Math.max(maxX, m.x + m.w + 120);
       maxY = Math.max(maxY, m.y + m.h + 120);
     }
+    if (endClusterCanvasLayout) {
+      const b = endClusterCanvasLayout.bounds;
+      maxX = Math.max(maxX, b.maxX + 120);
+      maxY = Math.max(maxY, b.maxY + 120);
+    }
     return { w: maxX, h: maxY };
-  }, [worldMetrics]);
+  }, [worldMetrics, endClusterCanvasLayout]);
 
   /** Kártyák tényleges befoglalója (beleértve negatív X-et is) — zoom „beleillesztéshez”. */
   const fitContentBounds = useMemo(() => {
@@ -772,8 +950,15 @@ export default function StoryCanvas({
       maxX = Math.max(maxX, m.x + m.w + 40);
       maxY = Math.max(maxY, m.y + m.h + 40);
     }
+    if (endClusterCanvasLayout) {
+      const b = endClusterCanvasLayout.bounds;
+      minX = Math.min(minX, b.minX - 40);
+      minY = Math.min(minY, b.minY - 40);
+      maxX = Math.max(maxX, b.maxX + 40);
+      maxY = Math.max(maxY, b.maxY + 40);
+    }
     return { minX, minY, maxX, maxY };
-  }, [worldMetrics]);
+  }, [worldMetrics, endClusterCanvasLayout]);
 
 
   const pathBubbleLayout = useMemo(() => {
@@ -832,6 +1017,9 @@ export default function StoryCanvas({
 
   const endZoneSeparatorWorldX = useMemo(() => {
     if (!endPageIds.length) return null;
+    if (viewMode === "graph" && endClusterCanvasLayout) {
+      return Math.max(0, endClusterCanvasLayout.bounds.minX - 28);
+    }
     let minX = Infinity;
     for (const id of endPageIds) {
       const pos = localLayout.nodes[id];
@@ -840,7 +1028,7 @@ export default function StoryCanvas({
     }
     if (!Number.isFinite(minX)) return null;
     return Math.max(0, minX - 28);
-  }, [endPageIds, localLayout.nodes]);
+  }, [endPageIds, localLayout.nodes, viewMode, endClusterCanvasLayout]);
 
   const commitLayout = useCallback(() => {
     if (interactionLocked) return;
@@ -864,6 +1052,42 @@ export default function StoryCanvas({
     onStoryChange,
     interactionLocked,
   ]);
+
+  const onToggleGraphColumnView = useCallback(() => {
+    if (interactionLocked) return;
+    setGraphColumnViewMode((prev) => {
+      const next: EditorGraphColumnViewMode =
+        prev === "startBalanced" ? "topStack" : "startBalanced";
+      if (next === "topStack") {
+        const fresh = buildFreshEditorLayoutNodes(
+          draftStory,
+          pageIds,
+          edges,
+          startPageId,
+          "topBand"
+        );
+        setLocalLayout((l0) => {
+          const nodes: Record<string, EditorLayoutNode> = { ...fresh };
+          for (const id of Object.keys(nodes)) {
+            const z = l0.nodes[id]?.z;
+            const cur = nodes[id];
+            if (
+              cur &&
+              z != null &&
+              typeof z === "number" &&
+              Number.isFinite(z)
+            ) {
+              nodes[id] = { ...cur, z };
+            }
+          }
+          return { ...l0, nodes };
+        });
+      } else {
+        setLocalLayout(balancedLayoutRef.current);
+      }
+      return next;
+    });
+  }, [interactionLocked, draftStory, pageIds, edges, startPageId]);
 
   const onFitGraphInView = useCallback(() => {
     const el = viewportRef.current;
@@ -962,6 +1186,10 @@ export default function StoryCanvas({
 
   const onViewportPointerDown = useCallback(
     (e: ReactPointerEvent) => {
+      if (canvasFullscreen && edgePanLoopRef.current != null) {
+        cancelAnimationFrame(edgePanLoopRef.current);
+        edgePanLoopRef.current = null;
+      }
       if ((e.target as HTMLElement).closest('[data-story-card="1"]')) return;
       if ((e.target as HTMLElement).closest("[data-distant-edge-chip]"))
         return;
@@ -999,7 +1227,7 @@ export default function StoryCanvas({
       setPanning(true);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [pan.x, pan.y]
+    [pan.x, pan.y, canvasFullscreen]
   );
 
   const onViewportPointerMove = useCallback(
@@ -1147,6 +1375,107 @@ export default function StoryCanvas({
     return () => el.removeEventListener("wheel", wheel);
   }, []);
 
+  const stopEdgePanLoop = useCallback(() => {
+    if (edgePanLoopRef.current != null) {
+      cancelAnimationFrame(edgePanLoopRef.current);
+      edgePanLoopRef.current = null;
+    }
+  }, []);
+
+  const edgePanPickTargetAllows = useCallback((target: EventTarget | null) => {
+    const el = target instanceof Element ? target : null;
+    if (!el) return false;
+    if (el.closest("[data-editor-overlay-portal]")) return false;
+    if (el.closest('[data-story-card="1"]')) return false;
+    if (el.closest("[data-distant-edge-chip]")) return false;
+    if (el.closest("[data-end-ingress-chip]")) return false;
+    if (el.closest("[data-metro-kind]")) return false;
+    return true;
+  }, []);
+
+  const edgePanTick = useCallback(() => {
+    edgePanLoopRef.current = null;
+    if (!canvasFullscreen || interactionLocked) return;
+    if (panRef.current || marqueeDragRef.current) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const { x, y } = lastMouseClientRef.current;
+    const hit = document.elementFromPoint(x, y);
+    if (!edgePanPickTargetAllows(hit)) return;
+    const r = vp.getBoundingClientRect();
+    const m = EDGE_PAN_MARGIN_PX;
+    let dx = 0;
+    let dy = 0;
+    if (x < r.left + m && x >= r.left) {
+      dx = EDGE_PAN_MAX_STEP * (1 - (x - r.left) / m);
+    } else if (x > r.right - m && x <= r.right) {
+      dx = -EDGE_PAN_MAX_STEP * (1 - (r.right - x) / m);
+    }
+    if (y < r.top + m && y >= r.top) {
+      dy = EDGE_PAN_MAX_STEP * (1 - (y - r.top) / m);
+    } else if (y > r.bottom - m && y <= r.bottom) {
+      dy = -EDGE_PAN_MAX_STEP * (1 - (r.bottom - y) / m);
+    }
+    if (dx !== 0 || dy !== 0) {
+      setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+      edgePanLoopRef.current = requestAnimationFrame(edgePanTick);
+    }
+  }, [canvasFullscreen, interactionLocked, edgePanPickTargetAllows]);
+
+  const onViewportMouseMoveEdgePan = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      if (!canvasFullscreen || interactionLocked) return;
+      lastMouseClientRef.current = { x: e.clientX, y: e.clientY };
+      if (panRef.current || marqueeDragRef.current) {
+        stopEdgePanLoop();
+        return;
+      }
+      if (!edgePanPickTargetAllows(e.target)) {
+        stopEdgePanLoop();
+        return;
+      }
+      const vp = viewportRef.current;
+      if (!vp) return;
+      const { x, y } = lastMouseClientRef.current;
+      const r = vp.getBoundingClientRect();
+      const m = EDGE_PAN_MARGIN_PX;
+      if (x < r.left || x > r.right || y < r.top || y > r.bottom) {
+        stopEdgePanLoop();
+        return;
+      }
+      const inBand =
+        x < r.left + m ||
+        x > r.right - m ||
+        y < r.top + m ||
+        y > r.bottom - m;
+      if (!inBand) {
+        stopEdgePanLoop();
+        return;
+      }
+      if (edgePanLoopRef.current === null) {
+        edgePanLoopRef.current = requestAnimationFrame(edgePanTick);
+      }
+    },
+    [
+      canvasFullscreen,
+      interactionLocked,
+      edgePanTick,
+      edgePanPickTargetAllows,
+      stopEdgePanLoop,
+    ]
+  );
+
+  const onViewportMouseLeaveEdgePan = useCallback(() => {
+    stopEdgePanLoop();
+  }, [stopEdgePanLoop]);
+
+  useEffect(() => {
+    if (!canvasFullscreen) stopEdgePanLoop();
+    return () => {
+      stopEdgePanLoop();
+    };
+  }, [canvasFullscreen, stopEdgePanLoop]);
+
   const bumpZoom = useCallback((delta: number) => {
     const { pan: p0, zoom: z0 } = panZoomAnchorRef.current;
     const z2 = clamp(Number((z0 + delta).toFixed(2)), ZOOM_MIN, ZOOM_MAX);
@@ -1221,6 +1550,78 @@ export default function StoryCanvas({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [openCategory]);
+
+  useEffect(() => {
+    if (openCategory !== null) setEndToolbarPhase(null);
+  }, [openCategory]);
+
+  /** Régi lista soha ne legyen „end” kategóriára nyitva. */
+  useEffect(() => {
+    if (openCategory === "end") setOpenCategory(null);
+  }, [openCategory]);
+
+  const updateEndToolbarPopoverPosition = useCallback(() => {
+    if (!endToolbarPhase || typeof window === "undefined") {
+      setEndToolbarPopoverBox(null);
+      return;
+    }
+    const btn = endToolbarMenuBtnRef.current;
+    if (!btn) {
+      setEndToolbarPopoverBox(null);
+      return;
+    }
+    const r = btn.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const panelW =
+      endToolbarPhase === "categories"
+        ? Math.min(360, vw - 16)
+        : Math.min(220, vw - 16);
+    let left = r.right - panelW;
+    left = Math.max(8, Math.min(left, vw - panelW - 8));
+    const top = r.bottom + CATEGORY_STRIP_POPOVER_GAP_PX;
+    const maxHeight = Math.max(120, vh - top - 10);
+    setEndToolbarPopoverBox({ top, left, width: panelW, maxHeight });
+  }, [endToolbarPhase]);
+
+  useLayoutEffect(() => {
+    updateEndToolbarPopoverPosition();
+  }, [updateEndToolbarPopoverPosition, pagesByCategory]);
+
+  useEffect(() => {
+    if (!endToolbarPhase) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEndToolbarPhase(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [endToolbarPhase]);
+
+  useEffect(() => {
+    if (!endToolbarPhase) return;
+    const ro = () => updateEndToolbarPopoverPosition();
+    window.addEventListener("resize", ro);
+    window.addEventListener("scroll", ro, true);
+    const scrollEl = categoryStripScrollRef.current;
+    scrollEl?.addEventListener("scroll", ro);
+    return () => {
+      window.removeEventListener("resize", ro);
+      window.removeEventListener("scroll", ro, true);
+      scrollEl?.removeEventListener("scroll", ro);
+    };
+  }, [endToolbarPhase, updateEndToolbarPopoverPosition]);
+
+  useEffect(() => {
+    if (!endToolbarPhase) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (endToolbarMenuBtnRef.current?.contains(t)) return;
+      if (endToolbarPopoverRef.current?.contains(t)) return;
+      setEndToolbarPhase(null);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [endToolbarPhase]);
 
   const syncCategoryStripNav = useCallback(() => {
     const el = categoryStripScrollRef.current;
@@ -1341,14 +1742,20 @@ export default function StoryCanvas({
     <div className={s.viewportColumn}>
       <div
         ref={viewportRef}
-        className={`${s.viewport} ${panning ? s.viewportPanning : ""} ${marqueeRect !== null ? s.viewportMarquee : ""}`}
-        style={{
-          height: Math.max(canvasH, MIN_CANVAS_VIEWPORT_PX),
-        }}
+        className={`${s.viewport} ${panning ? s.viewportPanning : ""} ${marqueeRect !== null ? s.viewportMarquee : ""} ${canvasFullscreen ? s.viewportFullscreen : ""}`}
+        style={
+          canvasFullscreen
+            ? undefined
+            : {
+                height: Math.max(canvasH, MIN_CANVAS_VIEWPORT_PX),
+              }
+        }
         onPointerDown={onViewportPointerDown}
         onPointerMove={onViewportPointerMove}
         onPointerUp={onViewportPointerUp}
         onPointerCancel={onViewportPointerUp}
+        onMouseMove={onViewportMouseMoveEdgePan}
+        onMouseLeave={onViewportMouseLeaveEdgePan}
       >
         <div
           className={s.world}
@@ -1373,7 +1780,7 @@ export default function StoryCanvas({
                 hoveredKey={hoveredEndIngressKey}
                 inboundYByKey={endIngressInboundYByKey}
               />
-              {graphRenderNodesWithStart.map((n) => {
+              {graphCanvasRenderNodes.map((n) => {
                 const pos = localLayout.nodes[n.pageId] ?? { x: 0, y: 0 };
                 const out = outgoingByPage.get(n.pageId) ?? [];
                 const inc = incomingEdgesByTarget.get(n.pageId) ?? [];
@@ -1449,8 +1856,70 @@ export default function StoryCanvas({
                           ? undefined
                           : onRenamePageId
                       }
+                      endCategoryPicklist={endCategoryPicklist}
+                      endPageBodyBackground={
+                        n.category === "end"
+                          ? resolveEndPageBodyBackground(draftStory, n.pageId)
+                          : undefined
+                      }
                     />
                   </div>
+                );
+              })}
+              {endCategoryCardMeta.map((c) => {
+                const catAccentId = `end_cat_${c.key}`;
+                const active = expandedEndCategoryKey === c.key;
+                const frame = editorEndCardAccentFrameStyle(catAccentId, active);
+                return (
+                  <button
+                    key={`endcat:${c.key}`}
+                    type="button"
+                    className={`${s.endCategoryClusterCard} ${active ? s.endCategoryClusterCardActive : ""}`}
+                    data-end-category-card="1"
+                    style={{
+                      left: c.x,
+                      top: c.y,
+                      width: c.w,
+                      height: c.h,
+                      borderColor: frame.borderColor,
+                      boxShadow: frame.boxShadow,
+                      background: "transparent",
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedEndCategoryKey((prev) =>
+                        prev === c.key ? null : c.key
+                      );
+                    }}
+                  >
+                    <div
+                      className={s.endCategoryClusterCardHead}
+                      style={editorEndCardAccentHeaderStripStyle(
+                        catAccentId,
+                        active
+                      )}
+                    />
+                    <div
+                      className={s.endCategoryClusterCardBody}
+                      style={{
+                        background: resolveEndPageBodyBackground(
+                          draftStory,
+                          `end_${c.key}_cluster`
+                        ),
+                      }}
+                    >
+                      <span className={s.endCategoryClusterSlug}>{c.key}</span>
+                      <div className={s.endCategoryClusterMeta}>
+                        <span className={s.endCategoryClusterCountNum}>
+                          {c.count}
+                        </span>
+                        <span className={s.endCategoryClusterCountLabel}>
+                          vég típusú lap
+                        </span>
+                      </div>
+                    </div>
+                  </button>
                 );
               })}
               {endZoneSeparatorWorldX != null ? (
@@ -1467,6 +1936,7 @@ export default function StoryCanvas({
                 bundles={endIngressBundles}
                 onHoverKey={setHoveredEndIngressKey}
                 inboundYByKey={endIngressInboundYByKey}
+                hideInboundChip={hideEndIngressInboundOnCategoryCard}
               />
               <StoryDistantEdgeChips
                 bundles={distantBundles}
@@ -1547,6 +2017,12 @@ export default function StoryCanvas({
                               ? undefined
                               : onRenamePageId
                           }
+                          endCategoryPicklist={endCategoryPicklist}
+                          endPageBodyBackground={
+                            n.category === "end"
+                              ? resolveEndPageBodyBackground(draftStory, n.pageId)
+                              : undefined
+                          }
                         />
                       </div>
                     );
@@ -1606,7 +2082,7 @@ export default function StoryCanvas({
                           setExpandedPathBubbleId(bubble.id);
                           onSelectPageIds([]);
                         }}
-                        title="Katt: buborék megnyitása"
+                        title="Részút megnyitása: kattintásra kibontjuk ezt az ágat / szakaszt"
                       >
                         <span className={s.pathBandLabel}>{bubble.name}</span>
                       </button>
@@ -1690,6 +2166,12 @@ export default function StoryCanvas({
                               ? undefined
                               : onRenamePageId
                           }
+                          endCategoryPicklist={endCategoryPicklist}
+                          endPageBodyBackground={
+                            n.category === "end"
+                              ? resolveEndPageBodyBackground(draftStory, n.pageId)
+                              : undefined
+                          }
                         />
                       </div>
                     );
@@ -1697,8 +2179,9 @@ export default function StoryCanvas({
                 </>
               ) : metroLayout.stations.length === 0 ? (
                 <p className={s.metroEmpty}>
-                  Nincs megjeleníthető metróvonal (hiányzik a kezdő oldal vagy nincs
-                  él a virtuális starttól).
+                  A metró nézetnek kell kiindulópont és legalább egy él a START felől.
+                  Ellenőrizd: van-e <code>startPageId</code>, és kapcsolódnak-e hozzá
+                  oldalak.
                 </p>
               ) : (
                 <>
@@ -1767,8 +2250,8 @@ export default function StoryCanvas({
                           left: st.x,
                           top: st.y,
                         }}
-                        title="Katt: részgráf megnyitása"
-                        aria-label={`${st.label} állomás, részgráf megnyitása`}
+                        title="Kattintásra megnyitjuk ezt a részgráfot (leszármazott oldalak)"
+                        aria-label={`${st.label} állomás — részgráf megnyitása`}
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1801,37 +2284,49 @@ export default function StoryCanvas({
           </div>
         ) : null}
       </div>
-      <div
-        className={s.resizeHandle}
-        role="separator"
-        aria-orientation="horizontal"
-        aria-valuemin={MIN_CANVAS_VIEWPORT_PX}
-        aria-valuemax={maxCanvasViewportPx(canvasFullscreen)}
-        aria-valuenow={Math.round(canvasH)}
-        aria-label="Rács vászon magasságának állítása"
-        onPointerDown={onResizeDown}
-        onPointerMove={onResizeMove}
-        onPointerUp={onResizeUp}
-        onPointerCancel={onResizeUp}
-      />
+      {!canvasFullscreen ? (
+        <div
+          className={s.resizeHandle}
+          role="separator"
+          aria-orientation="horizontal"
+          aria-valuemin={MIN_CANVAS_VIEWPORT_PX}
+          aria-valuemax={maxCanvasViewportPx(canvasFullscreen)}
+          aria-valuenow={Math.round(canvasH)}
+          aria-label="A vászon terület magasságának állítása (húzd a választó sávot)"
+          onPointerDown={onResizeDown}
+          onPointerMove={onResizeMove}
+          onPointerUp={onResizeUp}
+          onPointerCancel={onResizeUp}
+        />
+      ) : null}
     </div>
   );
 
+  const overlayPortalParent =
+    overlayMountEl ??
+    (typeof document !== "undefined" ? document.body : null);
+
   return (
-    <div className={`${s.wrap} ${embedded ? s.wrapEmbedded : ""}`}>
+    <div
+      className={`${s.wrap} ${embedded ? s.wrapEmbedded : ""} ${canvasFullscreen ? s.wrapCanvasFullscreen : ""}`}
+    >
       <div className={s.unifiedVisualBar}>
         {visualBarLeading ? (
           <div className={s.unifiedLeading}>{visualBarLeading}</div>
         ) : null}
         <div className={s.toolbar}>
-        <div className={s.toolbarZoomGroup} role="group" aria-label="Vászon nagyítás">
+        <div
+          className={s.toolbarZoomGroup}
+          role="group"
+          aria-label="Vászon nagyítása és kicsinyítése"
+        >
           <button
             type="button"
             className={s.toolbarZoomBtn}
             disabled={zoom <= ZOOM_MIN + 1e-4}
             onClick={() => bumpZoom(-ZOOM_STEP)}
-            aria-label="Kicsinyítés"
-            title="Kicsinyítés"
+            aria-label="Kicsinyítés egy lépéssel"
+            title="Kicsinyítés: több kártya fér a képernyőre"
           >
             −
           </button>
@@ -1843,41 +2338,50 @@ export default function StoryCanvas({
             className={s.toolbarZoomBtn}
             disabled={zoom >= ZOOM_MAX - 1e-4}
             onClick={() => bumpZoom(ZOOM_STEP)}
-            aria-label="Nagyítás"
-            title="Nagyítás"
+            aria-label="Nagyítás egy lépéssel"
+            title="Nagyítás: részletek és szövegek olvashatóbbak"
           >
             +
           </button>
         </div>
-        <span className={s.toolbarZoomHint} title="Ctrl+Shift + egérgörgő">
-          Ctrl+Shift+scroll: zoom
+        <span
+          className={s.toolbarZoomHint}
+          title="Gyors nagyítás: tartsd lenyomva a Ctrl+Shift billentyűket, és görgess az egérrel a vászon fölött"
+        >
+          Ctrl+Shift+görgő: zoom
         </span>
         <button type="button" onClick={() => setZoom(1)}>
           Zoom 100%
         </button>
         <button
           type="button"
-          onClick={() => {
-            setPan({ x: 48, y: 36 });
-            setZoom(1);
-          }}
+          disabled={interactionLocked}
+          onClick={onToggleGraphColumnView}
+          title={
+            graphColumnViewMode === "startBalanced"
+              ? "Átkapcsolás: oszlopok felülről, egy közös felső vonalhoz igazítva (nem a START függőleges középpontjához)"
+              : "Átkapcsolás: oszlopok a START kártya függőleges középpontjához igazítva"
+          }
+          aria-label="Gráf elrendezés: START középre vagy felülről építkezés"
         >
-          Központ
+          {graphColumnViewMode === "startBalanced"
+            ? "Elrendezés: START középre"
+            : "Elrendezés: felülről"}
         </button>
         <button
           type="button"
           onClick={onFitGraphInView}
-          title="Nagyítás és pásztázás: minden kártya beleférjen a vászonba"
-          aria-label="Gráf beleillesztése a vászonba"
+          title="Beleillesztés: a nagyítás és a görgetés úgy áll be, hogy az összes kártya látszódjon"
+          aria-label="Teljes gráf beleillesztése a látható vászonba"
         >
-          Beleillesztés
+          Összes kártya kilátásba
         </button>
         <button
           type="button"
           disabled={interactionLocked}
           onClick={onAutoRelayout}
-          title="Pozíciók újraszámolása a gráf szerint (felülírja a mentett elrendezést)"
-          aria-label="Automatikus elrendezés a gráf szerint"
+          title="Automatikus elrendezés: a kártyák pozíciói a kapcsolatok alapján újraszámolódnak (felülírja a kézi húzásokat)"
+          aria-label="Automatikus gráf-elrendezés — mentett pozíciók felülírása"
         >
           Auto elrendezés
         </button>
@@ -1894,8 +2398,8 @@ export default function StoryCanvas({
           <button
             type="button"
             className={s.categoryStripNavBtn}
-            aria-label="Kategóriák görgetése balra"
-            title="Balra"
+            aria-label="Kategória-sáv görgetése balra"
+            title="Kategóriák balra görgetése"
             onClick={() => {
               categoryStripScrollRef.current?.scrollBy({
                 left: -CATEGORY_STRIP_SCROLL_STEP_PX,
@@ -1909,7 +2413,7 @@ export default function StoryCanvas({
         <div
           ref={categoryStripScrollRef}
           className={s.categoryStripScroll}
-          aria-label="Oldalak kategóriánként"
+          aria-label="Oldaltípusok kategóriánként — kattintásra lista, plusz gombbal új oldal"
           onScroll={syncCategoryStripNav}
         >
           {EDITOR_CATEGORY_ORDER.map((cat) => {
@@ -1919,45 +2423,78 @@ export default function StoryCanvas({
             return (
               <div
                 key={cat}
-                className={`${s.categoryStripGroup} ${isEndCat ? s.categoryStripGroupEnd : ""}`}
+                className={`${s.categoryStripGroup} ${isEndCat ? s.categoryStripGroupEnd : ""} ${isEndCat ? s.categoryStripGroupEndWrap : ""}`}
                 style={
                   isEndCat
                     ? editorEndCardAccentStyle(CATEGORY_STRIP_END_ACCENT_ID, false)
                     : undefined
                 }
               >
-                <button
-                  type="button"
-                  ref={(el) => {
-                    categoryStripAnchorRefs.current[cat] = el;
-                  }}
-                  className={s.categoryStripTriggerBtn}
-                  aria-expanded={isOpen}
-                  aria-haspopup="listbox"
-                  onClick={() => {
-                    setOpenCategory((o) => (o === cat ? null : cat));
-                  }}
-                >
-                  <span className={s.categoryStripChevron} aria-hidden>
-                    {isOpen ? "▼" : "▶"}
-                  </span>
-                  <span
-                    className={s.categoryStripGroupTitle}
-                    title={CATEGORY_LABELS[cat]}
+                {isEndCat ? (
+                  <div
+                    className={s.categoryStripEndLabelStatic}
+                    title="Végoldalak: a részletes lista és az új vég lap a ▾ menüben"
                   >
-                    {CATEGORY_LABELS[cat]}
-                  </span>
-                  <span className={s.categoryStripCount}>({pages.length})</span>
-                </button>
-                <button
-                  type="button"
-                  className={s.categoryStripAdd}
-                  title={`Új üres: ${CATEGORY_LABELS[cat]}`}
-                  aria-label={`Új oldal (${CATEGORY_LABELS[cat]})`}
-                  onClick={() => onAddPageForCategory(cat)}
-                >
-                  +
-                </button>
+                    <span className={s.categoryStripGroupTitle}>
+                      {CATEGORY_LABELS[cat]}
+                    </span>
+                    <span className={s.categoryStripCount}>({pages.length})</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    ref={(el) => {
+                      categoryStripAnchorRefs.current[cat] = el;
+                    }}
+                    className={s.categoryStripTriggerBtn}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
+                    onClick={() => {
+                      setEndToolbarPhase(null);
+                      setOpenCategory((o) => (o === cat ? null : cat));
+                    }}
+                  >
+                    <span className={s.categoryStripChevron} aria-hidden>
+                      {isOpen ? "▼" : "▶"}
+                    </span>
+                    <span
+                      className={s.categoryStripGroupTitle}
+                      title={CATEGORY_LABELS[cat]}
+                    >
+                      {CATEGORY_LABELS[cat]}
+                    </span>
+                    <span className={s.categoryStripCount}>({pages.length})</span>
+                  </button>
+                )}
+                {isEndCat ? (
+                  <button
+                    ref={endToolbarMenuBtnRef}
+                    type="button"
+                    className={s.categoryStripEndMenuBtn}
+                    title="Vég szekció menü: új végoldal, vagy vég-kategóriák és színek kezelése"
+                    aria-label="Vég menü — új végoldal vagy kategóriák"
+                    aria-expanded={endToolbarPhase !== null}
+                    aria-haspopup="menu"
+                    data-no-card-drag="1"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEndToolbarPhase((p) => (p ? null : "menu"));
+                    }}
+                  >
+                    <span aria-hidden>▾</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={s.categoryStripAdd}
+                    title={`Új üres oldal beszúrása: ${CATEGORY_LABELS[cat]}`}
+                    aria-label={`Új oldal létrehozása — ${CATEGORY_LABELS[cat]}`}
+                    onClick={() => onAddPageForCategory(cat)}
+                  >
+                    +
+                  </button>
+                )}
               </div>
             );
           })}
@@ -1966,8 +2503,8 @@ export default function StoryCanvas({
           <button
             type="button"
             className={s.categoryStripNavBtn}
-            aria-label="Kategóriák görgetése jobbra"
-            title="Jobbra"
+            aria-label="Kategória-sáv görgetése jobbra"
+            title="Kategóriák jobbra görgetése"
             onClick={() => {
               categoryStripScrollRef.current?.scrollBy({
                 left: CATEGORY_STRIP_SCROLL_STEP_PX,
@@ -1990,11 +2527,12 @@ export default function StoryCanvas({
       )}
       {openCategory !== null &&
       categoryPopoverBox &&
-      typeof document !== "undefined"
+      overlayPortalParent
         ? createPortal(
             <div
               ref={categoryStripPopoverRef}
               className={s.categoryStripPopover}
+              data-editor-overlay-portal
               style={{
                 top: categoryPopoverBox.top,
                 left: categoryPopoverBox.left,
@@ -2006,7 +2544,7 @@ export default function StoryCanvas({
             >
               {pagesByCategory[openCategory].length === 0 ? (
                 <span className={s.categoryStripEmpty}>
-                  Nincs ilyen típusú oldal.
+                  Ebben a típusban még nincs oldal — használd a + gombot a sávban.
                 </span>
               ) : (
                 pagesByCategory[openCategory].map((p) => (
@@ -2026,9 +2564,77 @@ export default function StoryCanvas({
                 ))
               )}
             </div>,
-            document.body
+            overlayPortalParent
           )
         : null}
+      {endToolbarPhase &&
+      endToolbarPopoverBox &&
+      overlayPortalParent
+        ? createPortal(
+            <div
+              ref={endToolbarPopoverRef}
+              className={s.endToolbarPopoverPortal}
+              data-editor-overlay-portal
+              style={{
+                top: endToolbarPopoverBox.top,
+                left: endToolbarPopoverBox.left,
+                width: endToolbarPopoverBox.width,
+                maxHeight: endToolbarPopoverBox.maxHeight,
+              }}
+              data-phase={endToolbarPhase}
+              role="presentation"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div
+                className={`${s.endToolbarShell} ${
+                  endToolbarPhase === "categories"
+                    ? s.endToolbarShellWide
+                    : ""
+                }`}
+              >
+                {endToolbarPhase === "menu" ? (
+                  <div
+                    className={s.endToolbarMenu}
+                    role="menu"
+                    aria-label="Vég szekció — új lap vagy kategóriák"
+                  >
+                    <button
+                      type="button"
+                      className={s.endToolbarMenuItem}
+                      role="menuitem"
+                      onClick={() => {
+                        onAddPageForCategory("end");
+                        setEndToolbarPhase(null);
+                      }}
+                    >
+                      Új végoldal létrehozása
+                    </button>
+                    <button
+                      type="button"
+                      className={s.endToolbarMenuItem}
+                      role="menuitem"
+                      onClick={() => setEndToolbarPhase("categories")}
+                    >
+                      Vég-kategóriák és színek…
+                    </button>
+                  </div>
+                ) : (
+                  <EditorEndCategoriesPopover
+                    draftStory={draftStory}
+                    onStoryChange={onStoryChange}
+                    onBack={() => setEndToolbarPhase("menu")}
+                  />
+                )}
+              </div>
+            </div>,
+            overlayPortalParent
+          )
+        : null}
+      <div
+        ref={setOverlayPortalEl}
+        className={s.overlayPortalHost}
+        aria-hidden
+      />
     </div>
   );
 }

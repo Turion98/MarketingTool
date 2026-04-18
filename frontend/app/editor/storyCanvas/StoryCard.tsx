@@ -26,7 +26,8 @@ import type { PageValidationIssue } from "@/app/lib/editor/pageInspectorValidati
 import {
   START_H,
   cardDimensions,
-  editorEndCardAccentStyle,
+  editorEndCardAccentFrameStyle,
+  editorEndCardAccentHeaderStripStyle,
   inputPortYs,
   isRiddleNode,
   orderedOutgoingEdges,
@@ -35,6 +36,11 @@ import {
   slotCount,
 } from "./storyCanvasGeometry";
 import { isEditorPendingPageId } from "@/app/lib/editor/storyTemplateInsert";
+import {
+  buildEndPageId,
+  parseEndPageIdSegments,
+} from "@/app/lib/editor/endPageIdParts";
+import EndPageIdSegments from "../EndPageIdSegments";
 import s from "./storyCanvas.module.scss";
 
 type StoryCardProps = {
@@ -66,6 +72,10 @@ type StoryCardProps = {
   distantOutgoingEdgeIds?: Set<string>;
   /** Dupla kattintás a fejlécben: oldal-ID; `null` = siker. */
   onRenamePageId?: (fromId: string, toId: string) => string | null;
+  /** Végoldal ID szegmensekhez: kategória lista a sztoriból. */
+  endCategoryPicklist?: string[];
+  /** Végoldal: kategória alapú törzsháttér (CSS `background`). */
+  endPageBodyBackground?: string;
   /** Új sztori bootstrap: START kártyán rövid útmutató. */
   bootstrapStartHint?: boolean;
 };
@@ -90,11 +100,16 @@ export default function StoryCard({
   incomingPortDotVisible,
   distantOutgoingEdgeIds,
   onRenamePageId,
+  endCategoryPicklist = [],
+  endPageBodyBackground,
   bootstrapStartHint = false,
 }: StoryCardProps) {
   const [idEdit, setIdEdit] = useState(false);
   const [draftId, setDraftId] = useState("");
   const [renameErr, setRenameErr] = useState<string | null>(null);
+  const [endIdCat, setEndIdCat] = useState("");
+  const [endIdTail, setEndIdTail] = useState("");
+  const [endIdLegacy, setEndIdLegacy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const idInputRef = useRef<HTMLInputElement>(null);
   const cardRootRef = useRef<HTMLDivElement | null>(null);
@@ -151,9 +166,10 @@ export default function StoryCard({
 
   useEffect(() => {
     if (!idEdit || !idInputRef.current) return;
+    if (node.category === "end" && !endIdLegacy) return;
     idInputRef.current.focus();
     if (!pendingPage) idInputRef.current.select();
-  }, [idEdit, pendingPage]);
+  }, [idEdit, pendingPage, node.category, endIdLegacy]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -181,15 +197,32 @@ export default function StoryCard({
 
   const tryCommitId = useCallback(() => {
     if (!onRenamePageId || !idEdit) return;
-    const trimmed = draftId.trim();
-    if (pendingPage) {
+    const isEndCard = node.category === "end";
+    let trimmed = draftId.trim();
+    if (isEndCard && !endIdLegacy) {
+      const c = endIdCat.trim();
+      const tail = endIdTail.trim();
+      if (!c || !tail) {
+        if (pendingPage) {
+          setRenameErr("Végoldal ID: válassz kategóriát, majd adj egyedi farok részt.");
+        } else {
+          cancelIdEdit();
+        }
+        return;
+      }
+      trimmed = buildEndPageId(c, tail);
+      if (!pendingPage && trimmed === node.pageId) {
+        cancelIdEdit();
+        return;
+      }
+    } else if (pendingPage) {
       if (!trimmed) {
         cancelIdEdit();
         return;
       }
     } else {
       if (!trimmed) {
-        setRenameErr("Az oldalazonosító nem lehet üres.");
+        setRenameErr("Az oldal ID nem maradhat üresen — adj meg egy nevet.");
         return;
       }
       if (trimmed === node.pageId) {
@@ -208,8 +241,12 @@ export default function StoryCard({
     draftId,
     idEdit,
     node.pageId,
+    node.category,
     onRenamePageId,
     pendingPage,
+    endIdLegacy,
+    endIdCat,
+    endIdTail,
   ]);
 
   const beginIdEdit = useCallback(
@@ -235,8 +272,30 @@ export default function StoryCard({
     lastAutoOpenPendingKey.current = node.pageId;
     setRenameErr(null);
     setDraftId("");
+    setEndIdCat("");
+    setEndIdTail("");
+    setEndIdLegacy(false);
     setIdEdit(true);
   }, [pendingPage, selected, onRenamePageId, node.pageId]);
+
+  useEffect(() => {
+    if (!idEdit || node.category !== "end") return;
+    if (pendingPage) {
+      setEndIdCat("");
+      setEndIdTail("");
+      setEndIdLegacy(false);
+      return;
+    }
+    const parsed = parseEndPageIdSegments(node.pageId);
+    if (parsed) {
+      setEndIdCat(parsed.category);
+      setEndIdTail(parsed.tail);
+      setEndIdLegacy(false);
+    } else {
+      setEndIdLegacy(true);
+      setDraftId(node.pageId);
+    }
+  }, [idEdit, node.category, node.pageId, pendingPage]);
 
   return (
     <div
@@ -256,7 +315,7 @@ export default function StoryCard({
         width: w,
         height: h,
         ...(node.category === "end"
-          ? editorEndCardAccentStyle(node.pageId, selected)
+          ? editorEndCardAccentFrameStyle(node.pageId, selected)
           : {}),
         ...(typeof stackZ === "number" && Number.isFinite(stackZ)
           ? { zIndex: menuOpen ? Math.max(stackZ, 9999) : stackZ }
@@ -317,18 +376,24 @@ export default function StoryCard({
 
       <div
         className={s.cardDragStrip}
+        style={
+          node.category === "end" && !isStart
+            ? editorEndCardAccentHeaderStripStyle(node.pageId, selected)
+            : undefined
+        }
         title={
           pendingPage
-            ? "Dupla katt az ID mezőn — kötelező. Máshol húzd az áthelyezéshez."
-            : "Húzd az áthelyezéshez (az ID sávon dupla katt: szerkesztés)"
+            ? "Új lap: dupla kattintás az ID sávon — kötelező név. A kártya többi részén húzd a mozgatáshoz."
+            : "Húzással mozgatod a kártyát. Dupla kattintás az ID sávon: azonosító szerkesztése."
         }
       >
         {isStart ? (
           <div className={s.cardStartInner}>
-            <span className={s.cardStartLabel}>Kezdőpont</span>
+            <span className={s.cardStartLabel}>Kezdőpont (START)</span>
             {bootstrapStartHint ? (
               <span className={s.cardStartBootstrapHint}>
-                Add meg a sztori adatait a jobb panelen.
+                1) Töltsd ki a jobb oldali meta űrlapot. 2) Mentsd — utána itt folytathatod
+                a szerkesztést.
               </span>
             ) : null}
           </div>
@@ -348,10 +413,10 @@ export default function StoryCard({
               title={
                 pendingPage
                   ? onRenamePageId
-                    ? "Kattints vagy dupla katt — egyedi ID megadása (kötelező)"
+                    ? "Kattints vagy dupla kattintás: adj egyedi oldal-ID-t (kötelező az új laphoz)."
                     : undefined
                   : onRenamePageId
-                    ? `${headerHoverLabel} — dupla katt: azonosító szerkesztése`
+                    ? `${headerHoverLabel} — dupla kattintás: azonosító szerkesztése`
                     : headerHoverLabel
               }
               onPointerDown={(e) => e.stopPropagation()}
@@ -366,17 +431,65 @@ export default function StoryCard({
               }}
             >
               {idEdit ? (
+                node.category === "end" && !endIdLegacy ? (
+                  <div
+                    className={s.cardIdEndSeg}
+                    data-no-card-drag="1"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <EndPageIdSegments
+                      categories={endCategoryPicklist}
+                      category={endIdCat}
+                      tail={endIdTail}
+                      onCategoryChange={(v) => {
+                        setEndIdCat(v);
+                        setRenameErr(null);
+                      }}
+                      onTailChange={(v) => {
+                        setEndIdTail(v);
+                        setRenameErr(null);
+                      }}
+                      onBlurCommit={() => {
+                        window.setTimeout(() => tryCommitId(), 0);
+                      }}
+                      onEscape={() => {
+                        cancelIdEdit();
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className={s.cardIdModeLink}
+                      data-no-card-drag="1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEndIdLegacy(true);
+                        setDraftId(pendingPage ? "" : node.pageId);
+                        setRenameErr(null);
+                      }}
+                    >
+                      Teljes ID
+                    </button>
+                  </div>
+                ) : (
                 <input
                   ref={idInputRef}
                   className={s.cardIdInput}
                   data-no-card-drag="1"
                   value={draftId}
-                  aria-label="Oldalazonosító"
+                  aria-label="Oldal egyedi azonosítója (ID)"
                   aria-invalid={renameErr ? true : undefined}
                   title={renameErr ?? undefined}
                   spellCheck={false}
                   autoComplete="off"
-                  placeholder={pendingPage ? "pl. chapter_2_a" : undefined}
+                  placeholder={
+                    pendingPage
+                      ? node.category === "end"
+                        ? "vagy teljes ID"
+                        : "pl. chapter_2_a"
+                      : undefined
+                  }
                   onChange={(e) => {
                     setDraftId(e.target.value);
                     setRenameErr(null);
@@ -397,11 +510,12 @@ export default function StoryCard({
                     window.setTimeout(() => tryCommitId(), 0);
                   }}
                 />
+                )
               ) : (
                 <span
                   className={`${s.cardId} ${pendingPage ? s.cardIdMuted : ""}`}
                 >
-                  {pendingPage ? "új oldal — ID kötelező" : headerDisplayText}
+                  {pendingPage ? "új lap — adj meg ID-t" : headerDisplayText}
                 </span>
               )}
             </div>
@@ -413,8 +527,8 @@ export default function StoryCard({
                   data-no-card-drag="1"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
-                  aria-label="Kártya műveletek"
-                  title="Kártya műveletek"
+                  aria-label="Kártya műveletek menü (törlés, másolás, ürítés)"
+                  title="További műveletek ehhez az oldalhoz"
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -431,7 +545,7 @@ export default function StoryCard({
                     className={s.cardMenuPanel}
                     data-no-card-drag="1"
                     role="menu"
-                    aria-label="Kártya műveletek"
+                    aria-label="Kártya műveletek listája"
                     onPointerDown={(e) => {
                       e.stopPropagation();
                     }}
@@ -487,7 +601,14 @@ export default function StoryCard({
         )}
       </div>
 
-      <div className={s.cardBody}>
+      <div
+        className={s.cardBody}
+        style={
+          node.category === "end" && endPageBodyBackground
+            ? { background: endPageBodyBackground }
+            : undefined
+        }
+      >
         {isStart ? (
           <span className={s.cardStartSub}>start →</span>
         ) : (

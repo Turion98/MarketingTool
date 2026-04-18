@@ -1,11 +1,16 @@
 import type { DistantEdgeBundle } from "./StoryEdges";
 
-const INBOUND_CHIP_MIN_GAP = 19;
-const CLAMP_MARGIN = 8;
+/** World px: bekötés-chip „magasság” + légzőtér (összeomlott kategória-kártyán több él). */
+const INBOUND_CHIP_MIN_GAP = 30;
+const CLAMP_MARGIN = 10;
 
-type WorldBox = { y: number; h: number };
+export type InboundWorldBox = { x: number; y: number; w: number; h: number };
 
-function clampInboundY(pageId: string, y: number, world: Map<string, WorldBox>): number {
+function clampInboundY(
+  pageId: string,
+  y: number,
+  world: Map<string, InboundWorldBox>
+): number {
   const w = world.get(pageId);
   if (!w) return y;
   const y0 = w.y + CLAMP_MARGIN;
@@ -15,7 +20,7 @@ function clampInboundY(pageId: string, y: number, world: Map<string, WorldBox>):
 
 function targetBand(
   pageId: string,
-  world: Map<string, WorldBox>
+  world: Map<string, InboundWorldBox>
 ): { y0: number; y1: number } | null {
   const w = world.get(pageId);
   if (!w) return null;
@@ -25,24 +30,35 @@ function targetBand(
   return { y0, y1 };
 }
 
+function inboundBandKey(
+  toPageId: string,
+  world: Map<string, InboundWorldBox>
+): string {
+  const w = world.get(toPageId);
+  if (!w) return `id:${toPageId}`;
+  const q = (n: number) => Math.round(n * 2) / 2;
+  return `${q(w.x)}_${q(w.y)}_${q(w.w)}_${q(w.h)}`;
+}
+
 /**
- * Ugyanazon cél oldal távoli bemeneti címkéi: azonos X, Y-ban nem fedik egymást.
- * Először függőleges „lépcső” a geometriai y2 szerint, majd az egész csoport
- * beleillesztése a cél kártya sávjába (tolás vagy arányos skálázás).
+ * Távoli / vég-bekötés chip Y: azonos cél **vizuális** téglalapjához tartozó kötegek
+ * együtt lépcsőznek (pl. összeomlott kategória-kártya: több vég-oldal ugyanazon a dobozon).
+ * Először függőleges „lépcső” a geometriai y2 szerint, majd a cél sávba illesztés.
  */
 export function computeDistantInboundYByKey(
   bundles: DistantEdgeBundle[],
-  world: Map<string, WorldBox>
+  world: Map<string, InboundWorldBox>
 ): Map<string, number> {
-  const byTo = new Map<string, DistantEdgeBundle[]>();
+  const byBand = new Map<string, DistantEdgeBundle[]>();
   for (const b of bundles) {
-    const arr = byTo.get(b.toPageId) ?? [];
+    const k = inboundBandKey(b.toPageId, world);
+    const arr = byBand.get(k) ?? [];
     arr.push(b);
-    byTo.set(b.toPageId, arr);
+    byBand.set(k, arr);
   }
   const out = new Map<string, number>();
 
-  for (const [, list] of byTo) {
+  for (const [, list] of byBand) {
     if (list.length === 0) continue;
     const toId = list[0]!.toPageId;
     if (list.length === 1) {

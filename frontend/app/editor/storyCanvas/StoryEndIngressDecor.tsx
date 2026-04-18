@@ -100,10 +100,16 @@ export function StoryEndIngressChips({
   bundles,
   onHoverKey,
   inboundYByKey,
+  hideInboundChip,
 }: {
   bundles: DistantEdgeBundle[];
   onHoverKey: (key: string | null) => void;
   inboundYByKey: Map<string, number>;
+  /**
+   * Ha true: a cél (vég) oldali „be” chip nem renderelődik (pl. összeomlott kategória-kártya).
+   * A forrás oldali chip és a vonal réteg változatlan; a vonal továbbra is a `inboundYByKey` szerint fut.
+   */
+  hideInboundChip?: (toPageId: string) => boolean;
 }) {
   if (bundles.length === 0) return null;
 
@@ -120,6 +126,7 @@ export function StoryEndIngressChips({
 
         const inTop = inboundYByKey.get(b.key) ?? b.y2;
         const inLeft = b.x2 + IN_CARD_OVERLAP_PX;
+        const hideIn = hideInboundChip?.(b.toPageId) ?? false;
 
         return (
           <div key={`eic:${b.key}`} className={s.endIngressChipPair}>
@@ -139,24 +146,26 @@ export function StoryEndIngressChips({
             >
               <span className={s.endIngressChipText}>{toLabel}</span>
             </div>
-            <div
-              role="presentation"
-              data-end-ingress-chip="1"
-              className={`${s.endIngressChip} ${s.endIngressChipIn}`}
-              style={{
-                left: inLeft,
-                top: inTop,
-                transform: "translate(-100%, -50%)",
-              }}
-              title={`Honnan: ${b.fromPageId}`}
-              onPointerEnter={() => onHoverKey(b.key)}
-              onPointerLeave={() => onHoverKey(null)}
-              onPointerDown={chipPointerDown}
-            >
-              <span className={s.endIngressChipText}>
-                {shortId(b.fromPageId)}
-              </span>
-            </div>
+            {!hideIn ? (
+              <div
+                role="presentation"
+                data-end-ingress-chip="1"
+                className={`${s.endIngressChip} ${s.endIngressChipIn}`}
+                style={{
+                  left: inLeft,
+                  top: inTop,
+                  transform: "translate(-100%, -50%)",
+                }}
+                title={`Honnan: ${b.fromPageId}`}
+                onPointerEnter={() => onHoverKey(b.key)}
+                onPointerLeave={() => onHoverKey(null)}
+                onPointerDown={chipPointerDown}
+              >
+                <span className={s.endIngressChipText}>
+                  {shortId(b.fromPageId)}
+                </span>
+              </div>
+            ) : null}
           </div>
         );
       })}

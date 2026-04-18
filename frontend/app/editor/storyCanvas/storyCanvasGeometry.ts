@@ -132,13 +132,16 @@ export function slotCount(node: StoryGraphNode, orderedOut: StoryGraphEdge[]): n
   return Math.max(1, node.choiceCount);
 }
 
-/**
- * Végoldal: oldal-id alapú egyedi arany + zöldes árnyalat (szerkesztő vászon).
- */
-export function editorEndCardAccentStyle(
+type EndCardAccentParts = {
+  borderColor: string;
+  boxShadow: string;
+  headerGradient: string;
+};
+
+function computeEndCardAccentParts(
   pageId: string,
   selected: boolean
-): CSSProperties {
+): EndCardAccentParts {
   let h = 2166136261;
   for (let i = 0; i < pageId.length; i++) {
     h ^= pageId.charCodeAt(i);
@@ -150,19 +153,58 @@ export function editorEndCardAccentStyle(
   const goldS = 52 + (u % 16);
   const greenS = 36 + ((u >> 16) % 18);
   const innerRing = `0 0 0 1px hsla(${greenHue} 48% 32% / 0.5), inset 0 1px 0 hsla(${goldHue} 62% 50% / 0.18)`;
-  const base: CSSProperties = {
-    borderColor: `hsl(${goldHue} ${goldS}% 54%)`,
-    background: `linear-gradient(156deg, hsla(${goldHue} 48% 16% / 0.98) 0%, hsla(${greenHue} ${greenS}% 12% / 0.96) 100%)`,
-    boxShadow: innerRing,
-  };
+  const headerGradient = `linear-gradient(156deg, hsla(${goldHue} 48% 16% / 0.98) 0%, hsla(${greenHue} ${greenS}% 12% / 0.96) 100%)`;
   if (selected) {
     return {
-      ...base,
       borderColor: "rgba(139, 168, 255, 0.82)",
       boxShadow: `${innerRing}, 0 0 0 1px rgba(139, 168, 255, 0.38)`,
+      headerGradient,
     };
   }
-  return base;
+  return {
+    borderColor: `hsl(${goldHue} ${goldS}% 54%)`,
+    boxShadow: innerRing,
+    headerGradient,
+  };
+}
+
+/**
+ * Végoldal kártya keret: szegély + belső fény; sötét háttér (a törzs külön színezhető).
+ */
+export function editorEndCardAccentFrameStyle(
+  pageId: string,
+  selected: boolean
+): CSSProperties {
+  const p = computeEndCardAccentParts(pageId, selected);
+  return {
+    borderColor: p.borderColor,
+    boxShadow: p.boxShadow,
+    background: "rgba(22, 27, 40, 0.96)",
+  };
+}
+
+/** Csak a felső drag-sáv (HEADER_H): megegyezik a korábbi teljes kártya fejléc-árnyalattal. */
+export function editorEndCardAccentHeaderStripStyle(
+  pageId: string,
+  selected: boolean
+): CSSProperties {
+  const p = computeEndCardAccentParts(pageId, selected);
+  return { background: p.headerGradient };
+}
+
+/**
+ * Végoldal: oldal-id alapú egyedi arany + zöldes árnyalat (teljes blokk — pl. sablon chip).
+ */
+export function editorEndCardAccentStyle(
+  pageId: string,
+  selected: boolean
+): CSSProperties {
+  const p = computeEndCardAccentParts(pageId, selected);
+  return {
+    borderColor: p.borderColor,
+    background: p.headerGradient,
+    boxShadow: p.boxShadow,
+  };
 }
 
 export function cardDimensions(
