@@ -59,7 +59,7 @@ export default function EditorEndPagesPanel({
         <span className={s.stackPanelToggleTitle}>
           <span className={s.stackPanelToggleMain}>Végoldalak</span>
           <span className={s.stackPanelToggleSubMuted}>
-            {endIds.length} db — kattintás: kijelölés az inspectorban
+            {endIds.length} lap — kattintásra kijelölöd a végoldalt a jobb oldali panelben
           </span>
         </span>
         <span className={s.previewPanelToggleChevron} aria-hidden>

@@ -30,7 +30,7 @@ export default function EditorShell() {
           fontFamily: "var(--font-heading-present), system-ui, sans-serif",
         }}
       >
-        Betöltés…
+        Szerkesztő betöltése…
       </div>
     );
   }
@@ -46,7 +46,7 @@ export default function EditorShell() {
           fontFamily: "var(--font-heading-present), system-ui, sans-serif",
         }}
       >
-        Átirányítás a belépéshez…
+        Átirányítás a bejelentkezéshez…
       </div>
     );
   }

@@ -303,7 +303,7 @@ function PreviewToolbar({
   return (
     <div className={s.previewToolbar}>
       <label>
-        Preview oldal
+        Előnézet oldala
         <select
           className={s.pageSelect}
           value={pageIds.includes(currentPageId) ? currentPageId : pageIds[0] ?? ""}
@@ -313,7 +313,7 @@ function PreviewToolbar({
             setCurrentPageId(v);
             if (pageIds.includes(v)) onSyncEditorPageId(v);
           }}
-          aria-label="Preview oldal választása"
+          aria-label="Melyik oldalon álljon az előnézet (a vászon kijelölése is ehhez igazodik)"
         >
           {pageIds.length === 0 ? (
             <option value="">—</option>
@@ -360,7 +360,7 @@ function PreviewToolbar({
           type="button"
           className={s.previewSkinApplyBtn}
           disabled={skinApplyBusy}
-          title="Beírja a meta.skin-t, újratölti a skin JSON-t és frissíti csak az előnézetet (nem kell külön menteni a sztorit)."
+          title="Rövid útmutató: a választott téma bekerül a sztori meta adataiba (skin), betöltjük a témafájlt, és csak az előnézet frissül — a szervermentés külön lépés."
           onClick={() => {
             if (!onHardRefreshPreview) return;
             const v = skin;
@@ -377,14 +377,16 @@ function PreviewToolbar({
               .finally(() => setSkinApplyBusy(false));
           }}
         >
-          {skinApplyBusy ? "Frissítés…" : "Skin az előnézetre"}
+          {skinApplyBusy ? "Alkalmazás…" : "Téma alkalmazása az előnézeten"}
         </button>
       </div>
       <span className={s.previewToolbarHint}>
-        A <strong>Skin az előnézetre</strong> gomb beállítja a{" "}
-        <code className={s.storyPickerCode}>meta.skin</code>-t a vázlatban, és
-        azonnal újrarajzolja a preview-t. Teljes mentés: „Változások mentése” a
-        vásznon. „Preview oldal” = vászon kijelölés.
+        <strong>Hogyan működik?</strong> 1) Válassz témát. 2) A gomb a{" "}
+        <code className={s.storyPickerCode}>meta.skin</code> mezőt ehhez igazítja a
+        szerkesztőben lévő sztoriban, és azonnal újrarajzolja az előnézetet. 3) A
+        szerverre akkor írd ki, ha kész vagy: a vászon sáv „Változások mentése”
+        funkciója. Az „Előnézet oldala” mező ugyanarra az oldalra mutat, amelyik
+        kártya épp kijelölt a vásznon.
       </span>
     </div>
   );
@@ -608,7 +610,7 @@ function EditorPreviewColumn({
         onClick={togglePreviewExpanded}
       >
         <span className={s.stackPanelToggleTitle}>
-          <span className={s.stackPanelToggleMain}>Előnézet (élő draft)</span>
+          <span className={s.stackPanelToggleMain}>Előnézet (élő vázlat)</span>
         </span>
         <span className={s.previewPanelToggleChevron} aria-hidden>
           {previewExpanded ? "▼" : "▶"}
@@ -654,7 +656,7 @@ function EditorPreviewColumn({
             aria-valuemin={220}
             aria-valuemax={maxBodyHeightPx}
             aria-valuenow={Math.round(bodyHeightPx)}
-            aria-label="Előnézet magasságának állítása"
+            aria-label="Az előnézet panel magasságának állítása húzással"
             onPointerDown={onResizeHandlePointerDown}
             onPointerMove={onResizeHandlePointerMove}
             onPointerUp={onResizeHandlePointerUp}
@@ -704,12 +706,13 @@ function EditorStudioRightColumn({
         >
           <div className={s.bootstrapPanelRoot}>
             <h2 className={s.bootstrapPanelHead}>
-              Új sztori – kötelező adatok
+              Új sztori: első lépés — kötelező adatok
             </h2>
             <div className={s.bootstrapPanelBody}>
               <p className={s.bootstrapMetaLead}>
-                Az előnézet és az oldal szerkesztő a meta mentése után érhető el.
-                A vásznon addig csak a kezdőpont látható.
+                Add meg az alap meta adatokat és mentsd a szerverre: utána nyílik meg
+                teljesen az előnézet és az oldal-szerkesztő. Addig a vásznon csak a
+                kezdőpont jelenik meg, így nem tudsz félkész sztorival „eltévedni”.
               </p>
               <NewStoryMetaPanel onCreated={onBootstrapStoryCreated} />
             </div>
@@ -745,7 +748,7 @@ function EditorStudioRightColumn({
           onClick={onToggleInspector}
         >
           <span className={s.stackPanelToggleTitle}>
-            <span className={s.stackPanelToggleMain}>Oldal szerkesztő</span>
+            <span className={s.stackPanelToggleMain}>Oldal tulajdonságok</span>
             {selectedPageId ? (
               <span
                 className={
@@ -755,14 +758,14 @@ function EditorStudioRightColumn({
                 }
               >
                 {selectedPageId === STORY_GRAPH_START_NODE_ID
-                  ? "Sztori meta (kezdőpont)"
+                  ? "Sztori meta (START kártya)"
                   : isEditorPendingPageId(selectedPageId)
-                    ? "Új oldal — add meg az ID-t"
+                    ? "Új lap: adj meg egyedi oldal-ID-t"
                     : selectedPageId}
               </span>
             ) : (
               <span className={s.stackPanelToggleSubMuted}>
-                Nincs oldal kijelölve
+                Válassz kártyát a vásznon a részletekhez
               </span>
             )}
           </span>
@@ -893,7 +896,7 @@ export default function EditorStudio({
     if (draftHasPendingEditorPageIds(cur)) {
       setSaveServerTone("err");
       setSaveServerHint(
-        "Mentés előtt nevezd meg vagy töröld a függő új oldalakat (editor vázlat-ID)."
+        "Mentés előtt: minden új kártyának legyen végleges, egyedi oldal-ID. Nevezd el a függő lapokat a jobb oldali panelben, vagy töröld őket a vászonról."
       );
       return;
     }
@@ -942,7 +945,7 @@ export default function EditorStudio({
     setJsonText(JSON.stringify(shell, null, 2));
     setParseError(null);
     setSchemaHint(
-      "Új sztori: töltsd ki a jobb oldali meta űrlapot, majd mentsd a szerverre."
+      "Új sztori lépései: 1) töltsd ki a jobb oldali meta űrlapot, 2) mentsd a szerverre — ez létrehozza a fájlt, és utána szerkesztheted a teljes gráfot."
     );
     setSelectedPageIds([]);
     setRevision((r) => r + 1);
@@ -994,7 +997,7 @@ export default function EditorStudio({
         if (cancelled) return;
         setServerStoryList([]);
         setStoryListError(
-          "Nem sikerült betölteni a sztori listát (/api/stories). Ellenőrizd a backendet."
+          "A sztori-lista nem érhető el. Ellenőrizd, hogy fut-e a backend, és hogy a böngésző eléri a `/api/stories` végpontot."
         );
       })
       .finally(() => {
@@ -1048,12 +1051,12 @@ export default function EditorStudio({
           if (v.ok) {
             setSchemaHint(
               v.warnings.length
-                ? `Séma figyelmeztetések: ${v.warnings.length} db`
+                ? `Séma: ${v.warnings.length} figyelmeztetés — az előnézet működhet; érdemes később rendbe tenni.`
                 : null
             );
           } else {
             setSchemaHint(
-              `Séma: ${v.errors.length} hiba — a preview ettől még futhat.`
+              `Séma: ${v.errors.length} hiba — az előnézet ettől még futhat, de javítsd a hibákat mentés előtt.`
             );
           }
         }
@@ -1062,7 +1065,7 @@ export default function EditorStudio({
         if (cancelled) return;
         if (e instanceof DOMException && e.name === "AbortError") return;
         setParseError(
-          "Nem sikerült betölteni a sztorit (backend /api/story). Illeszd be manuálisan a JSON-t."
+          "A sztori nem töltődött be a szerverről. Próbáld: másik sztori a listából, vagy illessz be érvényes JSON-t a haladó szerkesztőbe."
         );
       });
     return () => {
@@ -1082,7 +1085,7 @@ export default function EditorStudio({
     try {
       const data = JSON.parse(raw) as unknown;
       if (!data || typeof data !== "object" || Array.isArray(data)) {
-        throw new Error("A gyökérnek JSON objektumnak kell lennie.");
+        throw new Error("A JSON gyökere objektum kell legyen (nem tömb vagy primitív).");
       }
       setParseError(null);
       const rec = data as Record<string, unknown>;
@@ -1094,12 +1097,12 @@ export default function EditorStudio({
       if (v.ok) {
         setSchemaHint(
           v.warnings.length
-            ? `Séma figyelmeztetések: ${v.warnings.length} db`
+            ? `Séma: ${v.warnings.length} figyelmeztetés — az előnézet működhet; érdemes később rendbe tenni.`
             : null
         );
       } else {
         setSchemaHint(
-          `Séma: ${v.errors.length} hiba — a preview ettől még futhat, ha az oldalak felismerhetők.`
+          `Séma: ${v.errors.length} hiba — az előnézet még futhat, ha az oldalak felismerhetők; javítsd a hibákat mentés előtt.`
         );
       }
     } catch (e) {
@@ -1202,12 +1205,12 @@ export default function EditorStudio({
       if (v.ok) {
         setSchemaHint(
           v.warnings.length
-            ? `Séma figyelmeztetések: ${v.warnings.length} db`
+            ? `Séma: ${v.warnings.length} figyelmeztetés — az előnézet működhet; érdemes később rendbe tenni.`
             : null
         );
       } else {
         setSchemaHint(
-          `Séma: ${v.errors.length} hiba — a preview ettől még futhat.`
+          `Séma: ${v.errors.length} hiba — az előnézet ettől még futhat, de javítsd a hibákat mentés előtt.`
         );
       }
     },
@@ -1241,7 +1244,7 @@ export default function EditorStudio({
   const onRenamePageFromCanvas = useCallback(
     (fromId: string, toId: string): string | null => {
       const cur = draftStoryRef.current;
-      if (!cur) return "Nincs betöltött sztori.";
+      if (!cur) return "Nincs betölthető sztori — válassz egyet a listából, vagy tölts be JSON-t.";
       const res = renameStoryPageIdInStory(cur, fromId, toId);
       if (!res.ok) return res.error;
       onStoryChangeFromCanvas(res.story);
@@ -1262,7 +1265,7 @@ export default function EditorStudio({
       if (!pid || !draftStory) return;
       if (
         !window.confirm(
-          `Biztosan törlöd a(z) „${pid}” oldalt? Más oldalak hivatkozásait kézzel ellenőrizd.`
+          `Törlöd a(z) „${pid}” oldalt? Utána nézd át a többi oldal ugrásait: előfordulhat, hogy még erre az ID-ra mutatnak.`
         )
       ) {
         return;
@@ -1357,12 +1360,12 @@ export default function EditorStudio({
       if (v.ok) {
         setSchemaHint(
           v.warnings.length
-            ? `Séma figyelmeztetések: ${v.warnings.length} db`
+            ? `Séma: ${v.warnings.length} figyelmeztetés — az előnézet működhet; érdemes később rendbe tenni.`
             : null
         );
       } else {
         setSchemaHint(
-          `Séma: ${v.errors.length} hiba — a preview ettől még futhat.`
+          `Séma: ${v.errors.length} hiba — az előnézet ettől még futhat, de javítsd a hibákat mentés előtt.`
         );
       }
     },
@@ -1387,7 +1390,7 @@ export default function EditorStudio({
     if (isNewStorySentinel(activeStorySrc)) {
       opts.push(
         <option key="__new_draft__" value={NEW_STORY_SRC_SENTINEL}>
-          Új sztori (meta vázlat)
+          Új sztori (meta szerkesztés alatt)
         </option>
       );
     }
@@ -1397,7 +1400,7 @@ export default function EditorStudio({
     if (!inList && cur && !isNewStorySentinel(activeStorySrc)) {
       opts.push(
         <option key="__current__" value={cur}>
-          Jelenlegi (nincs a listán): {cur.replace(/^stories\//, "")}
+          Aktuális fájl (nincs a listában): {cur.replace(/^stories\//, "")}
         </option>
       );
     }
@@ -1412,7 +1415,7 @@ export default function EditorStudio({
     if (opts.length === 0) {
       opts.push(
         <option key="__seed__" value={SEED_STORY_SRC}>
-          Alapértelmezett (lista üres)
+          Alap példa (a lista üres)
         </option>
       );
     }
@@ -1432,7 +1435,7 @@ export default function EditorStudio({
     <div className={s.root}>
       <div className={s.shell}>
       <div className={s.topBar}>
-        <h1 className={s.title}>Szerkesztő</h1>
+        <h1 className={s.title}>Sztori szerkesztő</h1>
       </div>
       <p className={s.userLine}>
         Bejelentkezve: <strong>{userEmail ?? userId}</strong>
@@ -1523,10 +1526,14 @@ export default function EditorStudio({
               aria-pressed={isFullscreen}
               aria-label={
                 isFullscreen
-                  ? "Kilépés a teljes képernyőből"
-                  : "Vizuális szerkesztő teljes képernyőre"
+                  ? "Kilépés a teljes képernyős vászon nézetből"
+                  : "Teljes képernyő: csak a vászon és a dokkolt jobb oszlop"
               }
-              title={isFullscreen ? "Kilépés (Esc)" : "Teljes képernyő (vászon)"}
+              title={
+                isFullscreen
+                  ? "Kilépés: Esc vagy újra erre a gombra kattintás"
+                  : "Teljes képernyő: nagyobb vászon, jobb oldalon előnézet és oldal-panel"
+              }
             >
               {isFullscreen ? (
                 <svg
@@ -1576,23 +1583,25 @@ export default function EditorStudio({
                   fullscreenSideSlot={
                     draftStory && isFullscreen ? (
                       <div className={s.fullscreenSideInner}>
-                        <EditorStudioRightColumn
-                          draftStory={draftStory}
-                          revision={revision}
-                          pageIds={pageIds}
-                          inspectorOpen={inspectorOpen}
-                          onToggleInspector={toggleInspectorExpanded}
-                          selectedPageId={selectedPageId}
-                          onSelectPageId={(id) =>
-                            handleSelectPageIds(id ? [id] : [])
-                          }
-                          issuesByPage={issuesByPage}
-                          onStoryChange={onStoryChangeFromCanvas}
-                          onDeletePage={onDeletePage}
-                          onRenamePageId={onRenamePageFromCanvas}
-                          bootstrapMode={isNewStoryBootstrap}
-                          onBootstrapStoryCreated={handleBootstrapStoryCreated}
-                        />
+                        <div className={s.fullscreenSideScroll}>
+                          <EditorStudioRightColumn
+                            draftStory={draftStory}
+                            revision={revision}
+                            pageIds={pageIds}
+                            inspectorOpen={inspectorOpen}
+                            onToggleInspector={toggleInspectorExpanded}
+                            selectedPageId={selectedPageId}
+                            onSelectPageId={(id) =>
+                              handleSelectPageIds(id ? [id] : [])
+                            }
+                            issuesByPage={issuesByPage}
+                            onStoryChange={onStoryChangeFromCanvas}
+                            onDeletePage={onDeletePage}
+                            onRenamePageId={onRenamePageFromCanvas}
+                            bootstrapMode={isNewStoryBootstrap}
+                            onBootstrapStoryCreated={handleBootstrapStoryCreated}
+                          />
+                        </div>
                       </div>
                     ) : undefined
                   }
@@ -1621,10 +1630,10 @@ export default function EditorStudio({
                                 ? storyListError
                                 : storyListLoading &&
                                     visibleStoryList.length === 0
-                                  ? "Sztori lista betöltése…"
+                                  ? "Sztori-lista betöltése…"
                                   : isAdmin
-                                    ? `${serverStoryList.length} sztori a szerveren`
-                                    : `${visibleStoryList.length} elérhető sztori`
+                                    ? `Összesen ${serverStoryList.length} sztori a szerveren`
+                                    : `Számodra ${visibleStoryList.length} sztori érhető el`
                             }
                             value={normalizeEditorStorySrc(activeStorySrc)}
                             onChange={(e) => {
@@ -1648,14 +1657,14 @@ export default function EditorStudio({
                             editorStoryAllowlist.length === 0) &&
                           !storyListError ? (
                             <span className={s.storyPickerHint}>
-                              Előfizetői mód: add meg a{" "}
+                              Korlátozott mód: a környezetben állítsd be a{" "}
                               <code className={s.storyPickerCode}>
                                 NEXT_PUBLIC_EDITOR_STORY_ALLOWLIST
                               </code>{" "}
-                              env változót (story id-k, vesszővel). Fejlesztéshez:
-                              egyetlen{" "}
-                              <code className={s.storyPickerCode}>*</code> =
-                              összes sztori.
+                              változót — vesszővel felsorolt story id-k határozzák meg,
+                              mely fájlok jelenjenek meg. Csak teszteléshez: egyetlen{" "}
+                              <code className={s.storyPickerCode}>*</code> az összes
+                              sztori listázása (éles környezetben ne használd).
                             </span>
                           ) : null}
                         </div>
@@ -1677,9 +1686,10 @@ export default function EditorStudio({
               ) : (
                 <div className={s.visualEmptyState}>
                   <p className={s.visualEmptyStateText}>
-                    Tölts be vagy illessz be érvényes sztori JSON-t a lenti haladó
-                    blokkban. Betöltés után az előnézet és az oldal szerkesztő a
-                    jobb oszlopban jelenik meg.
+                    Kezdés: nyisd le lent a „Haladó: nyers JSON” részt, és illessz be
+                    érvényes sztori JSON-t — vagy válassz sztorit a fenti listából, ha
+                    a backend elérhető. Sikeres betöltés után megjelenik a vászon, jobbra
+                    pedig az előnézet és az oldal tulajdonságok panel.
                   </p>
                 </div>
               )}
@@ -1688,13 +1698,13 @@ export default function EditorStudio({
 
           {isNewStoryBootstrap ? (
             <div className={s.advancedJsonBlocked}>
-              A haladó JSON, a sablonok és a nyers szerkesztés csak a kötelező meta mentése
-              után érhető el. Add meg a jobb oldali űrlapot, majd kattints a „Meta mentése és
-              sztori létrehozása” gombra.
+              Új sztori esetén először a jobb oldali űrlapot kell kitöltened és elmentened:
+              csak utána nyílik meg a nyers JSON, a sablonok és a teljes vászon-szerkesztés.
+              Következő lépés: „Meta mentése és sztori létrehozása”.
             </div>
           ) : (
             <details className={s.advancedJson}>
-              <summary>Haladó: nyers JSON + vázlat</summary>
+              <summary>Haladó: nyers JSON és sablonok</summary>
               <div className={s.advancedJsonInner}>
                 {draftStory ? (
                   <EditorOutline
@@ -1711,7 +1721,7 @@ export default function EditorStudio({
                   value={jsonText}
                   onChange={(e) => onJsonChange(e.target.value)}
                   spellCheck={false}
-                  aria-label="Sztori JSON szerkesztése"
+                  aria-label="Teljes sztori JSON szerkesztése (haladó)"
                   style={{ minHeight: "12rem" }}
                 />
                 {parseError ? <p className={s.errorBox}>{parseError}</p> : null}
@@ -1719,9 +1729,10 @@ export default function EditorStudio({
                   <p className={s.hint}>{schemaHint}</p>
                 ) : null}
                 <p className={s.hint}>
-                  A vászon és az előnézet a memóriában lévő JSON-ból él — sémaellenőrzés
-                  figyelmeztethet, a preview ettől még futhat. A szerverre íráshoz használd a
-                  vászon sávban a „Változások mentése” gombot (felülírja a storyId alatti fájlt).
+                  <strong>JSON és vászon:</strong> amit ide írsz, abból él a vászon és az
+                  előnézet — a sémaellenőrzés figyelmeztethet, de az előnézet ettől még
+                  futhat. <strong>Szerverre mentés:</strong> a vászon fölötti „Változások
+                  mentése” írja ki a kiválasztott sztori fájlt (felülírja a meglévőt).
                 </p>
               </div>
             </details>
@@ -1731,7 +1742,7 @@ export default function EditorStudio({
         {draftStory && !isFullscreen ? (
           <div
             className={s.rightColumn}
-            aria-label="Előnézet és oldal szerkesztő"
+            aria-label="Előnézet, végoldalak listája és oldal tulajdonságok"
           >
             <EditorStudioRightColumn
               draftStory={draftStory}
@@ -1753,7 +1764,7 @@ export default function EditorStudio({
       </div>
 
       <div className={s.footerLinks}>
-        <Link href="/">← Vissza a kezdőlapra</Link>
+        <Link href="/">← Vissza a kezdőlapra (kilépés a szerkesztőből)</Link>
       </div>
     </div>
   </div>

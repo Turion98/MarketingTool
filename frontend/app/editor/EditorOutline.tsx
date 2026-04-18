@@ -120,7 +120,7 @@ export default function EditorOutline({
     <div className={s.outlineWrap}>
       <details className={s.outlineDetails}>
         <summary className={s.outlineSummary}>
-          Oldaltípusok (szerkesztő)
+          Oldaltípusok és JSON kiemelés
           <span className={s.outlineBadge}>{flat.length} oldal</span>
         </summary>
         <div className={s.outlineBody}>
@@ -148,10 +148,11 @@ export default function EditorOutline({
           {activeCategory ? (
             <div className={s.highlightBar}>
               <span className={s.highlightMeta}>
-                Kijelölés: teljes oldal-objektum — {CATEGORY_LABELS[activeCategory]}
+                Oktató: válassz típust, és a szerkesztő kiemeli a teljes oldal-blokkot a
+                nyers JSON-ban — {CATEGORY_LABELS[activeCategory]}
                 {rangeCount === 0
-                  ? " — nincs ilyen típus a jelenlegi JSON-ban"
-                  : ` — ${rangeCount} db · Előző / Következő = másik oldal ugyanabban a típusban`}
+                  ? " — ehhez a típushoz még nincs oldal a dokumentumban"
+                  : ` — ${rangeCount} találat; az Előző / Következő gombok ugyanilyen típusú másik oldalra ugranak`}
               </span>
               {rangeCount > 1 ? (
                 <div className={s.highlightNav}>
@@ -160,14 +161,14 @@ export default function EditorOutline({
                     className={s.btnTiny}
                     onClick={() => setHighlightIdx((i) => i - 1)}
                   >
-                    ← Előző oldal
+                    ← Előző (ugyanaz a típus)
                   </button>
                   <button
                     type="button"
                     className={s.btnTiny}
                     onClick={() => setHighlightIdx((i) => i + 1)}
                   >
-                    Következő oldal →
+                    Következő (ugyanaz a típus) →
                   </button>
                 </div>
               ) : null}
@@ -179,7 +180,9 @@ export default function EditorOutline({
       <details className={s.outlineDetails}>
         <summary className={s.outlineSummary}>
           Oldal sablonok
-          <span className={s.outlineHint}>+ beszúrás a pages végére</span>
+          <span className={s.outlineHint}>
+            + sablon beszúrása a pages lista végére
+          </span>
         </summary>
         <div className={s.templateSections}>
           <div className={s.templateScroll}>

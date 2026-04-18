@@ -32,7 +32,7 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
     slugErr && storySlug.trim()
       ? slugErr
       : !storySlug.trim()
-        ? "A logo feltöltéshez add meg a sztori azonosítót (slug)."
+        ? "Logo feltöltés: előbb add meg a sztori azonosítót (slug), hogy tudjuk, melyik mappába kerüljön a fájl."
         : null;
 
   const onUploadLogo = useCallback(async () => {
@@ -43,7 +43,7 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
       return;
     }
     if (!logoFile) {
-      setFormError("Válassz képfájlt a feltöltéshez.");
+      setFormError("Válassz ki egy képfájlt a gépedről a feltöltéshez.");
       return;
     }
     setLogoUploadBusy(true);
@@ -112,7 +112,7 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
         const msg = err instanceof Error ? err.message : String(err);
         if (/409|already exists|foglalt/i.test(msg)) {
           setFormError(
-            "Ez a sztori-azonosító már foglalt a szerveren. Válassz másik slugot."
+            "Ez a sztori-azonosító már létezik a szerveren. Válassz másik slugot, vagy nyisd meg a meglévő sztorit szerkesztésre."
           );
         } else {
           setFormError(msg);
@@ -127,15 +127,15 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
   return (
     <form className={s.bootstrapMetaForm} onSubmit={(e) => void onSubmit(e)}>
       <p className={s.bootstrapMetaLead}>
-        Add meg a kötelező mezőket, majd mentsd — a szerveren létrejön az új JSON
-        fájl. A logót feltöltheted előbb, vagy a mentés feltölti, ha van kiválasztott
-        fájl.
+        <strong>Első mentés:</strong> töltsd ki a kötelező mezőket, majd kattints a mentésre —
+        a szerveren létrejön az új JSON fájl, és megnyílik a teljes szerkesztő. A logót
+        feltöltheted előbb külön, vagy a mentés egyben feltölti, ha már kiválasztottál fájlt.
       </p>
 
       <fieldset className={s.bootstrapMetaFieldset}>
-        <legend className={s.bootstrapMetaLegend}>Kötelező</legend>
+        <legend className={s.bootstrapMetaLegend}>Kötelező azonosítók</legend>
         <label className={s.bootstrapMetaLabel}>
-          Sztori azonosító (slug, fájlnév)
+          Sztori azonosító (slug — a fájlnév alapja)
           <input
             className={s.bootstrapMetaInput}
             value={storySlug}
@@ -149,7 +149,7 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
       </fieldset>
 
       <fieldset className={s.bootstrapMetaFieldset}>
-        <legend className={s.bootstrapMetaLegend}>Meta és CTA-k</legend>
+        <legend className={s.bootstrapMetaLegend}>Megjelenés és gombok (CTA)</legend>
         <StoryMetaFormFields
           model={model}
           onChange={setModel}
@@ -173,7 +173,7 @@ export default function NewStoryMetaPanel({ onCreated }: NewStoryMetaPanelProps)
         className={s.bootstrapMetaSubmit}
         disabled={busy}
       >
-        {busy ? "Mentés…" : "Meta mentése és sztori létrehozása"}
+        {busy ? "Mentés…" : "Meta mentése — sztori fájl létrehozása a szerveren"}
       </button>
     </form>
   );

@@ -69,7 +69,7 @@ export function StoryMetaFormFields({
   return (
     <>
       <label className={s.bootstrapMetaLabel}>
-        Megjelenített cím
+        Megjelenített cím (játékosnak látszik)
         <input
           className={s.bootstrapMetaInput}
           value={model.title}
@@ -79,7 +79,7 @@ export function StoryMetaFormFields({
         />
       </label>
       <label className={s.bootstrapMetaLabel}>
-        Kezdő oldal ID
+        Kezdő oldal ID (meta.startPageId — ide lép be a játék)
         <input
           className={s.bootstrapMetaInput}
           value={model.startPageId}
@@ -91,9 +91,9 @@ export function StoryMetaFormFields({
       </label>
 
       <fieldset className={s.bootstrapMetaFieldset}>
-        <legend className={s.bootstrapMetaLegend}>CTA presetek</legend>
+        <legend className={s.bootstrapMetaLegend}>CTA presetek (gombok URL-jei)</legend>
         <label className={s.bootstrapMetaLabel}>
-          Alapértelmezett vége CTA (preset kulcs)
+          Alapértelmezett vége gomb (preset kulcs)
           <select
             className={s.bootstrapMetaInput}
             value={
@@ -160,7 +160,7 @@ export function StoryMetaFormFields({
                 disabled={disabled || model.ctaRows.length <= 1}
                 onClick={() => removeCtaRow(idx)}
               >
-                Preset törlése
+                Preset eltávolítása a listából
               </button>
             </div>
           </div>
@@ -172,15 +172,15 @@ export function StoryMetaFormFields({
             disabled={disabled}
             onClick={addCtaRow}
           >
-            + Új CTA preset
+            + Új CTA preset sor
           </button>
         </div>
       </fieldset>
 
       <fieldset className={s.bootstrapMetaFieldset}>
-        <legend className={s.bootstrapMetaLegend}>Logo</legend>
+        <legend className={s.bootstrapMetaLegend}>Márka logo</legend>
         <label className={s.bootstrapMetaLabel}>
-          Kép feltöltése (PNG, JPG, WebP, SVG)
+          Kép kiválasztása (PNG, JPG, WebP, SVG)
           <input
             type="file"
             accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"
@@ -205,7 +205,7 @@ export function StoryMetaFormFields({
               }
               onClick={() => void onUploadLogo()}
             >
-              {logoUploadBusy ? "Feltöltés…" : "Logo feltöltése a szerverre"}
+              {logoUploadBusy ? "Feltöltés…" : "Logo feltöltése (külön mentés nélkül is)"}
             </button>
             {logoUploadDisabledReason ? (
               <span className={s.bootstrapMetaLead}>{logoUploadDisabledReason}</span>
@@ -215,7 +215,7 @@ export function StoryMetaFormFields({
         {model.logoPath.trim() ? (
           <>
             <p className={s.bootstrapMetaLogoPreview}>
-              Beállított útvonal: {model.logoPath.trim()}
+              Jelenlegi szerver útvonal: {model.logoPath.trim()}
             </p>
             <div className={s.bootstrapMetaCtaToolbar}>
               <button
@@ -224,7 +224,7 @@ export function StoryMetaFormFields({
                 disabled={disabled}
                 onClick={() => onChange({ ...model, logoPath: "" })}
               >
-                Logo eltávolítása a meta-ból
+                Logo eltávolítása a meta adatokból
               </button>
             </div>
           </>

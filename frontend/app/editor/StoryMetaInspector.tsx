@@ -61,11 +61,11 @@ export default function StoryMetaInspector({
   const onUploadLogo = useCallback(async () => {
     setFormError(null);
     if (!storyId) {
-      setFormError("Hiányzó sztori azonosító (storyId / meta.id).");
+      setFormError("Hiányzik a sztori azonosító — ellenőrizd a storyId vagy meta.id mezőt.");
       return;
     }
     if (!logoFile) {
-      setFormError("Válassz képfájlt a feltöltéshez.");
+      setFormError("Válassz ki egy képfájlt a gépedről a feltöltéshez.");
       return;
     }
     setLogoUploadBusy(true);
@@ -119,7 +119,9 @@ export default function StoryMetaInspector({
           onUploadLogo={() => void onUploadLogo()}
           logoUploadBusy={logoUploadBusy}
           logoUploadDisabledReason={
-            !storyId ? "Hiányzó storyId — nem lehet feltölteni." : null
+            !storyId
+              ? "Logo feltöltéshez szükség van storyId / meta.id értékre."
+              : null
           }
         />
         {formError ? (
@@ -133,7 +135,7 @@ export default function StoryMetaInspector({
           disabled={applyBusy}
           onClick={onApply}
         >
-          {applyBusy ? "Alkalmazás…" : "Meta alkalmazása a vázlatra"}
+          {applyBusy ? "Alkalmazás…" : "Meta alkalmazása a szerkesztőben lévő sztorira"}
         </button>
       </div>
     </div>
