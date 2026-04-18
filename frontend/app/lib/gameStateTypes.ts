@@ -83,10 +83,14 @@ export type PageData = {
       default?: string;
     };
   };
-  logic?: {
-    ifHasFragment?: { fragment: string; goTo: string }[];
-    elseGoTo?: string;
-  };
+  logic?:
+    | {
+        ifHasFragment?: { fragment: string; goTo: string }[];
+        elseGoTo?: string;
+      }
+    | Array<{ if?: string[]; goto?: string }>;
+  /** Scorecard / tömbös logic: ha nincs illeszkedő szabály, ide (PageData.scorecardFallback). */
+  scorecardFallback?: string;
   needsFragment?: string[];
   needsFragmentAny?: string[];
 };
