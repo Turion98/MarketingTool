@@ -85,8 +85,11 @@ Questell runs a **JSON-driven decision engine**:
 ## Project structure (simplified)
 
 frontend/ → app, player, editor, embed routes
+
 backend/ → API, analytics, story engine
+
 schemas/ → shared JSON schema definitions
+
 stories/ → example decision flows
 
 ---
