@@ -1,0 +1,307 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(28, 37, 54, 0.12);
+  background: rgba(246, 241, 231, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.2rem clamp(0.4rem, 1.6vw, 0.65rem);
+  display: flex;
+  position: relative;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  margin-right: auto;
+  padding: 0;
+  line-height: 0;
+}
+
+.logoImage {
+  width: auto;
+  height: clamp(1.8rem, 3.8vw, 2.35rem);
+  object-fit: contain;
+  display: block;
+}
+
+.navDesktop {
+  display: none;
+  align-items: center;
+  gap: 0.15rem;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1024px) {
+  .navDesktop {
+    display: flex;
+  }
+}
+
+.actions {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .actions {
+    display: flex;
+    margin-left: auto;
+    padding-right: 4.15rem;
+    transform: translateX(-25%);
+  }
+}
+
+.navMobileToggle {
+  display: flex;
+  margin-left: auto;
+}
+
+@media (min-width: 1024px) {
+  .navMobileToggle {
+    display: none;
+  }
+}
+
+.iconButton {
+  appearance: none;
+  border: 1px solid rgba(31, 41, 55, 0.16);
+  background: rgba(255, 255, 255, 0.75);
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mobilePanel {
+  width: 100%;
+  border-top: 1px solid rgba(232, 236, 244, 0.08);
+  padding: 0.75rem clamp(0.85rem, 3vw, 1.25rem) 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .mobilePanel {
+    display: none;
+  }
+}
+
+.mobileGroupTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(31, 41, 55, 0.6);
+  margin: 0.25rem 0 0.15rem;
+}
+
+.mobileLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mobileLink {
+  color: rgba(31, 41, 55, 0.92);
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.35rem 0;
+}
+
+.mobileLink:hover {
+  color: #0f172a;
+}
+
+.mobileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(232, 236, 244, 0.08);
+}
+
+.dropdownWrap {
+  position: relative;
+}
+
+.dropdownTrigger {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: rgba(31, 41, 55, 0.88);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dropdownTrigger:hover,
+.dropdownTrigger[aria-expanded="true"] {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.chevron {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.dropdownPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.35rem;
+  min-width: 12rem;
+  padding: 0.4rem;
+  border-radius: 10px;
+  background: #fffdf8;
+  border: 1px solid rgba(31, 41, 55, 0.14);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.14);
+}
+
+.dropdownLink {
+  display: block;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  color: rgba(31, 41, 55, 0.9);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.dropdownLink:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+.dropdownLinkActive {
+  background: rgba(59, 130, 246, 0.14);
+  color: #0f172a;
+}
+
+.topLink {
+  color: rgba(31, 41, 55, 0.88);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+}
+
+.topLink:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.ghost {
+  color: rgba(31, 41, 55, 0.88);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 41, 55, 0.2);
+}
+
+.ghost:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.primary {
+  color: #fffaf2;
+  background: #8a6a4a;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+}
+
+.primary:hover {
+  filter: brightness(1.06);
+}
+
+/* Present nyelv — a fő nav jobb oldali akciók között; mobilon a menü gomb előtt */
+.langSeg {
+  display: none;
+  align-items: stretch;
+  border-radius: 999px;
+  border: 1px solid rgba(138, 106, 74, 0.32);
+  background: rgba(200, 168, 131, 0.14);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .langSeg {
+    display: inline-flex;
+    position: absolute;
+    right: clamp(0.85rem, 3vw, 1.25rem);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+}
+
+.langSegBtn {
+  margin: 0;
+  padding: 0.26rem 0.55rem;
+  border: none;
+  background: transparent;
+  color: rgba(58, 44, 32, 0.84);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.langSegBtn + .langSegBtn {
+  box-shadow: -1px 0 0 rgba(138, 106, 74, 0.24);
+}
+
+.langSegBtn:hover {
+  background: rgba(200, 168, 131, 0.2);
+  color: rgba(58, 44, 32, 0.96);
+}
+
+.langSegBtnActive {
+  background: linear-gradient(180deg, #c8a883 0%, #8a6a4a 100%);
+  color: #fffaf2;
+}
+
+.langSegMobile {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .langSegMobile {
+    display: none;
+  }
+}

@@ -1,0 +1,231 @@
+.page {
+  color: #1f2937;
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: start;
+  margin: 0 auto;
+  max-width: 1140px;
+  padding: clamp(2.2rem, 4vw, 3.7rem) clamp(1rem, 3.2vw, 2rem) clamp(3rem, 5vw, 4.5rem);
+}
+
+.left {
+  display: grid;
+  gap: 0.9rem;
+  align-self: start;
+  min-width: 0;
+  max-width: 42rem;
+}
+
+.eyebrow,
+.comingEyebrow {
+  color: rgba(138, 106, 74, 0.92);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.title {
+  color: #0f172a;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin: 0;
+  max-width: 22ch;
+}
+
+.lead {
+  color: rgba(51, 65, 85, 0.9);
+  font-size: 0.88rem;
+  line-height: 1.8;
+  margin: 0;
+  max-width: 68ch;
+}
+
+.steps {
+  display: grid;
+  gap: 0.65rem;
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+}
+
+.steps li {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  border-radius: 12px;
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.72rem 0.82rem;
+}
+
+.steps h2 {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  margin: 0;
+  color: #0f172a;
+}
+
+.steps p {
+  color: rgba(51, 65, 85, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.74;
+  margin: 0;
+}
+
+.stepHead {
+  display: block;
+}
+
+.price {
+  color: #f2f8ff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0.12rem 0 0;
+  text-align: center;
+}
+
+.comingSoon {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  border-radius: 14px;
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+  padding: 0.82rem;
+}
+
+.comingSoon h2 {
+  font-size: 1rem;
+  margin: 0;
+  color: #0f172a;
+}
+
+.comingSoon p {
+  color: rgba(51, 65, 85, 0.9);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.waitlistLink {
+  color: #8a6a4a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.waitlistLink:hover {
+  text-decoration: underline;
+}
+
+.right {
+  align-self: start;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  border-radius: 16px;
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.1rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Keep imported ContactModal form fully inside request container */
+.right :global(.form),
+.right :global(.section),
+.right :global(.field),
+.right :global(.row),
+.right :global(.checkboxGroup),
+.right :global(.radioGroup),
+.right :global(.actions) {
+  min-width: 0;
+}
+
+.right :global(.row) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.right :global(input),
+.right :global(select),
+.right :global(textarea) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.right :global(.checkboxLabel),
+.right :global(.radioLabel) {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.form {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.field span {
+  color: rgba(217, 230, 248, 0.95);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  background: rgba(8, 14, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: #edf4ff;
+  font: inherit;
+  padding: 0.62rem 0.72rem;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.submitBtn {
+  background: linear-gradient(180deg, #7db9ff, #5ea3ff);
+  border: 1px solid rgba(172, 212, 255, 0.8);
+  border-radius: 10px;
+  color: #0c1a31;
+  font-weight: 700;
+  margin-top: 0.2rem;
+  min-height: 2.6rem;
+  padding: 0.58rem 0.9rem;
+}
+
+.responseNote {
+  color: rgba(184, 203, 232, 0.88);
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    max-width: 100%;
+  }
+
+  .right :global(.row) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

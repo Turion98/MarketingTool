@@ -1,0 +1,1118 @@
+/* Product finder, zig-zag (fishbone) layout */
+
+.page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vh, 2rem) clamp(1rem, 4vw, 2rem) clamp(2.5rem, 8vh, 4rem);
+  color: #e8ecf4;
+  font-family: var(--font-heading-present), system-ui, sans-serif;
+}
+
+/* ---- Reveal on scroll ---- */
+.sectionInner {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.58s ease, transform 0.58s ease;
+}
+
+/* Use section module classes only (attribute + :local(.isVisible) is brittle in CSS Modules) */
+.zigzagSection.isVisible .sectionInner,
+.whyOneAnswer.isVisible .sectionInner,
+.finalSection.isVisible .sectionInner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Zig-zag sections (direct children of .page; final CTA is not .zigzagSection) ---- */
+.zigzagSection {
+  padding: clamp(5rem, 12vh, 8.5rem) 0;
+  transition: padding-bottom 0.45s ease;
+}
+
+.zigzagSection.sectionExpandOpen {
+  padding-bottom: clamp(0.45rem, 1.2vh, 0.85rem);
+}
+
+.page > .zigzagSection + .zigzagSection {
+  margin-top: clamp(1.5rem, 4vh, 3rem);
+}
+
+.zigzagInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(2rem, 5vw, 4rem); /* up to ~64px */
+}
+
+@media (min-width: 880px) {
+  .zigzagInner {
+    gap: 4rem;
+  }
+
+  .page > .zigzagSection:nth-child(odd) .zigzagInner {
+    flex-direction: row;
+  }
+
+  .page > .zigzagSection:nth-child(even) .zigzagInner {
+    flex-direction: row-reverse;
+  }
+}
+
+.zigzagText {
+  flex: 1;
+  max-width: 40rem;
+  min-width: 0;
+}
+
+/* Hero: wider text column so the first title line fits on one row */
+@media (min-width: 880px) {
+  .heroZigzag .zigzagInner {
+    align-items: flex-start;
+  }
+
+  .heroZigzag .zigzagText {
+    flex: 1.45;
+    max-width: min(52rem, 58vw);
+    padding-right: 0.5rem;
+  }
+
+  .heroZigzag .zigzagVisual {
+    flex: 0.82;
+    max-width: 22rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .heroZigzag .zigzagText {
+    max-width: min(56rem, 52vw);
+  }
+}
+
+.heroTitleFirst {
+  display: inline;
+}
+
+@media (min-width: 640px) {
+  .heroTitleFirst {
+    white-space: nowrap;
+  }
+}
+
+.zigzagVisual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-width: 0;
+  padding: 3rem 0;
+}
+
+/* Visible band around selected sections (matches CTA / card language) */
+.sectionSurface {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 16px;
+  border: 1px solid rgba(232, 236, 244, 0.12);
+  background: linear-gradient(
+    160deg,
+    rgba(129, 168, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.025) 42%,
+    rgba(0, 0, 0, 0.32) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: clamp(1.5rem, 3.5vw, 2.35rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.sectionSurface .zigzagInner {
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+@media (min-width: 880px) {
+  .sectionSurface .zigzagVisual {
+    padding-top: clamp(1rem, 3vh, 2rem);
+    padding-bottom: clamp(1rem, 3vh, 2rem);
+  }
+}
+
+/* ---- Readable stacks (max ~520px text measure) ---- */
+.sectionHeader {
+  margin-bottom: 1.75rem;
+  max-width: 40rem; /* 640px */
+}
+
+.textStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* 20px */
+  max-width: 32.5rem; /* 520px */
+}
+
+.textBlock {
+  margin-bottom: 1.5rem; /* 24px when not inside a flex-gap stack */
+}
+
+.textStack .textBlock {
+  margin-bottom: 0;
+}
+
+.textBlock p {
+  margin: 0;
+}
+
+.textDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 2.5rem 0; /* 40px */
+  max-width: 32.5rem;
+}
+
+.infoCard {
+  padding: 1.35rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 236, 244, 0.1);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.045) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  max-width: 32.5rem;
+}
+
+.infoCard .textStack {
+  gap: 1rem;
+}
+
+@media (max-width: 879px) {
+  .zigzagInner {
+    flex-direction: column !important;
+  }
+
+  .zigzagVisual {
+    width: 100%;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(129, 168, 255, 0.92);
+  margin: 0 0 1.35rem;
+}
+
+.sectionHeader .heroTitle {
+  margin-bottom: 0;
+}
+
+.heroTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(2.15rem, 4.2vw, 3.35rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.25rem;
+  color: rgba(252, 252, 255, 0.98);
+}
+
+.lead {
+  font-size: clamp(1.0625rem, 1.9vw, 1.1875rem);
+  line-height: 1.92;
+  color: rgba(232, 236, 244, 0.76);
+  margin: 0;
+  max-width: 32.5rem;
+}
+
+.lead + .lead {
+  margin-top: 0.75rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0b0f18;
+  background: linear-gradient(180deg, #f4f6fb 0%, #dce3f0 100%);
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.btnPrimary:hover {
+  filter: brightness(1.06);
+}
+
+.btnPrimary:active {
+  transform: scale(0.98);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(232, 236, 244, 0.95);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid rgba(232, 236, 244, 0.18);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(232, 236, 244, 0.28);
+}
+
+.sectionHeader .sectionKicker {
+  margin-bottom: 1rem;
+}
+
+.sectionKicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(129, 168, 255, 0.88);
+  margin: 0 0 1rem;
+}
+
+.sectionHeader .sectionHeading {
+  margin-bottom: 0;
+}
+
+.sectionHeading {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.25rem;
+  color: rgba(252, 252, 255, 0.97);
+  max-width: 40rem;
+}
+
+.introWide {
+  font-size: 1.0625rem;
+  line-height: 1.92;
+  color: rgba(232, 236, 244, 0.82);
+  margin: 0;
+  max-width: 32.5rem;
+}
+
+.prose {
+  font-size: 1.0625rem;
+  line-height: 1.92;
+  color: rgba(232, 236, 244, 0.84);
+  max-width: 32.5rem;
+  margin: 0;
+}
+
+.prose strong {
+  color: rgba(248, 250, 252, 0.95);
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+  color: rgba(232, 236, 244, 0.9);
+}
+
+.detailProse {
+  font-size: 0.9375rem;
+  line-height: 1.78;
+  color: rgba(232, 236, 244, 0.78);
+}
+
+/* ---- Expandable “more” (aligned with onboarding-flows) ---- */
+.expandTrigger {
+  margin-top: 1.35rem;
+  padding: 0.65rem 0.85rem;
+  width: fit-content;
+  max-width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(196, 214, 255, 0.96);
+  cursor: pointer;
+  text-align: left;
+  border-radius: 10px;
+  border: 1px solid rgba(232, 236, 244, 0.12);
+  background: rgba(15, 23, 42, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
+}
+
+.expandTrigger:hover {
+  color: rgba(232, 240, 255, 0.99);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(232, 236, 244, 0.18);
+}
+
+.expandTrigger:focus-visible {
+  outline: 2px solid rgba(129, 168, 255, 0.75);
+  outline-offset: 2px;
+}
+
+.expandHost {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  margin-top: 0;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 0.38s ease,
+    margin-top 0.42s ease;
+}
+
+.expandHost.expandHostOpen {
+  grid-template-rows: 1fr;
+  margin-top: clamp(1.15rem, 2.8vw, 1.85rem);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expandHost,
+  .expandHost.expandHostOpen {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.expandHostInner {
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.expandHost.expandHostOpen .expandHostInner {
+  overflow: visible;
+}
+
+.expandSurface {
+  padding: clamp(1.25rem, 3vw, 2.25rem) 0 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.expandTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.75rem, 4vw, 3.25rem) clamp(2rem, 5vw, 4.5rem);
+  padding: 0 clamp(0.5rem, 2vw, 1.25rem);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .expandTwoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.expandTwoCol .detailProse {
+  display: contents;
+}
+
+.expandTwoCol .detailProse p {
+  font-size: 0.9375rem;
+  line-height: 1.82;
+  color: rgba(232, 236, 244, 0.8);
+  margin: 0 0 0.62rem;
+}
+
+.expandTwoCol .detailProse p:last-child {
+  margin-bottom: 0;
+}
+
+.expandSurface .detailProse strong {
+  color: rgba(248, 250, 252, 0.92);
+  font-weight: 600;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.expandSurface .detailProse em {
+  font-style: italic;
+  color: rgba(232, 236, 244, 0.88);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.expandCloseStrip {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  margin-top: 0;
+  padding: clamp(1.25rem, 2.8vw, 2rem) clamp(1rem, 3vw, 1.5rem) clamp(0.95rem, 2.2vw, 1.25rem);
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  color: rgba(240, 244, 252, 0.94);
+  min-height: clamp(3.65rem, 9vw, 4.65rem);
+  -webkit-tap-highlight-color: transparent;
+  background: transparent;
+}
+
+.expandCloseStrip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.58) 36%,
+    rgba(0, 0, 0, 0.22) 62%,
+    transparent 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.2s ease;
+}
+
+.expandCloseStrip:hover::before {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.94) 0%,
+    rgba(0, 0, 0, 0.64) 38%,
+    rgba(0, 0, 0, 0.26) 64%,
+    transparent 100%
+  );
+}
+
+.expandCloseStripLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 1);
+  padding-bottom: 0.1rem;
+}
+
+.expandCloseStrip:focus-visible {
+  outline: 2px solid rgba(129, 168, 255, 0.65);
+  outline-offset: 2px;
+}
+
+/* Insight cards */
+.insightGrid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.25rem;
+  max-width: 100%;
+  align-items: start;
+}
+
+@media (min-width: 700px) {
+  .insightGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .insightGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.insightCard {
+  padding: 1.25rem 1.35rem;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 236, 244, 0.1);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.insightCard.infoCard {
+  max-width: none;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1.35rem 1.45rem;
+}
+
+/* Why-one-answer: full-width band, single column — centered copy, one card row, left-aligned details */
+.page > .zigzagSection.whyOneAnswer {
+  margin-left: calc(-1 * clamp(1rem, 4vw, 2rem));
+  margin-right: calc(-1 * clamp(1rem, 4vw, 2rem));
+  padding-left: clamp(1rem, 4vw, 2rem);
+  padding-right: clamp(1rem, 4vw, 2rem);
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+}
+
+.whyOneAnswer .sectionInner {
+  width: 100%;
+  max-width: none;
+}
+
+.whyOneAnswerColumn {
+  width: 100%;
+  max-width: min(72rem, 100%);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.whyOneAnswerTop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.whyOneAnswerTop .sectionHeader {
+  margin-bottom: 1.25rem;
+  max-width: 40rem;
+}
+
+.whyOneAnswerTop .sectionHeading {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.whyOneAnswerTop .prose {
+  text-align: center;
+  max-width: 32.5rem;
+}
+
+.whyOneAnswerTop .prose + .prose {
+  margin-top: 0.65rem;
+}
+
+/* Five cards in one row (scroll on very narrow viewports) */
+.whyOneAnswerCardRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(0.5rem, 1.2vw, 0.85rem);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.whyOneAnswer .whyOneAnswerCardRow .card {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 1rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+@media (max-width: 639px) {
+  .whyOneAnswer .whyOneAnswerCardRow .card {
+    flex: 0 0 min(42vw, 10.5rem);
+  }
+}
+
+.whyOneAnswerExpand {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.whyOneAnswerExpand .expandTrigger {
+  margin-top: 0;
+}
+
+.whyOneAnswer .cardTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  color: rgba(252, 252, 255, 0.95);
+  letter-spacing: -0.01em;
+}
+
+.whyOneAnswer .cardLead {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(159, 188, 255, 0.95);
+  margin: 0 0 0.4rem;
+}
+
+.whyOneAnswer .cardBody {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+  color: rgba(232, 236, 244, 0.75);
+}
+
+.whyOneAnswer .card .cardBody + .cardBody {
+  margin-top: 0.35rem;
+}
+
+.insightTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.75rem;
+  color: rgba(252, 252, 255, 0.96);
+}
+
+.insightBody {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin: 0;
+  color: rgba(232, 236, 244, 0.72);
+  overflow-wrap: break-word;
+}
+
+/* Step grid (2×2 desktop) */
+.stepGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem; /* 24px */
+  max-width: 100%;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 700px) {
+  .stepGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.stepCard {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1.2rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 236, 244, 0.09);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.stepIndex {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0b0f18;
+  background: rgba(129, 168, 255, 0.95);
+}
+
+.stepTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: rgba(252, 252, 255, 0.95);
+}
+
+.stepBody {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+  color: rgba(232, 236, 244, 0.68);
+}
+
+/* Image placeholders + light UI skeleton */
+.imagePlaceholder {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 1rem 1.1rem 1.15rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  overflow: hidden;
+}
+
+.mockSkeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.35rem 0.25rem 0;
+  opacity: 0.55;
+}
+
+.mockChrome {
+  display: flex;
+  gap: 0.35rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mockDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mockBar {
+  height: 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  width: 72%;
+}
+
+.mockBarShort {
+  height: 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  width: 48%;
+}
+
+.mockPills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.mockPill {
+  height: 1.35rem;
+  width: 3.2rem;
+  border-radius: 999px;
+  background: rgba(129, 168, 255, 0.12);
+  border: 1px solid rgba(129, 168, 255, 0.2);
+}
+
+.imagePlaceholderLabel {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+  align-self: center;
+  max-width: 16rem;
+  line-height: 1.4;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.38);
+  margin-top: 0.5rem;
+}
+
+/* Final CTA (not part of zig-zag) */
+.finalSection {
+  padding: clamp(3rem, 10vh, 6rem) 0 0;
+  margin-bottom: 0;
+}
+
+.ctaPanel {
+  padding: clamp(2rem, 5vw, 2.75rem);
+  border-radius: 16px;
+  border: 1px solid rgba(232, 236, 244, 0.12);
+  background: linear-gradient(
+    160deg,
+    rgba(129, 168, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 45%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.finalStatement {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.5rem, 2.8vw, 2.125rem);
+  font-weight: 500;
+  line-height: 1.38;
+  margin: 0 0 clamp(1.25rem, 3vw, 1.75rem);
+  color: rgba(252, 252, 255, 0.98);
+  max-width: min(100%, 64rem);
+  width: 100%;
+  text-align: center;
+}
+
+.closingHeader {
+  width: 100%;
+  max-width: min(100%, 64rem);
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-align: center;
+}
+
+.closingBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.85rem, 2vw, 1.1rem);
+  width: 100%;
+  max-width: min(100%, 64rem);
+  margin: 0 0 clamp(1.5rem, 4vw, 2rem);
+  text-align: center;
+}
+
+.finalLead {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.65;
+  color: rgba(232, 236, 244, 0.9);
+  margin: 0;
+  max-width: min(100%, 64rem);
+  width: 100%;
+}
+
+.finalSupportFull {
+  font-size: 0.9375rem;
+  line-height: 1.78;
+  color: rgba(232, 236, 244, 0.72);
+  margin: 0;
+  max-width: min(100%, 52rem);
+  width: 100%;
+}
+
+.ctaPanelActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-self: stretch;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .heroActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btnPrimary,
+  .btnSecondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stepGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Brown Brand Consistency ===== */
+.eyebrow,
+.sectionKicker {
+  color: rgba(138, 106, 74, 0.92);
+}
+
+.btnPrimary {
+  background: linear-gradient(180deg, #c8a883 0%, #8a6a4a 100%);
+  color: #fffaf2;
+  border-color: rgba(138, 106, 74, 0.42);
+}
+
+.btnSecondary {
+  color: rgba(58, 44, 32, 0.92);
+  background: rgba(200, 168, 131, 0.14);
+  border-color: rgba(138, 106, 74, 0.32);
+}
+
+.sectionBand,
+.stepCard,
+.ctaPanel,
+.siteFooter {
+  border-color: rgba(138, 106, 74, 0.2);
+}
+
+/* ===== Light Theme Calibration (Product Finder) ===== */
+.page {
+  color: #1f2937;
+}
+
+.heroTitle,
+.sectionHeading,
+.finalStatement {
+  color: #111827;
+}
+
+.lead,
+.prose,
+.introWide,
+.detailProse,
+.expandTwoCol .detailProse p,
+.finalLead,
+.finalSupportFull,
+.whyOneAnswer .cardBody,
+.stepBody {
+  color: rgba(30, 41, 59, 0.9);
+}
+
+.prose strong,
+.expandSurface .detailProse strong {
+  color: #0f172a;
+}
+
+.prose em,
+.expandSurface .detailProse em {
+  color: rgba(71, 85, 105, 0.86);
+}
+
+.sectionSurface,
+.infoCard,
+.insightCard,
+.whyOneAnswer .whyOneAnswerCardRow .card,
+.stepCard,
+.ctaPanel {
+  background: rgba(199, 181, 159, 0.84);
+  border-color: rgba(58, 44, 32, 0.24);
+  box-shadow: 0 12px 28px rgba(58, 44, 32, 0.14);
+}
+
+.expandTrigger {
+  color: rgba(30, 41, 59, 0.9);
+  background: rgba(255, 250, 242, 0.46);
+  border-color: rgba(71, 85, 105, 0.26);
+  box-shadow: none;
+}
+
+.expandTrigger:hover {
+  color: rgba(15, 23, 42, 0.94);
+  background: rgba(255, 250, 242, 0.62);
+  border-color: rgba(71, 85, 105, 0.34);
+}
+
+.expandCloseStrip {
+  color: rgba(58, 44, 32, 0.9);
+}
+
+.expandCloseStrip::before {
+  background: linear-gradient(
+    to top,
+    rgba(226, 216, 198, 0.92) 0%,
+    rgba(235, 226, 211, 0.78) 42%,
+    rgba(246, 240, 230, 0.2) 72%,
+    transparent 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.expandCloseStrip:hover::before {
+  background: linear-gradient(
+    to top,
+    rgba(226, 216, 198, 0.96) 0%,
+    rgba(235, 226, 211, 0.84) 42%,
+    rgba(246, 240, 230, 0.28) 72%,
+    transparent 100%
+  );
+}
+
+.expandCloseStripLabel {
+  color: rgba(58, 44, 32, 0.88);
+  text-shadow: none;
+}
+
+.whyOneAnswer .cardTitle,
+.stepTitle,
+.insightTitle {
+  color: #111827;
+}
+
+.whyOneAnswer .cardLead {
+  color: rgba(51, 65, 85, 0.86);
+}
+
+.stepIndex {
+  color: #f8fafc;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+}
+
+.imagePlaceholder {
+  background: linear-gradient(180deg, #f7f2e9 0%, #efe7da 100%);
+  border-color: rgba(138, 106, 74, 0.22);
+  color: rgba(58, 44, 32, 0.52);
+}
+
+.mockChrome {
+  border-bottom-color: rgba(138, 106, 74, 0.2);
+}
+
+.mockDot {
+  background: rgba(138, 106, 74, 0.28);
+}
+
+.mockBar {
+  background: rgba(138, 106, 74, 0.2);
+}
+
+.mockBarShort {
+  background: rgba(138, 106, 74, 0.16);
+}
+
+.mockPill {
+  background: rgba(200, 168, 131, 0.2);
+  border-color: rgba(138, 106, 74, 0.28);
+}
+
+.imagePlaceholderLabel {
+  color: rgba(58, 44, 32, 0.65);
+}
+
+.textDivider {
+  background: rgba(138, 106, 74, 0.2);
+}
+
+.finalSection {
+  background: transparent;
+}
