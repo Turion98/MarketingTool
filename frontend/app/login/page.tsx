@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import LoginClient from "./LoginClient";
 
 export const metadata: Metadata = {
-  title: "Belépés | Adventure App",
-  description: "Belépés a szerkesztőbe",
+  title: "Belépés | Questell",
+  description: "Belépés a Questell szerkesztői felületére",
 };
 
 export default function LoginPage() {
@@ -17,8 +17,8 @@ export default function LoginPage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0b0f18",
-            color: "#e8ecf4",
+            background: "#efe5d4",
+            color: "#2a2118",
           }}
         >
           Betöltés…

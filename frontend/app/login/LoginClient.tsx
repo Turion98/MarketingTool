@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/app/lib/auth/useAuth";
+import MarketingNav from "@/app/components/marketing/MarketingNav";
 import s from "./login.module.scss";
 
 export default function LoginClient() {
@@ -14,6 +15,9 @@ export default function LoginClient() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifySent, setNotifySent] = useState(false);
+  const [showLoginMenu, setShowLoginMenu] = useState(false);
 
   const nextPath = searchParams.get("next") || "/editor";
 
@@ -35,65 +39,115 @@ export default function LoginClient() {
     [busy, ready, login, email, password, router, nextPath]
   );
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "F5") {
+        e.preventDefault();
+        setShowLoginMenu((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
-    <div className={s.root}>
-      <div className={s.split}>
-        <div className={s.panelCol}>
-          <div className={s.panel}>
-            <h1 className={s.title}>Belépés</h1>
-            <p className={s.lead}>
-              A szerkesztő fejlesztés alatt van. Csak admin belépés engedélyezett.
-              Nyitás hamarosan.
+    <>
+      <MarketingNav />
+      <div className={s.root}>
+        <div className={s.split}>
+          <section className={s.comingSection} aria-labelledby="coming-soon-title">
+            <p className={s.comingTitle} id="coming-soon-title">
+              Coming soon.
+            </p>
+            <p className={s.comingSubtitle}>We&apos;re almost ready.</p>
+            <p className={s.comingText}>
+              Questell is being built right now. Sign up and be the first to get access when we
+              launch.
             </p>
 
-            <form className={s.form} onSubmit={(e) => void onSubmit(e)}>
-              <label className={s.label} htmlFor="login-email">
-                E-mail
-              </label>
+            {showLoginMenu ? (
+              <div className={s.panelCol}>
+                <div className={s.panel}>
+                  <h1 className={s.title}>Questell fiók belépés</h1>
+                  <p className={s.lead}>
+                    Lépj be az admin felületre, és folytasd a flow-k szerkesztését, publikálását és
+                    mérését.
+                  </p>
+
+                  <form className={s.form} onSubmit={(e) => void onSubmit(e)}>
+                    <label className={s.label} htmlFor="login-email">
+                      E-mail
+                    </label>
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="username"
+                      className={s.input}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={!ready || busy}
+                      required
+                    />
+
+                    <label className={s.label} htmlFor="login-password">
+                      Jelszó
+                    </label>
+                    <input
+                      id="login-password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      className={s.input}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={!ready || busy}
+                      required
+                    />
+
+                    {error ? <p className={s.error}>{error}</p> : null}
+
+                    <button
+                      type="submit"
+                      className={`${s.btn} ${s.btnPrimary}`}
+                      disabled={!ready || busy}
+                    >
+                      {busy ? "Belépés…" : "Belépés"}
+                    </button>
+                  </form>
+
+                  <p className={s.footer}>
+                    <Link href="/">← Vissza a marketing oldalra</Link>
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            <form
+              className={s.notifyForm}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!notifyEmail.trim()) return;
+                setNotifySent(true);
+              }}
+            >
               <input
-                id="login-email"
-                name="email"
                 type="email"
-                autoComplete="username"
+                value={notifyEmail}
+                onChange={(e) => setNotifyEmail(e.target.value)}
                 className={s.input}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={!ready || busy}
+                placeholder="Email address"
+                aria-label="Email address"
                 required
               />
-
-              <label className={s.label} htmlFor="login-password">
-                Jelszó
-              </label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                className={s.input}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={!ready || busy}
-                required
-              />
-
-              {error ? <p className={s.error}>{error}</p> : null}
-
-              <button
-                type="submit"
-                className={`${s.btn} ${s.btnPrimary}`}
-                disabled={!ready || busy}
-              >
-                {busy ? "Belépés…" : "Belépés"}
+              <button type="submit" className={`${s.btn} ${s.btnSecondary}`}>
+                Notify me
               </button>
             </form>
-
-            <p className={s.footer}>
-              <Link href="/">← Vissza a kezdőlapra</Link>
-            </p>
-          </div>
+            {notifySent ? <p className={s.notifyOk}>Thanks, we will notify you.</p> : null}
+          </section>
         </div>
       </div>
-    </div>
+    </>
   );
 }
