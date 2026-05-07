@@ -4,8 +4,8 @@ Turn static websites into guided decision flows that increase conversion.
 
 Instead of overwhelming users with content, Questell guides them step-by-step to a clear decision.
 
-→ Not a quiz
-→ Not a chatbot
+→ Not a quiz  
+→ Not a chatbot  
 → A conversion layer for websites
 
 🌐 Live: https://www.thequestell.com
@@ -84,13 +84,12 @@ Questell runs a **JSON-driven decision engine**:
 
 ## Project structure (simplified)
 
-frontend/ → app, player, editor, embed routes
-
-backend/ → API, analytics, story engine
-
-schemas/ → shared JSON schema definitions
-
-stories/ → example decision flows
+```text
+frontend/  → app, player, editor, embed routes
+backend/   → API, analytics, story engine
+schemas/   → shared JSON schema definitions
+stories/   → example decision flows
+```
 
 ---
 
@@ -114,12 +113,15 @@ User enters → chooses path → flow adapts → reaches CTA
 
 ### Frontend
 
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
 ### Backend
 
+```bash
 cd backend
 python -m venv .venv
 
@@ -130,6 +132,7 @@ python -m venv .venv
 pip install -r requirements.txt
 cp .env.example .env
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
 ---
 
@@ -155,7 +158,7 @@ It is a **decision engine + runtime system** designed for:
 
 ## Status
 
-Active development.
+Active development.  
 Evolving toward a production-ready system.
 
 ---

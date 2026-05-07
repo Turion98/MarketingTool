@@ -14,6 +14,7 @@ import { fetchStoriesWithMultiFallback } from "@/app/lib/storiesListing";
 import { useEmbedParentIframeHeight } from "@/app/lib/useEmbedParentIframeHeight";
 import s from "./HomeEntry.module.scss";
 import ls from "@/app/login/login.module.scss";
+import MarketingNav from "@/app/components/marketing/MarketingNav";
 
 export default function HomeEntry() {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -124,8 +125,10 @@ export default function HomeEntry() {
   }, [skins]);
 
   return (
-    <div className={s.root}>
-      <div className={s.mainRow}>
+    <div className={s.pageWrap}>
+      <MarketingNav />
+      <div className={s.root}>
+        <div className={s.mainRow}>
         <div className={s.leftColumn}>
           <div
             className={s.brandDockShell}
@@ -296,6 +299,7 @@ export default function HomeEntry() {
           </aside>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
