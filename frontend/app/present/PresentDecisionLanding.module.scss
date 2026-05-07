@@ -3460,10 +3460,11 @@
 
 /* Intro hero headline: remove remaining blue tones */
 .heroTitleAccent {
-  background: linear-gradient(120deg, #8a6a4a 0%, #a98661 48%, #c8a883 100%) !important;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent !important;
+  background: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+  color: #8a6a4a !important;
 }
 
 .heroBlock[data-hero-block="1"] .heroParagraph[data-hero-line="0"],
