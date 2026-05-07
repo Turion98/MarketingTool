@@ -183,45 +183,12 @@
 .topBarStepBandInner .r1StepLabel {
   font-size: 0.62rem;
   letter-spacing: 0.04em;
-  color: rgba(186, 230, 253, 0.72);
+  color: rgba(138, 106, 74, 0.82);
 }
 
-/* Logó (+ intro CTA) egy fix blokkban; eltolás megegyezik a korábbi hero stackkel */
+/* Logó (+ CTA) egyetlen fix rétegben: intro és decision állapot közt ugyanaz az elem mozog. */
 .presentFixedBrand {
   position: fixed;
-  top: calc(clamp(2.35rem, 5.5dvh, 3.15rem) + env(safe-area-inset-top, 0px));
-  right: calc(
-    var(--present-brand-anchor-right) + env(safe-area-inset-right, 0px)
-  );
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: max-content;
-  max-width: min(calc(100vw - 1.5rem), 32rem);
-  pointer-events: none;
-
-  @media (min-width: 720px) {
-    transform: translateX(var(--present-brand-shift-x))
-      translateY(
-        calc(
-          clamp(-1.25rem, -12vh, -0.05rem) + clamp(0.7rem, 5.5vh, 1.4rem)
-        )
-      );
-  }
-}
-
-/* MarketingNav + Present felső sáv: a jobb oldali fix logó ne lógjon a site header alá */
-.pageWithSiteNav .presentFixedBrand {
-  top: calc(
-    clamp(4.15rem, 10dvh, 5.85rem) + env(safe-area-inset-top, 0px)
-  );
-}
-
-/* R1 / R2 / R3: logó jobb alsó sarok; R3-nál a megoldás CTA a logó felett (DOM sorrend) */
-.presentFixedBrandCorner {
-  position: fixed;
-  top: auto;
   bottom: calc(
     clamp(0.28rem, 1.2dvh, 0.72rem) + env(safe-area-inset-bottom, 0px)
   );
@@ -231,13 +198,13 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   width: max-content;
   max-width: min(calc(100vw - 1.5rem), 32rem);
   pointer-events: none;
   transition:
-    bottom 1.08s cubic-bezier(0.16, 1, 0.3, 1),
-    right 1.08s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 1.6s cubic-bezier(0.42, 0, 0.58, 1),
+    bottom 1.6s cubic-bezier(0.42, 0, 0.58, 1),
+    right 1.6s cubic-bezier(0.42, 0, 0.58, 1);
 
   @media (min-width: 720px) {
     right: calc(
@@ -246,19 +213,14 @@
   }
 }
 
-@keyframes brandCornerEnterFromIntro {
-  0% {
-    transform: translate3d(0, -42dvh, 0);
-    opacity: 0.9;
-  }
-  78% {
-    transform: translate3d(0, 0.08rem, 0);
-    opacity: 0.98;
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
+.presentFixedBrandIntro {
+  align-items: center;
+  transform: translate3d(var(--present-brand-shift-x), -39dvh, 0);
+}
+
+.presentFixedBrandDecision {
+  align-items: flex-end;
+  transform: translate3d(0, 0, 0);
 }
 
 @keyframes r3SolutionCtaFadeIn {
@@ -270,24 +232,15 @@
   }
 }
 
-.presentFixedBrandCornerEnterFromIntro {
-  will-change: transform, opacity;
-  animation: brandCornerEnterFromIntro 1.08s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.reduceMotion .presentFixedBrandCornerEnterFromIntro {
-  animation: none !important;
-}
-
-.reduceMotion .presentFixedBrandCorner {
+.reduceMotion .presentFixedBrand {
   transition: none !important;
 }
 
-.presentFixedBrandCorner .presentFixedLogo {
+.presentFixedBrandDecision .presentFixedLogo {
   object-position: right bottom;
 }
 
-.presentFixedBrandCorner .presentFixedIntroCta {
+.presentFixedBrandDecision .presentFixedIntroCta {
   justify-content: flex-end;
   width: 100%;
   margin-top: 0;
@@ -315,14 +268,14 @@
   pointer-events: auto;
 }
 
-.page[data-phase="r3"] .presentFixedBrandCorner .presentFixedIntroCta {
+.page[data-phase="r3"] .presentFixedBrandDecision .presentFixedIntroCta {
   max-width: min(var(--present-logo-img-max-w), 13.5rem, 44vw);
   margin-inline: 0;
   margin-right: clamp(0.7rem, 1.8vw, 1.25rem);
 }
 
 /* R3: a logó fix maradjon; a gomb abszolútan alá érkezzen */
-.page[data-phase="r3"] .presentFixedBrandCorner {
+.page[data-phase="r3"] .presentFixedBrandDecision {
   flex-direction: column;
   align-items: flex-end;
   bottom: calc(
@@ -330,11 +283,11 @@
   );
 }
 
-.page[data-phase="r3"] .presentFixedBrandCorner .presentFixedLogo {
+.page[data-phase="r3"] .presentFixedBrandDecision .presentFixedLogo {
   margin-right: 0;
 }
 
-.page[data-phase="r3"] .presentFixedBrandCorner .presentFixedIntroCta {
+.page[data-phase="r3"] .presentFixedBrandDecision .presentFixedIntroCta {
   position: absolute;
   top: calc(100% + clamp(0.38rem, 1.1vh, 0.65rem));
   left: 50%;
@@ -347,13 +300,13 @@
   animation: r3SolutionCtaFadeIn 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.page[data-phase="r3"] .presentFixedBrandCorner .r3PrimaryCta {
+.page[data-phase="r3"] .presentFixedBrandDecision .r3PrimaryCta {
   white-space: nowrap;
   min-width: max-content;
   padding-inline: clamp(1.05rem, 2.2vw, 1.45rem);
 }
 
-.reduceMotion .page[data-phase="r3"] .presentFixedBrandCorner .presentFixedIntroCta {
+.reduceMotion .page[data-phase="r3"] .presentFixedBrandDecision .presentFixedIntroCta {
   animation: none !important;
   opacity: 1 !important;
 }
@@ -1433,15 +1386,15 @@
   width: 18px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(125, 211, 252, 0.22);
-  border: 1px solid rgba(125, 211, 252, 0.18);
+  background: rgba(138, 106, 74, 0.24);
+  border: 1px solid rgba(138, 106, 74, 0.22);
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .r1StepNodeActive {
-  background: rgba(56, 189, 248, 0.75);
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+  background: rgba(138, 106, 74, 0.85);
+  border-color: rgba(138, 106, 74, 0.62);
+  box-shadow: 0 0 6px rgba(138, 106, 74, 0.35);
 }
 
 .r1StepLabel {
@@ -2001,6 +1954,23 @@
   -webkit-backdrop-filter: none;
 }
 
+.page[data-phase="r3"] .r3HudBlurGroup {
+  width: 100%;
+  max-width: min(43rem, 100%);
+  margin: 0 auto;
+  padding: clamp(0.7rem, 1.9vh, 1.05rem) clamp(0.8rem, 2.1vw, 1.15rem);
+  border-radius: 16px;
+  border: 1px solid rgba(138, 106, 74, 0.22);
+  background: rgba(255, 250, 242, 0.7);
+  backdrop-filter: blur(24px) saturate(122%);
+  -webkit-backdrop-filter: blur(24px) saturate(122%);
+  box-shadow: 0 16px 36px rgba(58, 44, 32, 0.12);
+}
+
+.page[data-phase="r3"] .r3HudBlurGroup .questionStage {
+  margin-bottom: 0;
+}
+
 .page[data-phase="r3"] .r1QuestionPanel.r1QuestionPanelR1::before,
 .page[data-phase="r3"] .r1QuestionPanel.r1QuestionPanelR1::after {
   display: none;
@@ -2048,7 +2018,7 @@
 .page[data-phase="r3"] .r3HudQuestellSection {
   width: 100%;
   max-width: min(42rem, 100%);
-  margin: clamp(0.45rem, 1.4vh, 0.85rem) auto 0;
+  margin: clamp(0.38rem, 1.2vh, 0.72rem) auto 0;
   animation: r3PanelEnter 0.54s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: 0.06s;
 }

@@ -58,7 +58,7 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
     heroEyebrow: "Product",
     heroTitle: "Solutions",
     heroSubtitle: "Routing hub for use-case pages.",
-    bullets: ["Product finder", "Package selection", "Campaign flows", "Onboarding flows"],
+    bullets: ["Product finder", "Campaign flows", "Onboarding flows"],
     ctaLabel: "See demos",
     ctaHref: "/demos",
   },
@@ -229,23 +229,6 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
     ctaLabel: "E-commerce",
     ctaHref: "/ecommerce",
   },
-  "package-selection": {
-    slug: "package-selection",
-    title: "Package selection",
-    description: "Use case: help visitors pick the right package or tier.",
-    category: "use-case",
-    template: "use-case",
-    heroEyebrow: "Use cases",
-    heroTitle: "Package selection",
-    heroSubtitle: "Placeholder: compare options and recommend a starting point.",
-    bullets: [
-      "Placeholder — transparent tradeoffs",
-      "Placeholder — fewer support tickets",
-      "Placeholder — faster checkout",
-    ],
-    ctaLabel: "Talk to us",
-    ctaHref: "/about",
-  },
   "campaign-flows": {
     slug: "campaign-flows",
     title: "Campaign flows",
@@ -326,7 +309,6 @@ export const MARKETING_NAV_INDUSTRIES = [
 /** Same four use cases as `/solutions` hub cards — order must match. */
 export const MARKETING_NAV_USE_CASES = [
   { label: "Product finder", href: "/product-finder" },
-  { label: "Package selection", href: "/package-selection" },
   { label: "Campaign flows", href: "/campaign-flows" },
   { label: "Onboarding flows", href: "/onboarding-flows" },
 ] as const;

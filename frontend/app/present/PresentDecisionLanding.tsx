@@ -306,8 +306,6 @@ export default function PresentDecisionLanding({
   const [r2Exiting, setR2Exiting] = useState(false);
   const [r3Exiting, setR3Exiting] = useState(false);
   const [r3CtaReady, setR3CtaReady] = useState(false);
-  const [brandCornerIntroEnter, setBrandCornerIntroEnter] = useState(false);
-  const prevPhaseRef = useRef<PresentPhase>("intro");
   useEffect(() => {
     const saved = readPresentLangFromStorage();
     if (saved) setLang(saved);
@@ -331,18 +329,6 @@ export default function PresentDecisionLanding({
     mq.addEventListener?.("change", apply);
     return () => mq.removeEventListener?.("change", apply);
   }, []);
-
-  useEffect(() => {
-    const prevPhase = prevPhaseRef.current;
-    prevPhaseRef.current = phase;
-    if (reduceMotion || !(prevPhase === "intro" && phase === "r1")) {
-      setBrandCornerIntroEnter(false);
-      return;
-    }
-    setBrandCornerIntroEnter(true);
-    const timer = window.setTimeout(() => setBrandCornerIntroEnter(false), 760);
-    return () => window.clearTimeout(timer);
-  }, [phase, reduceMotion]);
 
   const ui = presentFlowUiByLang[lang];
 
@@ -1033,14 +1019,16 @@ export default function PresentDecisionLanding({
           </div>
         ) : null}
 
-        {phase === "r1" ||
+        {phase === "intro" ||
+        phase === "summary" ||
+        phase === "r1" ||
         phase === "r2" ||
-        (phase === "r3" && pain) ? (
+        phase === "r3" ? (
           <div
-            className={`${s.presentFixedBrandCorner} ${
-              brandCornerIntroEnter && phase === "r1"
-                ? s.presentFixedBrandCornerEnterFromIntro
-                : ""
+            className={`${s.presentFixedBrand} ${
+              phase === "intro" || phase === "summary"
+                ? s.presentFixedBrandIntro
+                : s.presentFixedBrandDecision
             }`}
           >
             {phase === "r3" && pain && r3CtaReady ? (
@@ -1054,17 +1042,6 @@ export default function PresentDecisionLanding({
                 </button>
               </div>
             ) : null}
-            <img
-              className={s.presentFixedLogo}
-              src={resolvedLogo}
-              alt={logoAlt}
-              decoding="async"
-            />
-          </div>
-        ) : null}
-
-        {phase === "intro" || phase === "summary" ? (
-          <div className={s.presentFixedBrand}>
             <img
               className={s.presentFixedLogo}
               src={resolvedLogo}
@@ -1237,66 +1214,68 @@ export default function PresentDecisionLanding({
                       className={`${s.r1StageLayout} ${s.decisionStage} ${s.r3StageLayout}`}
                       aria-label={ui.r3Prompt}
                     >
-                      <header className={`${s.r1QuestionStage} ${s.questionStage}`}>
-                        <div
-                          className={`${s.r1QuestionPanel} ${s.r1QuestionPanelR1}`}
-                        >
-                          <div className={s.r1SoloCopy}>
-                            <p className={s.r2HudEyebrow}>
-                              {ui.r3ContentByPain[pain].shortLabel}
-                            </p>
-                            <h2
-                              ref={titleRef}
-                              tabIndex={-1}
-                              className={`${s.phaseTitle} ${s.phaseTitleTerminal}`}
-                              aria-label={panelTextBlocks[0] || undefined}
-                            >
-                              {reduceMotion || narrativeRevealStep > 0 ? (
-                                panelTextBlocks[0]
-                              ) : (
-                                <NarrativeWordLine
-                                  text={panelTextBlocks[0]}
-                                  wordBaseMs={narrativeHudLeadMs(phase)}
-                                />
-                              )}
-                            </h2>
-                            <div className={s.r1Lead}>
-                              <p className={s.r1Subtext}>
-                                {reduceMotion || narrativeRevealStep > 1 ? (
-                                  panelTextBlocks[1]
-                                ) : narrativeRevealStep === 1 ? (
+                      <div className={s.r3HudBlurGroup}>
+                        <header className={`${s.r1QuestionStage} ${s.questionStage}`}>
+                          <div
+                            className={`${s.r1QuestionPanel} ${s.r1QuestionPanelR1}`}
+                          >
+                            <div className={s.r1SoloCopy}>
+                              <p className={s.r2HudEyebrow}>
+                                {ui.r3ContentByPain[pain].shortLabel}
+                              </p>
+                              <h2
+                                ref={titleRef}
+                                tabIndex={-1}
+                                className={`${s.phaseTitle} ${s.phaseTitleTerminal}`}
+                                aria-label={panelTextBlocks[0] || undefined}
+                              >
+                                {reduceMotion || narrativeRevealStep > 0 ? (
+                                  panelTextBlocks[0]
+                                ) : (
                                   <NarrativeWordLine
-                                    text={panelTextBlocks[1]}
+                                    text={panelTextBlocks[0]}
                                     wordBaseMs={narrativeHudLeadMs(phase)}
                                   />
-                                ) : null}
-                              </p>
+                                )}
+                              </h2>
+                              <div className={s.r1Lead}>
+                                <p className={s.r1Subtext}>
+                                  {reduceMotion || narrativeRevealStep > 1 ? (
+                                    panelTextBlocks[1]
+                                  ) : narrativeRevealStep === 1 ? (
+                                    <NarrativeWordLine
+                                      text={panelTextBlocks[1]}
+                                      wordBaseMs={narrativeHudLeadMs(phase)}
+                                    />
+                                  ) : null}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </header>
+                        </header>
 
-                      {hudComplete ? (
-                        <section
-                          className={s.r3HudQuestellSection}
-                          aria-labelledby="r3-questell-primer-title"
-                        >
-                          <div className={s.r3HudQuestell} data-pain={pain}>
-                            <h3
-                              id="r3-questell-primer-title"
-                              className={s.r3NarrativeHeading}
-                            >
-                              {ui.r3ContentByPain[pain].questellPrimer.title}
-                            </h3>
-                            <p className={s.r3NarrativeParagraph}>
-                              {ui.r3ContentByPain[pain].questellPrimer.body[0]}
-                            </p>
-                            <p className={s.r3NarrativeParagraphMuted}>
-                              {ui.r3ContentByPain[pain].questellPrimer.body[1]}
-                            </p>
-                          </div>
-                        </section>
-                      ) : null}
+                        {hudComplete ? (
+                          <section
+                            className={s.r3HudQuestellSection}
+                            aria-labelledby="r3-questell-primer-title"
+                          >
+                            <div className={s.r3HudQuestell} data-pain={pain}>
+                              <h3
+                                id="r3-questell-primer-title"
+                                className={s.r3NarrativeHeading}
+                              >
+                                {ui.r3ContentByPain[pain].questellPrimer.title}
+                              </h3>
+                              <p className={s.r3NarrativeParagraph}>
+                                {ui.r3ContentByPain[pain].questellPrimer.body[0]}
+                              </p>
+                              <p className={s.r3NarrativeParagraphMuted}>
+                                {ui.r3ContentByPain[pain].questellPrimer.body[1]}
+                              </p>
+                            </div>
+                          </section>
+                        ) : null}
+                      </div>
 
                       {hudComplete ? (
                         <section

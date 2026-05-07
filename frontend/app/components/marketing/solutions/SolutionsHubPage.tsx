@@ -21,11 +21,6 @@ const COPY = {
         line: "Guide users to the right product based on how their answers combine.",
       },
       {
-        href: "/package-selection",
-        title: "Package selection",
-        line: "Help buyers choose the right tier with clear trade-offs and less hesitation.",
-      },
-      {
         href: "/campaign-flows",
         title: "Campaign flows",
         line: "Turn campaign traffic into guided decisions that end at a specific outcome.",
@@ -45,11 +40,6 @@ const COPY = {
         href: "/product-finder",
         title: "Termékajánló",
         line: "A felhasználót a megfelelő termékhez vezeti az alapján, ahogy a válaszok együtt értelmezhetők.",
-      },
-      {
-        href: "/package-selection",
-        title: "Csomagválasztás",
-        line: "Segít kiválasztani a megfelelő csomagot tiszta trade-offokkal és kevesebb bizonytalansággal.",
       },
       {
         href: "/campaign-flows",

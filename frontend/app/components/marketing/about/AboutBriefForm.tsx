@@ -8,7 +8,6 @@ type Option = { value: string; label: string };
 const MAIN_GOALS: Option[] = [
   { value: "", label: "Select use case" },
   { value: "product-finder", label: "Product finder" },
-  { value: "package-selection", label: "Package selection" },
   { value: "campaign-flows", label: "Campaign flows" },
   { value: "onboarding-flows", label: "Onboarding flows" },
 ];
