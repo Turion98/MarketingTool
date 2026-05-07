@@ -5,12 +5,16 @@ import React, { useEffect, useRef } from "react";
 type MeshProps = {
   intensity?: number; // "energia" skála (nem pontszám)
   color?: string; // "r,g,b"
+  baseColor?: string; // "r,g,b" - this stays as the unblended area color
   className?: string;
   style?: React.CSSProperties;
 
   // opcionális: fókusz pont (0..1) — 3D-ben kamera-tilt / pivot jelleggel használjuk
   focus?: { x: number; y: number };
   focusStrength?: number; // 0..1
+  progress?: number; // 0..1 - how much of the masked area is recolored
+  blendCenter?: { x: number; y: number }; // 0..1 viewport position
+  blendRadius?: number; // 0..1 relative to max viewport dimension
 };
 
 type Point = {
@@ -30,6 +34,11 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+function smoothstep(edge0: number, edge1: number, x: number) {
+  const t = clamp01((x - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
 function parseRGB(input: string) {
   const parts = input.split(",").map((v) => Number(v.trim()));
   const r = Number.isFinite(parts[0]) ? parts[0] : 255;
@@ -41,10 +50,14 @@ function parseRGB(input: string) {
 export const DynamicMeshBackground: React.FC<MeshProps> = ({
   intensity = 1,
   color = "255,255,255",
+  baseColor = "245,240,230",
   className,
   style,
   focus,
   focusStrength = 0.6,
+  progress = 1,
+  blendCenter,
+  blendRadius = 0.9,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointsRef = useRef<Point[]>([]);
@@ -58,6 +71,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
   // current/target paraméterek: lerp-eljük
   const currentRef = useRef({
+    baseR: 245,
+    baseG: 240,
+    baseB: 230,
     r: 255,
     g: 255,
     b: 255,
@@ -65,9 +81,16 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     fx: 0.5,
     fy: 0.5,
     focusStrength: 0.6,
+    progress: 1,
+    blendCx: 0.5,
+    blendCy: 0.5,
+    blendRadius: 0.9,
   });
 
   const targetRef = useRef({
+    baseR: 245,
+    baseG: 240,
+    baseB: 230,
     r: 255,
     g: 255,
     b: 255,
@@ -75,11 +98,19 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     fx: 0.5,
     fy: 0.5,
     focusStrength: 0.6,
+    progress: 1,
+    blendCx: 0.5,
+    blendCy: 0.5,
+    blendRadius: 0.9,
   });
 
   // props -> target
   useEffect(() => {
+    const base = parseRGB(baseColor);
     const { r, g, b } = parseRGB(color);
+    targetRef.current.baseR = base.r;
+    targetRef.current.baseG = base.g;
+    targetRef.current.baseB = base.b;
     targetRef.current.r = r;
     targetRef.current.g = g;
     targetRef.current.b = b;
@@ -95,7 +126,11 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
     }
 
     targetRef.current.focusStrength = Math.max(0, Math.min(1, focusStrength));
-  }, [color, intensity, focus, focusStrength]);
+    targetRef.current.progress = clamp01(progress);
+    targetRef.current.blendCx = blendCenter ? clamp01(blendCenter.x) : 0.5;
+    targetRef.current.blendCy = blendCenter ? clamp01(blendCenter.y) : 0.5;
+    targetRef.current.blendRadius = Math.max(0.05, Math.min(1.2, blendRadius));
+  }, [baseColor, color, intensity, focus, focusStrength, progress, blendCenter, blendRadius]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -158,6 +193,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       // első frame ne villanjon
       const t = targetRef.current;
       currentRef.current = {
+        baseR: t.baseR,
+        baseG: t.baseG,
+        baseB: t.baseB,
         r: t.r,
         g: t.g,
         b: t.b,
@@ -165,6 +203,10 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         fx: t.fx,
         fy: t.fy,
         focusStrength: t.focusStrength,
+        progress: t.progress,
+        blendCx: t.blendCx,
+        blendCy: t.blendCy,
+        blendRadius: t.blendRadius,
       };
 
       lastTRef.current = performance.now();
@@ -186,6 +228,9 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       const t = targetRef.current;
 
       const SMOOTH = 0.06;
+      c.baseR = lerp(c.baseR, t.baseR, SMOOTH);
+      c.baseG = lerp(c.baseG, t.baseG, SMOOTH);
+      c.baseB = lerp(c.baseB, t.baseB, SMOOTH);
       c.r = lerp(c.r, t.r, SMOOTH);
       c.g = lerp(c.g, t.g, SMOOTH);
       c.b = lerp(c.b, t.b, SMOOTH);
@@ -193,8 +238,10 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
       c.fx = lerp(c.fx, t.fx, SMOOTH);
       c.fy = lerp(c.fy, t.fy, SMOOTH);
       c.focusStrength = lerp(c.focusStrength, t.focusStrength, SMOOTH);
-
-      const colorStr = `${c.r.toFixed(0)},${c.g.toFixed(0)},${c.b.toFixed(0)}`;
+      c.progress = lerp(c.progress, t.progress, SMOOTH);
+      c.blendCx = lerp(c.blendCx, t.blendCx, SMOOTH);
+      c.blendCy = lerp(c.blendCy, t.blendCy, SMOOTH);
+      c.blendRadius = lerp(c.blendRadius, t.blendRadius, SMOOTH);
 
       const isMobile = w < 720;
       const motion = prefersReduced ? 0.22 : 1;
@@ -240,6 +287,10 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         sx: number;
         sy: number;
         s: number;
+        blend: number;
+        r: number;
+        g: number;
+        b: number;
       }>;
 
       ctx.clearRect(0, 0, w, h);
@@ -250,6 +301,10 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
       const MAX_DIST = isMobile ? 150 : 260;
       const MAX_DIST2 = MAX_DIST * MAX_DIST;
+      const blendCxPx = w * c.blendCx;
+      const blendCyPx = h * c.blendCy;
+      const blendRadiusPx = Math.max(1, Math.max(w, h) * c.blendRadius);
+      const blendInnerPx = blendRadiusPx * 0.68;
 
       // ✅ doboz wrap határok
       const minX = cx - spreadX * 0.5;
@@ -320,8 +375,14 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
         const scale = cameraZ / (cameraZ + z);
         const sx = cx + x * scale;
         const sy = cy + y * scale;
+        const d = Math.hypot(sx - blendCxPx, sy - blendCyPx);
+        const maskedArea = 1 - smoothstep(blendInnerPx, blendRadiusPx, d);
+        const blend = clamp01(maskedArea * c.progress);
+        const pr = lerp(c.baseR, c.r, blend);
+        const pg = lerp(c.baseG, c.g, blend);
+        const pb = lerp(c.baseB, c.b, blend);
 
-        projected[i] = { sx, sy, s: scale };
+        projected[i] = { sx, sy, s: scale, blend, r: pr, g: pg, b: pb };
 
         const depthT = clamp01((scale - 0.65) / 0.75);
         const a = NODE_ALPHA_BASE * (0.55 + depthT * 0.75);
@@ -329,7 +390,7 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
         ctx.beginPath();
         ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${colorStr},${a})`;
+        ctx.fillStyle = `rgba(${pr.toFixed(0)},${pg.toFixed(0)},${pb.toFixed(0)},${a})`;
         ctx.fill();
       }
 
@@ -349,11 +410,14 @@ export const DynamicMeshBackground: React.FC<MeshProps> = ({
 
             const zMix = clamp01(((a.s + b.s) * 0.5 - 0.72) / 0.85);
             const alpha = base * (0.55 + zMix * 0.8);
+            const lr = (a.r + b.r) * 0.5;
+            const lg = (a.g + b.g) * 0.5;
+            const lb = (a.b + b.b) * 0.5;
 
             ctx.beginPath();
             ctx.moveTo(a.sx, a.sy);
             ctx.lineTo(b.sx, b.sy);
-            ctx.strokeStyle = `rgba(${colorStr},${alpha})`;
+            ctx.strokeStyle = `rgba(${lr.toFixed(0)},${lg.toFixed(0)},${lb.toFixed(0)},${alpha})`;
             ctx.stroke();
           }
         }

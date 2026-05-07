@@ -188,10 +188,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   const meshColor =
     intent === "engage"
-      ? "80,190,240"
+      ? "162,126,92"
       : intent === "convert"
       ? "175,135,95"
-      : "255,255,255";
+      : "168,128,92";
 
   const meshIntensity = intent === "engage" ? 1.15 : intent === "convert" ? 0.85 : 1;
 

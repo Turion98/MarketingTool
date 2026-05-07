@@ -4264,4 +4264,131 @@ box-shadow:
   }
 }
 
+/* ===== 2026 Light Rebrand Override ===== */
+.page {
+  --text-primary: #1f2937;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-accent: #8a6a4a;
+}
+
+.page::before {
+  background:
+    radial-gradient(circle at 28% 16%, rgba(96, 165, 250, 0.12), transparent 58%),
+    linear-gradient(180deg, #f9f6ef 0%, #f6f1e7 100%);
+}
+
+.heroInner,
+.audienceStatementSection,
+.platformInner,
+.whyInner,
+.examplesInner,
+.collabInner,
+.pricingInner,
+.audienceInner,
+.techInner,
+.finalCtaInner,
+.whyCard,
+.examplesPanel,
+.examplesNav,
+.examplesDetail,
+.audienceItem {
+  background: rgba(255, 255, 255, 0.84) !important;
+  border-color: rgba(31, 41, 55, 0.12) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
+}
+
+.primaryCta,
+.finalQuoteCta,
+.examplesStartButton {
+  background: linear-gradient(180deg, #c8a883, #8a6a4a) !important;
+  color: #fffaf2 !important;
+}
+
+/* ===== Text Contrast Fix (light theme) ===== */
+.heroTitle,
+.platformTitle,
+.whyTitle,
+.whyItemTitle,
+.examplesTitle,
+.examplesContentTitle,
+.collabTitle,
+.audienceTitle,
+.audienceItemTitle,
+.techTitle,
+.techItemTitle,
+.finalCtaTitle {
+  color: #0f172a !important;
+}
+
+.heroSubtitle,
+.heroSubtitles,
+.heroParagraph,
+.audienceStatementText,
+.platformLead,
+.platformLeadek,
+.whyLead,
+.whyBody,
+.whyBullet,
+.examplesIntroLead,
+.examplesHeroLine,
+.examplesIntro,
+.examplesBridge,
+.examplesParagraph,
+.examplesBullet,
+.collabLead,
+.audienceLead,
+.audienceItem p,
+.techLead,
+.techItem p,
+.techBullets,
+.techClosing,
+.finalCtaText {
+  color: rgba(51, 65, 85, 0.9) !important;
+}
+
+/* ===== Present Home Visual Clone (marketing palette) ===== */
+.heroRotatorLabel,
+.intentLabel,
+.platformTitle,
+.campaignTitle,
+.techItemTitle,
+.audienceItemTitle {
+  color: rgba(138, 106, 74, 0.95) !important;
+}
+
+.secondaryCta,
+.campaignMoreSummary,
+.langToggle {
+  background: rgba(255, 250, 242, 0.52) !important;
+  border-color: rgba(58, 44, 32, 0.24) !important;
+  color: rgba(58, 44, 32, 0.95) !important;
+  box-shadow: none !important;
+}
+
+.secondaryCta[aria-pressed="true"] {
+  background: rgba(200, 168, 131, 0.24) !important;
+  border-color: rgba(138, 106, 74, 0.44) !important;
+}
+
+/* ===== Home text color rethink ===== */
+.page {
+  --text-primary: #0f172a !important;
+  --text-secondary: #1f2937 !important;
+  --text-muted: #334155 !important;
+}
+
+.heroSubtitle,
+.heroSubtitles,
+.heroParagraph,
+.platformLead,
+.platformLeadek,
+.audienceStatementText,
+.whyBody,
+.collabLead,
+.techLead,
+.finalCtaText {
+  color: rgba(30, 41, 59, 0.96) !important;
+}
+
 

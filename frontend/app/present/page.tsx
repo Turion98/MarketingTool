@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import LandingPage from "./PresentLandingPage";
+import PresentDecisionLanding from "./PresentDecisionLanding";
 
 const PresentPage: React.FC = () => {
   const handleRequestQuoteClick = () => {
@@ -17,7 +17,7 @@ const PresentPage: React.FC = () => {
   };
 
   return (
-    <LandingPage
+    <PresentDecisionLanding
       logoSrc="/assets/my_logo.png"
       logoAlt="Questell logo"
       onRequestQuoteClick={handleRequestQuoteClick}
