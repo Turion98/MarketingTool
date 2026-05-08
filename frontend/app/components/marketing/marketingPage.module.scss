@@ -25,13 +25,13 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(31, 41, 55, 0.55);
+  color: color-mix(in srgb, tokens.$mk-topbar-bg 58%, transparent);
   margin-bottom: 0.5rem;
 }
 
 .hero {
   padding-bottom: clamp(1.5rem, 4vw, 2.25rem);
-  border-bottom: 1px solid rgba(31, 41, 55, 0.12);
+  border-bottom: 1px solid tokens.$mk-container-border-soft;
 }
 
 .eyebrow {
@@ -49,13 +49,13 @@
   line-height: 1.12;
   margin: 0 0 0.65rem;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: tokens.$mk-topbar-bg;
 }
 
 .subtitle {
   font-size: clamp(1rem, 1.25vw, 1.08rem);
   line-height: 1.72;
-  color: rgba(51, 65, 85, 0.82);
+  color: rgba(33, 56, 109, 0.82);
   margin: 0;
   max-width: 40rem;
 }
@@ -69,14 +69,14 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(51, 65, 85, 0.62);
+  color: color-mix(in srgb, tokens.$mk-topbar-bg 66%, transparent);
   margin: 0 0 1rem;
 }
 
 .sectionBody {
   font-size: 0.98rem;
   line-height: 1.74;
-  color: rgba(30, 41, 59, 0.88);
+  color: rgba(20, 32, 66, 0.88);
   margin: 0;
   max-width: 44rem;
 }
@@ -84,7 +84,7 @@
 .bullets {
   margin: 0.75rem 0 0;
   padding-left: 1.15rem;
-  color: rgba(30, 41, 59, 0.9);
+  color: rgba(20, 32, 66, 0.9);
   line-height: 1.68;
   font-size: 0.96rem;
 }
@@ -96,7 +96,7 @@
 .examplesList {
   margin: 0.5rem 0 0;
   padding-left: 1.15rem;
-  color: rgba(30, 41, 59, 0.82);
+  color: rgba(20, 32, 66, 0.82);
   line-height: 1.66;
   font-size: 0.94rem;
 }
@@ -105,8 +105,8 @@
   margin-top: clamp(2rem, 5vw, 2.75rem);
   padding: clamp(1.25rem, 3vw, 1.75rem);
   border-radius: 12px;
-  background: color-mix(in srgb, tokens.$mk-surface 70%, transparent);
-  border: 1px solid rgba(31, 41, 55, 0.12);
+  background: linear-gradient(145deg, tokens.$mk-closing-bg 0%, tokens.$mk-closing-bg-strong 100%);
+  border: 1px solid tokens.$mk-closing-border;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -117,7 +117,7 @@
 .ctaText {
   margin: 0;
   font-size: 0.95rem;
-  color: rgba(30, 41, 59, 0.84);
+  color: tokens.$mk-closing-text;
   max-width: 28rem;
 }
 
@@ -134,6 +134,7 @@
   text-decoration: none;
   white-space: nowrap;
   transition: filter 0.15s ease, transform 0.15s ease;
+  border: 1px solid color-mix(in srgb, tokens.$mk-cta-bg 68%, black);
 }
 
 .ctaLink:hover {

@@ -1,9 +1,16 @@
 @use "./marketingTokens" as tokens;
 
+:global(:root) {
+  --marketing-nav-offset: clamp(2.2rem, 3.8vw, 2.55rem);
+}
+
 .header {
-  position: sticky;
+  position: fixed !important;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
   border-bottom: 1px solid rgba(230, 236, 247, 0.16);
   background: tokens.$mk-topbar-bg !important;
   backdrop-filter: blur(10px);
