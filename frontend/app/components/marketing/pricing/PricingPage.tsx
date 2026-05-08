@@ -166,7 +166,7 @@ const PRICING_COPY = {
     ],
   },
   hu: {
-    heroTitle: "Egyszerű árazás. Egy tiszta kiindulópont.",
+    heroTitle: "Egyszerű árazás. Rejtett költségek nélkül!",
     heroLead:
       "Indíts egy olyan flow-val, ami fel van építve, be van ágyazva, és egy valós oldalon már élőben fut. Ha működik, válaszd a neked megfelelő csomagot.",
     pricingPlansAria: "Arazasi csomagok",
@@ -342,7 +342,17 @@ export default function PricingPage() {
   return (
     <article className={s.page}>
       <header className={s.hero}>
-        <h1 className={s.title}>{copy.heroTitle}</h1>
+        <h1 className={s.title}>
+          {lang === "hu" ? (
+            <>
+              Egyszerű árazás.
+              <br className={s.mobileOnlyBreak} />
+              Rejtett költségek nélkül!
+            </>
+          ) : (
+            copy.heroTitle
+          )}
+        </h1>
         <p className={s.lead}>{copy.heroLead}</p>
       </header>
 

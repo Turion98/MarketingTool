@@ -55,32 +55,15 @@ export default function CampaignFlowsPage() {
   }, []);
 
   useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const nodes = root.querySelectorAll<HTMLElement>("[data-reveal]");
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const id = entry.target.getAttribute("data-reveal-id") as RevealKey | null;
-          if (!id) continue;
-          setRevealById((prev) => ({ ...prev, [id]: true }));
-          io.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -24px 0px" }
-    );
-    const initial: Partial<Record<RevealKey, boolean>> = {};
-    nodes.forEach((el) => {
-      const id = el.getAttribute("data-reveal-id") as RevealKey | null;
-      if (!id) return;
-      const r = el.getBoundingClientRect();
-      const inView = r.top < window.innerHeight * 0.94 && r.bottom > 0;
-      if (inView) initial[id] = true;
-      else io.observe(el);
-    });
-    setRevealById((prev) => ({ ...prev, ...initial }));
-    return () => io.disconnect();
+    const allVisible: Partial<Record<RevealKey, boolean>> = {
+      hero: true,
+      problem: true,
+      agency: true,
+      brand: true,
+      architecture: true,
+      final: true,
+    };
+    setRevealById(allVisible);
   }, []);
 
   return (
