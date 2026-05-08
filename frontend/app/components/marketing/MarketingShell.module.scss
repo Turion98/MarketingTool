@@ -19,11 +19,3 @@
   padding-top: clamp(3.2rem, 6vw, 4.1rem);
 }
 
-:global(body) {
-  background: tokens.$mk-page-bg;
-}
-
-:global(html:has([data-marketing-shell="true"])),
-:global(body:has([data-marketing-shell="true"])) {
-  background: tokens.$mk-page-bg !important;
-}
