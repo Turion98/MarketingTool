@@ -1,3 +1,5 @@
+@use "./marketingTokens" as tokens;
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -37,7 +39,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(138, 106, 74, 0.92);
+  color: tokens.$mk-topbar-bg;
   margin: 0 0 0.9rem;
 }
 
@@ -103,7 +105,7 @@
   margin-top: clamp(2rem, 5vw, 2.75rem);
   padding: clamp(1.25rem, 3vw, 1.75rem);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
+  background: color-mix(in srgb, tokens.$mk-surface 70%, transparent);
   border: 1px solid rgba(31, 41, 55, 0.12);
   display: flex;
   flex-wrap: wrap;
@@ -126,8 +128,8 @@
   padding: 0.65rem 1.15rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #fffaf2;
-  background: #8a6a4a;
+  color: tokens.$mk-cta-text;
+  background: tokens.$mk-cta-bg;
   border-radius: 8px;
   text-decoration: none;
   white-space: nowrap;
@@ -135,7 +137,8 @@
 }
 
 .ctaLink:hover {
-  filter: brightness(1.05);
+  background: tokens.$mk-cta-bg-hover;
+  filter: none;
 }
 
 .ctaLink:active {

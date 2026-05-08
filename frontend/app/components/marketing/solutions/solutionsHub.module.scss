@@ -1,3 +1,5 @@
+@use "../marketingTokens" as tokens;
+
 .page {
   width: 100%;
   max-width: 56rem;
@@ -71,7 +73,7 @@
 }
 
 .card:hover {
-  border-color: rgba(138, 106, 74, 0.42);
+  border-color: tokens.$mk-container-border;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
   transform: translateY(-2px);
@@ -138,7 +140,7 @@
   justify-content: flex-start;
   gap: 0.55rem;
   padding: 0.8rem 0.95rem 0.7rem;
-  background: linear-gradient(120deg, rgba(200, 168, 131, 0.26) 0%, rgba(138, 106, 74, 0.2) 100%);
+  background: linear-gradient(120deg, tokens.$mk-container-bg-soft 0%, tokens.$mk-container-bg 100%);
   clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
   transition:
     width 0.34s ease,
@@ -150,7 +152,7 @@
 .card:focus-visible .cardTrap {
   width: 100%;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  background: linear-gradient(120deg, rgba(200, 168, 131, 0.38) 0%, rgba(138, 106, 74, 0.28) 100%);
+  background: linear-gradient(120deg, tokens.$mk-container-bg 0%, tokens.$mk-container-bg-strong 100%);
 }
 
 .card:hover .cardTitle,
@@ -166,18 +168,18 @@
 
 /* ===== Brown Brand Consistency ===== */
 .eyebrow {
-  color: rgba(138, 106, 74, 0.92);
+  color: tokens.$mk-topbar-bg;
 }
 
 .card {
-  border-color: rgba(138, 106, 74, 0.28);
+  border-color: tokens.$mk-container-border-soft;
 }
 
 .cardTrap {
-  background: linear-gradient(120deg, rgba(200, 168, 131, 0.3) 0%, rgba(138, 106, 74, 0.22) 100%);
+  background: linear-gradient(120deg, tokens.$mk-container-bg 0%, tokens.$mk-container-bg-strong 100%);
 }
 
 .card:hover .cardTrap,
 .card:focus-visible .cardTrap {
-  background: linear-gradient(120deg, rgba(200, 168, 131, 0.38) 0%, rgba(138, 106, 74, 0.28) 100%);
+  background: linear-gradient(120deg, tokens.$mk-container-bg 0%, tokens.$mk-container-bg-strong 100%);
 }

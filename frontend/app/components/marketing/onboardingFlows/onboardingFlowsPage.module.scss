@@ -1,7 +1,9 @@
 /* Onboarding & education use case — same visual language as product-finder, explicit row order (no nth-child on .page) */
+@use "../marketingTokens" as tokens;
 
 .page {
   width: 100%;
+  box-sizing: border-box;
   max-width: 72rem;
   margin: 0 auto;
   padding: clamp(1.25rem, 4vh, 2rem) clamp(1rem, 4vw, 2rem) clamp(2.5rem, 8vh, 4rem);
@@ -116,7 +118,7 @@
   font-weight: 600;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: rgba(129, 168, 255, 0.88);
+  color: tokens.$mk-topbar-bg;
   margin: 0 0 1rem;
 }
 
@@ -133,6 +135,7 @@
   margin: 0 0 1.25rem;
   color: rgba(252, 252, 255, 0.97);
   max-width: 40rem;
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
@@ -140,7 +143,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(129, 168, 255, 0.92);
+  color: tokens.$mk-topbar-bg;
   margin: 0 0 1.35rem;
 }
 
@@ -152,6 +155,7 @@
   letter-spacing: -0.02em;
   margin: 0 0 1.25rem;
   color: rgba(252, 252, 255, 0.98);
+  overflow-wrap: anywhere;
 }
 
 .lead {
@@ -178,25 +182,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
   padding: 0.8rem 1.35rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #0b0f18;
-  background: linear-gradient(180deg, #f4f6fb 0%, #dce3f0 100%);
+  color: tokens.$mk-cta-text;
+  background: tokens.$mk-cta-bg;
   border-radius: 10px;
   text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid color-mix(in srgb, tokens.$mk-cta-bg 68%, black);
   transition: filter 0.15s ease, transform 0.15s ease;
 }
 
 .btnPrimary:hover {
-  filter: brightness(1.06);
+  background: tokens.$mk-cta-bg-hover;
+  filter: none;
 }
 
 .btnSecondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
   padding: 0.8rem 1.25rem;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -675,7 +684,24 @@
 }
 
 @media (max-width: 640px) {
+  .page {
+    padding: 0.95rem 0.9rem 2.5rem;
+  }
+
+  .zigzagSection {
+    padding: 2rem 0;
+  }
+
+  .page > .zigzagSection + .zigzagSection {
+    margin-top: 0.8rem;
+  }
+
+  .zigzagVisual {
+    padding: 0.35rem 0 0.1rem;
+  }
+
   .heroActions {
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
   }
@@ -683,32 +709,56 @@
   .btnPrimary,
   .btnSecondary {
     width: 100%;
+    max-width: 100%;
     justify-content: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    padding: 0.72rem 1rem;
+  }
+
+  .ctaPanel {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1.2rem 0.9rem;
+    border-radius: 14px;
+  }
+
+  .finalLead,
+  .finalStatement,
+  .prose,
+  .lead {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .ctaPanelActions {
+    width: 100%;
+    align-items: stretch;
   }
 }
 
 /* ===== Brown Brand Consistency ===== */
 .eyebrow,
 .sectionKicker {
-  color: rgba(138, 106, 74, 0.92);
+  color: tokens.$mk-topbar-bg;
 }
 
 .btnPrimary {
-  background: linear-gradient(180deg, #c8a883 0%, #8a6a4a 100%);
-  color: #fffaf2;
-  border-color: rgba(138, 106, 74, 0.42);
+  background: tokens.$mk-cta-bg;
+  color: tokens.$mk-cta-text;
+  border-color: color-mix(in srgb, tokens.$mk-cta-bg 68%, black);
 }
 
 .btnSecondary {
-  color: rgba(58, 44, 32, 0.92);
-  background: rgba(200, 168, 131, 0.14);
-  border-color: rgba(138, 106, 74, 0.32);
+  color: rgba(20, 32, 66, 0.92);
+  background: tokens.$mk-container-bg-soft;
+  border-color: tokens.$mk-container-border;
 }
 
 .sectionBand,
 .stepCard,
 .siteFooter {
-  border-color: rgba(138, 106, 74, 0.2);
+  border-color: tokens.$mk-container-border-soft;
 }
 
 /* ===== Light Theme Calibration (cloned from Product Finder) ===== */
@@ -737,15 +787,28 @@
 
 .sectionKicker,
 .eyebrow {
-  color: rgba(138, 106, 74, 0.92);
+  color: tokens.$mk-topbar-bg;
 }
 
 .band,
 .oeCard,
 .ctaPanel {
-  background: rgba(199, 181, 159, 0.84);
-  border-color: rgba(58, 44, 32, 0.24);
-  box-shadow: 0 12px 28px rgba(58, 44, 32, 0.14);
+  background: color-mix(in srgb, tokens.$mk-surface 72%, tokens.$mk-container-bg-strong);
+  border-color: tokens.$mk-container-border;
+  box-shadow: 0 12px 28px tokens.$mk-container-shadow;
+}
+
+.finalSection .ctaPanel {
+  background: linear-gradient(145deg, tokens.$mk-closing-bg 0%, tokens.$mk-closing-bg-strong 100%);
+  border-color: tokens.$mk-closing-border;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.26);
+}
+
+.finalSection .finalStatement,
+.finalSection .finalLead,
+.finalSection .siteFooter,
+.finalSection .siteFooter a {
+  color: tokens.$mk-closing-text;
 }
 
 .expandTrigger {
@@ -766,57 +829,57 @@
 }
 
 .btnPrimary {
-  background: linear-gradient(180deg, #c8a883 0%, #8a6a4a 100%);
-  color: #fffaf2;
-  border-color: rgba(138, 106, 74, 0.42);
+  background: tokens.$mk-cta-bg;
+  color: tokens.$mk-cta-text;
+  border-color: color-mix(in srgb, tokens.$mk-cta-bg 68%, black);
 }
 
 .btnSecondary {
-  color: rgba(58, 44, 32, 0.92);
-  background: rgba(200, 168, 131, 0.14);
-  border-color: rgba(138, 106, 74, 0.32);
+  color: rgba(20, 32, 66, 0.92);
+  background: tokens.$mk-container-bg-soft;
+  border-color: tokens.$mk-container-border;
 }
 
 .btnSecondary:hover {
-  background: rgba(200, 168, 131, 0.22);
-  border-color: rgba(138, 106, 74, 0.4);
+  background: tokens.$mk-container-bg;
+  border-color: tokens.$mk-container-border;
 }
 
 .imagePlaceholder {
-  background: linear-gradient(180deg, #f7f2e9 0%, #efe7da 100%);
-  border-color: rgba(138, 106, 74, 0.22);
-  color: rgba(58, 44, 32, 0.52);
+  background: linear-gradient(180deg, tokens.$mk-surface 0%, tokens.$mk-surface-strong 100%);
+  border-color: tokens.$mk-container-border-soft;
+  color: rgba(20, 32, 66, 0.52);
 }
 
 .mockChrome {
-  border-bottom-color: rgba(138, 106, 74, 0.2);
+  border-bottom-color: tokens.$mk-container-border-soft;
 }
 
 .mockDot {
-  background: rgba(138, 106, 74, 0.28);
+  background: tokens.$mk-container-bg-strong;
 }
 
 .mockBar {
-  background: rgba(138, 106, 74, 0.2);
+  background: tokens.$mk-container-bg;
 }
 
 .mockBarShort {
-  background: rgba(138, 106, 74, 0.16);
+  background: tokens.$mk-container-bg-soft;
 }
 
 .mockPill {
-  background: rgba(200, 168, 131, 0.2);
-  border: 1px solid rgba(138, 106, 74, 0.28);
+  background: tokens.$mk-container-bg;
+  border: 1px solid tokens.$mk-container-border;
 }
 
 .imagePlaceholderLabel {
-  color: rgba(58, 44, 32, 0.65);
+  color: rgba(20, 32, 66, 0.65);
 }
 
 .siteFooter {
-  border-top-color: rgba(58, 44, 32, 0.2);
+  border-top-color: tokens.$mk-container-border-soft;
 }
 
 .siteFooter a {
-  color: rgba(138, 106, 74, 0.92);
+  color: rgba(33, 56, 109, 0.92);
 }

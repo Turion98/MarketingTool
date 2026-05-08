@@ -1,8 +1,11 @@
+@use "./marketingTokens" as tokens;
+
 .shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f6f1e7;
+  overflow-x: hidden;
+  background: tokens.$mk-page-bg;
   color: #1f2937;
   font-family: var(--font-heading-present), system-ui, sans-serif;
 }
@@ -12,4 +15,14 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  background: tokens.$mk-page-bg;
+}
+
+:global(body) {
+  background: tokens.$mk-page-bg;
+}
+
+:global(html:has([data-marketing-shell="true"])),
+:global(body:has([data-marketing-shell="true"])) {
+  background: tokens.$mk-page-bg !important;
 }

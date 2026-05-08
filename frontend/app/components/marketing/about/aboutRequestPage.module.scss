@@ -1,3 +1,5 @@
+@use "../marketingTokens" as tokens;
+
 .page {
   color: #1f2937;
   display: grid;
@@ -19,7 +21,7 @@
 
 .eyebrow,
 .comingEyebrow {
-  color: rgba(138, 106, 74, 0.92);
+  color: tokens.$mk-topbar-bg;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -122,7 +124,7 @@
 
 .right {
   align-self: start;
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, tokens.$mk-surface 90%, transparent);
   border: 1px solid rgba(31, 41, 55, 0.12);
   border-radius: 16px;
   display: grid;
