@@ -1,4 +1,6 @@
 
+@use "../components/marketing/marketingTokens" as mk;
+
 /* ================================
    PresentLandingPage.module.scss
    ================================ */
@@ -4268,13 +4270,17 @@ box-shadow:
   --text-primary: #1f2937;
   --text-secondary: #334155;
   --text-muted: #64748b;
-  --text-accent: #8a6a4a;
+  --text-accent: #{mk.$mk-topbar-bg};
 }
 
 .page::before {
   background:
-    radial-gradient(circle at 28% 16%, rgba(96, 165, 250, 0.12), transparent 58%),
-    linear-gradient(180deg, #f9f6ef 0%, #f6f1e7 100%);
+    radial-gradient(circle at 28% 16%, rgba(70, 116, 210, 0.14), transparent 58%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, mk.$mk-page-bg 96%, white) 0%,
+      mk.$mk-page-bg 100%
+    );
 }
 
 .heroInner,
@@ -4292,16 +4298,17 @@ box-shadow:
 .examplesNav,
 .examplesDetail,
 .audienceItem {
-  background: rgba(255, 255, 255, 0.84) !important;
-  border-color: rgba(31, 41, 55, 0.12) !important;
+  background: color-mix(in srgb, mk.$mk-surface 86%, transparent) !important;
+  border-color: mk.$mk-container-border-soft !important;
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
 }
 
 .primaryCta,
 .finalQuoteCta,
 .examplesStartButton {
-  background: linear-gradient(180deg, #c8a883, #8a6a4a) !important;
-  color: #fffaf2 !important;
+  background: mk.$mk-cta-bg !important;
+  color: mk.$mk-cta-text !important;
+  border-color: color-mix(in srgb, mk.$mk-cta-bg 68%, black) !important;
 }
 
 /* ===== Text Contrast Fix (light theme) ===== */
@@ -4317,7 +4324,7 @@ box-shadow:
 .techTitle,
 .techItemTitle,
 .finalCtaTitle {
-  color: #0f172a !important;
+  color: mk.$mk-topbar-bg !important;
 }
 
 .heroSubtitle,
@@ -4343,7 +4350,7 @@ box-shadow:
 .techBullets,
 .techClosing,
 .finalCtaText {
-  color: rgba(51, 65, 85, 0.9) !important;
+  color: rgba(20, 32, 66, 0.9) !important;
 }
 
 /* ===== Present Home Visual Clone (marketing palette) ===== */
@@ -4353,21 +4360,21 @@ box-shadow:
 .campaignTitle,
 .techItemTitle,
 .audienceItemTitle {
-  color: rgba(138, 106, 74, 0.95) !important;
+  color: mk.$mk-topbar-bg !important;
 }
 
 .secondaryCta,
 .campaignMoreSummary,
 .langToggle {
-  background: rgba(255, 250, 242, 0.52) !important;
-  border-color: rgba(58, 44, 32, 0.24) !important;
-  color: rgba(58, 44, 32, 0.95) !important;
+  background: mk.$mk-container-bg-soft !important;
+  border-color: mk.$mk-container-border !important;
+  color: rgba(20, 32, 66, 0.95) !important;
   box-shadow: none !important;
 }
 
 .secondaryCta[aria-pressed="true"] {
-  background: rgba(200, 168, 131, 0.24) !important;
-  border-color: rgba(138, 106, 74, 0.44) !important;
+  background: mk.$mk-container-bg !important;
+  border-color: mk.$mk-container-border !important;
 }
 
 /* ===== Home text color rethink ===== */
@@ -4387,7 +4394,98 @@ box-shadow:
 .collabLead,
 .techLead,
 .finalCtaText {
-  color: rgba(30, 41, 59, 0.96) !important;
+  color: rgba(20, 32, 66, 0.96) !important;
+}
+
+/* ===== FINAL HARD OVERRIDE (no tokens) ===== */
+.page::before {
+  background:
+    radial-gradient(circle at 28% 16%, rgba(70, 116, 210, 0.14), transparent 58%) !important,
+    linear-gradient(180deg, #ececec 0%, #d8d8d8 100%) !important;
+}
+
+.heroInner,
+.audienceStatementSection,
+.platformInner,
+.whyInner,
+.examplesInner,
+.collabInner,
+.pricingInner,
+.audienceInner,
+.techInner,
+.finalCtaInner,
+.whyCard,
+.examplesPanel,
+.examplesNav,
+.examplesDetail,
+.audienceItem {
+  background: rgba(236, 244, 255, 0.86) !important;
+  border-color: rgba(43, 74, 143, 0.22) !important;
+}
+
+.heroTitle,
+.platformTitle,
+.whyTitle,
+.whyItemTitle,
+.examplesTitle,
+.examplesContentTitle,
+.collabTitle,
+.audienceTitle,
+.audienceItemTitle,
+.techTitle,
+.techItemTitle,
+.finalCtaTitle,
+.heroRotatorLabel,
+.intentLabel,
+.campaignTitle {
+  color: #202633 !important;
+}
+
+.heroSubtitle,
+.heroSubtitles,
+.heroParagraph,
+.audienceStatementText,
+.platformLead,
+.platformLeadek,
+.whyLead,
+.whyBody,
+.whyBullet,
+.examplesIntroLead,
+.examplesHeroLine,
+.examplesIntro,
+.examplesBridge,
+.examplesParagraph,
+.examplesBullet,
+.collabLead,
+.audienceLead,
+.audienceItem p,
+.techLead,
+.techItem p,
+.techBullets,
+.techClosing,
+.finalCtaText {
+  color: rgba(20, 32, 66, 0.92) !important;
+}
+
+.primaryCta,
+.finalQuoteCta,
+.examplesStartButton {
+  background: #a94145 !important;
+  color: #f5f8ff !important;
+  border-color: rgba(85, 24, 28, 0.6) !important;
+}
+
+.secondaryCta,
+.campaignMoreSummary,
+.langToggle {
+  background: rgba(72, 110, 196, 0.12) !important;
+  border-color: rgba(43, 74, 143, 0.34) !important;
+  color: rgba(20, 32, 66, 0.95) !important;
+}
+
+.secondaryCta[aria-pressed="true"] {
+  background: rgba(55, 89, 163, 0.16) !important;
+  border-color: rgba(43, 74, 143, 0.34) !important;
 }
 
 
