@@ -1347,6 +1347,18 @@ export default function PresentDecisionLanding({
                         </section>
                         </section>
                       ) : null}
+
+                      {hudComplete && r3CtaReady ? (
+                        <div className={s.mobileFlowSolutionCta}>
+                          <button
+                            type="button"
+                            className={`${s.heroPrimaryCta} ${s.r3PrimaryCta}`}
+                            onClick={startR3GuidedFlowCta}
+                          >
+                            {ui.r3DockCta}
+                          </button>
+                        </div>
+                      ) : null}
                     </section>
                   ) : phase === "r1" ? (
                     <section
