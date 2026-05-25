@@ -116,6 +116,10 @@ export default function LoginClient() {
                     </button>
                   </form>
 
+                  <Link href="/test-chat" className={`${s.btn} ${s.btnSecondary} ${s.testBtn}`}>
+                    Teszt
+                  </Link>
+
                   <p className={s.footer}>
                     <Link href="/">← Vissza a marketing oldalra</Link>
                   </p>
