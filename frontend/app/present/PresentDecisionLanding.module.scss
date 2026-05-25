@@ -336,10 +336,6 @@
   margin-right: 0;
 }
 
-.page[data-phase="r3"] .presentFixedBrandDecision .presentFixedLogo {
-  display: none !important;
-}
-
 .page[data-phase="r3"] .presentFixedBrandDecision .presentFixedIntroCta {
   position: absolute;
   top: calc(100% + clamp(0.38rem, 1.1vh, 0.65rem));
@@ -438,7 +434,8 @@
   }
 
   .page[data-phase="r1"] .presentFixedBrand,
-  .page[data-phase="r2"] .presentFixedBrand {
+  .page[data-phase="r2"] .presentFixedBrand,
+  .page[data-phase="r3"] .presentFixedBrandDecision .presentFixedLogo {
     display: none !important;
   }
 
