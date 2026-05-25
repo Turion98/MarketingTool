@@ -1,5 +1,7 @@
 "use client";
 
+import type { AiConditionsState } from "./gameStateMutators";
+
 export type NextSwitch =
   | string
   | { switch: string; cases: Record<string, string>; default?: string };
@@ -142,6 +144,8 @@ export type GameStateContextType = {
   setCurrentPageId: (id: string) => void;
   currentPageData?: PageData | null;
   goToNextPage: (nextPageId: string) => void;
+  processAiNode: (pageId: string, prompt: string, imageProvided?: boolean) => Promise<void>;
+  aiConditionsState: AiConditionsState;
   handleAnswer?: (
     page: PageData,
     res: { correct: boolean; choiceIdx: number; elapsedMs: number }

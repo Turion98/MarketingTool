@@ -2,6 +2,10 @@
 
 import { canonicalMilestoneFragmentId } from "./milestoneFragmentId";
 import type { FragmentBank, PageData } from "./gameStateTypes";
+import {
+  getSatisfiedConditionIds,
+  type AiConditionsState,
+} from "./gameStateMutators";
 import { puzzleRoutePickGlobalKey } from "./puzzleRoutePick";
 import { getClientFetchApiBase } from "./publicApiBase";
 
@@ -86,10 +90,57 @@ export function buildPageRequestUrl(pageId: string, storySrc: string): string {
 export function resolvePageRuntimeDecision(
   raw: unknown,
   unlockedFragments: string[],
-  globals?: Record<string, unknown>
+  globals?: Record<string, unknown>,
+  aiConditions?: AiConditionsState
 ): PageRuntimeDecision {
   const page = asRecord(raw);
   if (!page) return { kind: "ok" };
+
+  if (page.type === "ai") {
+    const routing = Array.isArray(page.routing) ? page.routing : [];
+    if (!routing.length) return { kind: "ok" };
+
+    const satisfied = new Set(
+      aiConditions ? getSatisfiedConditionIds(aiConditions) : []
+    );
+
+    for (const rule of routing) {
+      const ruleRecord = asRecord(rule);
+      if (!ruleRecord) continue;
+
+      if ("default" in ruleRecord && !("if" in ruleRecord)) continue;
+
+      const required = Array.isArray(ruleRecord.if)
+        ? (ruleRecord.if as unknown[]).filter(
+            (x): x is string => typeof x === "string"
+          )
+        : [];
+      const goto =
+        typeof ruleRecord.goto === "string"
+          ? ruleRecord.goto.trim()
+          : null;
+
+      if (!required.length || !goto) continue;
+
+      if (required.every((cid) => satisfied.has(cid))) {
+        return { kind: "redirect", pageId: goto };
+      }
+    }
+
+    for (const rule of routing) {
+      const ruleRecord = asRecord(rule);
+      if (!ruleRecord) continue;
+      if (!("default" in ruleRecord) || "if" in ruleRecord) continue;
+
+      const defaultVal = ruleRecord.default;
+      if (defaultVal === "ask") return { kind: "ok" };
+      if (typeof defaultVal === "string" && defaultVal.trim()) {
+        return { kind: "redirect", pageId: defaultVal.trim() };
+      }
+    }
+
+    return { kind: "ok" };
+  }
 
   const poolRouteLike =
     page.type === "puzzleRoute" || page.type === "decision" || page.type === "poolRoute"

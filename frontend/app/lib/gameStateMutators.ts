@@ -83,3 +83,57 @@ export function resolveAnswerNextPage(
 
   return typeof page.next === "string" ? page.next : null;
 }
+
+export type AiConditionEntry = {
+  nodeId: string;
+  satisfiedAt: number;
+};
+
+export type AiConditionsState = Record<string, AiConditionEntry>;
+
+export function nextAiConditionsState(
+  prev: AiConditionsState,
+  nodeId: string,
+  newlySatisfied: string[]
+): AiConditionsState {
+  if (!newlySatisfied.length) return prev;
+  const next: AiConditionsState = { ...prev };
+  const now = Date.now();
+  for (const conditionId of newlySatisfied) {
+    if (!conditionId) continue;
+    if (next[conditionId]) continue;
+    next[conditionId] = {
+      nodeId,
+      satisfiedAt: now,
+    };
+  }
+  return next;
+}
+
+export function getSatisfiedConditionIds(
+  state: AiConditionsState
+): string[] {
+  return Object.keys(state);
+}
+
+export function getSatisfiedConditionsByNode(
+  state: AiConditionsState,
+  nodeId: string
+): string[] {
+  return Object.entries(state)
+    .filter(([, entry]) => entry.nodeId === nodeId)
+    .map(([conditionId]) => conditionId);
+}
+
+export function clearAiConditionsForNode(
+  prev: AiConditionsState,
+  nodeId: string
+): AiConditionsState {
+  const next: AiConditionsState = {};
+  for (const [conditionId, entry] of Object.entries(prev)) {
+    if (entry.nodeId !== nodeId) {
+      next[conditionId] = entry;
+    }
+  }
+  return next;
+}

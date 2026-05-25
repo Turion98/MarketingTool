@@ -45,13 +45,19 @@ import {
   mergeFragmentBanks,
 } from "./gameStateFragments";
 import {
+  getSatisfiedConditionIds,
+  nextAiConditionsState,
   nextFlagsState,
   nextFragmentsState,
   nextGlobalFragmentBankForUnlock,
   nextRuneImagesState,
   nextUnlockedFragmentsState,
   resolveAnswerNextPage,
+  type AiConditionsState,
 } from "./gameStateMutators";
+import { getClientFetchApiBase } from "./publicApiBase";
+// Kanonikus order ID regex: /\bORD-[A-Z]{2,6}-[0-9]{2,6}\b/i — questellOrderId.ts
+import { extractQuestellOrderId } from "./questellOrderId";
 import {
   clearAbortControllers,
   clearRegisteredAudioElements,
@@ -157,6 +163,8 @@ export const GameStateProvider = ({
   const [audioRestartToken, setAudioRestartToken] = useState<number>(0);
 
   const [flagsState, setFlagsState] = useState<Set<string>>(new Set());
+  const [aiConditionsState, setAiConditionsState] =
+    useState<AiConditionsState>({});
 
   /** ⬅️ Rúna képek map (flagId → png src) */
   const [imagesByFlag, setImagesByFlag] = useState<Record<string, string>>({});
@@ -171,6 +179,7 @@ export const GameStateProvider = ({
   const globalStartPageId = getStartPageId(globals);
   const globalCampaign = getStringGlobal(globals, "campaign");
   const globalRunePack = globals.runePack;
+  const storySrc = globalStorySrc;
   const analyticsGlobals = useMemo<GameStateGlobals>(
     () => ({
       storySrc: globalStorySrc,
@@ -725,6 +734,73 @@ useEffect(() => {
     }
   }, [globals, setGlobal, goToNextPage]);
 
+  const processAiNode = useCallback(
+    async (pageId: string, prompt: string, imageProvided?: boolean) => {
+      if (!storySrc) return;
+
+      const satisfiedConditions = getSatisfiedConditionIds(aiConditionsState);
+      const orderIdForRequest = getStringGlobal(globals, "orderId");
+
+      const base = getClientFetchApiBase();
+      const url = `${base}/api/ai-node/process`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          src: storySrc,
+          pageId,
+          prompt,
+          satisfiedConditions,
+          order_id: orderIdForRequest || null,
+          ...(imageProvided === true ? { image_provided: true } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("AI node process failed", response.status);
+        return;
+      }
+
+      const result = await response.json();
+
+      const satList = Array.isArray(result.satisfiedConditions)
+        ? result.satisfiedConditions
+        : [];
+      if (satList.includes("has_order_id")) {
+        const extracted = extractQuestellOrderId(prompt);
+        if (extracted) setGlobal("orderId", extracted);
+      }
+
+      // Kondíciók mentése state-be (teljes lista + newly — pl. image_provided latch)
+      const mergeIds =
+        satList.length > 0
+          ? satList
+          : Array.isArray(result.newlySatisfied)
+            ? result.newlySatisfied
+            : [];
+      if (result.activeNodeId && mergeIds.length > 0) {
+        setAiConditionsState((prev) =>
+          nextAiConditionsState(prev, result.activeNodeId, mergeIds)
+        );
+      }
+
+      // Navigáció vagy pontosítás kérés
+      if (result.status === "ok" && result.nextPageId) {
+        goToNextPage(result.nextPageId);
+        return;
+      }
+
+      if (result.status === "clarification" && result.clarificationQuestion) {
+        // Pontosító kérdés megjelenítése
+        // A meglévő clarification UI pattern szerint kezeld
+        console.info("AI clarification:", result.clarificationQuestion);
+        return;
+      }
+    },
+    [aiConditionsState, globals, storySrc, goToNextPage, setGlobal]
+  );
+
   /** Szerkesztő draft: meta + storySrc sentinel; érvényes oldal-ID-n maradunk, ha még létezik. */
   useEffect(() => {
     if (!hydrated) return;
@@ -1141,6 +1217,8 @@ useEffect(() => {
         setCurrentPageId,
         currentPageData,
         goToNextPage,
+        processAiNode,
+        aiConditionsState,
         handleAnswer,
 
         globalError,
