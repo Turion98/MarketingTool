@@ -11,11 +11,13 @@ from middleware.http import NoCacheStoriesMiddleware, SecurityHeadersMiddleware
 from router.white_label import router as white_label_router
 from routers.admin import router as admin_router
 from routers.analytics import router as analytics_router
+from routers.ai_node_routes import router as ai_node_router
 from routers.media import router as media_router
 from routers.embed_access import router as embed_access_router
 from routers.reports import router as reports_router
 from routers.runtime import router as runtime_router
 from services.reports import start_report_scheduler
+from services.embedding_store import preload_embeddings
 from services.runtime_config import STORIES_DIR
 from storysvc.router import router as stories_router
 
@@ -55,6 +57,7 @@ app.include_router(media_router)
 app.include_router(analytics_router)
 app.include_router(reports_router)
 app.include_router(embed_access_router, prefix="/api")
+app.include_router(ai_node_router, prefix="/api")
 
 if os.path.isdir("assets"):
     app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -68,4 +71,5 @@ if os.path.isdir(STORIES_DIR):
 
 @app.on_event("startup")
 def _on_startup():
+    preload_embeddings()
     start_report_scheduler(app)

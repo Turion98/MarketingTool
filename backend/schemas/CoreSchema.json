@@ -43,7 +43,91 @@
           "minLength": 1
         },
         "startPageId": { "type": "string" },
-        "campaignId": { "type": "string" }
+        "campaignId": { "type": "string" },
+        "defaultFallbackMessage": {
+          "type": "string",
+          "description": "Statikus üzenet, ha node matching bizonytalan és nincs node-szintű fallback_message."
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "mock_today": {
+              "type": "string",
+              "description": "ISO dátum (pl. 2026-05-15) — derive_conditions alapértelmezett „ma” mock tesztekhez."
+            },
+            "return_window_days": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Visszaküldési ablak napokban (derive_conditions)."
+            }
+          }
+        },
+        "reply_style": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "global_rules": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Stílusszabályok — minden reply LLM hívás system promptjába kerülnek."
+            },
+            "ack_and_paragraph_instruction": {
+              "type": "string",
+              "description": "Nyugtázási és bekezdés-formázási instrukció a reply LLM-nek."
+            }
+          }
+        },
+        "order_context_mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "precedence_rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "if_present": { "type": "string" },
+                  "suppress": { "type": "string" }
+                },
+                "required": ["if_present", "suppress"]
+              }
+            },
+            "field_rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "field": { "type": "string" },
+                  "condition": { "type": "string" },
+                  "when": {
+                    "type": "string",
+                    "enum": ["truthy", "not_null"]
+                  },
+                  "when_value": {},
+                  "when_any_value": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "requires_field_not_null": { "type": "string" },
+                  "requires_field_lt_today": { "type": "string" },
+                  "session_guard_not": { "type": "string" }
+                },
+                "required": ["field", "condition"]
+              }
+            },
+            "session_state_keys": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "computed_condition_ids": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        }
       }
     },
     "engine": {
@@ -150,7 +234,7 @@
         "reward": { "$ref": "#/$defs/Reward" },
         "type": {
           "type": "string",
-          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "puzzleOutcomeLogic", "scorecard", "conditionalRouting"],
+          "enum": ["default", "transition", "puzzle", "decision", "fragmentRecall", "end", "logic", "puzzleOutcomeLogic", "scorecard", "conditionalRouting", "ai"],
           "default": "default"
         },
         "title": { "type": "string" },
@@ -189,6 +273,10 @@
         {
           "if": { "properties": { "type": { "const": "fragmentRecall" } } },
           "then": { "$ref": "#/$defs/FragmentRecallPage" }
+        },
+        {
+          "if": { "properties": { "type": { "const": "ai" } } },
+          "then": { "$ref": "#/$defs/AiNode" }
         }
       ]
     },
@@ -479,6 +567,179 @@
             "id": { "type": "string" },
             "showImage": { "type": "boolean" }
           }
+        }
+      }
+    },
+    "AiNodeCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean", "default": false },
+        "do_not_reask_if_satisfied": { "type": "boolean", "default": false },
+        "do_not_reask_hint": {
+          "type": "string",
+          "description": "Ha megadva: ez a szöveg kerül a reply LLM instrukciójába az általános szabály helyett/mellett, ha a kondíció teljesült."
+        },
+        "text_triggers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Magyar frázisok — ha bármelyik illeszkedik a user üzenetére (ékezet-normalizálva), a kondíció determinisztikusan teljesül."
+        },
+        "trigger_default_if_no_outcome": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "trigger_default_fallback": { "type": "string" }
+      }
+    },
+    "AiNodeStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "goal", "ai_action"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "goal": { "type": "string", "minLength": 1 },
+        "ai_action": { "type": "string", "minLength": 1 },
+        "reply_rules": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "extract_hint": {
+          "type": "string",
+          "description": "Opcionális szöveg, amit a runtime az extract_conditions promptba fűz — node ID hardcode nélkül."
+        },
+        "internal_conditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AiNodeCondition" }
+        },
+        "done_when": { "type": "string" },
+        "branches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["if"],
+            "properties": {
+              "if": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1
+              },
+              "next_step": { "type": "string" },
+              "goto": { "type": "string" },
+              "message": { "type": "string" },
+              "inject_conditions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "anyOf": [
+              { "required": ["next_step"] },
+              { "required": ["goto"] }
+            ]
+          }
+        },
+        "default_next": { "type": ["string", "null"] },
+        "skip_backfill": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["if_any", "then"],
+            "properties": {
+              "if_any": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Ha ezek közül bármelyik teljesült a session-ben..."
+              },
+              "requires": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "...és ezek mind teljesültek..."
+              },
+              "then": {
+                "type": "string",
+                "description": "...akkor ezt a kondíciót teljesíti skip során."
+              }
+            }
+          }
+        },
+        "late_image_backfill": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["when_all", "then"],
+            "properties": {
+              "when_all": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Ha ezek mind teljesültek a session-ben..."
+              },
+              "then": {
+                "type": "string",
+                "description": "...és kép érkezett, akkor ezt a kondíciót teljesíti."
+              }
+            }
+          }
+        }
+      }
+    },
+    "AiNodeRoutingRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "if": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "goto": { "type": "string", "minLength": 1 },
+        "default": { "type": "string", "enum": ["ask", "goto"] }
+      },
+      "oneOf": [
+        { "required": ["if", "goto"] },
+        { "required": ["default"] }
+      ]
+    },
+    "AiNode": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "knowledge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["description"],
+          "properties": {
+            "description": { "type": "string", "minLength": 1 },
+            "scope": { "type": "string" },
+            "examples": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/AiNodeCondition" },
+          "uniqueItems": true
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AiNodeStep" }
+        },
+        "routing": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/AiNodeRoutingRule" }
+        },
+        "fallback_message": {
+          "type": "string",
+          "description": "Opcionális statikus assistantMessage, ha a node matching askClarification és nincs modell assistantMessage."
         }
       }
     },

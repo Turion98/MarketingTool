@@ -6,6 +6,7 @@ import re
 import shutil
 import traceback
 from copy import deepcopy
+from datetime import date
 from pathlib import Path
 from typing import cast
 
@@ -448,6 +449,261 @@ def get_generated_image_response(story_slug: str, image_name: str) -> FileRespon
     resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return resp
+
+
+_STORY_RUNTIME_DEFAULTS: dict[str, int] = {
+    "max_entry_skip_depth": 10,
+    "max_routing_chain_depth": 5,
+    "max_chain_hops": 8,
+    "embedding_top_k": 3,
+    "return_window_days": 30,
+}
+
+_STORY_META_STRING_DEFAULTS: dict[str, str] = {
+    "default_clarification": "Kérlek pontosítsd a kérdésedet.",
+    "default_fallback": "Köszönjük, folytatjuk.",
+    "end_ack_fallback": "Köszönjük, rögzítettük az ügyedet.",
+}
+
+
+def get_story_meta(story: dict | None) -> dict:
+    if not isinstance(story, dict):
+        return {}
+    meta = story.get("meta")
+    return meta if isinstance(meta, dict) else {}
+
+
+def get_story_runtime_date(story: dict | None, key: str) -> date | None:
+    """meta.runtime string dátum → date objektum. None ha hiányzik vagy invalid."""
+    meta = get_story_meta(story)
+    runtime = meta.get("runtime")
+    if not isinstance(runtime, dict):
+        return None
+    val = runtime.get(key)
+    if not isinstance(val, str) or not val:
+        return None
+    try:
+        return date.fromisoformat(val)
+    except ValueError:
+        return None
+
+
+def get_story_runtime_int(story: dict | None, key: str) -> int:
+    """Story meta.runtime[key] vagy beépített default."""
+    default = _STORY_RUNTIME_DEFAULTS.get(key, 0)
+    meta = get_story_meta(story)
+    runtime = meta.get("runtime")
+    if not isinstance(runtime, dict):
+        return default
+    raw = runtime.get(key)
+    if isinstance(raw, bool):
+        return int(raw)
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, float):
+        return int(raw)
+    if isinstance(raw, str):
+        try:
+            return int(raw.strip())
+        except ValueError:
+            return default
+    return default
+
+
+def get_story_meta_string(story: dict | None, key: str) -> str:
+    """Story meta[key] vagy beépített default."""
+    default = _STORY_META_STRING_DEFAULTS.get(key, "")
+    meta = get_story_meta(story)
+    raw = meta.get(key)
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return default
+
+
+def resolve_end_page_content(
+    pages: dict | None,
+    page_id: str,
+) -> str:
+    """End node fix `content` szövege, ha létezik."""
+    if not isinstance(pages, dict) or not isinstance(page_id, str) or not page_id.strip():
+        return ""
+    page = pages.get(page_id.strip())
+    if not isinstance(page, dict) or page.get("type") != "end":
+        return ""
+    raw = page.get("content")
+    return raw.strip() if isinstance(raw, str) and raw.strip() else ""
+
+
+def resolve_ai_clarification_fallback_message(story: StoryDocument, page_id: str) -> str:
+    """
+    Node matching bizonytalanság (askClarification) esetén statikus üzenet a story JSON-ból.
+    Sorrend: az adott pageId AI node fallback_message → meta.defaultFallbackMessage → rövid default.
+    """
+    pages = story.get("pages") if isinstance(story, dict) else None
+    meta = story.get("meta") if isinstance(story, dict) else None
+
+    story_default = ""
+    if isinstance(meta, dict):
+        raw = meta.get("defaultFallbackMessage")
+        if isinstance(raw, str) and raw.strip():
+            story_default = raw.strip()
+
+    if isinstance(pages, dict):
+        node = pages.get(page_id)
+        if isinstance(node, dict) and node.get("type") == "ai":
+            fm = node.get("fallback_message")
+            if isinstance(fm, str) and fm.strip():
+                return fm.strip()
+
+    return story_default or get_story_meta_string(story, "default_clarification")
+
+
+def resolve_ai_node_routing(
+    routing: list[dict],
+    satisfied_conditions: list[str],
+) -> tuple[str | None, list[str]]:
+    """
+    Determinisztikus kondíció router AI node-okhoz.
+
+    routing: az AI node 'routing' tömbje a JSON-ból
+    satisfied_conditions: az AI által felismert teljesült kondíció ID-k
+
+    Visszatér:
+    - (nextPageId, inject_conditions): nextPageId string ha van egyértelmű irány,
+      "ask" ha pontosítást kell kérni, None ha nincs routing szabály
+    """
+    if not isinstance(routing, list):
+        return None, []
+
+    satisfied = set(satisfied_conditions or [])
+
+    for rule in routing:
+        if not isinstance(rule, dict):
+            continue
+
+        # Default szabály — mindig utoljára fut
+        if "default" in rule and "if" not in rule:
+            continue
+
+        required = rule.get("if")
+        goto = rule.get("goto")
+
+        if not isinstance(required, list) or not isinstance(goto, str):
+            continue
+
+        if all(cond in satisfied for cond in required):
+            inject = rule.get("inject_conditions")
+            injected = [
+                cid.strip()
+                for cid in inject
+                if isinstance(cid, str) and cid.strip()
+            ] if isinstance(inject, list) else []
+            return goto.strip(), injected
+
+    # Ha if-alapú szabály nem illeszkedett, keressük a default-ot
+    for rule in routing:
+        if not isinstance(rule, dict):
+            continue
+        if "default" in rule and "if" not in rule:
+            default_val = rule.get("default")
+            if default_val == "ask":
+                return "ask", []
+            if isinstance(default_val, str) and default_val != "ask":
+                return default_val.strip(), []
+
+    return None, []
+
+
+def get_ai_node_payload(
+    page_id: str,
+    src: str | None,
+    satisfied_conditions: list[str]
+) -> dict:
+    """
+    AI node routing endpoint belépési pontja.
+    Visszaadja a következő pageId-t vagy 'ask' értéket.
+    """
+    story_path = normalize_src_to_path(src)
+    story = load_story(story_path)
+
+    page = None
+    if "pages" in story and isinstance(story["pages"], dict):
+        page = story["pages"].get(page_id)
+    if page is None:
+        page = find_page_recursive(story, page_id)
+    if page is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"AI node {page_id} not found"
+        )
+
+    if page.get("type") != "ai":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Page {page_id} is not an ai node"
+        )
+
+    routing = page.get("routing")
+    if not isinstance(routing, list):
+        raise HTTPException(
+            status_code=400,
+            detail=f"AI node {page_id} has no routing defined"
+        )
+
+    next_page, inject_conditions = resolve_ai_node_routing(
+        routing, satisfied_conditions
+    )
+
+    return {
+        "currentPageId": page_id,
+        "nextPageId": next_page,
+        "injectConditions": inject_conditions,
+        "satisfiedConditions": satisfied_conditions,
+        "ask": next_page == "ask",
+    }
+
+
+def resolve_step_routing(
+    node: dict,
+    current_step_id: str,
+    satisfied_conditions: list[str],
+) -> dict:
+    """
+    Step alapú routing — meghatározza a következő
+    stepet vagy hogy a node routing-ra kell-e lépni.
+
+    Visszatér:
+    {
+        "nextStepId": str | None,
+        "nodeRoutingReady": bool,
+    }
+    """
+    _ = satisfied_conditions
+    steps = node.get("steps") or []
+    if not steps:
+        return {"nextStepId": None, "nodeRoutingReady": True}
+
+    step_ids = [s.get("id") for s in steps if s.get("id")]
+    last_step_id = step_ids[-1] if step_ids else None
+
+    if current_step_id == last_step_id:
+        return {"nextStepId": None, "nodeRoutingReady": True}
+
+    current_index = next(
+        (i for i, s in enumerate(steps) if s.get("id") == current_step_id),
+        None,
+    )
+    if current_index is None:
+        return {"nextStepId": None, "nodeRoutingReady": True}
+
+    next_index = current_index + 1
+    if next_index < len(steps):
+        return {
+            "nextStepId": steps[next_index].get("id"),
+            "nodeRoutingReady": False,
+        }
+
+    return {"nextStepId": None, "nodeRoutingReady": True}
 
 
 def clear_cache_payload() -> dict[str, str | bool]:
