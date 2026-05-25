@@ -1,0 +1,258 @@
+{
+  "schemaVersion": "1.0.0",
+  "_comment_schemaVersion": "Story schema version. Keep as 1.0.0 unless your runtime requires another version.",
+  "storyId": "your-domain-template",
+  "_comment_storyId": "Unique story identifier (slug). Example: insurance-support-hu, saas-helpdesk-en.",
+  "locale": "hu",
+  "_comment_locale": "Language code (hu, en, de, etc.).",
+  "meta": {
+    "id": "your-domain-template",
+    "_comment_id": "Meta-level id. Usually same as storyId.",
+    "title": "Your Domain AI Flow Template",
+    "_comment_title": "Human-readable story title.",
+    "startPageId": "intake",
+    "_comment_startPageId": "Entry node id. Must exist in pages."
+  },
+  "_comment_meta": "Top-level metadata.",
+  "pages": {
+    "intake": {
+      "id": "intake",
+      "_comment_id": "Unique node id.",
+      "type": "ai",
+      "_comment_type": "ai means this node uses AI for condition extraction/routing context.",
+      "knowledge": {
+        "description": "Entry point for generic user requests before a specific category is identified.",
+        "_comment_description": "When should this node be active?",
+        "scope": "General inquiry, issue report, support request, unknown category",
+        "_comment_scope": "Keyword/theme coverage for matching.",
+        "examples": [
+          "I need help with something.",
+          "I have a problem.",
+          "Not sure where to start."
+        ],
+        "_comment_examples": "Typical user utterances for this node."
+      },
+      "_comment_knowledge": "Semantic context used for matching.",
+      "conditions": [
+        {
+          "id": "issue_type_known",
+          "_comment_id": "Condition key in snake_case.",
+          "description": "The issue type/category is identified.",
+          "_comment_description": "Business meaning of the condition.",
+          "required": true,
+          "_comment_required": "true = required for deterministic routing; false = optional."
+        },
+        {
+          "id": "has_reference_id",
+          "_comment_id_2": "Any business identifier (ticket/account/order/case/etc.).",
+          "description": "User provided a reference identifier.",
+          "_comment_description_2": "Useful for direct handling/escalation.",
+          "required": false
+        },
+        {
+          "id": "contact_provided",
+          "_comment_id_3": "Any contact detail availability.",
+          "description": "User provided contact details.",
+          "_comment_description_3": "Useful for callbacks/follow-up.",
+          "required": false
+        }
+      ],
+      "_comment_conditions": "Conditions to extract from user input.",
+      "routing": [
+        {
+          "if": ["issue_type_known", "has_reference_id"],
+          "_comment_if": "If all listed conditions are satisfied, go to target node.",
+          "goto": "router-to-specific",
+          "_comment_goto": "Target node id."
+        },
+        {
+          "if": ["issue_type_known"],
+          "goto": "router-to-specific"
+        },
+        {
+          "default": "ask",
+          "_comment_default": "ask means stay in current AI node and ask clarification."
+        }
+      ],
+      "_comment_routing": "Routing rules evaluated in order."
+    },
+
+    "specific-type-a": {
+      "id": "specific-type-a",
+      "type": "ai",
+      "knowledge": {
+        "description": "Specific category A handling.",
+        "scope": "Category A domain-specific scope",
+        "examples": [
+          "This belongs to category A.",
+          "I need A-type support."
+        ]
+      },
+      "conditions": [
+        {
+          "id": "has_reference_id",
+          "description": "Reference id provided.",
+          "required": true
+        },
+        {
+          "id": "details_provided",
+          "description": "Problem/request details provided.",
+          "required": true
+        },
+        {
+          "id": "priority_high",
+          "description": "User marked urgency/high priority.",
+          "required": false
+        }
+      ],
+      "routing": [
+        {
+          "if": ["has_reference_id", "details_provided", "priority_high"],
+          "goto": "end-a-priority"
+        },
+        {
+          "if": ["has_reference_id", "details_provided"],
+          "goto": "end-a-standard"
+        },
+        {
+          "if": ["has_reference_id"],
+          "goto": "end-a-need-details"
+        },
+        {
+          "default": "ask"
+        }
+      ],
+      "_comment": "Replace with your own category A semantics."
+    },
+
+    "specific-type-b": {
+      "id": "specific-type-b",
+      "type": "ai",
+      "knowledge": {
+        "description": "Specific category B handling.",
+        "scope": "Category B domain-specific scope",
+        "examples": [
+          "This is category B.",
+          "I need B-type processing."
+        ]
+      },
+      "conditions": [
+        {
+          "id": "subject_identified",
+          "description": "Target subject/entity is clear.",
+          "required": true
+        },
+        {
+          "id": "authorization_ok",
+          "description": "Authorization/identity check passed.",
+          "required": true
+        },
+        {
+          "id": "contact_provided",
+          "description": "Contact details available.",
+          "required": false
+        }
+      ],
+      "routing": [
+        {
+          "if": ["subject_identified", "authorization_ok"],
+          "goto": "end-b-process"
+        },
+        {
+          "if": ["subject_identified"],
+          "goto": "end-b-need-auth"
+        },
+        {
+          "default": "ask"
+        }
+      ],
+      "_comment": "Replace with your own category B semantics."
+    },
+
+    "specific-type-c": {
+      "id": "specific-type-c",
+      "type": "ai",
+      "knowledge": {
+        "description": "Specific category C handling.",
+        "scope": "Category C domain-specific scope",
+        "examples": [
+          "I need C-type information.",
+          "Please check status for C scenario."
+        ]
+      },
+      "conditions": [
+        {
+          "id": "has_reference_id",
+          "description": "Reference id provided.",
+          "required": true
+        },
+        {
+          "id": "request_scope_known",
+          "description": "Requested information scope is clear.",
+          "required": true
+        }
+      ],
+      "routing": [
+        {
+          "if": ["has_reference_id", "request_scope_known"],
+          "goto": "end-c-answer"
+        },
+        {
+          "if": ["has_reference_id"],
+          "goto": "end-c-clarify-scope"
+        },
+        {
+          "default": "ask"
+        }
+      ],
+      "_comment": "Replace with your own category C semantics."
+    },
+
+    "router-to-specific": {
+      "id": "router-to-specific",
+      "type": "end",
+      "_comment_type": "End node returns final content and exits this route.",
+      "content": "Your request category is identified. Routing to the appropriate specific flow.",
+      "_comment_content": "User-facing message."
+    },
+
+    "end-a-priority": {
+      "id": "end-a-priority",
+      "type": "end",
+      "content": "Category A request marked priority and queued for fast handling."
+    },
+    "end-a-standard": {
+      "id": "end-a-standard",
+      "type": "end",
+      "content": "Category A request registered for standard processing."
+    },
+    "end-a-need-details": {
+      "id": "end-a-need-details",
+      "type": "end",
+      "content": "Please provide missing details for Category A processing."
+    },
+
+    "end-b-process": {
+      "id": "end-b-process",
+      "type": "end",
+      "content": "Category B request accepted and processing started."
+    },
+    "end-b-need-auth": {
+      "id": "end-b-need-auth",
+      "type": "end",
+      "content": "Additional authorization is required to continue Category B request."
+    },
+
+    "end-c-answer": {
+      "id": "end-c-answer",
+      "type": "end",
+      "content": "Category C request understood. We will provide the requested information."
+    },
+    "end-c-clarify-scope": {
+      "id": "end-c-clarify-scope",
+      "type": "end",
+      "content": "Please clarify what exact information you need for Category C."
+    }
+  },
+  "_comment_pages": "All nodes are defined here. AI nodes collect conditions and route; end nodes return final output text."
+}

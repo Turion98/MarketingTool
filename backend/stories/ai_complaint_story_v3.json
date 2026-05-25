@@ -1,0 +1,4292 @@
+{
+  "schemaVersion": "1.1.0",
+  "storyId": "ai-complaint-v3",
+  "locale": "hu",
+  "meta": {
+    "id": "ai-complaint-v3",
+    "title": "Refurbished elektronika panaszkezelés",
+    "startPageId": "complaint-intake",
+    "defaultFallbackMessage": "Szia! Miben segíthetek? Kérlek írd le a problémádat.",
+    "runtime": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 1000,
+      "mock_today": "2026-05-15",
+      "return_window_days": 30,
+      "max_entry_skip_depth": 10,
+      "max_routing_chain_depth": 5,
+      "max_chain_hops": 8,
+      "embedding_top_k": 3
+    },
+    "order_context_mapping": {
+      "precedence_rules": [
+        {
+          "if_present": "marked_delivered_not_received",
+          "suppress": "package_lost"
+        },
+        {
+          "if_present": "defect_on_arrival",
+          "suppress": "exclusion_risk"
+        }
+      ],
+      "field_rules": [
+        {
+          "field": "tracking_number",
+          "condition": "tracking_checked",
+          "when": "truthy"
+        },
+        {
+          "field": "tracking_status",
+          "condition": "package_lost",
+          "when_value": "lost",
+          "session_guard_not": "marked_delivered_not_received"
+        },
+        {
+          "field": "tracking_status",
+          "condition": "loss_confirmed",
+          "when_value": "lost"
+        },
+        {
+          "field": "extended_warranty_active",
+          "condition": "extended_warranty_active",
+          "when_value": true
+        },
+        {
+          "field": "sold_battery_threshold",
+          "condition": "sold_threshold_known",
+          "when": "not_null"
+        },
+        {
+          "field": "accessories_in_order",
+          "condition": "order_accessory_list_checked",
+          "when": "not_null"
+        },
+        {
+          "field": "tracking_status",
+          "condition": "delay_duration_known",
+          "when_any_value": ["in_transit", "delayed"],
+          "requires_field_not_null": "estimated_delivery_date",
+          "requires_field_lt_today": "estimated_delivery_date"
+        }
+      ],
+      "session_state_keys": {
+        "battery_health_reported": "battery_health_user_reported",
+        "missing_accessory_name": "missing_accessory_name"
+      },
+      "computed_condition_ids": {
+        "within_return_window": "within_return_window",
+        "outside_return_window": "outside_return_window",
+        "delay_duration_known": "delay_duration_known",
+        "below_sold_threshold": "below_sold_threshold",
+        "accessory_was_in_order": "accessory_was_in_order",
+        "accessory_not_in_order": "accessory_not_in_order",
+        "return_was_completed": "return_was_completed",
+        "return_not_received": "return_not_received"
+      }
+    },
+    "reply_style": {
+      "global_rules": [
+        "Maximum 3 mondat per válasz",
+        "Ne ismételd vissza amit az ügyfél mondott",
+        "Ne említs olyan adatot ami nem releváns az aktuális lépéshez",
+        "Ne összegezz ha nem az utolsó step",
+        "Lezárt eset után ne indíts új magyarázatot"
+      ],
+      "ack_and_paragraph_instruction": "Ha a felhasználó üzenete előtt szerepel a „### Most teljesült kondíciók…” blokk, a válaszban ezeket röviden, természetesen nyugtázd (egy rövid mondatban). Egymástól független gondolatokat (például nyugta majd következő kérdés) külön bekezdésben adj meg: az assistantMessage szövegben használj dupla sortörést (egy üres sort) a bekezdések között."
+    },
+    "default_clarification": "Kérlek pontosítsd a kérdésedet.",
+    "default_fallback": "Köszönjük, folytatjuk.",
+    "end_ack_fallback": "Köszönjük, rögzítettük az ügyedet.",
+    "reference_id_pattern": "ORD-[A-Z]{2,6}-\\d{2,6}",
+    "order_context_footer": "Ezeket a tényeket ne kérdezd meg újra a felhasználótól. Ha a tracking státusz 'delivered' de a felhasználó nem kapta meg, az marked_delivered_not_received kondíció jelöltje.",
+    "condition_labels": {
+      "surroundings_checked": "az ügyfél ellenőrizte a szomszédoknál",
+      "tracking_screenshot_provided": "tracking képernyőkép megérkezett",
+      "damage_photos_provided": "sérülési fotók megérkeztek",
+      "image_provided": "kép csatolva",
+      "defect_described": "hiba leírása megérkezett",
+      "exclusion_check_done": "kizárási okok tisztázva",
+      "evidence_provided": "bizonyíték megérkezett",
+      "charger_tested": "töltő tesztelve",
+      "battery_health_known": "battery health érték megadva",
+      "remedy_preference_known": "preferált megoldás megadva",
+      "product_condition_assessed": "termék állapota felmérve",
+      "reset_confirmed": "gyári visszaállítás megerősítve",
+      "screenshot_provided": "képernyőkép megérkezett",
+      "ordered_spec_known": "rendelt specifikáció tisztázva",
+      "received_spec_known": "kapott specifikáció tisztázva",
+      "missing_accessory_identified": "hiányzó tartozék azonosítva",
+      "photos_provided": "fotók megérkeztek",
+      "courier_contacted": "futárszolgálat megkeresve",
+      "loss_confirmed": "csomag elveszett megerősítve"
+    }
+  },
+  "pages": {
+    "off-topic": {
+      "id": "off-topic",
+      "type": "ai",
+      "fallback_message": "Sajnos ez a kérdés kívül esik azon, amiben segíteni tudok. Ügyfélszolgálatunk a következő témákban áll rendelkezésedre: szállítási problémák, termékhibák, akkumulátor és töltési gondok, rossz termék érkezett, kozmetikai állapot viták, aktiválási zárolás, visszaküldés és visszatérítés. Van ilyen jellegű problémád?",
+      "knowledge": {
+        "description": "Akkor aktív ha a felhasználó üzenete nem tartozik egyetlen ismert ügyfélszolgálati kategóriába sem — például általános kérdések, időjárás, viccek, vagy bármilyen a refurbished elektronika panaszkezelésen kívül eső téma. A node barátságosan elutasít és visszairányít.",
+        "scope": "off-topic, irreleváns téma, nem tartozik ide, általános kérdés, időjárás, viccek, nem ügyfélszolgálati kérdés",
+        "examples": [
+          "Mi az időjárás ma?",
+          "Tudnál viccelni?",
+          "Ki nyerte a focimeccset?",
+          "Mesélj valamit magadról",
+          "Mi a véleményed erről?"
+        ]
+      },
+      "conditions": [
+        {
+          "id": "user_acknowledged",
+          "description": "A felhasználó tudomásul vette hogy ez a rendszer csak refurbished elektronika panaszkezelésre alkalmas, és vagy újrafogalmazta kérdését ügyfélszolgálati témában, vagy búcsúzott.",
+          "required": false
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "user_acknowledged"
+          ],
+          "goto": "complaint-intake"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "complaint-intake": {
+      "id": "complaint-intake",
+      "type": "ai",
+      "fallback_message": "Szia! Miben segíthetek? Kérlek írd le röviden a problémádat — például: mi a baj a termékkel, mikor érkezett, és mi a rendelési számod.",
+      "knowledge": {
+        "description": "Belépési pont. Akkor aktív ha az ügyfél általános panaszt jelez, de még nem derült ki pontosan melyik kategóriába esik. Ha egyértelmű a kategória, állítsd be a complaint_type_known mellett pontosan egy routing zászlót is (complaint_shipping, complaint_product_defect, complaint_battery, complaint_activation_lock, complaint_return, complaint_refund, complaint_wrong_item vagy complaint_cosmetic), hogy a determinisztikus router a megfelelő specifikus AI node-ra vigyen. Szállítási panasz esetén (complaint_shipping) állítsd be a megfelelő szituáció-flaget is: marked_delivered_not_received, packaging_damaged, package_lost, delay_duration_known, vagy urgency_high — ha az ügyfél első üzenetéből egyértelműen következik. Az egyes panasz-típusoknál állítsd be a releváns részlet-flageket is ha az első üzenetből egyértelműen következnek: product-defect esetén defect_on_arrival / liquid_damage / physical_impact / third_party_repair; battery esetén swelling_or_safety_risk / issue_since_arrival / non_certified_charger; activation-lock esetén lock_type_known / seller_side_confirmed / third_party_platform_ban / mdm_lock; wrong-item esetén missing_accessory_only / replacement_requested; cosmetic esetén functional_impact / cosmetic_issue_described; refund esetén double_charge / return_was_completed / return_not_received.",
+        "scope": "Általános panasz, reklamáció, probléma bejelentés, nem tudom hova forduljak, valami nem stimmel",
+        "examples": [
+          "Problémám van a rendelésemmel",
+          "Szeretnék reklamálni",
+          "Segítséget kérek",
+          "Valami nem stimmel a vásárlásommal",
+          "Nem vagyok elégedett"
+        ]
+      },
+      "conditions": [
+        {
+          "id": "complaint_type_known",
+          "description": "Ismert a panasz típusa: szállítás, hibás termék, akkumulátor/töltés, aktiválási zárolás, visszaküldés, visszatérítés, rossz termék érkezett, kozmetikai állapot vita",
+          "required": true
+        },
+        {
+          "id": "has_order_id",
+          "description": "Az ügyfél megadta a rendelési számát. Elfogadott formátum: ORD-[KAT]-[SZÁM], például ORD-DEL-001. Egyéb formátum esetén kérd újra.",
+          "required": false,
+          "do_not_reask_if_satisfied": true,
+          "validation_pattern_ref": "reference_id_pattern"
+        },
+        {
+          "id": "complaint_shipping",
+          "description": "A panasz fő kategóriája szállítás/kézbesítés: késik, elveszett, nem érkezett meg, hibás cím, futár, kézbesítve de nincs meg, szállítás közben sérült csomag.",
+          "required": false
+        },
+        {
+          "id": "marked_delivered_not_received",
+          "description": "A tracking szerint kézbesítve van, de az ügyfél nem kapta meg a csomagot. Csak akkor állítsd be ha complaint_shipping is teljesül. Példa: 'tracking szerint kézbesítve de nem kaptam meg', 'a futár leadta de nincs meg'.",
+          "required": false
+        },
+        {
+          "id": "packaging_damaged",
+          "description": "A csomag sérülten érkezett — a csomagolás rongált, össze volt nyomva, vagy a termék szállítás közben sérült. Csak akkor állítsd be ha complaint_shipping is teljesül.",
+          "required": false
+        },
+        {
+          "id": "package_lost",
+          "description": "A csomag elveszett vagy a tracking szerint nem követhető. Csak akkor állítsd be ha complaint_shipping is teljesül.",
+          "required": false
+        },
+        {
+          "id": "delay_duration_known",
+          "description": "Az ügyfél megadta hány napja késik a csomag és/vagy mi az aktuális tracking státusz. Csak akkor állítsd be ha complaint_shipping is teljesül.",
+          "required": false
+        },
+        {
+          "id": "urgency_high",
+          "description": "Az üzenetből egyértelműen sürgős eset derül ki — azonnali beavatkozás szükséges. Csak akkor állítsd be ha complaint_shipping is teljesül.",
+          "required": false
+        },
+        {
+          "id": "courier_contacted",
+          "description": "Az ügyfél felvette a kapcsolatot a futárszolgálattal — telefonon, írásban, vagy bármilyen módon. Csak akkor állítsd be ha complaint_shipping is teljesül. Példa: 'írtam a futárnak', 'felhívtam őket', 'jeleztem a futárszolgálatnak'.",
+          "required": false
+        },
+        {
+          "id": "loss_confirmed",
+          "description": "A futárszolgálat vagy a tracking megerősítette hogy a csomag elveszett. Csak akkor állítsd be ha complaint_shipping és package_lost is teljesül. Példa: 'a futár azt mondta elveszett', 'a tracking elveszettnek jelzi', 'nem követhető a csomag'.",
+          "required": false,
+          "do_not_reask_if_satisfied": true
+        },
+        {
+          "id": "complaint_product_defect",
+          "description": "Műszaki hiba vagy nem megfelelően működő termék (nem akksi-kategória, nem kifejezetten csak szállítási kár, nem rossz termék SKU, nem kozmetikai vita).",
+          "required": false
+        },
+        {
+          "id": "complaint_battery",
+          "description": "Akkumulátor, töltés, gyors lemerülés, nem tölt, battery health, töltő probléma.",
+          "required": false
+        },
+        {
+          "id": "complaint_activation_lock",
+          "description": "Aktiválási zárolás, iCloud/Fiók zárolás, MDM, nem lehet aktiválni.",
+          "required": false
+        },
+        {
+          "id": "complaint_return",
+          "description": "Visszaküldés, visszárú, return folyamat.",
+          "required": false
+        },
+        {
+          "id": "complaint_refund",
+          "description": "Visszatérítés, refund, pénz vissza, fizetési reklamáció.",
+          "required": false
+        },
+        {
+          "id": "complaint_wrong_item",
+          "description": "Nem azt a terméket kaptam, rossz SKU/szín/modell érkezett.",
+          "required": false
+        },
+        {
+          "id": "complaint_cosmetic",
+          "description": "Kozmetikai állapot, grade vita, karcolás/használat nyomok eltérése az ígérthez képest.",
+          "required": false
+        },
+        {
+          "id": "defect_on_arrival",
+          "description": "A hiba már érkezéskor fennállt — az ügyfél kicsomagoláskor vagy azonnal észrevette. Csak akkor állítsd be ha complaint_product_defect is teljesül. Példa: 'érkezéskor törött volt', 'kicsomagoláskor észrevettem', 'már az elején sem működött'.",
+          "required": false
+        },
+        {
+          "id": "liquid_damage",
+          "description": "A készülék folyadékkal érintkezett. Csak akkor állítsd be ha complaint_product_defect is teljesül. Példa: 'vízbe esett', 'folyadék érte', 'leöntöttem'.",
+          "required": false
+        },
+        {
+          "id": "physical_impact",
+          "description": "A készülék leesett vagy fizikai behatás érte. Csak akkor állítsd be ha complaint_product_defect is teljesül. Példa: 'leesett', 'megütöttem', 'elejtettem'.",
+          "required": false
+        },
+        {
+          "id": "third_party_repair",
+          "description": "A készüléket korábban már megjavíttatta valaki. Csak akkor állítsd be ha complaint_product_defect is teljesül. Példa: 'már megjavíttattam', 'szervizben volt', 'valaki megpróbálta megjavítani'.",
+          "required": false
+        },
+        {
+          "id": "swelling_or_safety_risk",
+          "description": "Duzzadt akkumulátor, füstölés, égett szag, vagy egyértelmű biztonsági kockázat. Csak akkor állítsd be ha complaint_battery is teljesül. Példa: 'duzzadt az aksi', 'füstöl a telefon', 'égett szagot érzek'.",
+          "required": false
+        },
+        {
+          "id": "issue_since_arrival",
+          "description": "A probléma már érkezés óta fennáll. Csak akkor állítsd be ha complaint_battery is teljesül. Példa: 'érkezés óta ilyen', 'már az elején is gyorsan merült', 'soha nem töltött rendesen'.",
+          "required": false
+        },
+        {
+          "id": "non_certified_charger",
+          "description": "Az ügyfél nem eredeti vagy nem tanúsított töltőt használ. Csak akkor állítsd be ha complaint_battery is teljesül. Példa: 'nem eredeti töltőt használok', 'harmadik féltől való töltő', 'olcsó töltő'.",
+          "required": false
+        },
+        {
+          "id": "lock_type_known",
+          "description": "Azonosított a zárolás típusa az ügyfél leírásából. Csak akkor állítsd be ha complaint_activation_lock is teljesül. Példa: 'iCloud zár', 'Find My iPhone be van kapcsolva', 'Google FRP', 'MDM profil', 'Snapchat tiltotta'.",
+          "required": false
+        },
+        {
+          "id": "seller_side_confirmed",
+          "description": "Egyértelmű hogy eladói mulasztás áll a zárolás mögött. Csak akkor állítsd be ha complaint_activation_lock is teljesül. Példa: 'az előző tulajdonos fiókja rajta van', 'nem törölték a fiókot'.",
+          "required": false
+        },
+        {
+          "id": "third_party_platform_ban",
+          "description": "Harmadik fél platform eszköztiltása. Csak akkor állítsd be ha complaint_activation_lock is teljesül. Példa: 'Snapchat tiltotta az eszközt', 'egy app blokkolta'.",
+          "required": false
+        },
+        {
+          "id": "mdm_lock",
+          "description": "MDM profil vagy vállalati zárolás van a készüléken. Csak akkor állítsd be ha complaint_activation_lock is teljesül. Példa: 'MDM profil van rajta', 'céges zár', 'vállalati eszközként van regisztrálva'.",
+          "required": false
+        },
+        {
+          "id": "missing_accessory_only",
+          "description": "Csak egy tartozék hiányzik, a fő termék specifikációja egyezik a rendeléssel. Csak akkor állítsd be ha complaint_wrong_item is teljesül. Példa: 'a töltő nem volt a dobozban', 'hiányzik egy tartozék', 'minden rendben csak a kábel hiányzik'.",
+          "required": false
+        },
+        {
+          "id": "replacement_requested",
+          "description": "Az ügyfél egyértelműen cserét kér. Csak akkor állítsd be ha complaint_wrong_item is teljesül. Példa: 'cserét szeretnék', 'küldjék a helyes terméket', 'csere kell nem visszatérítés'.",
+          "required": false
+        },
+        {
+          "id": "functional_impact",
+          "description": "A kozmetikai sérülés funkcionális működési hibát is okoz. Csak akkor állítsd be ha complaint_cosmetic is teljesül. Példa: 'a képernyő is törött', 'nem nyílik a zsanér', 'az érintő sem reagál'.",
+          "required": false
+        },
+        {
+          "id": "cosmetic_issue_described",
+          "description": "Az ügyfél leírta hol és milyen kozmetikai eltérés látható. Csak akkor állítsd be ha complaint_cosmetic is teljesül. Példa: 'tele van karcokkal', 'beütések vannak rajta', 'az állapot nem egyezik az ígérttel'.",
+          "required": false
+        },
+        {
+          "id": "double_charge",
+          "description": "Dupla terhelés vagy többszörös levonás történt. Csak akkor állítsd be ha complaint_refund is teljesül. Példa: 'kétszer vonták le', 'dupla terhelés', 'többször levonták az összeget'.",
+          "required": false
+        },
+        {
+          "id": "return_was_completed",
+          "description": "A visszaküldés megérkezett a raktárba és elfogadásra került. Csak akkor állítsd be ha complaint_refund is teljesül. Példa: 'már visszaküldtem és megérkezett', 'a raktár átvette', 'elfogadták a visszárumat'.",
+          "required": false
+        },
+        {
+          "id": "return_not_received",
+          "description": "A visszaküldés még nem érkezett meg a raktárba. Csak akkor állítsd be ha complaint_refund is teljesül. Példa: 'visszaküldtem de nem kaptak meg', 'feladtam de nem érkezett meg'.",
+          "required": false
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_shipping"
+          ],
+          "goto": "delivery-issue"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_product_defect"
+          ],
+          "goto": "product-defect"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_battery"
+          ],
+          "goto": "battery-issue"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_activation_lock"
+          ],
+          "goto": "activation-lock"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_return"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_refund"
+          ],
+          "goto": "payment-refund"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_wrong_item"
+          ],
+          "goto": "wrong-item"
+        },
+        {
+          "if": [
+            "complaint_type_known",
+            "complaint_cosmetic"
+          ],
+          "goto": "cosmetic-dispute"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "delivery-issue": {
+      "id": "delivery-issue",
+      "fallback_message": "Szállítási problémád van? Segítünk megoldani. Kérlek pontosítsd: a csomag késik, elveszettnek tűnik, sérülten érkezett, vagy a tracking szerint kézbesítve van de nem kaptad meg? Add meg a rendelési számodat is.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Szállítási problémák kezelése. Akkor aktív ha az ügyfél nem kapta meg a csomagját, a csomag késik, elveszett, hibás címre ment, vagy a tracking szerint kézbesítve de az ügyfél nem kapta meg. Ide tartozik a sérült csomagolással érkezett termék is ha a kár szállítás közben keletkezett.",
+        "scope": "Késő szállítás, elveszett csomag, nem érkezett meg, tracking probléma, hibás cím, futár, kézbesítve de nincs meg, sérült csomag érkezés",
+        "examples": [
+          "Nem érkezett meg a rendelésem",
+          "Már két hete várok a csomagra",
+          "A tracking szerint kézbesítve de nem kaptam meg",
+          "Rossz címre ment a csomag",
+          "A futár nem csöngetett be",
+          "A doboz teljesen össze volt nyomva amikor megérkezett",
+          "A csomag el van veszve"
+        ]
+      },
+      "session_facts_whitelist": [
+        "marked_delivered_not_received",
+        "packaging_damaged",
+        "package_lost",
+        "urgency_high",
+        "delay_duration_known",
+        "courier_contacted",
+        "loss_confirmed",
+        "surroundings_checked",
+        "tracking_screenshot_provided"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "packaging_damaged"
+          ],
+          "then": "delivery_situation_identified"
+        },
+        {
+          "when_all": [
+            "packaging_damaged"
+          ],
+          "then": "tracking_checked"
+        },
+        {
+          "when_all": [
+            "marked_delivered_not_received"
+          ],
+          "then": "delivery_situation_identified"
+        },
+        {
+          "when_all": [
+            "marked_delivered_not_received"
+          ],
+          "then": "tracking_checked"
+        },
+        {
+          "when_all": [
+            "package_lost"
+          ],
+          "then": "delivery_situation_identified"
+        },
+        {
+          "when_all": [
+            "package_lost"
+          ],
+          "then": "tracking_checked"
+        },
+        {
+          "when_all": [
+            "delay_duration_known"
+          ],
+          "then": "delivery_situation_identified"
+        },
+        {
+          "when_all": [
+            "urgency_high",
+            "has_order_id"
+          ],
+          "then": "escalation_data_complete"
+        },
+        {
+          "when_all": [
+            "package_lost"
+          ],
+          "then": "loss_confirmed"
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító, tracking státusz és szállítási szituáció-típus azonosítása (extract: kötelezők + megfelelő opcionális szituáció-flag)",
+          "extract_hint": "Ha az üzenetből egyértelmű a szituáció, állítsd be a megfelelő opcionális kondíciót is — tracking_checked önmagában nem elég. „Tracking szerint kézbesítve de nem kaptam meg” → tracking_checked ÉS marked_delivered_not_received. Sérült csomag → packaging_damaged. Elveszett / nem követhető → package_lost. Késés → delay_duration_known.",
+          "ai_action": "Bekéri a rendelési számot. Ha a tracking szám és a futárszolgálat neve már ismert a rendszerből (tracking_checked teljesült), ne kérje be újra — erősítse meg az ügyfélnek hogy látja az adatokat. Ha tracking adat nem ismert, kérje be. Extract: ha az üzenetből egyértelmű a szituáció, állítsd be a megfelelő opcionális kondíciót is (marked_delivered_not_received, packaging_damaged, package_lost, delay_duration_known) — a tracking_checked önmagában nem helyettesíti ezeket. Példa: „tracking szerint kézbesítve de nem kaptam meg” → tracking_checked ÉS marked_delivered_not_received.",
+          "reply_rules": [
+            "Csak a rendelési számot és a szállítási helyzet típusát kérd — semmi mást",
+            "Ha az ügyfél már leírta a helyzetet, ne ismételd vissza — csak erősítsd meg egy mondatban",
+            "Ne magyarázd el a folyamat következő lépéseit"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "tracking_checked",
+              "description": "Az ügyfél megnézte vagy megadta a tracking státuszt, a futárszolgálat nevét, vagy egyértelműen kijelentette hogy a csomag már fizikailag megérkezett (kézben átvéve, sérülten érkezett). Tracking szám nem szükséges. Nem helyettesíti a marked_delivered_not_received kondíciót: ha a tracking „kézbesítve” de az ügyfél nem kapta meg, mindkét kondíciót állítsd be.",
+              "do_not_reask_if_satisfied": true,
+              "do_not_reask_hint": "TILOS tracking számot vagy futárszolgálat nevét bekérni. Ha a rendelési adatok blokkban már szerepel futár neve vagy tracking szám, erősítsd meg — ne kérd be újra."
+            },
+            {
+              "id": "urgency_high",
+              "description": "Az ügyfél vagy az üzenet alapján egyértelműen sürgős / kritikus eset (azonnali beavatkozás szükséges).",
+              "required": false
+            },
+            {
+              "id": "marked_delivered_not_received",
+              "description": "A tracking szerint kézbesítve van, de az ügyfél nem kapta meg a csomagot. Kötelezően állítsd be extractben ha az ügyfél azt írja: „tracking szerint kézbesítve de nem kaptam meg”, „delivered de nincs nálam”, „kézbesítve áll a státusz de nem érkezett meg”. Teljesül akkor is ha a return_not_received kondíció teljesül és a tracking kézbesítve állapotot jelez. tracking_checked mellett is külön kell — ne hagyd ki.",
+              "required": false
+            },
+            {
+              "id": "packaging_damaged",
+              "description": "A csomagolás vagy a termék szállítás közben sérült / rongálódott. Extractben állítsd be ha az ügyfél sérülést, összenyomódott dobozt vagy rongálódást említ.",
+              "required": false
+            },
+            {
+              "id": "package_lost",
+              "description": "A csomag elveszettnek minősül vagy a tracking szerint elveszett / nem követhető. Extractben állítsd be ha az ügyfél elveszett csomagot vagy nem követhető trackinget említ.",
+              "required": false
+            },
+            {
+              "id": "delay_duration_known",
+              "description": "Ismert hány napja késik a csomag és mi az aktuális tracking státusz. Extractben állítsd be ha az ügyfél késést, várakozást vagy késett szállítást említ.",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és tracking_checked teljesül",
+          "branches": [
+            {
+              "if": [
+                "urgency_high",
+                "packaging_damaged"
+              ],
+              "next_step": "step_3b"
+            },
+            {
+              "if": [
+                "urgency_high"
+              ],
+              "next_step": "step_escalate"
+            },
+            {
+              "if": [
+                "tracking_checked",
+                "marked_delivered_not_received"
+              ],
+              "next_step": "step_3a"
+            },
+            {
+              "if": [
+                "tracking_checked",
+                "package_lost"
+              ],
+              "next_step": "step_3c"
+            },
+            {
+              "if": [
+                "tracking_checked",
+                "packaging_damaged"
+              ],
+              "next_step": "step_3b"
+            },
+            {
+              "if": [
+                "tracking_checked",
+                "delay_duration_known"
+              ],
+              "next_step": "step_3d"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_2",
+          "goal": "Szállítási helyzet azonosítása",
+          "ai_action": "Értelmezi a tracking státuszt és megállapítja a pontos problémát: késő szállítás, 'delivered' de nincs meg, sérült csomag, vagy ténylegesen elveszett.",
+          "reply_rules": [
+            "Ne kérj új adatot — csak azonosítsd a helyzetet a már megadottak alapján",
+            "Maximum 1 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "delivery_situation_identified",
+              "description": "Automatikusan teljesül ha bármelyik szituáció-kondíció azonosítva: marked_delivered_not_received, packaging_damaged, package_lost, vagy delay_duration_known. Ne várj külön megerősítést — ha az ügyfél leírásából egyértelműen következik melyik eset áll fenn, ez a kondíció azonnal teljesítettnek tekintendő."
+            },
+            {
+              "id": "marked_delivered_not_received",
+              "description": "A tracking szerint kézbesítve van, de az ügyfél nem kapta meg a csomagot.",
+              "required": false
+            },
+            {
+              "id": "packaging_damaged",
+              "description": "A csomagolás vagy a termék szállítás közben sérült / rongálódott.",
+              "required": false
+            },
+            {
+              "id": "package_lost",
+              "description": "A csomag elveszettnek minősül vagy a tracking szerint elveszett / nem követhető.",
+              "required": false
+            },
+            {
+              "id": "delay_duration_known",
+              "description": "Ismert hány napja késik a csomag és mi az aktuális tracking státusz.",
+              "required": false
+            }
+          ],
+          "done_when": "delivery_situation_identified teljesül",
+          "branches": [
+            {
+              "if": [
+                "marked_delivered_not_received"
+              ],
+              "next_step": "step_3a"
+            },
+            {
+              "if": [
+                "packaging_damaged"
+              ],
+              "next_step": "step_3b"
+            },
+            {
+              "if": [
+                "package_lost"
+              ],
+              "next_step": "step_3c"
+            },
+            {
+              "if": [
+                "delay_duration_known"
+              ],
+              "next_step": "step_3d"
+            }
+          ],
+          "default_next": "step_3d"
+        },
+        {
+          "id": "step_3a",
+          "image_conditions": ["tracking_screenshot_provided"],
+          "late_image_backfill": [
+            {
+              "when_all": ["surroundings_checked", "marked_delivered_not_received"],
+              "then": "tracking_screenshot_provided"
+            }
+          ],
+          "goal": "Delivered-not-received eset kezelése",
+          "ai_action": "Megkérdezi hogy az ügyfél ellenőrizte-e a szomszédoknál, portásnál, alternatív kézbesítési pontoknál. Kéri a tracking képernyőképét.",
+          "reply_rules": [
+            "Csak két dolgot kérj: szomszéd/portás ellenőrzés megerősítése és tracking képernyőkép",
+            "Ne említsd a visszatérítési határidőt",
+            "Ne sorold fel a satisfied kondíciókat",
+            "Ne magyarázd el mi fog történni a nyomozás után — az a lezárásnál jön",
+            "Ha az ügyfél nem tud tracking képernyőképet küldeni, a szóbeli megerősítés is elfogadható."
+          ],
+          "internal_conditions": [
+            {
+              "id": "surroundings_checked",
+              "description": "Az ügyfél megerősítette hogy ellenőrizte a szomszédoknál, portásnál, egyéb lehetséges helyszíneken.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "tracking_screenshot_provided",
+              "description": "Az ügyfél küldött tracking képernyőképet vagy megerősítette hogy nem tud.",
+              "do_not_reask_if_satisfied": true,
+              "do_not_reask_hint": "TILOS képernyőképet vagy fotót újra bekérni — köszönd meg röviden a csatolt képet és lépj tovább."
+            }
+          ],
+          "done_when": "surroundings_checked és tracking_screenshot_provided teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_3b",
+          "image_conditions": ["damage_photos_provided"],
+          "goal": "Sérült csomag kezelése",
+          "ai_action": "Kéri a külső csomagolás és a termék fotóit. Megkérdezi hogy a termék működik-e. Egy mondatban felhívja a figyelmet: az összes csomagolóanyagot (doboz, tömítés) meg kell őrizni a fuvarozói kárbejelentéshez.",
+          "reply_rules": [
+            "Csak a fotókat kérd és azt hogy működik-e a termék",
+            "A csomagolás megőrzésére figyelmeztetést egy mondatban add meg, ne listában",
+            "Ne magyarázd el a fuvarozói folyamatot",
+            "Ha sürgős az ügy, jelezd — azonnal prioritásként kezeljük."
+          ],
+          "internal_conditions": [
+            {
+              "id": "damage_photos_provided",
+              "description": "Az ügyfél küldött fotókat a sérült csomagolásról és/vagy termékről.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "product_functionality_known",
+              "description": "Ismert hogy a termék működik-e a sérülés ellenére.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "damage_photos_provided és product_functionality_known teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_3c",
+          "goal": "Elveszett csomag kezelése",
+          "ai_action": "Megerősíti az elveszett csomag státuszt a tracking alapján. Megkérdezi hogy az ügyfél felvette-e a kapcsolatot a futárszolgálattal.",
+          "reply_rules": [
+            "Csak azt kérd: felvette-e a kapcsolatot a futárral",
+            "Ne sorold fel mi történik ha elveszett — az a lezárásnál jön",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "courier_contacted",
+              "description": "Az ügyfél megpróbálta felvenni a kapcsolatot a futárszolgálattal, vagy megerősítette hogy nem tudta.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "loss_confirmed",
+              "description": "Az elveszett csomag státusz megerősített a tracking adatok vagy a futárszolgálat visszajelzése alapján. Automatikusan teljesül ha az ügyfél azt mondja hogy a tracking elveszettnek vagy nem követhetőnek jelzi, vagy ha a futárszolgálat ezt telefonon vagy írásban megerősítette — ne várj külön visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "courier_contacted és loss_confirmed teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_3d",
+          "goal": "Késő szállítás kezelése",
+          "ai_action": "Megállapítja hány napja késik a csomag a várható szállítási időhöz képest, és közli a jelenlegi tracking státuszt.",
+          "reply_rules": [
+            "Csak a késés mértékét és az aktuális tracking státuszt közöld",
+            "Ne ígérj konkrét megoldást — csak tájékoztass",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "delay_duration_known",
+              "description": "Ismert hány napja késik a csomag és mi az aktuális tracking státusz. Teljesül ha az ügyfél megadta a várható szállítási dátumot és az aktuális tracking státuszt, vagy ha az ügyfél leírásából egyértelműen következik a késés mértéke. Ne kérj megerősítést — ha az info megvan, azonnal teljesítettnek tekintendő."
+            }
+          ],
+          "done_when": "delay_duration_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "delay_duration_known"
+              ],
+              "next_step": "step_4"
+            }
+          ],
+          "default_next": "step_4",
+          "skippable": false,
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_escalate",
+          "goal": "Sürgős eset azonnali eszkalálása",
+          "ai_action": "Azonosítja az urgencia okát és összegyűjti az alapadatokat (rendelési szám, tracking) az agent handoff-hoz.",
+          "reply_rules": [
+            "Rövid, nyugtató hang — maximum 2 mondat",
+            "Ne kérj több adatot mint ami az agent handoff-hoz kell",
+            "Ne magyarázd el az escalation folyamatát részletesen"
+          ],
+          "internal_conditions": [
+            {
+              "id": "escalation_data_complete",
+              "description": "Automatikusan teljesül ha megvan a rendelési szám és az urgencia oka. Tracking státusz nem kötelező. Ne várj ügyfél-visszajelzést — ha az AI elküldte az eszkalációs üzenetet és az alapadatok rendelkezésre állnak, ez a kondíció azonnal teljesítettnek tekintendő."
+            }
+          ],
+          "done_when": "escalation_data_complete teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_4",
+          "goal": "Lezárás és végoldal routing",
+          "ai_action": "Rövid nyugtázó mondat (max 1 mondat). Routing az end node-ra a teljesült kondíciók alapján. — ne ígérj konkrét megoldást, az end node szövege adja.",
+          "reply_rules": [
+            "Maximum 1 mondat — csak nyugtázás.",
+            "Ne kérj be hiányzó adatot — az előző lépésekben már összegyűjtöttük.",
+            "Ne magyarázd a következő lépéseket — az end node adja.",
+            "Ne utalj összefoglalóra, vizsgálatra, vagy remedy-re.",
+            "Ne ismételd az end node szövegét."
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_communicated",
+              "description": "Automatikusan teljesül miután az AI közölte az ügyfélnek a konkrét következő lépést. Ne várj ügyfél-visszajelzést — ha az AI elküldte a lezáró üzenetet, ez a kondíció teljesítettnek tekintendő. Ezt követően azonnal a branches alapján routing következik."
+            }
+          ],
+          "branches": [
+            {
+              "if": [
+                "urgency_high",
+                "escalation_data_complete"
+              ],
+              "goto": "escalate-delivery"
+            },
+            {
+              "if": [
+                "marked_delivered_not_received",
+                "surroundings_checked",
+                "tracking_screenshot_provided"
+              ],
+              "goto": "delivery-investigation"
+            },
+            {
+              "if": [
+                "package_lost",
+                "courier_contacted",
+                "loss_confirmed"
+              ],
+              "goto": "delivery-investigation"
+            },
+            {
+              "if": [
+                "urgency_high",
+                "packaging_damaged",
+                "damage_photos_provided",
+                "product_functionality_known"
+              ],
+              "goto": "escalate-delivery-damage"
+            },
+            {
+              "if": [
+                "packaging_damaged",
+                "damage_photos_provided",
+                "product_functionality_known"
+              ],
+              "goto": "delivery-damage-claim"
+            },
+            {
+              "if": [
+                "delay_duration_known"
+              ],
+              "goto": "investigate-delivery"
+            }
+          ],
+          "done_when": "remedy_communicated teljesül",
+          "default_next": "agent-handoff",
+          "fallback_reason": "Egyik branch feltételkészlete sem teljesült teljesen — hiányos kondíció-halmaz miatt agent-handoff.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "urgency_high"
+          ],
+          "goto": "escalate-delivery"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "marked_delivered_not_received",
+            "tracking_checked",
+            "surroundings_checked",
+            "tracking_screenshot_provided"
+          ],
+          "goto": "delivery-investigation"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "package_lost",
+            "courier_contacted",
+            "loss_confirmed"
+          ],
+          "goto": "delivery-investigation"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "urgency_high",
+            "packaging_damaged",
+            "damage_photos_provided",
+            "product_functionality_known"
+          ],
+          "goto": "escalate-delivery-damage"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "packaging_damaged",
+            "damage_photos_provided",
+            "product_functionality_known"
+          ],
+          "goto": "delivery-damage-claim"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "delay_duration_known"
+          ],
+          "goto": "investigate-delivery"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "product-defect": {
+      "id": "product-defect",
+      "fallback_message": "Műszaki hibával vagy nem megfelelően működő termékkel kapcsolatban tudok segíteni. Kérlek írd le pontosan mi a probléma és melyik funkció érintett, valamint add meg a rendelési számodat.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Általános műszaki hiba kezelése. Akkor aktív ha az ügyfél azt jelzi hogy a termék nem működik, valamelyik funkciója hibás, vagy fizikailag sérülten érkezett. Nem ide tartozik az akkumulátor/töltési probléma (battery-issue node), az aktiválási vagy fiók zárolás (activation-lock node), a kozmetikai állapot vita (cosmetic-dispute node), vagy a rossz termék érkezett eset (wrong-item node).",
+        "scope": "Nem működik, képernyő hibás, billentyűzet nem reagál, kamera nem működik, mikrofon hiba, hangszóró hiba, port nem működik, fizikai törés érkezéskor, touch nem reagál, rendszer lefagy",
+        "examples": [
+          "Nem kapcsol be a laptop",
+          "A képernyőn zöld csíkok vannak",
+          "A billentyűzet néhány gombja nem működik",
+          "A kamera elmosódott képet ad",
+          "A USB port nem ismeri fel az eszközöket",
+          "Bekapcsoláskor lefagy a rendszer",
+          "A touch screen nem reagál"
+        ]
+      },
+      "session_facts_whitelist": [
+        "defect_on_arrival",
+        "defect_timing_known",
+        "physical_impact",
+        "liquid_damage",
+        "third_party_repair",
+        "exclusion_check_done",
+        "exclusion_risk",
+        "extended_warranty_active",
+        "within_return_window",
+        "software_issue_possible",
+        "troubleshooting_done",
+        "defect_persists",
+        "defect_resolved_by_troubleshooting",
+        "image_provided",
+        "evidence_provided",
+        "remedy_preference_known",
+        "physical_damage_visible",
+        "defect_confirmed_by_evidence"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "liquid_damage"
+          ],
+          "then": "exclusion_risk"
+        },
+        {
+          "when_all": [
+            "physical_impact"
+          ],
+          "then": "exclusion_risk"
+        },
+        {
+          "when_all": [
+            "third_party_repair"
+          ],
+          "then": "exclusion_risk"
+        },
+        {
+          "when_all": [
+            "liquid_damage"
+          ],
+          "then": "exclusion_check_done"
+        },
+        {
+          "when_all": [
+            "physical_impact"
+          ],
+          "then": "exclusion_check_done"
+        },
+        {
+          "when_all": [
+            "third_party_repair"
+          ],
+          "then": "exclusion_check_done"
+        },
+        {
+          "when_all": [
+            "defect_on_arrival"
+          ],
+          "then": "defect_timing_known"
+        },
+        {
+          "when_all": [
+            "liquid_damage"
+          ],
+          "then": "defect_timing_known"
+        },
+        {
+          "when_all": [
+            "physical_impact"
+          ],
+          "then": "defect_timing_known"
+        },
+        {
+          "when_all": [
+            "defect_resolved_by_troubleshooting"
+          ],
+          "then": "troubleshooting_done"
+        },
+        {
+          "when_all": [
+            "defect_persists"
+          ],
+          "then": "troubleshooting_done"
+        },
+        {
+          "when_all": [
+            "physical_damage_visible"
+          ],
+          "then": "troubleshooting_done"
+        },
+        {
+          "when_all": [
+            "physical_impact"
+          ],
+          "then": "troubleshooting_done"
+        },
+        {
+          "when_all": [
+            "liquid_damage"
+          ],
+          "then": "troubleshooting_done"
+        },
+        {
+          "when_all": [
+            "remedy_preference_known"
+          ],
+          "then": "case_summary_confirmed"
+        },
+        {
+          "when_all": [
+            "defect_persists",
+            "evidence_provided"
+          ],
+          "then": "defect_confirmed_by_evidence"
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító bekérése és garancia státusz azonosítása",
+          "extract_hint": "Ha az ügyfél a hiba időpontjával együtt kifejezetten jelzi hogy nem volt esés, folyadék, harmadik fél javítás vagy más külső behatás (pl. „semilyen külső behatás nem érte”), állítsd be exclusion_check_done-t is — ne várj külön step_2 kérdésre.",
+          "ai_action": "Bekéri a rendelési számot. A rendelési adatból ellenőrzi extended warranty, 30 napos visszaküldési határidő és kiszállítás dátuma. Ha extended warranty aktív, egy mondatban jelzi. Bekéri a hiba leírását, érintett komponenst és hogy érkezéskor vagy később jelent meg. Ha ugyanabban az üzenetben az ügyfél kifejezetten tagadja a külső behatást (esés, folyadék, harmadik fél javítás), állítsd be az exclusion_check_done kondíciót is — ne halaszd step_2-re.",
+          "reply_rules": [
+            "Ha extended warranty aktív: maximum 1 mondat tájékoztatás — ne részletezd a folyamatot",
+            "Ne magyarázd el a következő lépéseket a folyamat elején"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "defect_described",
+              "description": "Az ügyfél pontosan leírta mi a hiba és melyik komponens érintett",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "defect_timing_known",
+              "description": "Ismert hogy a hiba érkezéskor volt-e jelen vagy később alakult ki",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "extended_warranty_active",
+              "description": "A rendelési adatok alapján aktív extended warranty van kötve a termékhez.",
+              "required": false
+            },
+            {
+              "id": "within_return_window",
+              "description": "A rendelési adatok alapján az ügyfél a 30 napos visszaküldési határidőn belül van.",
+              "required": false
+            },
+            {
+              "id": "exclusion_risk",
+              "description": "Az ügyfél válaszai alapján fennáll garanciális kizárás vagy jelentős kockázat (esés, folyadék, jogosulatlan javítás stb.).",
+              "required": false
+            },
+            {
+              "id": "liquid_damage",
+              "description": "Az ügyfél megemlítette hogy a készülék folyadékkal érintkezett.",
+              "required": false
+            },
+            {
+              "id": "physical_impact",
+              "description": "Az ügyfél megemlítette hogy a készülék leesett vagy fizikai behatás érte.",
+              "required": false
+            },
+            {
+              "id": "third_party_repair",
+              "description": "Az ügyfél megemlítette hogy a készüléket korábban már megjavíttatták valakivel.",
+              "required": false
+            },
+            {
+              "id": "defect_on_arrival",
+              "description": "A hiba már érkezéskor / kézhezvételkor / kicsomagoláskor fennállt — pl. „rögtön kibontás után hibás volt”, „amikor megkaptam, már nem működött”, „érkezéskor sérült volt”. NE állítsd be ha az ügyfél múltbeli időpontot említ amikor a hiba később alakult ki (pl. „múlt héten leesett”, „tegnap óta nem működik”, „2 napja kezdődött”) — ezekben az esetekben a megfelelő külső-behatás kondíciót (physical_impact, liquid_damage) állítsd be, a defect_on_arrival-t hagyd üresen.",
+              "required": false
+            },
+            {
+              "id": "software_issue_possible",
+              "description": "A tünetek alapján szoftver vagy beállítás okozhatja a hibát.",
+              "required": false
+            },
+            {
+              "id": "exclusion_check_done",
+              "description": "Az ügyfél válaszolt a külső behatás kérdésére, vagy már ebben az üzenetben kifejezetten jelezte hogy nem volt esés, folyadék érintkezés, harmadik fél javítás vagy más fizikai behatás (pl. „semilyen külső behatás nem érte”, „nem esett le”, „nem volt folyadék”).",
+              "required": false,
+              "text_triggers": [
+                "semilyen külső",
+                "nincs külső",
+                "nem volt külső",
+                "nem érte külső",
+                "nem esett le",
+                "nem volt esés",
+                "nem volt folyadék",
+                "nem javíttattam",
+                "nem volt behatás",
+                "nem volt semmi ilyen"
+              ]
+            }
+          ],
+          "done_when": "has_order_id és defect_described és defect_timing_known teljesül",
+          "branches": [
+            {
+              "if": ["exclusion_risk"],
+              "next_step": "step_exclusion"
+            },
+            {
+              "if": ["has_order_id", "defect_described", "defect_timing_known", "exclusion_check_done"],
+              "next_step": "step_3"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_2",
+          "goal": "Kizárási okok ellenőrzése",
+          "ai_action": "Megkérdezi hogy volt-e esés, folyadék érintkezés, harmadik fél általi javítási kísérlet, vagy más fizikai behatás — kivéve ha az ügyfél már korábban (step_1-ben vagy ebben az üzenetben) egyértelműen jelezte hogy nem volt külső behatás: akkor exclusion_check_done már teljesült, ne kérdezz újra. Egyértelműen de empatikusan kérdez, nem vádolva. Ha extended warranty aktív, nem kommentálja a kizárási kockázatot — az elbírálás az ügyintéző feladata.",
+          "reply_rules": [
+            "Ha exclusion_check_done már teljesült a sessionben, küldj egy rövid megerősítő mondatot (pl. 'Rögzítettük hogy nem volt külső behatás.') — ne kérdezz újra, a rendszer automatikusan folytatja a következő lépéssel.",
+            "Ha az ügyfél most tagadja a külső behatást, állítsd be exclusion_check_done-t azonnal."
+          ],
+          "internal_conditions": [
+            {
+              "id": "exclusion_check_done",
+              "description": "Automatikusan teljesül ha az ügyfél az első üzenetben vagy ebben az üzenetben egyértelműen jelezte hogy nem volt külső behatás, VAGY ha liquid_damage / physical_impact / third_party_repair kondíció teljesült (implication által). Ne várj külön megerősítést — ha a körülmények ismertek, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "text_triggers": [
+                "semilyen külső",
+                "nincs külső",
+                "nem volt külső",
+                "nem érte külső",
+                "nem esett le",
+                "nem volt esés",
+                "nem volt folyadék",
+                "nem javíttattam",
+                "nem volt behatás",
+                "nem volt semmi ilyen"
+              ]
+            },
+            {
+              "id": "exclusion_risk",
+              "description": "Az ügyfél válaszai alapján fennáll garanciális kizárás vagy jelentős kockázat.",
+              "required": false
+            }
+          ],
+          "done_when": "exclusion_check_done teljesül",
+          "branches": [
+            {
+              "if": [
+                "exclusion_risk"
+              ],
+              "next_step": "step_exclusion"
+            }
+          ],
+          "default_next": "step_3",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_exclusion",
+          "goal": "Kizárási ok dokumentálása",
+          "skip_backfill": [
+            {
+              "requires": ["exclusion_risk"],
+              "if_any": ["physical_impact", "liquid_damage", "third_party_repair"],
+              "then": "exclusion_details_collected"
+            }
+          ],
+          "ai_action": "Összegyűjti a kizárási körülmények részleteit. Ha nincs extended warranty: egy rövid, hivatalos hangvételű mondatban tájékoztatja az ügyfelet hogy a jelzett behatás befolyásolhatja a garanciális elbírálást, de a végső döntés a raktárban történik. Ha extended warranty aktív: csendben dokumentálja és folytatja, nem emeli ki a kizárási kockázatot.",
+          "reply_rules": [
+            "Kérdezz rá a körülményekre — egy konkrét kérdés, ne lista",
+            "Ne ígérj eredményt — az elbírálás a raktárban történik",
+            "Maximum 2 mondat",
+            "Ha az exclusion_check_done már teljesült (az ügyfél korábban jelezte hogy nem volt külső behatás), ne kérdezz újra — csak erősítsd meg egy rövid mondatban hogy rögzítettük."
+          ],
+          "internal_conditions": [
+            {
+              "id": "exclusion_details_collected",
+              "description": "A kizárási körülmények részletesen dokumentálva vannak",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "exclusion_details_collected teljesül",
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_3",
+          "goal": "Alapvető hibaelhárítás elvégeztetése",
+          "extract_hint": "Ha az ügyfél már korábban megpróbálta az újraindítást vagy frissítést („már megvolt”, „már megpróbáltam”) és a panasz továbbra is aktív, állítsd be troubleshooting_done ÉS defect_persists — ne várj külön „igen, fennáll” mondatot. Ha a hiba megoldódott: defect_resolved_by_troubleshooting. Ne állíts be egyszerre defect_persists és defect_resolved_by_troubleshooting értéket.",
+          "ai_action": "Ha a hiba szoftver-jellegű lehet, kéri az újraindítást, szoftverfrissítés ellenőrzést, és ha indokolt, gyári visszaállítást — kivéve ha az ügyfél már jelezte hogy ezeket korábban elvégezte. Ha az ügyfél azt mondja hogy már megpróbálta a hibaelhárítást és a hiba továbbra is fennáll (pl. frissítés nem elérhető, nem segített, még mindig hibás), állítsd be troubleshooting_done és defect_persists — ne kérj újra troubleshooting lépéseket és ne ismételj „Ezután is fennáll?” kérdést. Ha a hiba megoldódott: defect_resolved_by_troubleshooting. Ha a hiba fizikai és egyértelmű (pl. törött képernyő), a hibaelhárítás kihagyható (troubleshooting_done).",
+          "reply_rules": [
+            "Ha az ügyfél már leírta hogy megpróbálta az újraindítást/frissítést és a panasz aktív maradt, ne kérdezd újra hogy „ezután is fennáll-e” — lépj tovább.",
+            "Ne állíts be egyszerre defect_persists és defect_resolved_by_troubleshooting értéket.",
+            "Maximum 2 mondat, ha még adatot kell bekérni."
+          ],
+          "internal_conditions": [
+            {
+              "id": "troubleshooting_done",
+              "description": "Az ügyfél elvégezte az alapvető hibaelhárítást, vagy megerősítette hogy korábban már megpróbálta (pl. „már megvolt”, „már újraindítottam”, „már ellenőriztem a frissítést”), vagy a hiba fizikai és a troubleshooting nem releváns.",
+              "do_not_reask_if_satisfied": true,
+              "text_triggers": [
+                "újraindítottam",
+                "újra indítottam",
+                "frissítettem",
+                "frissíteni",
+                "frissítést",
+                "megpróbál",
+                "kipróbál",
+                "elvégeztem",
+                "megvolt",
+                "meg volt",
+                "újratelepít"
+              ],
+              "trigger_default_if_no_outcome": [
+                "defect_persists",
+                "defect_resolved_by_troubleshooting"
+              ],
+              "trigger_default_fallback": "defect_persists"
+            },
+            {
+              "id": "defect_persists",
+              "description": "A hiba a hibaelhárítás után is fennáll. Teljesült ha az ügyfél azt mondja: „már megpróbálta / már megvolt” és a panasz továbbra is aktív, „nem segített”, „még mindig van”, „frissítés nem elérhető és a gond megmaradt”, „továbbra is hibás”. Ne várj külön „igen, fennáll” mondatot, ha a kontextus egyértelmű.",
+              "required": false,
+              "text_triggers": [
+                "nem segít",
+                "nem hozott",
+                "még mindig",
+                "továbbra is",
+                "nem működ",
+                "hasztalan",
+                "nem javult",
+                "nem megold",
+                "fent áll"
+              ]
+            },
+            {
+              "id": "defect_resolved_by_troubleshooting",
+              "description": "A hiba az alapvető hibaelhárítás után megoldódott (pl. „most már jó”, „működik”, „megoldódott”).",
+              "required": false,
+              "text_triggers": [
+                "megoldódott",
+                "most már jó",
+                "most már működ",
+                "jól működik",
+                "nem hibás"
+              ]
+            }
+          ],
+          "done_when": "troubleshooting_done teljesül",
+          "branches": [
+            {
+              "if": [
+                "defect_resolved_by_troubleshooting"
+              ],
+              "next_step": "step_resolved"
+            }
+          ],
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_resolved",
+          "goal": "Hiba hibaelhárítással megoldva",
+          "ai_action": "Rövid lezáró üzenetet küld — örül hogy megoldódott, és tájékoztatja az ügyfelet hogy ha visszatér a probléma, bármikor írhat. Ne kérdezzen rá hogy minden rendben van-e — a megoldódás már ismert.",
+          "reply_rules": [
+            "Csak lezáró mondat — örülünk hogy megoldódott.",
+            "Egy mondatban jelezd hova fordulhat ha visszatér a probléma.",
+            "Ne kérdezz rá hogy minden rendben van-e.",
+            "Maximum 2 mondat."
+          ],
+          "internal_conditions": [
+            {
+              "id": "resolution_confirmed",
+              "description": "Az ügyfél megerősítette hogy a hiba megoldódott Automatikusan teljesül miután az AI elküldte a lezáró üzenetet — ne várj ügyfél-visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "resolution_confirmed teljesül",
+          "default_next": "process-defect-resolved",
+          "chain_on_complete": true,
+          "is_closing": true,
+          "is_terminal": true
+        },
+        {
+          "id": "step_4",
+          "image_conditions": ["evidence_provided", "image_provided"],
+          "goal": "Fotó/videó bizonyíték bekérése",
+          "extract_hint": "A beküldött bizonyíték alapján pontosan egy kondíciót állíts be: ha a fotón külső fizikai sérülés látható (törött üveg, horpadás, becsapódás nyoma) → physical_damage_visible. Ha a hiba funkcionális vagy szoftveres és fizikai sérülés nem látható → defect_confirmed_by_evidence. Ha a hiba nem fotózható és az ügyfél leírta a reprodukálás lépéseit → defect_confirmed_by_evidence. A kettőt egyszerre csak akkor állítsd be ha egyértelműen mindkettő fennáll.",
+          "ai_action": "Kéri a hiba fotóját vagy videóját. Leírja pontosan mit kell megörökíteni. Ha a hiba nem fotózható (pl. hangszóró), kéri a reprodukálhatóság leírását. Nem értékeli és nem minősíti a beérkezett bizonyítékot — a kondíciókat a rendszer ismeri fel a beküldött tartalom alapján.",
+          "reply_rules": [
+            "Pontosan írd le mit kell megörökíteni — konkrét, nem általános",
+            "Ha a hiba nem fotózható, kérd a reprodukálhatóság leírását",
+            "Ne értékeld és ne minősítsd a beküldött bizonyítékot",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "evidence_provided",
+              "description": "Az ügyfél küldött fotót/videót a hibáról, vagy megerősítette hogy a hiba nem fotózható és leírta a reprodukálás lépéseit.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "image_provided",
+              "description": "A rendszer szerint kép vagy videó érkezett ehhez a fordulóhoz (a tényleges bizonyíték kondíció az evidence_provided).",
+              "required": false,
+              "do_not_reask_if_satisfied": true,
+              "do_not_reask_hint": "TILOS képernyőképet vagy fotót újra bekérni — köszönd meg röviden a csatolt képet és lépj tovább."
+            },
+            {
+              "id": "defect_confirmed_by_evidence",
+              "description": "A bizonyíték alapján a hiba egyértelműen azonosítható — szoftver vagy funkcionális hiba, fizikai sérülés nélkül.",
+              "required": false
+            },
+            {
+              "id": "physical_damage_visible",
+              "description": "A beküldött fotókon külső fizikai sérülés látható — emberi elbírálás szükséges.",
+              "required": false
+            }
+          ],
+          "done_when": "evidence_provided teljesül",
+          "default_next": "step_5"
+        },
+        {
+          "id": "step_5",
+          "goal": "Összefoglalás és kimenet meghatározása",
+          "ai_action": "Ha remedy_preference_known már teljesül (az ügyfél korábban megadta), ne kérdezd be újra — egy rövid megerősítő kérdéssel ellenőrizd: pl. 'Korábban [remedy] preferenciát jelöltél meg — ez még mindig így van?'. Ha megerősíti, azonnal routolj. Ha within_return_window teljesül és remedy_preference_known még nem: egy mondatban visszaigazolja a hibát, majd megkérdezi a remedy preferenciát — cserét, visszatérítést vagy javítást szeretne-e. Agent-handoff ágakon: csak rövid nyugtázó mondat, remedy kérdés nélkül.",
+          "reply_rules": [
+            "Ha remedy_preference_known már teljesül: ne küldj üzenetet — azonnal routolj.",
+            "within_return_window ágon: visszaigazolás + remedy kérdés (csere, visszatérítés, javítás) — maximum 2 mondat.",
+            "agent-handoff ágon: maximum 1 mondat nyugtázás — ne kérdezz remedy preferenciát, ne magyarázd a folyamatot.",
+            "Ne magyarázd a visszaküldési folyamatot — a következő node adja.",
+            "Maximum 2 mondat."
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét, visszatérítést vagy javítást szeretne. Csak product-return ágon szükséges.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "case_summary_confirmed",
+              "description": "Automatikusan teljesül miután az AI elküldte a lezáró üzenetet. Agent-handoff ágon azonnal teljesül. Product-return ágon remedy_preference_known után teljesül automatikusan.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "branches": [
+            {
+              "if": ["within_return_window", "defect_confirmed_by_evidence"],
+              "goto": "product-return",
+              "inject_conditions": ["return_source_defect"]
+            },
+            {
+              "if": ["within_return_window", "exclusion_risk"],
+              "goto": "product-return",
+              "inject_conditions": ["return_source_defect"]
+            },
+            {
+              "if": ["within_return_window", "physical_damage_visible"],
+              "goto": "product-return",
+              "inject_conditions": ["return_source_defect"]
+            },
+            {
+              "if": ["physical_damage_visible", "extended_warranty_active"],
+              "goto": "agent-handoff-warranty-damage",
+              "message": "Köszönjük a beküldött képet — a sérülést és az ügy részleteit rögzítettük."
+            },
+            {
+              "if": ["physical_damage_visible"],
+              "goto": "agent-handoff-physical-damage",
+              "message": "Köszönjük a beküldött képet — a sérülést rögzítettük."
+            },
+            {
+              "if": ["exclusion_risk", "extended_warranty_active"],
+              "goto": "agent-handoff-warranty-exclusion",
+              "message": "Köszönjük a részleteket — az eset körülményeit rögzítettük."
+            },
+            {
+              "if": ["exclusion_risk"],
+              "goto": "agent-handoff-exclusion",
+              "message": "Köszönjük a részleteket — az eset körülményeit rögzítettük."
+            },
+            {
+              "if": ["defect_confirmed_by_evidence", "extended_warranty_active"],
+              "goto": "product-return",
+              "inject_conditions": ["return_source_defect"]
+            },
+            {
+              "if": ["defect_confirmed_by_evidence"],
+              "goto": "agent-handoff-defect-no-window",
+              "message": "Köszönjük a beküldött bizonyítékot — az esetet rögzítettük."
+            }
+          ],
+          "done_when": "case_summary_confirmed és remedy_preference_known teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "within_return_window",
+            "defect_confirmed_by_evidence",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "within_return_window",
+            "exclusion_risk",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "within_return_window",
+            "physical_damage_visible",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "physical_damage_visible",
+            "extended_warranty_active"
+          ],
+          "goto": "agent-handoff-warranty-damage"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "physical_damage_visible"
+          ],
+          "goto": "agent-handoff-physical-damage"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "exclusion_risk",
+            "extended_warranty_active"
+          ],
+          "goto": "agent-handoff-warranty-exclusion"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "exclusion_risk"
+          ],
+          "goto": "agent-handoff-exclusion"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_on_arrival",
+            "defect_confirmed_by_evidence",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "extended_warranty_active"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_on_arrival",
+            "defect_confirmed_by_evidence",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "defect_confirmed_by_evidence",
+            "extended_warranty_active"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "defect_described",
+            "evidence_provided",
+            "exclusion_check_done",
+            "case_summary_confirmed",
+            "defect_confirmed_by_evidence"
+          ],
+          "goto": "agent-handoff-defect-no-window"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "battery-issue": {
+      "id": "battery-issue",
+      "fallback_message": "Akkumulátor vagy töltési problémával kapcsolatban tudok segíteni. Kérlek írd le pontosan: gyorsan merül, egyáltalán nem tölt, lassan tölt, vagy véletlenszerűen kapcsol le? Add meg a rendelési számodat is.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Akkumulátor és töltési problémák kezelése. Akkor aktív ha az ügyfél akkumulátor lemerüléssel, lassú töltéssel, véletlen lekapcsolásokkal, túlmelegedéssel, vagy töltő/kábel problémával kapcsolatos panaszt jelez.",
+        "scope": "Akkumulátor, töltés, gyorsan lemerül, nem tölt, lassú töltés, túlmelegszik, random lekapcsol, akksi, töltő nem működik, battery health",
+        "examples": [
+          "Az akkumulátor két óra alatt lemerül",
+          "A telefon egyáltalán nem tölt",
+          "Nagyon lassan tölt még gyors töltővel is",
+          "Véletlenszerűen lekapcsol pedig van még töltöttsége",
+          "Erősen melegszik töltés közben",
+          "A battery health már 60% és csak két hónapja van meg",
+          "A töltő nem csatlakozik rendesen"
+        ]
+      },
+      "session_facts_whitelist": [
+        "swelling_or_safety_risk",
+        "battery_symptom_known",
+        "issue_since_arrival",
+        "extended_warranty_active",
+        "sold_threshold_known",
+        "below_sold_threshold",
+        "battery_health_known",
+        "charger_type_known",
+        "non_certified_charger",
+        "charger_is_the_problem",
+        "charger_tested",
+        "physical_damage_visible",
+        "problem_persists_with_correct_charger",
+        "problem_resolved_by_charger",
+        "image_provided"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "swelling_or_safety_risk"
+          ],
+          "then": "battery_symptom_known"
+        },
+        {
+          "when_all": [
+            "problem_resolved_by_charger"
+          ],
+          "then": "charger_tested"
+        },
+        {
+          "when_all": [
+            "problem_persists_with_correct_charger"
+          ],
+          "then": "charger_tested"
+        },
+        {
+          "when_all": [
+            "non_certified_charger",
+            "charger_is_the_problem"
+          ],
+          "then": "charger_tested"
+        },
+        {
+          "when_all": [
+            "non_certified_charger"
+          ],
+          "then": "charger_type_known"
+        },
+        {
+          "when_all": [
+            "charger_is_the_problem"
+          ],
+          "then": "charger_type_known"
+        },
+        {
+          "when_all": [
+            "image_provided"
+          ],
+          "then": "evidence_provided"
+        },
+        {
+          "when_all": [
+            "battery_health_known",
+            "sold_threshold_known"
+          ],
+          "then": "below_sold_threshold"
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító bekérése és garancia státusz azonosítása",
+          "ai_action": "Bekéri a rendelési számot és a tünet leírását. Ha sold_threshold_known teljesült, az ígért küszöbértéket ne kérje be. Ha extended warranty aktív, egy mondatban jelzi. Extract: az első üzenetből állítsd be az összes felismerhető opcionális kondíciót az alábbi példák alapján. Biztonsági kockázat: 'duzzad', 'füstöl', 'égett szag', 'forró' → swelling_or_safety_risk. Érkezés óta fennáll: 'érkezés óta', 'első naptól', 'amióta megkaptam' → issue_since_arrival. Töltő típus: ha az ügyfél megnevezi a töltőjét → charger_type_known. Nem certified töltő: 'nem eredeti', 'harmadik fél', 'olcsó töltő', 'nem gyári' → non_certified_charger. Töltőteszt elvégezve: 'már kipróbáltam más töltővel', 'gyárival is ugyanez' → charger_tested. Töltőteszt eredménye: ha az ügyfél azt írja hogy gyári vagy megfelelő töltővel is kipróbálta és a probléma fennáll → problem_persists_with_correct_charger ÉS charger_tested. Nem certified töltő ÉS töltési tünet (lassú töltés, nem tölt, random lekapcsol) → charger_is_the_problem. Battery health érték megadva: 'battery health X%', 'akkumulátor állapota X%' → below_sold_threshold ha az érték az ígért küszöb alatt van. Fizikai sérülés: 'leesett', 'törött', 'behorpadt' → physical_damage_visible.",
+          "reply_rules": [
+            "Ha swelling_or_safety_risk azonosult: NE kérdezz tovább semmit — ne kérj rendelési számot, ne kérj további leírást. A rendszer azonnal step_safety-re routol.",
+            "Ha battery_symptom_known már teljesült, ne kérd be újra a tünet leírását",
+            "Ha issue_since_arrival teljesült, ne kérdezz rá mióta áll fenn a probléma",
+            "Ha charger_type_known teljesült, ne kérdezz rá a töltő típusára",
+            "Ha extended warranty aktív: maximum 1 mondat tájékoztatás — ne részletezd a folyamatot",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "battery_symptom_known",
+              "description": "Azonosított a pontos tünet kategória",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "extended_warranty_active",
+              "description": "A rendelési adatok alapján aktív extended warranty van kötve a termékhez.",
+              "required": false
+            },
+            {
+              "id": "sold_threshold_known",
+              "description": "Az eladáskor ígért battery health küszöbérték ismert a rendelési adatokból.",
+              "required": false
+            },
+            {
+              "id": "swelling_or_safety_risk",
+              "description": "Duzzadt akkumulátor, füstölés, égő szag, vagy egyértelmű biztonsági kockázat.",
+              "required": false
+            },
+            {
+              "id": "charger_type_known",
+              "description": "Ismert milyen típusú töltőt használ az ügyfél.",
+              "required": false
+            },
+            {
+              "id": "non_certified_charger",
+              "description": "Az ügyfél nem eredeti / nem megfelelő tanúsítványú töltőt használ.",
+              "required": false
+            },
+            {
+              "id": "charger_is_the_problem",
+              "description": "A tünetek alapján a töltő vagy a kábel okozza a problémát.",
+              "required": false
+            },
+            {
+              "id": "charger_tested",
+              "description": "Az ügyfél kipróbálta a készüléket egy másik töltővel vagy kábellel, vagy megerősítette hogy nem áll rendelkezésre másik töltő.",
+              "required": false
+            },
+            {
+              "id": "problem_persists_with_correct_charger",
+              "description": "Az ügyfél már kipróbálta a készüléket megfelelő / gyári / tanúsított töltővel és kábellel, és a probléma továbbra is fennáll. Teljesül ha az ügyfél azt írja: 'gyárival is kipróbáltam de ugyanez', 'más töltővel is fennáll', 'eredeti töltővel is ugyanúgy merül'.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "below_sold_threshold",
+              "description": "A battery health az eladáskor ígért küszöb alá esett.",
+              "required": false
+            },
+            {
+              "id": "issue_since_arrival",
+              "description": "A probléma már érkezéskor is fennállt / érkezés óta folyamatosan jelen van.",
+              "required": false
+            },
+            {
+              "id": "physical_damage_visible",
+              "description": "Az ügyfél külső fizikai sérülést említett a készüléken.",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és battery_symptom_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "swelling_or_safety_risk"
+              ],
+              "next_step": "step_safety"
+            },
+            {
+              "if": [
+                "below_sold_threshold"
+              ],
+              "next_step": "step_4"
+            },
+            {
+              "if": [
+                "issue_since_arrival",
+                "evidence_provided"
+              ],
+              "next_step": "step_4"
+            },
+            {
+              "if": [
+                "non_certified_charger",
+                "charger_is_the_problem"
+              ],
+              "next_step": "step_charger_issue"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_safety",
+          "goal": "Biztonsági vészhelyzet kezelése",
+          "ai_action": "Azonnal tájékoztatja az ügyfelet hogy duzzadt akkumulátort vagy füstölő/égett szagú eszközt NEM szabad postára adni. Utasítja hogy tegye biztonságos helyre, ne töltse, és azonnal vegye fel a kapcsolatot az ügyfélszolgálattal telefonon. Lezárja a folyamatot agent handoff-fal.",
+          "reply_rules": [
+            "Azonnali, határozott hang — ne legyen puha vagy bizonytalan",
+            "Csak a biztonsági utasítást add — ne töltse, tegye biztonságos helyre",
+            "Ne magyarázd a technikai okokat",
+            "Maximum 2 mondat, majd agent handoff jelzése"
+          ],
+          "internal_conditions": [
+            {
+              "id": "safety_instructions_understood",
+              "description": "Automatikusan teljesül miután az AI elküldte a biztonsági utasítást. Nem vár ügyfél-visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "safety_instructions_understood teljesül",
+          "default_next": "safety-escalation",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        },
+        {
+          "id": "step_2",
+          "goal": "Töltő/kábel tesztelés elvégeztetése",
+          "ai_action": "Ellenőrzi hogy az ügyfél már elvégezte-e a töltőtesztet. Ha igen — nem kéri meg újra. Extract: ha az ügyfél leírja hogy kipróbált egy másik töltőt vagy kábelt, állítsd be a charger_tested kondíciót. Példa: 'már kipróbáltam gyári töltővel is' → charger_tested. Ha a probléma más töltővel is fennáll: charger_tested ÉS problem_persists_with_correct_charger. Ha nem certified töltő és az a probléma: charger_tested ÉS charger_is_the_problem. Ha issue_since_arrival már teljesült, ne kérdezz rá mióta áll fenn a probléma.",
+          "reply_rules": [
+            "Ha charger_tested teljesült, ne kérd a tesztet — csak nyugtázd",
+            "Ha charger_type_known teljesült, ne kérdezz rá a töltő típusára",
+            "Ha issue_since_arrival teljesült, ne kérdezz rá az időre",
+            "Ne kommentáld a nem-certified töltő kockázatát ebben a lépésben",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "charger_tested",
+              "description": "Az ügyfél már elvégezte a töltőtesztet — akár ebben az üzenetben, akár korábban leírta. Teljesül ha az ügyfél azt mondja hogy kipróbált egy másik töltőt vagy kábelt, függetlenül a márkától vagy típustól. Nem szükséges új teszt elvégzése ha ez az információ már megvan.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "charger_type_known",
+              "description": "Ismert milyen típusú töltőt használ az ügyfél",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "non_certified_charger",
+              "description": "Az ügyfél nem eredeti / nem megfelelő tanúsítványú töltőt használ.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "charger_is_the_problem",
+              "description": "A tünetek alapján a töltő vagy a kábel okozza a problémát.",
+              "required": false
+            },
+            {
+              "id": "issue_since_arrival",
+              "description": "A probléma már érkezéskor is fennállt / érkezés óta folyamatosan jelen van.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "charger_tested és charger_type_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "below_sold_threshold"
+              ],
+              "next_step": "step_4"
+            },
+            {
+              "if": [
+                "issue_since_arrival",
+                "evidence_provided"
+              ],
+              "next_step": "step_4"
+            },
+            {
+              "if": [
+                "problem_persists_with_correct_charger"
+              ],
+              "next_step": "step_3"
+            },
+            {
+              "if": [
+                "non_certified_charger",
+                "charger_is_the_problem"
+              ],
+              "next_step": "step_charger_issue"
+            }
+          ],
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_charger_issue",
+          "goal": "Nem megfelelő töltő azonosítása és tájékoztatás",
+          "ai_action": "Tájékoztatja az ügyfelet hogy a tünetek alapján a nem megfelelő / nem tanúsított töltő okozhatja a problémát. Elmagyarázza hogy refurbished készülékeknél fontos az eredeti vagy MFi/USB-IF tanúsított töltő és kábel használata — nem tanúsított töltő lassabb töltést, random lekapcsolást, és hosszú távon akkumulátor degradációt okozhat. Megkéri az ügyfelet hogy próbálja ki egy megfelelő töltővel és jelezze hogy fennáll-e még a probléma.",
+          "reply_rules": [
+            "Magyarázd el röviden a töltő-akkumulátor összefüggést",
+            "Ne vádold az ügyfelet — semleges, tájékoztató hang",
+            "Egy konkrét kéréssel zárd: próbálja ki megfelelő töltővel és jelezze vissza",
+            "Miután elküldted a tájékoztatást, várj az ügyfél visszajelzésére — ne routolj tovább amíg nem derül ki hogy a csere megoldotta-e a problémát.",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "charger_guidance_given",
+              "description": "Automatikusan teljesül miután az AI elküldte a töltőre vonatkozó tájékoztatást. Ne várj ügyfél-visszajelzést — ha az AI elküldte az üzenetet a nem megfelelő töltő kockázatáról és a helyes töltő kipróbálásának kéréséről, ez a kondíció azonnal teljesítettnek tekintendő. Ezt követően a rendszer várja az ügyfél visszajelzését — routing csak problem_resolved_by_charger vagy problem_persists_with_correct_charger teljesülése után történik.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "problem_persists_with_correct_charger",
+              "description": "Az ügyfél megerősítette hogy megfelelő töltővel is fennáll a probléma.",
+              "required": false
+            },
+            {
+              "id": "problem_resolved_by_charger",
+              "description": "A probléma megszűnt a megfelelő töltő használatával.",
+              "required": false
+            }
+          ],
+          "done_when": "charger_guidance_given ÉS (problem_resolved_by_charger VAGY problem_persists_with_correct_charger) teljesül",
+          "branches": [
+            {
+              "if": [
+                "problem_resolved_by_charger"
+              ],
+              "next_step": "step_charger_resolved"
+            },
+            {
+              "if": [
+                "problem_persists_with_correct_charger"
+              ],
+              "next_step": "step_3"
+            }
+          ],
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_charger_resolved",
+          "goal": "Töltő csere által megoldott probléma lezárása",
+          "ai_action": "Megerősíti hogy a probléma a nem megfelelő töltő miatt állt fenn. Összefoglalja a tanácsot: mindig megfelelő tanúsítású töltőt és kábelt használjon. Megkérdezi hogy van-e egyéb kérdése vagy segíthet-e másban.",
+          "reply_rules": [
+            "Rövid pozitív megerősítés",
+            "Egy mondatban add meg a tanácsot a jövőre nézve",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "resolution_confirmed",
+              "description": "Automatikusan teljesül miután az AI megerősítette hogy a probléma a nem megfelelő töltő miatt állt fenn és elküldte a lezáró tanácsot. Ne várj ügyfél-visszajelzést — ha az AI elküldte az üzenetet, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "resolution_confirmed teljesül",
+          "default_next": "process-charger-resolved",
+          "is_closing": true,
+          "is_terminal": true
+        },
+        {
+          "id": "step_3",
+          "image_conditions": ["evidence_provided"],
+          "goal": "Battery health érték és bizonyíték bekérése",
+          "ai_action": "A tünet típusa alapján kéri a megfelelő bizonyítékot. Kapacitás probléma esetén: battery health képernyőkép (iOS: Beállítások > Akkumulátor > Akkumulátor állapota). Töltési hiba esetén: töltés közbeni videó. Külső fizikai sérülés esetén: fotók több szögből. Szoftver jellegű hiba esetén: reprodukálhatóság leírása. Nem értékeli és nem minősíti a beérkezett bizonyítékot — a kondíciókat a rendszer ismeri fel a beküldött tartalom alapján. Extract: ha az ügyfél battery health értéket ad meg → battery_health_known. Ha az érték az ígért küszöb alatt van → below_sold_threshold is. Példa: 'battery health 71%' → battery_health_known, és ha sold_threshold_known alapján a küszöb pl. 80% → below_sold_threshold. Ha az ügyfél szövegesen megadja a battery health értéket → battery_health_known. Ha az érték kisebb mint a sold_threshold_known küszöb → below_sold_threshold is. Ha csak kép érkezett szöveges érték nélkül → csak evidence_provided teljesül, below_sold_threshold nem.",
+          "reply_rules": [
+            "A tünet típusához igazítsd a kérést — ne általános 'küldjön fotót' üzenet",
+            "Kapacitás probléma esetén: battery health képernyőkép útvonalát add meg",
+            "Ne értékeld és ne minősítsd a beküldött bizonyítékot — a rendszer ismeri fel a kondíciókat",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "evidence_provided",
+              "description": "Automatikusan teljesül ha a rendszer képet vagy videót regisztrált (image_provided), vagy ha az ügyfél szövegesen megerősítette hogy a hiba nem fotózható és leírta a reprodukálás lépéseit. Ne várj külön ügyfél-visszajelzést — ha a kép megérkezett, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "image_provided",
+              "description": "A rendszer szerint kép vagy videó érkezett ehhez a fordulóhoz (a tényleges bizonyíték kondíció az evidence_provided).",
+              "required": false,
+              "do_not_reask_if_satisfied": true,
+              "do_not_reask_hint": "TILOS képernyőképet vagy fotót újra bekérni — köszönd meg röviden a csatolt képet és lépj tovább."
+            },
+            {
+              "id": "battery_health_known",
+              "description": "Az ügyfél megadta a battery health értéket vagy megerősítette hogy nem tudja ellenőrizni.",
+              "required": false
+            },
+            {
+              "id": "below_sold_threshold",
+              "description": "A battery health érték az eladáskor ígért küszöb alá esett. Teljesül ha az ügyfél szövegesen megadja a battery health százalékot és az értéke kisebb mint a sold_threshold_known alapján ismert küszöb. Példa: sold_threshold 86%, ügyfél azt írja '85%' vagy 'battery health 85%' → teljesül. Ha csak kép érkezett és szöveges érték nem ismert → ne állítsd be, az evidence_provided elegendő.",
+              "required": false
+            },
+            {
+              "id": "physical_damage_visible",
+              "description": "A bizonyítékok alapján külső fizikai sérülés látható a készüléken.",
+              "required": false
+            },
+            {
+              "id": "defect_confirmed_by_evidence",
+              "description": "A bizonyíték alapján a hiba egyértelműen azonosítható és AI által megítélhető (kapacitás, töltő, szoftver).",
+              "required": false
+            }
+          ],
+          "done_when": "evidence_provided teljesül",
+          "branches": [
+            {
+              "if": [
+                "below_sold_threshold"
+              ],
+              "next_step": "step_4"
+            }
+          ],
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_4",
+          "goal": "Összefoglalás és kimenet meghatározása",
+          "ai_action": "Két dolgot csinál egy üzenetben: (1) egy mondatban visszaigazolja a hibát és hogy visszaküldési folyamat indul, (2) közvetlenül utána megkérdezi a remedy preferenciát — cserét vagy visszatérítést szeretne-e az ügyfél. Ez a két elem egyetlen összefüggő üzenetben jelenik meg. Ha remedy_preference_known már teljesül (az ügyfél korábban megadta), ne kérdezd be újra — egy rövid megerősítő kérdéssel ellenőrizd: pl. 'Korábban [remedy] preferenciát jelöltél meg — ez még mindig így van?'. Ha megerősíti, azonnal routolj.",
+          "reply_rules": [
+            "Egy összefüggő üzenetben: először 1 mondatban a hiba visszaigazolása, majd rögtön a remedy kérdés",
+            "A remedy kérdés legyen konkrét: csere vagy visszatérítés",
+            "Maximum 2 mondat összesen",
+            "Ne magyarázd a visszaküldési folyamatot — a product-return node adja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét vagy visszatérítést szeretne."
+            },
+            {
+              "id": "case_summary_confirmed",
+              "description": "Csak step_4-ben állítható be, miután az AI megerősítette vagy bekérte a remedy preferenciát. Nem következik automatikusan remedy_preference_known-ból. Intake-ből TILOS beállítani."
+            }
+          ],
+          "branches": [
+            {
+              "if": [
+                "physical_damage_visible",
+                "extended_warranty_active"
+              ],
+              "goto": "agent-handoff",
+              "inject_conditions": [],
+              "message": "Fizikai sérülés és extended warranty kombinációja — ügyintéző vizsgálja meg."
+            },
+            {
+              "if": [
+                "physical_damage_visible"
+              ],
+              "goto": "agent-handoff",
+              "inject_conditions": [],
+              "message": "Fizikai sérülés látható — ügyintéző vizsgálja meg."
+            },
+            {
+              "if": [
+                "below_sold_threshold"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ],
+              "message": "Az akkumulátor kapacitása az ígért szint alá esett — visszaküldési folyamat indul."
+            },
+            {
+              "if": [
+                "issue_since_arrival"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ],
+              "message": "Érkezési akkumulátor hibát rögzítettük — visszaküldési folyamat indul."
+            },
+            {
+              "if": [
+                "extended_warranty_active",
+                "defect_confirmed_by_evidence"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ],
+              "message": "A hiba azonosítva, extended warranty aktív — visszaküldési folyamat indul."
+            },
+            {
+              "if": [
+                "defect_confirmed_by_evidence"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ],
+              "message": "A hiba azonosítva — visszaküldési folyamat indul."
+            },
+            {
+              "if": [
+                "case_summary_confirmed"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ],
+              "message": "Akkumulátor garanciális igényt rögzítettük — visszaküldési folyamat indul."
+            }
+          ],
+          "done_when": "remedy_preference_known és case_summary_confirmed teljesül",
+          "default_next": "product-return",
+          "default_inject_conditions": [
+            "return_source_defect"
+          ],
+          "fallback_reason": "Ha egyik branch sem teljesül (nincs physical_damage, below_sold_threshold, issue_since_arrival, extended_warranty vagy defect_confirmed_by_evidence), az akkumulátor hiba garanciálisnak tekinthető — product-return folyamat indul.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "swelling_or_safety_risk"
+          ],
+          "goto": "safety-escalation"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "battery_symptom_known",
+            "below_sold_threshold"
+          ],
+          "goto": "product-return",
+          "inject_conditions": [
+            "return_source_defect"
+          ]
+        },
+        {
+          "if": [
+            "has_order_id",
+            "battery_symptom_known",
+            "issue_since_arrival"
+          ],
+          "goto": "product-return",
+          "inject_conditions": [
+            "return_source_defect"
+          ]
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "activation-lock": {
+      "id": "activation-lock",
+      "fallback_message": "Úgy tűnik aktiválási problémád van a készülékkel. Tudj segíteni: milyen zárolási üzenetet látsz pontosan — iCloud fiók, Google fiók megerősítés, vagy valami más? Add meg a rendelési számodat is.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Aktiválási és fiók zárolás kezelése. Akkor aktív ha az ügyfél nem tudja aktiválni a készüléket mert egy korábbi fiók van rajta, a Find My iPhone vagy Google FRP zár aktív, vagy egy harmadik fél platform tiltotta a készüléket.",
+        "scope": "Find My iPhone, iCloud lock, Google FRP, aktiválás nem sikerül, régi fiók rajta van, készülék tiltva, device ban, Activation Lock, MDM zár",
+        "examples": [
+          "Nem tudom aktiválni mert egy régi iCloud fiók van rajta",
+          "A Find My iPhone be van kapcsolva és nem tudok belépni",
+          "Google FRP zárat kér és nem tudom megkerülni",
+          "A Snapchat azt mondja a készülék tiltva van",
+          "MDM profil van rajta amit nem tudok eltávolítani",
+          "Az előző tulajdonos fiókja még rajta van"
+        ]
+      },
+      "session_facts_whitelist": [
+        "lock_type_known",
+        "screenshot_provided",
+        "seller_side_confirmed",
+        "third_party_platform_ban",
+        "mdm_lock",
+        "image_provided",
+        "has_order_id",
+        "responsibility_assessed",
+        "responsibility_communicated",
+        "remedy_preference_known",
+        "evidence_provided"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "seller_side_confirmed"
+          ],
+          "then": "responsibility_assessed"
+        },
+        {
+          "when_all": [
+            "third_party_platform_ban"
+          ],
+          "then": "responsibility_assessed"
+        },
+        {
+          "when_all": [
+            "mdm_lock"
+          ],
+          "then": "responsibility_assessed"
+        },
+        {
+          "when_all": [
+            "screenshot_provided"
+          ],
+          "then": "evidence_provided"
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító és zárolás típusának azonosítása",
+          "extract_hint": "Az első üzenetből állítsd be az összes felismerhető kondíciót. iCloud / Find My / Apple ID / előző tulajdonos fiókja → lock_type_known + seller_side_confirmed. Google FRP → lock_type_known. MDM / vállalati profil → lock_type_known + mdm_lock. Platform ban (Snapchat, app tiltás) → lock_type_known + third_party_platform_ban.",
+          "ai_action": "Bekéri a rendelési számot és megkéri az ügyfelet hogy írja le pontosan milyen zárolási üzenetet lát a készüléken — például: 'iCloud aktiválási zár', 'Google fiók megerősítés szükséges', 'MDM profil', vagy egy app neve ami tiltást jelez.",
+          "reply_rules": [
+            "Két dolgot kérj: rendelési számot és a zárolási üzenet pontos szövegét",
+            "Adj 2-3 konkrét példát hogy milyen üzenetre gondolsz",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "lock_type_known",
+              "description": "Azonosított a zárolás típusa: iCloud/Find My, Google FRP, MDM, harmadik fél platform ban.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "seller_side_confirmed",
+              "description": "Egyértelmű hogy eladói oldali mulasztás (pl. nem törölték a fiókot).",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "third_party_platform_ban",
+              "description": "Harmadik fél platform (pl. Snapchat) eszköztiltása / ban.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "mdm_lock",
+              "description": "MDM profil vagy hasonló vállalati zárolás.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "has_order_id és lock_type_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "lock_type_known",
+                "seller_side_confirmed"
+              ],
+              "next_step": "step_2"
+            },
+            {
+              "if": [
+                "lock_type_known",
+                "third_party_platform_ban"
+              ],
+              "next_step": "step_2"
+            },
+            {
+              "if": [
+                "lock_type_known",
+                "mdm_lock"
+              ],
+              "next_step": "step_2"
+            }
+          ],
+          "default_next": "step_2",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_2",
+          "image_conditions": ["screenshot_provided"],
+          "goal": "Képernyőkép bekérése bizonyítékként",
+          "extract_hint": "Ha kép érkezett és a zárolási üzenet látható rajta → screenshot_provided. Ha az ügyfél megerősítette hogy nem tud képet küldeni → screenshot_provided NEM teljesül, csak image_decline_triggers kezelendő.",
+          "ai_action": "Kéri a zárolási képernyő fotóját vagy képernyőképét. Elmagyarázza hogy ez szükséges a felelősség megállapításához — az eladói mulasztás és a platform ban vizuálisan elkülöníthető.",
+          "reply_rules": [
+            "Csak a képernyőképet kérd",
+            "Egy mondatban indokold miért szükséges",
+            "Ne magyarázd a felelősség-megállapítás folyamatát"
+          ],
+          "internal_conditions": [
+            {
+              "id": "screenshot_provided",
+              "description": "Az ügyfél ténylegesen küldött képernyőképet a zárolási üzenetről. Csak akkor állítsd be ha kép ténylegesen érkezett — ha az ügyfél megerősítette hogy nem tud képet küldeni, ez a kondíció NEM teljesül.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "screenshot_provided teljesül",
+          "default_next": "step_3",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_3",
+          "goal": "Felelősség megállapítása",
+          "extract_hint": "A zárolás típusából közvetlenül következtess — ne kérj újabb leírást. iCloud/Find My/Apple ID/előző tulajdonos → seller_side_confirmed. Platform ban (Snapchat, app) → third_party_platform_ban. MDM/vállalati profil → mdm_lock. Egyik sem azonosítható → responsibility_assessed teljesül, specifikus flag nélkül.",
+          "ai_action": "FONTOS: Ha lock_type_known már teljesült a sessionből, NE kérj be újabb zárolás-leírást. A már ismert zárolás típusából közvetlenül következtess az alábbi logika szerint:\n- Ha az előző fordulóban az ügyfél iCloud, Find My, Apple ID, Google fiók, FRP, vagy 'előző tulajdonos fiókja' típusú zárolást említett → seller_side_confirmed teljesül\n- Ha az előző fordulóban platform tiltást említett (Snapchat, app ban, eszköztiltás) → third_party_platform_ban teljesül\n- Ha az előző fordulóban MDM, vállalati profil, céges zár típust említett → mdm_lock teljesül\n- Ha a típus ismert de egyik kategóriába sem sorolható egyértelműen → egyik specifikus kondíció sem teljesül, de responsibility_assessed igen\nEz a következtetés a képernyőkép beérkezése után azonnal lefut — nem kell újabb felhasználói üzenet a kategorizáláshoz.\n\nA zárolás típusa és a képernyőkép alapján azonosítja a felelősséget. Négy eset lehetséges:\n1. iCloud/Find My zár, előző tulajdonos fiókja rajta → seller_side_confirmed\n2. Harmadik fél platform tiltás (pl. Snapchat, egyéb app ban) → third_party_platform_ban\n3. MDM profil / vállalati zár → mdm_lock\n4. Egyik sem azonosítható egyértelműen, vagy az ügyfél nem tudja megmondani → egyik specifikus kondíció sem teljesül, de responsibility_assessed AKKOR IS teljesül, mert a megállapítás eredménye: 'nem azonosítható, agent handoff szükséges'.",
+          "reply_rules": [
+            "Ne közöld az ügyfélnek a felelősség megállapításának logikáját",
+            "Ne használj jogi vagy technikai terminológiát",
+            "Maximum 1 mondat — csak annyit hogy mi a következő lépés",
+            "Mindig küldj 1 mondatos visszajelzést a megállapításról — ez kötelező mielőtt a következő stepre lép",
+            "Ha egyik zárolás-típus sem azonosítható egyértelműen: 1 mondatban közöld hogy az esetet ügyintéző fogja megvizsgálni — ne próbálj tovább diagnosztizálni"
+          ],
+          "internal_conditions": [
+            {
+              "id": "responsibility_assessed",
+              "description": "Automatikusan teljesül miután az AI elvégezte a zárolás típusának értékelését és elküldte a visszajelzést — függetlenül az eredménytől (eladói mulasztás, platform ban, MDM, vagy nem azonosítható). Ne várj külön megerősítést. Intake-ből vagy step_3 előtt TILOS beállítani — kizárólag step_3 lefutása után állítható be, miután az AI elvégezte a zárolástípus értékelését és elküldte a visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "responsibility_communicated",
+              "description": "Automatikusan teljesül miután az AI egy mondatban közölte az ügyféllel a felelősség megállapításának eredményét (pl. eladói mulasztás, platform ban, MDM). Ne várj ügyfél-visszajelzést — ha az AI elküldte az üzenetet, ez a kondíció azonnal teljesítettnek tekintendő. Intake-ből vagy step_3 előtt TILOS beállítani — kizárólag step_3-ban állítható be, miután az AI elküldte a visszajelző üzenetet az ügyfelnek.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "seller_side_confirmed",
+              "description": "Egyértelmű hogy eladói oldali mulasztás (pl. nem törölték a fiókot).",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "third_party_platform_ban",
+              "description": "Harmadik fél platform (pl. Snapchat) eszköztiltása / ban.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "mdm_lock",
+              "description": "MDM profil vagy hasonló vállalati zárolás.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "responsibility_assessed és responsibility_communicated teljesül",
+          "branches": [
+            {
+              "if": [
+                "seller_side_confirmed"
+              ],
+              "next_step": "step_4a"
+            },
+            {
+              "if": [
+                "third_party_platform_ban"
+              ],
+              "next_step": "step_4b"
+            },
+            {
+              "if": [
+                "mdm_lock"
+              ],
+              "next_step": "step_4c"
+            }
+          ],
+          "default_next": "step_escalate",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_4a",
+          "goal": "Eladói mulasztás visszaigazolása és remedy preferencia",
+          "extract_hint": "Ha remedy_preference_known már teljesült a sessionből, ne kérd be újra — megerősítő kérdéssel ellenőrizd.",
+          "ai_action": "Két dolgot csinál egy üzenetben: (1) egy mondatban visszaigazolja az eladói mulasztást, (2) közvetlenül utána megkérdezi a remedy preferenciát — cserét vagy visszatérítést szeretne-e az ügyfél. Ez a két elem egyetlen összefüggő üzenetben jelenik meg.",
+          "reply_rules": [
+            "Egy összefüggő üzenetben: először 1 mondatban az eladói mulasztás visszaigazolása, majd rögtön a remedy kérdés",
+            "A remedy kérdés legyen konkrét: csere vagy visszatérítés",
+            "Maximum 2 mondat összesen",
+            "Ne magyarázd a visszaküldési folyamatot — a product-return node adja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét vagy visszatérítést szeretne. Ha az első üzenetből jön, a rendszer elmenti — de step_4a-ban megerősítő kérdéssel ellenőrizni kell mielőtt lock_handoff_confirmed teljesül. Intake-ből való beállítás esetén NEM teljesíti automatikusan lock_handoff_confirmed-et.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "lock_handoff_confirmed",
+              "description": "Automatikusan teljesül miután az AI megerősítette a remedy preferenciát és elküldte a lezáró üzenetet. Ne várj ügyfél-visszajelzést. Csak step_4a-ban állítható be, miután az AI megerősítette a remedy preferenciát és elküldte a lezáró üzenetet. Intake-ből vagy korábbi step-ből TILOS beállítani.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "remedy_preference_known és lock_handoff_confirmed teljesül",
+          "branches": [
+            {
+              "if": [
+                "remedy_preference_known"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_defect"
+              ]
+            }
+          ],
+          "default_next": "agent-handoff",
+          "fallback_reason": "Ha remedy_preference_known nem teljesül, ügyintéző veszi át.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        },
+        {
+          "id": "step_4b",
+          "goal": "Harmadik fél platform ban kezelése és lezárás",
+          "extract_hint": "Ha az ügyfél visszaigazolta hogy felveszi a kapcsolatot a platformmal → platform_case_summarized teljesül.",
+          "ai_action": "Utasítja hogy vegye fel a kapcsolatot az érintett platformmal. Rövid visszaigazolás.",
+          "reply_rules": [
+            "Platform tájékoztató: maximum 2 mondat — a vizsgálati folyamat részleteit az end node adja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "platform_guidance_given",
+              "description": "Automatikusan teljesül miután az AI elküldte a platform kontaktálásra vonatkozó utasítást. Ne várj ügyfél-visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "platform_case_summarized",
+              "description": "Automatikusan teljesül miután az AI közölte az ügyfélnek hogy vegye fel a kapcsolatot az érintett platformmal és összefoglalta az esetet. Ne várj ügyfél-visszajelzést — ha az AI elküldte az útmutatót, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "platform_guidance_given és platform_case_summarized teljesül",
+          "default_next": "review-platform-ban",
+          "fallback_reason": "Platform ban esetén review-platform-ban end node.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        },
+        {
+          "id": "step_4c",
+          "goal": "MDM zárolás kezelése és lezárás",
+          "extract_hint": "Ha az AI elküldte az MDM eszkaláció visszaigazolását → mdm_escalation_done és mdm_case_summarized teljesül.",
+          "ai_action": "Jelzi hogy MDM eszkaláció indul az eladó felé — rövid visszaigazolás.",
+          "reply_rules": [
+            "Csak eszkaláció indulásának visszajelzése — ne ígér időkeretet vagy remedy-t ebben a stepben"
+          ],
+          "internal_conditions": [
+            {
+              "id": "mdm_escalation_done",
+              "description": "Automatikusan teljesül miután az AI elküldte az MDM eszkaláció visszaigazolását. Ne várj ügyfél-visszajelzést.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "mdm_case_summarized",
+              "description": "Automatikusan teljesül miután az AI jelezte hogy MDM eszkaláció indul az eladó felé és összefoglalta az esetet. Ne várj ügyfél-visszajelzést — ha az AI elküldte az eszkalációs üzenetet, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "mdm_escalation_done és mdm_case_summarized teljesül",
+          "default_next": "investigate-lock",
+          "fallback_reason": "MDM zárolás esetén investigate-lock end node.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        },
+        {
+          "id": "step_escalate",
+          "goal": "Nem azonosítható zárolás — agent handoff",
+          "extract_hint": "Ha az AI elküldte a tájékoztatást → escalation_summary_done teljesül.",
+          "ai_action": "Tájékoztatja az ügyfelet hogy a zárolás típusa nem azonosítható egyértelműen az elérhető adatokból, és egy ügyintéző fogja személyesen megvizsgálni az esetet. Összefoglalja az eddig összegyűjtött adatokat az agent handoff előtt.",
+          "reply_rules": [
+            "Empatikus, rövid tájékoztatás — ügyintéző fogja megvizsgálni",
+            "Ne sorold fel mi mindent próbáltatok",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "escalation_summary_done",
+              "description": "Automatikusan teljesül miután az AI tájékoztatta az ügyfelet hogy a zárolás típusa nem azonosítható egyértelműen és az eset manuális felülvizsgálatra kerül. Ne várj ügyfél-visszajelzést — ha az AI elküldte az eszkalációs üzenetet, ez a kondíció azonnal teljesítettnek tekintendő.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "escalation_summary_done teljesül",
+          "default_next": "agent-handoff-lock",
+          "fallback_reason": "Nem azonosítható zárolás esetén agent-handoff.",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "lock_type_known",
+            "seller_side_confirmed",
+            "screenshot_provided",
+            "responsibility_assessed"
+          ],
+          "goto": "product-return",
+          "inject_conditions": [
+            "return_source_defect"
+          ]
+        },
+        {
+          "if": [
+            "has_order_id",
+            "lock_type_known",
+            "third_party_platform_ban"
+          ],
+          "goto": "review-platform-ban"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "lock_type_known",
+            "mdm_lock"
+          ],
+          "goto": "investigate-lock"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "product-return": {
+      "id": "product-return",
+      "fallback_message": "Visszaküldéssel kapcsolatban tudok segíteni. Kérlek pontosítsd: meggondoltad magad, kompatibilitási probléma van, vagy egy korábbi hiba miatt szeretnéd visszaküldeni a terméket? Add meg a rendelési számodat is.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Visszaküldési folyamat kezelése. Akkor aktív ha az ügyfél vissza akarja küldeni a terméket — akár meggondolta magát / kompatibilitási ok / elvárás eltérés miatt (change-of-mind), akár egy korábbi garanciális vagy akkumulátor hiba megállapítása után kerül ide a rendszer. A node a belépési kondíciók alapján automatikusan átugorja a már teljesített lépéseket: ha az ügyfél egy defect vagy battery folyamatból érkezik, az order, a hiba leírása és a bizonyíték már megvan — csak az állapotfelmérés, az előkészítés és a lezárás hiányzik.",
+        "scope": "Visszaküldés, visszárú, elállási jog, meggondoltam magam, nem tetszik, kompatibilitási probléma, visszaküldési címke, 30 napos visszaküldés, garanciális visszaküldés, hibás termék visszaküldése, akkumulátor hiba visszaküldés",
+        "examples": [
+          "Vissza szeretném küldeni a terméket",
+          "Meggondoltam magam",
+          "Nem kompatibilis a rendszeremmel",
+          "Nem az elvárásaimnak megfelelő",
+          "Hogyan küldhetek vissza valamit",
+          "Szeretnék élni az elállási jogommal",
+          "A hibás terméket vissza kell küldeni",
+          "Mit kell csinálnom a visszaküldéshez"
+        ]
+      },
+      "session_facts_whitelist": [
+        "return_reason_known",
+        "return_source_defect",
+        "return_source_cosmetic",
+        "return_source_wrong_item",
+        "within_return_window",
+        "outside_return_window",
+        "extended_warranty_active",
+        "product_condition_assessed",
+        "product_condition_issue",
+        "reset_confirmed",
+        "remedy_preference_known",
+        "has_order_id"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "return_source_defect"
+          ],
+          "then": "return_reason_known"
+        },
+        {
+          "when_all": [
+            "return_source_cosmetic"
+          ],
+          "then": "return_reason_known"
+        },
+        {
+          "when_all": [
+            "return_source_wrong_item"
+          ],
+          "then": "return_reason_known"
+        },
+        {
+          "when_all": [
+            "within_return_window"
+          ],
+          "then": "return_window_checked"
+        },
+        {
+          "when_all": [
+            "outside_return_window"
+          ],
+          "then": "return_window_checked"
+        },
+        {
+          "when_all": [
+            "return_source_defect"
+          ],
+          "then": "return_window_checked"
+        },
+        {
+          "when_all": [
+            "return_source_cosmetic"
+          ],
+          "then": "return_window_checked"
+        },
+        {
+          "when_all": [
+            "return_source_wrong_item"
+          ],
+          "then": "return_window_checked"
+        },
+        {
+          "when_all": [
+            "return_source_wrong_item"
+          ],
+          "then": "remedy_preference_known"
+        },
+        {
+          "when_all": [
+            "return_source_cosmetic"
+          ],
+          "then": "remedy_preference_known"
+        }
+      ],
+      "conditions": [
+        {
+          "id": "has_order_id",
+          "description": "Az ügyfél megadta a rendelési számát, vagy ez már egy korábbi node-ból ismert.",
+          "required": false,
+          "do_not_reask_if_satisfied": true,
+          "validation_pattern_ref": "reference_id_pattern"
+        },
+        {
+          "id": "return_source_cosmetic",
+          "description": "Az ügyfél egy kozmetikai állapot vitából (cosmetic-dispute node) érkezik ide: a grade ismert, a fotók megvannak, az állapotfelmérés megtörtént, a visszaküldési ablak ellenőrzött volt.",
+          "required": false
+        },
+        {
+          "id": "return_reason_known",
+          "description": "Ismert a visszaküldés oka: change-of-mind, kompatibilitási probléma, elvárás eltérés, vagy garanciális/defekt/akkumulátor hiba miatt irányított visszaküldés.",
+          "required": false
+        },
+        {
+          "id": "return_source_defect",
+          "description": "Az ügyfél egy garanciális termékhibás folyamatból (product-defect vagy battery-issue node) érkezik ide: a hiba azonosított és bizonyított, az order_id ismert, a 30 napos ablak ellenőrzött volt.",
+          "required": false
+        },
+        {
+          "id": "within_return_window",
+          "description": "Az ügyfél a 30 napos visszaküldési határidőn belül van — vagy ez egy korábbi node-ban már megállapítást nyert.",
+          "required": false
+        },
+        {
+          "id": "outside_return_window",
+          "description": "Az ügyfél a 30 napos visszaküldési határidőn túl van.",
+          "required": false
+        },
+        {
+          "id": "product_condition_assessed",
+          "description": "Az ügyfél nyilatkozott a termék jelenlegi állapotáról: csomagolás megléte, tartozékok, extra sérülések.",
+          "required": false
+        },
+        {
+          "id": "product_condition_issue",
+          "description": "Hiányzó tartozék, extra sérülés vagy egyéb állapotprobléma, ami értékcsökkentést vonhat maga után.",
+          "required": false
+        },
+        {
+          "id": "condition_deduction_accepted",
+          "description": "Az ügyfél döntött: elfogadja az esetleges értékcsökkentést, vagy nem kívánja folytatni a visszaküldést.",
+          "required": false
+        },
+        {
+          "id": "reset_confirmed",
+          "description": "Az ügyfél megerősítette hogy elvégezte (vagy el fogja végezni) a gyári visszaállítást és az összes személyes fiók eltávolítását visszaküldés előtt.",
+          "required": false
+        },
+        {
+          "id": "remedy_preference_known",
+          "description": "Az ügyfél megadta hogy javítást, cserét vagy visszatérítést szeretne — csak return_source_defect esetén releváns.",
+          "required": false
+        },
+        {
+          "id": "extended_warranty_active",
+          "description": "A rendelési adatok alapján aktív extended warranty van kötve a termékhez.",
+          "required": false
+        },
+        {
+          "id": "return_source_wrong_item",
+          "description": "Az ügyfél egy rossz termék érkezett folyamatból érkezik: a spec eltérés dokumentált, a fotóbizonyíték megvan, a remedy preferencia ismert.",
+          "required": false
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Belépési kondíciók felmérése — szükséges lépések meghatározása",
+          "ai_action": "A state-ben már meglévő kondíciók alapján azonnal meghatározza melyik lépés az első valódi teendő. Ha return_source_defect teljesül: has_order_id, return_reason_known és within_return_window már teljesített — egyből step_3-ra ugrik. Ha has_order_id már megvan de return_reason_known hiányzik: röviden megkérdezi az okot, majd step_2-re lép. Ha semmi nem ismert: bekéri a rendelési számot és a visszaküldés okát.",
+          "reply_rules": [
+            "Ha az ok már ismert, ne kérdezd újra — csak erősítsd meg",
+            "Ha a rendelési szám hiányzik, csak azt kérd",
+            "Maximum 1-2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát, vagy ez már egy korábbi node-ból ismert.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "return_reason_known",
+              "description": "Ismert a visszaküldés oka.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "return_source_defect",
+              "description": "Defect/battery folyamatból érkező visszaküldés: order, hiba, 30 napos ablak már ismert.",
+              "required": false
+            },
+            {
+              "id": "return_source_cosmetic",
+              "description": "Cosmetic-dispute folyamatból érkező visszaküldés: grade, fotók, állapotfelmérés már ismert.",
+              "required": false
+            },
+            {
+              "id": "return_source_wrong_item",
+              "description": "Wrong-item folyamatból érkező visszaküldés: spec eltérés dokumentált, fotóbizonyíték megvan.",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és return_reason_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "return_source_cosmetic"
+              ],
+              "next_step": "step_3"
+            },
+            {
+              "if": [
+                "return_source_wrong_item"
+              ],
+              "next_step": "step_3"
+            },
+            {
+              "if": [
+                "return_source_defect"
+              ],
+              "next_step": "step_3"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_2",
+          "goal": "30 napos visszaküldési ablak ellenőrzése",
+          "ai_action": "Ellenőrzi a rendelési dátum alapján hogy az ügyfél a 30 napos visszaküldési határidőn belül van-e. Ha return_source_defect teljesül, ezt a lépést a rendszer átugorja — a step_1 branch már step_3-ra irányít. Ha határidőn túl: empatikusan tájékoztatja és megvizsgálja van-e kivételes körülmény (betegség, postai késedelem, extended_warranty_active). Ha határidőn belül: folytatja.",
+          "reply_rules": [
+            "Ne magyarázd a 30 napos szabályt ha határidőn belül van — csak folytasd",
+            "Ha határidőn túl: empatikus, de egyértelmű közlés",
+            "Ne ígérj kivételt — csak jelezd hogy megvizsgálod",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "return_window_checked",
+              "description": "A visszaküldési ablak ellenőrzött és az eredmény ismert."
+            },
+            {
+              "id": "within_return_window",
+              "description": "Az ügyfél a 30 napos visszaküldési határidőn belül van.",
+              "required": false
+            },
+            {
+              "id": "outside_return_window",
+              "description": "Az ügyfél a 30 napos visszaküldési határidőn túl van.",
+              "required": false
+            }
+          ],
+          "done_when": "return_window_checked teljesül",
+          "branches": [
+            {
+              "if": [
+                "outside_return_window"
+              ],
+              "next_step": "step_window_expired"
+            }
+          ],
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_window_expired",
+          "goal": "Lejárt visszaküldési határidő kezelése",
+          "ai_action": "Empatikusan közli hogy a 30 napos visszaküldési határidő lejárt. Elmagyarázza a szabályt. Megvizsgálja hogy fennáll-e kivételes körülmény vagy extended_warranty_active van-e. Ha extended warranty aktív és garanciális hiba igazolt: a folyamat folytatódhat — step_3-ra lép. Ha nincs kivétel és nincs biztosítás: lezárja az esetet és tájékoztatja az ügyfelet a lehetséges következő lépésekről (manuális felülvizsgálat kérése).",
+          "reply_rules": [
+            "Empatikus hang, de egyértelmű — a határidő lejárt",
+            "Ne adj hamis reményt ha nincs kivételes körülmény",
+            "Ha extended warranty aktív: egy mondatban jelezd hogy ez befolyásolhatja az elbírálást",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "window_outcome_communicated",
+              "description": "Automatikusan teljesül miután az AI közölte az ügyfélnek hogy a visszaküldési határidő lejárt és elmagyarázta a szabályt. Ne várj ügyfél-visszajelzést — ha az AI elküldte a tájékoztató üzenetet, ez a kondíció azonnal teljesítettnek tekintendő."
+            },
+            {
+              "id": "extended_warranty_active",
+              "description": "Aktív extended warranty — garanciális alapon folytatható a visszaküldés határidőn túl is.",
+              "required": false
+            }
+          ],
+          "done_when": "window_outcome_communicated teljesül",
+          "branches": [
+            {
+              "if": [
+                "extended_warranty_active",
+                "return_source_defect"
+              ],
+              "next_step": "step_3"
+            }
+          ],
+          "default_next": "process-return-rejected",
+          "is_closing": true,
+          "is_terminal": true
+        },
+        {
+          "id": "step_3",
+          "goal": "Termék jelenlegi állapotának felmérése",
+          "ai_action": "Megkérdezi hogy a termék jelenlegi állapotban van-e: nincs extra (visszaküldés utáni) sérülés, megvan az eredeti csomagolás és minden tartozék. Ha return_source_defect teljesül, kontextust ad: 'Mielőtt elindítjuk a visszaküldést, néhány gyors kérdés a csomag jelenlegi állapotáról.' Tájékoztatja hogy hiányzó tartozék vagy extra sérülés értékcsökkentést vonhat maga után.",
+          "reply_rules": [
+            "Kérdezz rá az eredeti csomagolásra és tartozékokra — konkrétan",
+            "Ne riaszd el az ügyfelet — az értékcsökkentés csak lehetőség, nem biztos",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "product_condition_assessed",
+              "description": "Az ügyfél nyilatkozott a termék jelenlegi állapotáról: csomagolás megléte, tartozékok, extra sérülések."
+            },
+            {
+              "id": "product_condition_issue",
+              "description": "Hiányzó tartozék, extra sérülés vagy egyéb állapotprobléma, ami értékcsökkentést vonhat maga után.",
+              "required": false
+            }
+          ],
+          "done_when": "product_condition_assessed teljesül",
+          "branches": [
+            {
+              "if": [
+                "product_condition_issue"
+              ],
+              "next_step": "step_condition_issue"
+            }
+          ],
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_condition_issue",
+          "goal": "Állapotprobléma kezelése",
+          "ai_action": "Tájékoztatja az ügyfelet hogy a hiányzó tartozék vagy extra sérülés miatt értékcsökkentés lehetséges a visszatérítésnél. Ha return_source_defect és extended_warranty_active teljesül: jelzi hogy a biztosítás keretében az elbírálás rugalmasabb lehet, de a végleges döntés a vizsgálat után születik. Megkérdezi hogy ilyen feltételekkel is folytatni szeretné-e a visszaküldést.",
+          "reply_rules": [
+            "Semleges, tájékoztató hang — ne vádold az ügyfelet",
+            "Egy mondatban jelezd az értékcsökkentés lehetőségét",
+            "Zárd konkrét kérdéssel: ilyen feltételekkel folytatja-e",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "condition_deduction_accepted",
+              "description": "Az ügyfél döntött: elfogadja az esetleges értékcsökkentést, vagy nem kívánja folytatni a visszaküldést."
+            }
+          ],
+          "done_when": "condition_deduction_accepted teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_4",
+          "goal": "Visszaküldés előtti előkészítési utasítások",
+          "ai_action": "Kéri a gyári visszaállítást és az összes személyes fiók eltávolítását (iCloud, Google fiók, Samsung fiók stb.) a visszaküldés előtt. Elmagyarázza miért szükséges: a raktár nem tud megjavítani vagy feldolgozni egy fiókzárolt eszközt, és a személyes adatok védelme az ügyfél érdeke. Ha reset_confirmed már teljesült egy korábbi node-ból: átugorja ezt a lépést és step_5-re lép.",
+          "reply_rules": [
+            "Magyarázd el röviden miért szükséges a reset",
+            "Sorold fel a fiók-típusokat konkrétan: iCloud, Google fiók, Samsung fiók",
+            "Ne folytasd amíg a reset nem megerősített",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "reset_confirmed",
+              "description": "Az ügyfél megerősítette hogy elvégezte (vagy el fogja végezni) a gyári visszaállítást és a fiók eltávolítást.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "reset_confirmed teljesül",
+          "default_next": "step_5"
+        },
+        {
+          "id": "step_5",
+          "goal": "Remedy meghatározása, kommunikálása és visszaküldési folyamat lezárása",
+          "ai_action": "Rövid nyugtázó mondat (max 1 mondat). Routing az end node-ra a teljesült kondíciók alapján. Ha remedy_preference_known már teljesül (az ügyfél korábban megadta), ne kérdezd be újra — egy rövid megerősítő kérdéssel ellenőrizd: pl. 'Korábban [remedy] preferenciát jelöltél meg — ez még mindig így van?'. Ha megerősíti, azonnal routolj.",
+          "reply_rules": [
+            "Maximum 1 mondat — csak nyugtázás.",
+            "Ne kérj be hiányzó adatot — az előző lépésekben már összegyűjtöttük.",
+            "Ne magyarázd a következő lépéseket — az end node adja.",
+            "Ne utalj összefoglalóra, vizsgálatra, vagy remedy-re.",
+            "Ne ismételd az end node szövegét."
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Ha return_source_defect teljesül: az ügyfél megadta hogy javítást, cserét vagy visszatérítést szeretne. Ha nem defect forrás: nem szükséges.",
+              "required": false
+            },
+            {
+              "id": "return_process_confirmed",
+              "description": "Az ügyfél megkapta a rövid lezáró jelzést; a részletes tájékoztatást a végoldal tartalmazza."
+            }
+          ],
+          "branches": [
+            {
+              "if": [
+                "return_source_defect",
+                "exclusion_risk",
+                "reset_confirmed"
+              ],
+              "goto": "process-return-exclusion"
+            },
+            {
+              "if": [
+                "return_source_defect",
+                "physical_damage_visible",
+                "reset_confirmed"
+              ],
+              "goto": "process-return-exclusion"
+            },
+            {
+              "if": [
+                "return_source_cosmetic",
+                "reset_confirmed"
+              ],
+              "goto": "process-return-cosmetic"
+            },
+            {
+              "if": [
+                "return_source_wrong_item",
+                "reset_confirmed"
+              ],
+              "goto": "process-return-defect"
+            },
+            {
+              "if": [
+                "return_source_defect",
+                "remedy_preference_known",
+                "condition_deduction_accepted"
+              ],
+              "goto": "process-return-defect-partial"
+            },
+            {
+              "if": [
+                "return_source_defect",
+                "remedy_preference_known"
+              ],
+              "goto": "process-return-defect"
+            },
+            {
+              "if": [
+                "within_return_window",
+                "condition_deduction_accepted"
+              ],
+              "goto": "process-return-partial"
+            },
+            {
+              "if": [
+                "within_return_window"
+              ],
+              "goto": "process-return"
+            }
+          ],
+          "done_when": "return_process_confirmed teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "return_source_cosmetic",
+            "reset_confirmed"
+          ],
+          "goto": "process-return-cosmetic"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "outside_return_window"
+          ],
+          "goto": "process-return-rejected"
+        },
+        {
+          "if": [
+            "return_source_defect",
+            "product_condition_assessed",
+            "reset_confirmed",
+            "remedy_preference_known",
+            "condition_deduction_accepted"
+          ],
+          "goto": "process-return-defect-partial"
+        },
+        {
+          "if": [
+            "return_source_defect",
+            "product_condition_assessed",
+            "reset_confirmed",
+            "remedy_preference_known"
+          ],
+          "goto": "process-return-defect"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "return_reason_known",
+            "within_return_window",
+            "product_condition_assessed",
+            "reset_confirmed",
+            "condition_deduction_accepted"
+          ],
+          "goto": "process-return-partial"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "return_reason_known",
+            "within_return_window",
+            "product_condition_assessed",
+            "reset_confirmed"
+          ],
+          "goto": "process-return"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "payment-refund": {
+      "id": "payment-refund",
+      "fallback_message": "Visszatérítéssel vagy fizetési problémával kapcsolatban tudok segíteni. Kérlek írd le: nem érkezett meg a visszatérítés, kétszer lett levonva az összeg, vagy más fizetési hibát tapasztaltál? Add meg a rendelési számodat is.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Visszatérítési és fizetési viták kezelése. Akkor aktív ha az ügyfél nem kapta vissza a pénzét egy elfogadott visszaküldés után, kétszer lett megterhelve, vagy fizetési hibát tapasztalt.",
+        "scope": "Visszatérítés nem érkezett meg, dupla terhelés, fizetési hiba, refund státusz, mikor kapom vissza a pénzem",
+        "examples": [
+          "Nem kaptam vissza a pénzemet a visszaküldés után",
+          "Kétszer vonták le a vételárat",
+          "Mikor kapom vissza a visszatérítést",
+          "A visszatérítés nem érkezett meg a bankszámlámra",
+          "Fizetési hiba történt a rendelésnél",
+          "Már három hete visszaküldtem és nincs refund"
+        ]
+      },
+      "session_facts_whitelist": [
+        "refund_type_known",
+        "double_charge",
+        "return_was_completed",
+        "return_not_received",
+        "payment_method_known",
+        "has_order_id",
+        "return_status_checked"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "double_charge"
+          ],
+          "then": "refund_type_known"
+        },
+        {
+          "when_all": [
+            "return_was_completed"
+          ],
+          "then": "return_status_checked"
+        },
+        {
+          "when_all": [
+            "return_not_received"
+          ],
+          "then": "return_status_checked"
+        },
+        {
+          "when_all": [
+            "return_was_completed"
+          ],
+          "then": "return_proof_available"
+        }
+      ],
+      "conditions": [
+        {
+          "id": "has_order_id",
+          "description": "Az ügyfél megadta a rendelési számát.",
+          "required": false,
+          "do_not_reask_if_satisfied": true,
+          "validation_pattern_ref": "reference_id_pattern"
+        },
+        {
+          "id": "refund_type_known",
+          "description": "Azonosított a visszatérítési probléma típusa: nem érkezett meg, dupla terhelés, vagy egyéb fizetési hiba.",
+          "required": false
+        },
+        {
+          "id": "double_charge",
+          "description": "Dupla terhelés vagy többszörös levonás történt.",
+          "required": false
+        },
+        {
+          "id": "return_was_completed",
+          "description": "A visszaküldés megérkezett a raktárba és elfogadásra került.",
+          "required": false
+        },
+        {
+          "id": "return_not_received",
+          "description": "A visszaküldés még nem érkezett meg a raktárba vagy nem került elfogadásra.",
+          "required": false
+        },
+        {
+          "id": "payment_method_known",
+          "description": "Az ügyfél megadta a fizetési módot.",
+          "required": false
+        },
+        {
+          "id": "refund_outcome_communicated",
+          "description": "Az ügyfél tudja hogy a visszatérítés mikor és hogyan fog megérkezni, vagy mi akadályozza. Csak a step_4-ben teljesülhet, miután az AI elküldte a nyugtázó üzenetet. Intake-ből vagy session-ből NEM állítható be.",
+          "required": false
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító és probléma típusának azonosítása",
+          "ai_action": "Bekéri a rendelési számot és azonosítja a probléma típusát: nem érkezett meg a visszatérítés, dupla terhelés, vagy egyéb fizetési hiba.",
+          "reply_rules": [
+            "Két dolgot kérj: rendelési számot és a probléma típusát",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "refund_type_known",
+              "description": "Azonosított a visszatérítési probléma típusa.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "double_charge",
+              "description": "Dupla terhelés vagy többszörös levonás történt.",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és refund_type_known teljesül",
+          "chain_on_complete": true,
+          "branches": [
+            {
+              "if": [
+                "double_charge"
+              ],
+              "next_step": "step_double_charge"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_double_charge",
+          "image_conditions": ["bank_screenshot_provided"],
+          "late_image_backfill": [
+            {
+              "when_all": ["double_charge"],
+              "then": "bank_screenshot_provided"
+            }
+          ],
+          "goal": "Dupla terhelés azonnali eszkalálása",
+          "ai_action": "Azonnal pénzügyi eszkalációt indít. Megkéri a banki kivonat képernyőképét bizonyítékként. Jelzi hogy prioritásként kezeljük és hamarosan felvesszük a kapcsolatot.",
+          "reply_rules": [
+            "Ne ígér konkrét megoldási időt — csak prioritás és hamarosan felvesszük a kapcsolatot",
+            "Kérd a banki kivonat képernyőképét — egy mondatban, az eszkaláló visszaigazolás után."
+          ],
+          "internal_conditions": [
+            {
+              "id": "bank_screenshot_provided",
+              "description": "Az ügyfél csatolta a banki kivonat képernyőképét amely a dupla terhelést igazolja.",
+              "do_not_reask_if_satisfied": true,
+              "do_not_reask_hint": "TILOS a banki kivonatot vagy képernyőképet újra bekérni — köszönd meg röviden a csatolt képet és lépj tovább."
+            },
+            {
+              "id": "double_charge_escalated",
+              "description": "A dupla terhelés eszkalálva, az ügyfél visszaigazolást kapott: az eset prioritásként lesz kezelve, de konkrét határidő ígéret nélkül. Automatikusan teljesül miután az AI elküldte az eszkaláló üzenetet. Ne várj ügyfél-visszajelzést.",
+              "auto_satisfy_after_reply": true,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "bank_screenshot_provided és double_charge_escalated teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true,
+          "fallback_reason": "Dupla terhelés eszkalálva — agent-handoff end node."
+        },
+        {
+          "id": "step_2",
+          "goal": "Visszaküldés státuszának ellenőrzése",
+          "ai_action": "Megkérdezi az ügyfelet hogy mikor küldte vissza a terméket és van-e feladási igazolása. Nem feltételezi hogy a visszaküldés megérkezett vagy nem érkezett meg — a státuszt az ügyfél válasza alapján azonosítja.",
+          "reply_rules": [
+            "Két dolgot kérj: mikor küldte vissza és van-e feladási igazolása",
+            "Ne feltételezd hogy megérkezett vagy nem érkezett meg",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "return_status_checked",
+              "description": "Ismert hogy a visszaküldés megérkezett-e és elfogadásra került-e.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "return_proof_available",
+              "description": "Az ügyfél megadta a feladás dátumát és a feladási igazolás meglétét megerősítette vagy tagadta.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "return_not_received",
+              "description": "A visszaküldés még nem érkezett meg a raktárba vagy nem került elfogadásra.",
+              "required": false,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "return_status_checked és return_proof_available teljesül",
+          "chain_on_complete": true,
+          "branches": [
+            {
+              "if": [
+                "return_not_received"
+              ],
+              "next_step": "step_return_not_received"
+            }
+          ],
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_return_not_received",
+          "goal": "Meg nem érkezett visszaküldés kezelése",
+          "ai_action": "Tájékoztatja az ügyfelet hogy a visszaküldés még nem érkezett meg a raktárba. Kéri a tracking számot és a feladási igazolást. Jelzi hogy vizsgálat indul.",
+          "reply_rules": [
+            "Empatikus hang — nem az ügyfél hibája",
+            "Kérd a tracking számot és a feladási igazolást — ebben a sorrendben",
+            "Jelezd hogy vizsgálat indul — egy mondatban",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "return_investigation_started",
+              "description": "Az AI jelezte hogy vizsgálat indul a visszaküldés státuszára. Teljesül akkor is ha az ügyfélnek nincs feladási igazolása — a vizsgálat az AI üzenet elküldésével elindul, az igazolás csak opcionális gyorsítás. Automatikusan teljesül miután az AI elküldte a tájékoztató üzenetet. Ne várj ügyfél-visszajelzést.",
+              "auto_satisfy_after_reply": true,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "return_investigation_started teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true,
+          "fallback_reason": "Visszaküldés vizsgálat elindult — agent-handoff end node."
+        },
+        {
+          "id": "step_3",
+          "goal": "Fizetési mód azonosítása és visszatérítési státusz lekérése",
+          "ai_action": "Ha payment_method_known teljesült, ne kérje a fizetési módot. Ha az időkeret ismert a rendelési adatokból: közli az ügyfélnek. Ha nem ismert: egy mondatban visszaigazolja hogy a visszatérítés feldolgozás alatt áll és hamarosan megérkezik. Mindkét esetben a step lezárul az üzenet elküldése után.",
+          "reply_rules": [
+            "Ha a fizetési mód még nem ismert: egy mondatban kérdezd meg (pl. bankkártyával, PayPal-lal vagy utalással fizetett?)",
+            "Visszatérítési időkeretet csak akkor közöld ha a rendelési adatokból ismert — ne becsülj"
+          ],
+          "internal_conditions": [
+            {
+              "id": "payment_method_known",
+              "description": "Az ügyfél megadta a fizetési módot.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "refund_timeline_communicated",
+              "description": "Az AI elküldte a visszatérítési státusz-visszajelzést: vagy a fizetési mód alapján ismert időkeretet közölte, vagy visszaigazolta hogy a visszatérítés feldolgozás alatt áll. Automatikusan teljesül miután az AI elküldte az üzenetet. Ne várj ügyfél-visszajelzést.",
+              "auto_satisfy_after_reply": true,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "payment_method_known és refund_timeline_communicated teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_4",
+          "goal": "Visszatérítési státusz rövid nyugtázása — az end node indítja a folyamatot",
+          "ai_action": "Ha return_was_completed teljesül: nyugtázza hogy a visszaküldés megérkezett és a visszatérítés folyamatban van. Ha return_was_completed nem teljesül: visszaigazolja hogy a visszatérítési igényt rögzítettük és feldolgozzuk. Maximum 1 mondat, utána routing az end node-ra.",
+          "reply_rules": [
+            "Ha return_was_completed teljesül: 'A visszaküldés megérkezett, a visszatérítés folyamatban van.' Ha nem teljesül: 'Visszatérítési igényedet rögzítettük, feldolgozzuk.'",
+            "Maximum 1 mondat — csak nyugtázás.",
+            "Ne kérj be hiányzó adatot — az előző lépésekben már összegyűjtöttük.",
+            "Ne magyarázd a következő lépéseket — az end node adja.",
+            "Ne utalj összefoglalóra, vizsgálatra, vagy remedy-re.",
+            "Ne ismételd az end node szövegét."
+          ],
+          "internal_conditions": [
+            {
+              "id": "refund_outcome_communicated",
+              "description": "Az ügyfél tudja hogy a visszatérítés mikor és hogyan fog megérkezni, vagy mi akadályozza. Automatikusan teljesül miután az AI elküldte a nyugtázó üzenetet. Ne várj ügyfél-visszajelzést.",
+              "auto_satisfy_after_reply": true,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "refund_outcome_communicated teljesül",
+          "default_next": "process-refund",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "fallback_reason": "Visszatérítés folyamatban — process-refund end node.",
+          "silent_on_matched_goto": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "double_charge"
+          ],
+          "goto": "agent-handoff"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "wrong-item": {
+      "id": "wrong-item",
+      "fallback_message": "Ha nem azt a terméket kaptad amit rendeltél, segítünk rendezni. Kérlek írd le mi érkezett és mi lett volna a helyes — modell, szín, tárhely — és add meg a rendelési számodat.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Rossz termék érkezett kezelése. Akkor aktív ha az ügyfél mást kapott mint amit rendelt: rossz modell, rossz szín, rossz tárhely kapacitás, rossz konfiguráció, vagy hiányzó tartozék amit a termékleírás tartalmazott.",
+        "scope": "Rossz modell, rossz szín, rossz tárhely, rossz konfiguráció, nem azt kaptam amit rendeltem, hiányzó tartozék ami bele volt ígérve",
+        "examples": [
+          "256GB-ot rendeltem de 128GB-ot kaptam",
+          "Fekete színt rendeltem de ezüstöt kaptam",
+          "iPhone 13-at rendeltem de iPhone 12 érkezett",
+          "A termékoldalon töltő is volt ígérve de nem volt a dobozban",
+          "Teljesen más modell érkezett mint amit megrendeltem",
+          "A rendelési visszaigazoláson más specifikáció szerepel mint amit kaptam"
+        ]
+      },
+      "session_facts_whitelist": [
+        "ordered_spec_known",
+        "received_spec_known",
+        "missing_accessory_only",
+        "photo_item_provided",
+        "photo_label_provided",
+        "remedy_preference_known",
+        "replacement_requested",
+        "mismatch_summary_confirmed",
+        "image_provided"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "missing_accessory_only"
+          ],
+          "then": "received_spec_known"
+        },
+        {
+          "when_all": [
+            "missing_accessory_only"
+          ],
+          "then": "ordered_spec_known"
+        },
+        {
+          "when_all": [
+            "missing_accessory_only"
+          ],
+          "then": "missing_accessory_identified"
+        },
+        {
+          "when_all": [
+            "accessory_was_in_order"
+          ],
+          "then": "order_accessory_list_checked"
+        },
+        {
+          "when_all": [
+            "accessory_not_in_order"
+          ],
+          "then": "order_accessory_list_checked"
+        },
+        {
+          "when_all": [
+            "photo_item_provided",
+            "photo_label_provided"
+          ],
+          "then": "photo_evidence_provided"
+        },
+        {
+          "when_all": [
+            "replacement_requested"
+          ],
+          "then": "remedy_preference_known"
+        }
+      ],
+      "conditions": [
+        {
+          "id": "has_order_id",
+          "description": "Az ügyfél megadta a rendelési számát.",
+          "required": false,
+          "do_not_reask_if_satisfied": true,
+          "validation_pattern_ref": "reference_id_pattern"
+        },
+        {
+          "id": "ordered_spec_known",
+          "description": "Ismert mit rendelt: modell, szín, tárhely, konfiguráció.",
+          "required": false
+        },
+        {
+          "id": "received_spec_known",
+          "description": "Ismert mit kapott ténylegesen.",
+          "required": false
+        },
+        {
+          "id": "missing_accessory_only",
+          "description": "Csak hiányzó tartozék a probléma (a fő termék specifikációja egyezik a rendeléssel).",
+          "required": false
+        },
+        {
+          "id": "photo_evidence_provided",
+          "description": "Az ügyfél küldött fotót a kapott termékről és a csomagolás címkéjéről.",
+          "required": false
+        },
+        {
+          "id": "remedy_preference_known",
+          "description": "Az ügyfél megmondta hogy cserét vagy visszatérítést szeretne.",
+          "required": false
+        },
+        {
+          "id": "replacement_requested",
+          "description": "Az ügyfél egyértelműen cserét kér a helyes termékre.",
+          "required": false
+        },
+        {
+          "id": "mismatch_summary_confirmed",
+          "description": "Az ügyfél megkapta és megerősítette a téves kiszállítás összefoglalását: mit rendelt, mit kapott, milyen bizonyíték érkezett, és milyen remedy irányba halad az ügy.",
+          "required": false
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító és spec eltérés dokumentálása",
+          "ai_action": "Bekéri a rendelési számot. Megkérdezi pontosan mit rendelt (modell, szín, tárhely, konfiguráció) és mit kapott ténylegesen.",
+          "reply_rules": [
+            "Két dolgot kérj: mit rendelt és mit kapott — konkrétan (modell, szín, tárhely)",
+            "Ha a rendelési szám már megvan, ne kérd újra",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "ordered_spec_known",
+              "description": "Ismert mit rendelt: modell, szín, tárhely, konfiguráció.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "received_spec_known",
+              "description": "Ismert mit kapott ténylegesen.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "missing_accessory_only",
+              "description": "Csak hiányzó tartozék a probléma (a fő termék specifikációja egyezik a rendeléssel).",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és ordered_spec_known és received_spec_known teljesül",
+          "branches": [
+            {
+              "if": [
+                "missing_accessory_only"
+              ],
+              "next_step": "step_accessory"
+            }
+          ],
+          "default_next": "step_2",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_accessory",
+          "goal": "Hiányzó tartozék kezelése",
+          "ai_action": "Azonosítja pontosan melyik tartozék hiányzik. Ha order_accessory_list_checked már teljesült, a rendelés vagy termékleírás tartozéklistáját közvetlenül használja. Ha az order / accessory lista nem elérhető vagy nem ellenőrizhető, nem talál ki jogosultsági döntést, nem ígér utánküldést, és agent-handoff irányba kezeli az ügyet. Ha a lista elérhető és a tartozék a rendelés része volt, a hiányzó tartozék utánküldési kimenetre halad. Ha a lista elérhető és a tartozék nem volt a rendelés része, elutasító / tájékoztató kimenetre halad.",
+          "reply_rules": [
+            "Ne hozz jogosultsági döntést, ha az order / accessory lista nem ellenőrizhető.",
+            "Ne ígérj utánküldést ebben a stepben; az utánküldési üzenetet a process-missing-accessory end node adja.",
+            "Ha a tartozéklista nem elérhető vagy nem egyértelmű, röviden jelezd, hogy ügyintézői ellenőrzés szükséges.",
+            "Ne kérdezd újra a hiányzó tartozék nevét, ha missing_accessory_identified már teljesült."
+          ],
+          "internal_conditions": [
+            {
+              "id": "missing_accessory_identified",
+              "description": "Az ügyfél egyértelműen megnevezte, pontosan melyik tartozék hiányzik"
+            },
+            {
+              "id": "order_accessory_list_checked",
+              "description": "A rendelés vagy termékleírás tartozéklistája ellenőrizve lett"
+            },
+            {
+              "id": "accessory_was_in_order",
+              "description": "Az ellenőrzött rendelési / termékleírás adatok alapján a hiányzó tartozék valóban a csomag része kellett volna legyen",
+              "required": false
+            },
+            {
+              "id": "accessory_not_in_order",
+              "description": "Az ellenőrzött rendelési / termékleírás adatok alapján a hiányzó tartozék nem volt a csomag része",
+              "required": false
+            }
+          ],
+          "done_when": "missing_accessory_identified és order_accessory_list_checked teljesül",
+          "branches": [
+            {
+              "if": [
+                "missing_accessory_identified",
+                "order_accessory_list_checked",
+                "accessory_was_in_order"
+              ],
+              "goto": "process-missing-accessory"
+            },
+            {
+              "if": [
+                "missing_accessory_identified",
+                "order_accessory_list_checked",
+                "accessory_not_in_order"
+              ],
+              "goto": "step_accessory_rejected"
+            }
+          ],
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "silent_on_matched_goto": true,
+          "fallback_reason": "missing_accessory_flow_complete"
+        },
+        {
+          "id": "step_accessory_rejected",
+          "goal": "Nem ígért tartozék — tájékoztatás és lezárás",
+          "ai_action": "Empatikusan tájékoztatja az ügyfelet hogy a megnevezett tartozék nem szerepelt a rendelésben. Felsorolja mi volt ténylegesen ígérve a rendelés adatai alapján. Megkérdezi van-e egyéb kérdése vagy segíthet-e másban.",
+          "reply_rules": [
+            "Empatikus, de egyértelmű — a tartozék nem szerepelt a rendelésben",
+            "Egy mondatban sorold fel mi volt ténylegesen ígérve",
+            "Ne kínálj fel megoldást amit nem tudsz teljesíteni",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "rejection_explained",
+              "description": "Az ügyfél megkapta a tájékoztatást, hogy a jelzett tartozék nem volt a rendelés része. Automatikusan teljesül, miután az AI elküldte ezt az üzenetet.",
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "rejection_explained teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "fallback_reason": "accessory_not_in_order",
+          "silent_on_matched_goto": true
+        },
+        {
+          "id": "step_2",
+          "image_conditions": ["photo_item_provided", "photo_label_provided"],
+          "goal": "Fotóbizonyíték bekérése — termék fotó és címke fotó",
+          "ai_action": "Kéri a kapott termék fotóját ÉS a csomagolás címkéjének fotóját külön-külön. Ha az ügyfél csak egyet küld, explicit módon jelzi melyik hiányzik még és miért szükséges mindkettő: a termék fotó a spec eltérést bizonyítja, a címke fotó a kiszállítási hibát.",
+          "reply_rules": [
+            "Kérj két fotót külön-külön: a kapott termék fotóját és a csomagolás / címke fotóját.",
+            "Ha csak az egyik fotó érkezett meg, pontosan nevezd meg melyik hiányzik.",
+            "A hiányzó fotó okát legfeljebb fél mondatban magyarázd meg.",
+            "A válasz maximum 2 mondat lehet.",
+            "Ne kérdezd újra azt a fotót, amelynek conditionje már satisfied."
+          ],
+          "internal_conditions": [
+            {
+              "id": "photo_item_provided",
+              "description": "Az ügyfél küldött fotót a kapott termékről.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "photo_label_provided",
+              "description": "Az ügyfél küldött fotót a csomagolás címkéjéről.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "photo_evidence_provided",
+              "description": "Mindkét fotó megvan: termék fotó és címke fotó.",
+              "required": false
+            }
+          ],
+          "done_when": "photo_item_provided és photo_label_provided teljesül",
+          "default_next": "step_3",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_3",
+          "goal": "Preferred remedy meghatározása",
+          "ai_action": "Ha replacement_requested már teljesült, ne kérdezd újra nulláról a remedy választást; röviden erősítsd meg, hogy az ügyfél cserét szeretne-e. Ha remedy_preference_known már teljesült, de replacement_requested nem, ne kérdezd újra nulláról; röviden erősítsd meg, hogy az ügyfél visszatérítést szeretne-e. Ha egyik remedy condition sem teljesült, kérdezd meg, hogy az ügyfél a helyes terméket kéri-e csereként, vagy inkább visszatérítést szeretne.",
+          "reply_rules": [
+            "Csak két opciót kínálj: csere vagy visszatérítés",
+            "Egy mondat — ne magyarázd a folyamatot",
+            "Ne feltételezd melyiket választja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét vagy visszatérítést szeretne."
+            },
+            {
+              "id": "replacement_requested",
+              "description": "Az ügyfél egyértelműen cserét kér a helyes termékre.",
+              "required": false
+            }
+          ],
+          "done_when": "remedy_preference_known teljesül",
+          "default_next": "step_4",
+          "chain_on_complete": true
+        },
+        {
+          "id": "step_4",
+          "goal": "Összefoglalás és átadás a return node-nak",
+          "ai_action": "Röviden összefoglalja a téves kiszállítás ügyét: mit rendelt az ügyfél, mit kapott helyette, milyen fotóbizonyíték érkezett, és milyen remedy irányba halad az ügy. Nem hoz új döntést és nem ígér logisztikai részleteket. A cél a mismatch_summary_confirmed kondíció teljesítése.",
+          "reply_rules": [
+            "Adj rövid, legfeljebb 2 mondatos összefoglalót a téves kiszállításról.",
+            "Említsd meg röviden a rendelt termék és a kapott termék eltérését, ha ezek az adatok már ismertek.",
+            "Említsd meg, hogy a fotóbizonyíték rögzítve lett, ha photo_evidence_provided teljesült.",
+            "Említsd meg a választott remedy irányt: csere vagy visszatérítés, ha már ismert.",
+            "Ne ígérj konkrét szállítási időt, refund dátumot vagy manuális vizsgálati eredményt.",
+            "Ne kérdezz újra olyan adatot, amely már satisfied."
+          ],
+          "internal_conditions": [
+            {
+              "id": "mismatch_summary_confirmed",
+              "description": "Az AI elküldte a nyugtázó mondatot az eltérésről. Automatikusan teljesül miután az AI elküldte az üzenetet. Ne várj ügyfél-visszajelzést.",
+              "auto_satisfy_after_reply": true,
+              "do_not_reask_if_satisfied": true
+            }
+          ],
+          "done_when": "mismatch_summary_confirmed teljesül",
+          "branches": [
+            {
+              "if": [
+                "replacement_requested"
+              ],
+              "goto": "process-wrong-item-replacement"
+            },
+            {
+              "if": [
+                "remedy_preference_known"
+              ],
+              "goto": "process-wrong-item-refund"
+            }
+          ],
+          "default_next": "product-return",
+          "default_inject_conditions": [
+            "return_source_wrong_item"
+          ],
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true,
+          "fallback_reason": "Spec eltérés rögzítve — routing end node-ra.",
+          "silent_on_matched_goto": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "ordered_spec_known",
+            "received_spec_known",
+            "missing_accessory_only",
+            "missing_accessory_identified",
+            "order_accessory_list_checked",
+            "accessory_was_in_order",
+            "accessory_outcome_communicated"
+          ],
+          "goto": "process-missing-accessory"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "ordered_spec_known",
+            "received_spec_known",
+            "photo_evidence_provided",
+            "mismatch_summary_confirmed",
+            "replacement_requested"
+          ],
+          "goto": "process-wrong-item-replacement"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "ordered_spec_known",
+            "received_spec_known",
+            "photo_evidence_provided",
+            "mismatch_summary_confirmed",
+            "remedy_preference_known"
+          ],
+          "goto": "process-wrong-item-refund"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "cosmetic-dispute": {
+      "id": "cosmetic-dispute",
+      "fallback_message": "Ha a termék fizikai állapota nem felel meg a megvásárolt minőségi besorolásnak, segítünk. Kérlek írd le hol és milyen eltérést tapasztalsz, és add meg a rendelési számodat.",
+      "type": "ai",
+      "knowledge": {
+        "description": "Kozmetikai állapot vita kezelése. Akkor aktív ha az ügyfél a termék fizikai állapotával elégedetlen mert az nem felel meg a megvásárolt minőségi besorolásnak (grade). Nem ide tartozik a törött kijelző, repedt üveg, vagy bármilyen funkcionális hatással járó sérülés — azok a product-defect node hatásköre.",
+        "scope": "Kozmetikai állapot, grade nem stimmel, túl karcos, beütések, karcok, Excellent de karcos, állapot nem megfelelő, nem az ígért minőség",
+        "examples": [
+          "Kiváló állapotot rendeltem de tele van karcokkal",
+          "A képernyőn jól látható karcolások vannak",
+          "Az alvázon beütések vannak amiket nem jeleztek",
+          "Excellent grade-et ígértek de ez inkább Good",
+          "A termék állapota nem egyezik a termékoldalon látottal",
+          "Látható sérülések vannak rajta amiket a leírás nem említett"
+        ]
+      },
+      "session_facts_whitelist": [
+        "sold_grade_known",
+        "cosmetic_issue_described",
+        "functional_impact",
+        "photos_provided",
+        "within_return_window",
+        "image_provided"
+      ],
+      "condition_implications": [
+        {
+          "when_all": [
+            "functional_impact"
+          ],
+          "then": "functional_impact_checked"
+        },
+        {
+          "when_all": [
+            "photos_in_good_light",
+            "photos_multiple_angles",
+            "photos_show_damage_clearly"
+          ],
+          "then": "photos_quality_sufficient"
+        },
+        {
+          "when_all": [
+            "photos_quality_sufficient"
+          ],
+          "then": "photos_provided"
+        },
+        {
+          "when_all": [
+            "remedy_preference_known"
+          ],
+          "then": "return_handoff_confirmed"
+        },
+        {
+          "when_all": [
+            "remedy_preference_known"
+          ],
+          "then": "redirect_acknowledged"
+        }
+      ],
+      "conditions": [
+        {
+          "id": "has_order_id",
+          "description": "Az ügyfél megadta a rendelési számát.",
+          "required": false,
+          "do_not_reask_if_satisfied": true,
+          "validation_pattern_ref": "reference_id_pattern"
+        },
+        {
+          "id": "sold_grade_known",
+          "description": "Ismert milyen grade-et vásárolt az ügyfél.",
+          "required": false
+        },
+        {
+          "id": "cosmetic_issue_described",
+          "description": "Az ügyfél leírta hol és milyen kozmetikai eltérés látható.",
+          "required": false
+        },
+        {
+          "id": "functional_impact",
+          "description": "A kozmetikai sérülés funkcionális működési hibát is okoz (pl. érintő nem reagál, zsanér sérült, kijelző törött).",
+          "required": false
+        },
+        {
+          "id": "photos_provided",
+          "description": "Az ügyfél küldött fotókat a sérülésekről.",
+          "required": false
+        },
+        {
+          "id": "photos_in_good_light",
+          "description": "A fotók jó megvilágításban készültek.",
+          "required": false
+        },
+        {
+          "id": "photos_multiple_angles",
+          "description": "A fotók több szögből készültek.",
+          "required": false
+        },
+        {
+          "id": "photos_show_damage_clearly",
+          "description": "A sérülés egyértelműen látható a fotókon.",
+          "required": false
+        },
+        {
+          "id": "photos_quality_sufficient",
+          "description": "Az összes fotó kondíció teljesül: jó fény, több szög, sérülés látható. Az AI ellenőrzi hogy a beküldött fotók alkalmasak-e az eset továbbítására — nem mérlegeli a grade kérdést.",
+          "required": false
+        },
+        {
+          "id": "grade_below_sold",
+          "description": "Az ügyfél által leírt és fotón látható állapot egyértelműen nem felel meg a megvásárolt grade definíciójának — ezt csak a raktár tudja véglegesen megállapítani.",
+          "required": false
+        },
+        {
+          "id": "within_return_window",
+          "description": "Az ügyfél még a 30 napos visszaküldési határidőn belül van.",
+          "required": false
+        }
+      ],
+      "steps": [
+        {
+          "id": "step_1",
+          "goal": "Rendelési azonosító, megvásárolt grade és kozmetikai eltérés bekérése",
+          "ai_action": "Bekéri a rendelési számot. Ha sold_grade_known teljesült, ne kérje be a grade-et a usertől — a rendszer már ismeri. Csak erősítse meg és kérje a probléma leírását.",
+          "reply_rules": [
+            "Ha sold_grade_known teljesült, ne kérd be a grade-et — csak erősítsd meg",
+            "Csak a kozmetikai probléma leírását kérd",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "has_order_id",
+              "description": "Az ügyfél megadta a rendelési számát.",
+              "do_not_reask_if_satisfied": true,
+              "validation_pattern_ref": "reference_id_pattern"
+            },
+            {
+              "id": "sold_grade_known",
+              "description": "Ismert milyen grade-et vásárolt az ügyfél.",
+              "required": false
+            },
+            {
+              "id": "cosmetic_issue_described",
+              "description": "Az ügyfél leírta hol és milyen kozmetikai eltérés látható.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "functional_impact",
+              "description": "A kozmetikai sérülés funkcionális működési hibát is okoz (pl. érintő nem reagál, zsanér sérült, kijelző törött).",
+              "required": false
+            },
+            {
+              "id": "within_return_window",
+              "description": "Az ügyfél még a 30 napos visszaküldési határidőn belül van.",
+              "required": false
+            }
+          ],
+          "done_when": "has_order_id és cosmetic_issue_described teljesül",
+          "branches": [
+            {
+              "if": [
+                "sold_grade_known"
+              ],
+              "next_step": "step_2"
+            }
+          ],
+          "default_next": "step_2"
+        },
+        {
+          "id": "step_2",
+          "goal": "Funkcionális hatás ellenőrzése",
+          "ai_action": "Megkérdezi hogy a kozmetikai hiba érinti-e a termék működését is (pl. érintő nem reagál, zsanér nem nyílik, kijelző törött). Ha igen: tájékoztatja az ügyfelet hogy ez már nem kozmetikai vita, hanem garanciális defekt, és átirányítja a megfelelő folyamatra.",
+          "reply_rules": [
+            "Egy konkrét kérdés: érinti-e a működést",
+            "Adj 2-3 példát hogy mit értesz funkcionális hatás alatt",
+            "Maximum 2 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "functional_impact_checked",
+              "description": "Ismert hogy a kozmetikai hiba funkcionális hatással is jár-e."
+            },
+            {
+              "id": "functional_impact",
+              "description": "A kozmetikai sérülés funkcionális működési hibát is okoz.",
+              "required": false
+            }
+          ],
+          "done_when": "functional_impact_checked teljesül",
+          "branches": [
+            {
+              "if": [
+                "functional_impact"
+              ],
+              "next_step": "step_functional_redirect"
+            }
+          ],
+          "default_next": "step_3"
+        },
+        {
+          "id": "step_functional_redirect",
+          "goal": "Átirányítás product-return kezelésre funkcionális hiba esetén",
+          "ai_action": "Két dolgot csinál egy üzenetben: (1) egy mondatban elmagyarázza hogy a funkcionális sérülés miatt ez garanciális defektként kezelendő, (2) megkérdezi a remedy preferenciát — cserét, visszatérítést vagy javítást szeretne-e.",
+          "reply_rules": [
+            "Egy mondatban az átirányítás oka, majd remedy kérdés (csere, visszatérítés, javítás)",
+            "Maximum 2 mondat",
+            "Ne magyarázd a visszaküldési folyamatot — a product-return node adja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét, visszatérítést vagy javítást szeretne."
+            },
+            {
+              "id": "redirect_acknowledged",
+              "description": "Automatikusan teljesül miután remedy_preference_known teljesül."
+            }
+          ],
+          "done_when": "remedy_preference_known és redirect_acknowledged teljesül",
+          "default_next": "product-return",
+          "default_inject_conditions": [
+            "return_source_defect"
+          ]
+        },
+        {
+          "id": "step_3",
+          "image_conditions": ["photos_provided"],
+          "goal": "Fotóbizonyíték bekérése meghatározott minőségi követelményekkel",
+          "ai_action": "Kéri a kozmetikai sérülések fotóit az alábbi konkrét követelményekkel: (1) természetes vagy erős mesterséges fényben készüljenek, (2) legalább 3 szögből: elölről, oldalról, és közelképként a sérülésről, (3) a teljes készüléktest is látható legyen legalább egy képen, (4) a sérülés legyen éles és egyértelműen azonosítható. Ha a beküldött fotók nem felelnek meg ezeknek a követelményeknek, pontosan jelzi melyik feltétel hiányzik és újra kéri.",
+          "reply_rules": [
+            "Sorold fel a 4 konkrét követelményt — fény, szögek, teljes test, éles közelkép",
+            "Ha visszajön nem megfelelő fotó, pontosan jelezd melyik feltétel hiányzik",
+            "Ne fogadd el homályos vagy egyetlen szögből készült fotót",
+            "Maximum 3 mondat"
+          ],
+          "internal_conditions": [
+            {
+              "id": "photos_provided",
+              "description": "Az ügyfél küldött fotókat.",
+              "do_not_reask_if_satisfied": true
+            },
+            {
+              "id": "photos_in_good_light",
+              "description": "A fotók jó megvilágításban készültek.",
+              "required": false
+            },
+            {
+              "id": "photos_multiple_angles",
+              "description": "A fotók legalább 3 szögből készültek.",
+              "required": false
+            },
+            {
+              "id": "photos_show_damage_clearly",
+              "description": "A sérülés egyértelműen látható és azonosítható a fotókon.",
+              "required": false
+            },
+            {
+              "id": "photos_quality_sufficient",
+              "description": "Minden fotó kondíció teljesül — a beküldött anyag alkalmas az eset továbbítására.",
+              "required": false
+            }
+          ],
+          "done_when": "photos_provided teljesül",
+          "default_next": "step_4"
+        },
+        {
+          "id": "step_4",
+          "goal": "Eset összefoglalása és visszaküldés indítása",
+          "ai_action": "Rövid nyugtázó mondat (max 1 mondat). Routing az end node-ra a teljesült kondíciók alapján.",
+          "reply_rules": [
+            "Maximum 1 mondat — csak nyugtázás.",
+            "Ne kérj be hiányzó adatot — az előző lépésekben már összegyűjtöttük.",
+            "Ne magyarázd a következő lépéseket — az end node adja.",
+            "Ne utalj összefoglalóra, vizsgálatra, vagy remedy-re.",
+            "Ne ismételd az end node szövegét."
+          ],
+          "internal_conditions": [
+            {
+              "id": "case_summary_confirmed",
+              "description": "Az ügyfél megkapta a rövid visszaigazolást; a részletes tájékoztatást a végoldal tartalmazza."
+            },
+            {
+              "id": "grade_below_sold",
+              "description": "Az ügyfél által leírt és fotón látható állapot jellemzően grade eltérésre utal — de a végleges döntés a raktáré.",
+              "required": false
+            },
+            {
+              "id": "within_return_window",
+              "description": "Az ügyfél még a 30 napos visszaküldési határidőn belül van.",
+              "required": false
+            }
+          ],
+          "done_when": "case_summary_confirmed teljesül",
+          "branches": [
+            {
+              "if": [
+                "within_return_window"
+              ],
+              "next_step": "step_5"
+            }
+          ],
+          "default_next": "step_5_outside_window",
+          "is_closing": true,
+          "is_terminal": true,
+          "permit_goto_auto_ack": true
+        },
+        {
+          "id": "step_5",
+          "goal": "Átvezetés a visszaküldési folyamatra",
+          "ai_action": "Egy mondatban visszaigazolja a kozmetikai eltérést és hogy visszaküldési folyamat indul, majd megkérdezi a remedy preferenciát — cserét vagy visszatérítést szeretne-e.",
+          "reply_rules": [
+            "Visszaigazolás + remedy kérdés (csere vagy visszatérítés) — maximum 2 mondat",
+            "Ne magyarázd a visszaküldési folyamatot — a product-return node adja"
+          ],
+          "internal_conditions": [
+            {
+              "id": "remedy_preference_known",
+              "description": "Az ügyfél megmondta hogy cserét vagy visszatérítést szeretne."
+            },
+            {
+              "id": "return_handoff_confirmed",
+              "description": "Automatikusan teljesül miután remedy_preference_known teljesül."
+            }
+          ],
+          "done_when": "remedy_preference_known és return_handoff_confirmed teljesül",
+          "branches": [
+            {
+              "if": [
+                "within_return_window"
+              ],
+              "goto": "product-return",
+              "inject_conditions": [
+                "return_source_cosmetic",
+                "product_condition_assessed",
+                "within_return_window"
+              ]
+            }
+          ],
+          "default_next": "product-return",
+          "default_inject_conditions": [
+            "return_source_cosmetic",
+            "product_condition_assessed"
+          ]
+        },
+        {
+          "id": "step_5_outside_window",
+          "goal": "Határidőn túli eset kezelése",
+          "ai_action": "Rövid nyugtázó mondat (max 1 mondat). Routing az end node-ra a teljesült kondíciók alapján.",
+          "reply_rules": [
+            "Maximum 1 mondat — csak nyugtázás.",
+            "Ne kérj be hiányzó adatot — az előző lépésekben már összegyűjtöttük.",
+            "Ne magyarázd a következő lépéseket — az end node adja.",
+            "Ne utalj összefoglalóra, vizsgálatra, vagy remedy-re.",
+            "Ne ismételd az end node szövegét."
+          ],
+          "internal_conditions": [
+            {
+              "id": "outside_window_communicated",
+              "description": "Az ügyfél megkapta a tájékoztatást a lejárt határidőről és a manuális felülvizsgálat folyamatáról."
+            }
+          ],
+          "done_when": "outside_window_communicated teljesül",
+          "default_next": "agent-handoff",
+          "is_closing": true,
+          "is_terminal": true
+        }
+      ],
+      "routing": [
+        {
+          "if": [
+            "has_order_id",
+            "sold_grade_known",
+            "cosmetic_issue_described",
+            "functional_impact"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "sold_grade_known",
+            "cosmetic_issue_described",
+            "photos_quality_sufficient",
+            "within_return_window"
+          ],
+          "goto": "product-return"
+        },
+        {
+          "if": [
+            "has_order_id",
+            "sold_grade_known",
+            "cosmetic_issue_described",
+            "photos_quality_sufficient"
+          ],
+          "goto": "agent-handoff"
+        },
+        {
+          "default": "ask"
+        }
+      ]
+    },
+    "complaint-router": {
+      "id": "complaint-router",
+      "type": "end",
+      "content": "Panaszodat rögzítettük, hamarosan felvesszük veled a kapcsolatot."
+    },
+    "delivery-investigation": {
+      "id": "delivery-investigation",
+      "type": "end",
+      "content": "Szállítási ügyedet rögzítettük. Futárszolgálatnál nyomozást indítunk — ha a csomag előkerül, értesítünk; ha nem, tájékoztatunk a pótszállítás vagy visszatérítés részleteiről."
+    },
+    "delivery-damage-claim": {
+      "id": "delivery-damage-claim",
+      "type": "end",
+      "content": "Szállítási ügyedet rögzítettük. Fuvarozói kárbejelentést indítunk — kérlek őrizd meg az összes csomagolóanyagot a vizsgálatig. Az eredményről e-mailben értesítünk."
+    },
+    "escalate-delivery-damage": {
+      "id": "escalate-delivery-damage",
+      "type": "end",
+      "content": "Sürgős sérült csomag ügyedet prioritásként kezeljük. Fuvarozói kárbejelentést indítunk — kérlek őrizd meg az összes csomagolóanyagot. Hamarosan felvesszük veled a kapcsolatot."
+    },
+    "process-return-exclusion": {
+      "id": "process-return-exclusion",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet rögzítettük. Mivel a termék külső behatás nyomait mutatja, a visszatérítés vagy csere elbírálása a beérkezés után a raktárban történik — az eredményről e-mailben értesítünk."
+    },
+    "process-return-cosmetic": {
+      "id": "process-return-cosmetic",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet rögzítettük. A raktár szakembere megvizsgálja hogy a termék állapota megfelel-e a vásárolt grade definíciójának. A vizsgálat eredményéről e-mailben értesítünk — teljes visszatérítés, csere, vagy indokolt esetben elutasítás lehetséges. A visszaküldési címkét e-mailben küldjük."
+    },
+    "process-return-defect-partial": {
+      "id": "process-return-defect-partial",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet rögzítettük. Az állapoteltérés miatt részleges visszatérítés lehetséges — a remedy preferenciádat és a pontos összeget a raktári vizsgálat után e-mailben közöljük."
+    },
+    "process-return-rejected": {
+      "id": "process-return-rejected",
+      "type": "end",
+      "content": "A 30 napos visszaküldési határidő lejárt és nem áll fenn kivételes körülmény. Visszaküldési kérelmedet sajnos nem tudjuk elfogadni. Ha úgy gondolod hogy különleges körülmény áll fenn, kérj manuális felülvizsgálatot ügyfélszolgálatunktól."
+    },
+    "process-return-defect": {
+      "id": "process-return-defect",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet rögzítettük. A remedy preferenciádat továbbítjuk a raktárnak, a végső döntésről e-mailben értesítünk."
+    },
+    "process-return-partial": {
+      "id": "process-return-partial",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet elfogadtuk. Az állapoteltérés miatt részleges visszatérítésre számíthatsz — a pontos összeget a raktári vizsgálat után e-mailben közöljük. Küldjük a visszaküldési címkét."
+    },
+    "escalate-delivery": {
+      "id": "escalate-delivery",
+      "type": "end",
+      "content": "Sürgős szállítási problémádat prioritásként kezeljük."
+    },
+    "investigate-delivery": {
+      "id": "investigate-delivery",
+      "type": "end",
+      "content": "Megvizsgáljuk a szállítási problémádat a tracking adatok alapján."
+    },
+    "investigate-delivery-missing": {
+      "id": "investigate-delivery-missing",
+      "type": "end",
+      "content": "Megvizsgáljuk a kézbesítési rekordot a futárszolgálatnál, mivel a tracking kézbesítettnek jelzi de te nem kaptad meg."
+    },
+    "investigate-shipping-damage": {
+      "id": "investigate-shipping-damage",
+      "type": "end",
+      "content": "Vizsgálatot indítunk a szállítás közbeni sérülés ügyében. Kérlek tartsd meg az összes csomagolóanyagot."
+    },
+    "review-exclusion": {
+      "id": "review-exclusion",
+      "type": "end",
+      "content": "A kizárási feltételek ellenőrzése szükséges a panasz feldolgozása előtt."
+    },
+    "process-replacement": {
+      "id": "process-replacement",
+      "type": "end",
+      "content": "Csereigényedet feldolgozzuk, hamarosan küldjük az új terméket."
+    },
+    "process-defect-arrival": {
+      "id": "process-defect-arrival",
+      "type": "end",
+      "content": "Érkezési hibát rögzítettük. Garanciális vizsgálatot indítunk."
+    },
+    "process-defect-warranty": {
+      "id": "process-defect-warranty",
+      "type": "end",
+      "content": "Garanciális reklamációdat rögzítettük. Vizsgálat indul."
+    },
+    "safety-escalation": {
+      "id": "safety-escalation",
+      "type": "end",
+      "content": "Biztonsági probléma miatt azonnal kezeljük az esetedet. Ne küld el a készüléket postán, vedd fel velünk a kapcsolatot."
+    },
+    "process-battery-threshold": {
+      "id": "process-battery-threshold",
+      "type": "end",
+      "content": "Az akkumulátor kapacitása az ígért szint alá esett. Garanciális igényt rögzítettük."
+    },
+    "process-battery-defect": {
+      "id": "process-battery-defect",
+      "type": "end",
+      "content": "Érkezési akkumulátor hibát rögzítettük."
+    },
+    "process-battery-warranty": {
+      "id": "process-battery-warranty",
+      "type": "end",
+      "content": "Akkumulátor garanciális igényt rögzítettük. Vizsgálat indul."
+    },
+    "process-charger-resolved": {
+      "id": "process-charger-resolved",
+      "type": "end",
+      "content": "A probléma a nem megfelelő töltő használatával volt összefüggésben. Az eredeti vagy tanúsított töltőre való váltással a készülék megfelelően működik. Köszönjük hogy jeleztétek — ha bármilyen további kérdés merül fel, állunk rendelkezésre."
+    },
+    "process-defect-resolved": {
+      "id": "process-defect-resolved",
+      "type": "end",
+      "content": "Örülünk hogy sikerült megoldani a problémát! Ha visszatér a hiba vagy bármilyen kérdésed van, bármikor írj nekünk."
+    },
+    "agent-handoff-warranty-damage": {
+      "id": "agent-handoff-warranty-damage",
+      "type": "end",
+      "content": "Extended warranty szerződésed alapján az esetedet prioritásként kezeljük. Ügyintéző bírálja el a beküldött bizonyítékok alapján — e-mailben értesítünk a döntésről."
+    },
+    "agent-handoff-physical-damage": {
+      "id": "agent-handoff-physical-damage",
+      "type": "end",
+      "content": "A beküldött fotók alapján fizikai sérülés látható. Ügyintéző bírálja el a bizonyítékok alapján — e-mailben értesítünk a döntésről."
+    },
+    "agent-handoff-warranty-exclusion": {
+      "id": "agent-handoff-warranty-exclusion",
+      "type": "end",
+      "content": "Extended warranty szerződésed alapján az esetedet prioritásként kezeljük a jelzett külső behatás ellenére. Ügyintéző bírálja el — e-mailben értesítünk."
+    },
+    "agent-handoff-exclusion": {
+      "id": "agent-handoff-exclusion",
+      "type": "end",
+      "content": "A jelzett külső behatás befolyásolhatja a garanciális elbírálást. Ügyintéző vizsgálja meg az esetet a bizonyítékok alapján — e-mailben értesítünk a döntésről."
+    },
+    "agent-handoff-defect-no-window": {
+      "id": "agent-handoff-defect-no-window",
+      "type": "end",
+      "content": "A hibát rögzítettük. Ügyintéző bírálja el a bizonyítékok alapján — e-mailben értesítünk a döntésről."
+    },
+    "agent-handoff-lock": {
+      "id": "agent-handoff-lock",
+      "type": "end",
+      "content": "A zárolás típusa manuális vizsgálatot igényel. Ügyintézőnk átnézi az esetet és felveszi veled a kapcsolatot — kérjük őrizd meg a zárolási üzenetről készített képernyőképet a vizsgálathoz."
+    },
+    "review-platform-ban": {
+      "id": "review-platform-ban",
+      "type": "end",
+      "content": "Harmadik fél platform általi tiltást vizsgálunk. Kérjük vedd fel a kapcsolatot az érintett platformmal is."
+    },
+    "investigate-lock": {
+      "id": "investigate-lock",
+      "type": "end",
+      "content": "Az MDM zárolás feloldása az előző tulajdonos vállalati rendszerének törlését igényli. Az eladóhoz eskaláljuk az esetet — ők felveszik a kapcsolatot a vállalati profil eltávolításához. A folyamat eredményéről e-mailben értesítünk."
+    },
+    "process-return": {
+      "id": "process-return",
+      "type": "end",
+      "content": "Visszaküldési kérelmedet elfogadtuk, küldjük a visszaküldési címkét."
+    },
+    "process-refund": {
+      "id": "process-refund",
+      "type": "end",
+      "content": "Visszatérítési kérelmedet feldolgozzuk."
+    },
+    "process-wrong-item-replacement": {
+      "id": "process-wrong-item-replacement",
+      "type": "end",
+      "content": "Téves kiszállítást rögzítettük. A helyes terméket küldjük."
+    },
+    "process-wrong-item-refund": {
+      "id": "process-wrong-item-refund",
+      "type": "end",
+      "content": "Téves kiszállítást rögzítettük. Visszatérítést indítunk."
+    },
+    "process-missing-accessory": {
+      "id": "process-missing-accessory",
+      "type": "end",
+      "content": "Hiányzó tartozékot rögzítettük. Utánküldjük a hiányzó elemet."
+    },
+    "process-cosmetic-return": {
+      "id": "process-cosmetic-return",
+      "type": "end",
+      "content": "Kozmetikai állapot eltérést rögzítettük. Visszaküldési folyamat indul."
+    },
+    "review-cosmetic-grade": {
+      "id": "review-cosmetic-grade",
+      "type": "end",
+      "content": "A fotók alapján megvizsgáljuk hogy a termék megfelel-e a vásárolt minőségi besorolásnak."
+    },
+    "agent-handoff": {
+      "id": "agent-handoff",
+      "type": "end",
+      "content": "Az esetedet ügyintézőhöz továbbítjuk, aki hamarosan felveszi veled a kapcsolatot."
+    }
+  }
+}
