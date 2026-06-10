@@ -263,6 +263,7 @@ class BlueprintRunResult:
     model: str
     input_tokens: int
     output_tokens: int
+    stop_reason: str | None
 
 
 def call_anthropic(
@@ -286,7 +287,11 @@ def call_anthropic(
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    response = client.messages.create(
+    # Streaming used unconditionally:
+    #  - Anthropic SDK requires streaming for any request whose max_tokens
+    #    estimate could exceed 10 minutes (>= ~32K out tokens for Sonnet 4.5).
+    #  - For shorter requests streaming is also safe, so we keep one path.
+    with client.messages.stream(
         model=model,
         max_tokens=max_tokens,
         temperature=temperature,
@@ -294,7 +299,10 @@ def call_anthropic(
         tools=[EXTRACT_BLUEPRINT_TOOL],
         tool_choice={"type": "tool", "name": "extract_blueprint"},
         messages=[{"role": "user", "content": user_message}],
-    )
+    ) as stream:
+        response = stream.get_final_message()
+
+    stop_reason = getattr(response, "stop_reason", None)
 
     tool_input: dict[str, Any] = {}
     for block in getattr(response, "content", None) or []:
@@ -308,7 +316,7 @@ def call_anthropic(
     if not tool_input:
         raise RuntimeError(
             "A modell nem hívta meg az extract_blueprint toolt. "
-            "Stop reason: " + str(getattr(response, "stop_reason", None))
+            f"Stop reason: {stop_reason}"
         )
 
     blueprint = DomainBlueprint.model_validate(tool_input)
@@ -320,6 +328,7 @@ def call_anthropic(
         model=model,
         input_tokens=getattr(usage, "input_tokens", 0) if usage else 0,
         output_tokens=getattr(usage, "output_tokens", 0) if usage else 0,
+        stop_reason=stop_reason,
     )
 
 
@@ -346,6 +355,7 @@ def save_blueprint(
             "model": result.model,
             "input_tokens": result.input_tokens,
             "output_tokens": result.output_tokens,
+            "stop_reason": result.stop_reason,
             "research_source": research_source,
             "research_chars_after_preprocess": research_chars_after_preprocess,
         },
@@ -372,6 +382,9 @@ def print_summary(result: BlueprintRunResult) -> None:
     else:
         print()
     print(f"Tokens:         in={result.input_tokens}  out={result.output_tokens}")
+    if result.stop_reason and result.stop_reason != "tool_use":
+        marker = " <-- TRUNCATED" if result.stop_reason == "max_tokens" else ""
+        print(f"Stop reason:    {result.stop_reason}{marker}")
     print()
     print(f"Summary: {bp.summary}")
     print()

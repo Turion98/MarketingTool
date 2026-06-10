@@ -8,3 +8,6 @@ frontend/.next/
 
 # Runtime analytics (JSONL written by the backend locally / on server)
 backend/data/analytics/
+
+# Onboarding pipeline run artifacts (blueprints, etc. — generated, run-specific)
+backend/data/onboarding/
