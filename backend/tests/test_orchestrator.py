@@ -740,3 +740,190 @@ def test_event_log_captures_full_lifecycle(
     assert persisted_ids == sorted(persisted_ids)
     assert [e.event_id for e in captured] == persisted_ids
 
+
+# --------------------------------------------------------------------------- #
+# 10. Domain-specific extended pool — auto-propagation                        #
+# --------------------------------------------------------------------------- #
+#
+# A Phase 1 `DomainBlueprint.proposed_new_external_fields` listája egy
+# job-scope, domain-specifikus pool. Két kontrakt-bizonyíték kell:
+#
+# (a) **Phase 2 propagation**: a `OnboardingClient.generate_node` által
+#     kapott `GenerationContext.blueprint` tartalmazza a propos listát,
+#     hogy a kliens implementáció a prompt-építéskor lássa.
+# (b) **Phase 3a propagation**: a `lint_full_story` `extra_known_external_fields`
+#     paraméterét a `run_phase3a` az aktuális blueprint propos field_name-jeivel
+#     hívja (monkeypatch-spy igazolja).
+
+
+def _blueprint_with_proposed(
+    *,
+    node_ids: tuple[str, ...] = ("intake-node",),
+    end_page_ids: tuple[str, ...] = ("end-default",),
+) -> DomainBlueprint:
+    from services.onboarding.contracts import ProposedNewExternalField
+
+    bp = _make_blueprint(node_ids=node_ids, end_page_ids=end_page_ids)
+    return bp.model_copy(update={
+        "proposed_new_external_fields": [
+            ProposedNewExternalField(
+                field_name="device_model",
+                description="The exact model/SKU of the refurbished device.",
+                rationale="Critical for wrong-item detection and device-specific troubleshooting.",
+                suggested_type="str",
+            ),
+            ProposedNewExternalField(
+                field_name="issue_start_date",
+                description="The date when the customer first noticed the issue.",
+                rationale="Required for warranty eligibility and proof-burden timing.",
+                suggested_type="date",
+            ),
+        ],
+    })
+
+
+def test_phase2_context_carries_proposed_external_fields(
+    orchestrator: OnboardingOrchestrator,
+    client: MockOnboardingClient,
+):
+    bp = _blueprint_with_proposed()
+    client.blueprint_response = bp
+    client.node_responses["intake-node"] = [_make_valid_node_dict("intake-node")]
+
+    orchestrator.start_job(
+        job_id="job-p2pp",
+        domain_name="dom",
+        target_locale="hu",
+        research_text="r",
+    )
+    orchestrator.run_phase1("job-p2pp")
+    orchestrator.run_phase2("job-p2pp")
+
+    # A `MockOnboardingClient` minden generate_node hívásnál felveszi a
+    # context-et — ennek ugyanazt a propos listát kell tartalmaznia.
+    ctx = client.last_context
+    assert ctx is not None
+    forwarded = {p.field_name for p in ctx.blueprint.proposed_new_external_fields}
+    assert forwarded == {"device_model", "issue_start_date"}
+
+
+def test_phase3a_passes_extra_known_external_fields_to_lint(
+    orchestrator: OnboardingOrchestrator,
+    client: MockOnboardingClient,
+    monkeypatch,
+):
+    bp = _blueprint_with_proposed()
+    client.blueprint_response = bp
+    client.node_responses["intake-node"] = [_make_valid_node_dict("intake-node")]
+
+    orchestrator.start_job(
+        job_id="job-p3pp",
+        domain_name="dom",
+        target_locale="hu",
+        research_text="r",
+    )
+    orchestrator.run_phase1("job-p3pp")
+    orchestrator.run_phase2("job-p3pp")
+
+    captured_kwargs: dict[str, Any] = {}
+    real = __import__(
+        "services.onboarding.orchestrator", fromlist=["lint_full_story"]
+    ).lint_full_story
+
+    def spy(story, *, extra_known_external_fields=None):
+        captured_kwargs["extra_known_external_fields"] = extra_known_external_fields
+        return real(story, extra_known_external_fields=extra_known_external_fields)
+
+    monkeypatch.setattr(
+        "services.onboarding.orchestrator.lint_full_story", spy
+    )
+    orchestrator.run_phase3a("job-p3pp")
+
+    forwarded = captured_kwargs.get("extra_known_external_fields")
+    assert forwarded is not None
+    assert set(forwarded) == {"device_model", "issue_start_date"}
+
+
+def test_router_node_known_pages_includes_other_blueprint_nodes(
+    orchestrator: OnboardingOrchestrator,
+    client: MockOnboardingClient,
+):
+    """Router heuristic: ha a target node `suggested_end_pages`-e üres, a
+    `_run_node_with_retries` minden blueprint AI-node-id-t a
+    `known_page_ids_so_far`-ba kell tegyen, hogy a router routing.goto-i
+    rátalálhassanak az első generáláskor (mielőtt bármi accepted lenne).
+    """
+    bp = _make_blueprint(node_ids=("complaint-intake", "doa-no-power"))
+    router = bp.nodes[0].model_copy(update={"suggested_end_pages": []})
+    bp = bp.model_copy(update={"nodes": [router, bp.nodes[1]]})
+    client.blueprint_response = bp
+
+    captured_contexts: list[GenerationContext] = []
+    original_generate = client.generate_node
+
+    def spy(*, context: GenerationContext) -> dict[str, Any]:
+        captured_contexts.append(context)
+        return original_generate(context=context)
+
+    client.generate_node = spy  # type: ignore[method-assign]
+
+    # Router routol a worker-re; worker az end-default-ra.
+    client.node_responses["complaint-intake"] = [
+        _make_valid_node_dict("complaint-intake", end_target="doa-no-power")
+    ]
+    client.node_responses["doa-no-power"] = [
+        _make_valid_node_dict("doa-no-power")
+    ]
+
+    orchestrator.start_job(
+        job_id="job-router",
+        domain_name="dom",
+        target_locale="hu",
+        research_text="r",
+    )
+    orchestrator.run_phase1("job-router")
+    orchestrator.run_phase2("job-router")
+
+    assert len(captured_contexts) == 2
+
+    # 1. hívás: a router. A heuristic miatt a `doa-no-power` is bent kell
+    # legyen a known_page_ids-ban, MIELŐTT bárki accepted lenne.
+    router_ctx = captured_contexts[0]
+    assert router_ctx.target_node_candidate.proposed_id == "complaint-intake"
+    assert router_ctx.accepted_nodes_summary == []
+    assert "complaint-intake" in router_ctx.known_page_ids_so_far
+    assert "doa-no-power" in router_ctx.known_page_ids_so_far
+    assert "end-default" in router_ctx.known_page_ids_so_far
+
+    # 2. hívás: a worker (regular node, suggested_end_pages NEM üres a default
+    # _make_blueprint-ből). Itt a heuristic NEM lép be, de a `complaint-intake`
+    # az accepted_so_far miatt kerül a known_pages-be.
+    worker_ctx = captured_contexts[1]
+    assert worker_ctx.target_node_candidate.proposed_id == "doa-no-power"
+    assert worker_ctx.target_node_candidate.suggested_end_pages == ["end-default"]
+    assert "complaint-intake" in worker_ctx.known_page_ids_so_far
+
+
+def test_phase3a_extra_pool_does_not_break_clean_lint(
+    orchestrator: OnboardingOrchestrator,
+    client: MockOnboardingClient,
+):
+    # Smoke: a propos lista jelenléte nem ronthat el egy egyébként clean
+    # lint-et, mert az `assemble_story` skeleton nem termel
+    # `order_context_mapping.field_rules`-t. Tehát az extra paraméter
+    # idle, és a verdict ugyanaz marad mint propos nélkül.
+    bp = _blueprint_with_proposed()
+    client.blueprint_response = bp
+    client.node_responses["intake-node"] = [_make_valid_node_dict("intake-node")]
+
+    orchestrator.start_job(
+        job_id="job-p3sm",
+        domain_name="dom",
+        target_locale="hu",
+        research_text="r",
+    )
+    orchestrator.run_phase1("job-p3sm")
+    orchestrator.run_phase2("job-p3sm")
+    result = orchestrator.run_phase3a("job-p3sm")
+    assert result.verdict in {"clean", "warnings_only"}
+

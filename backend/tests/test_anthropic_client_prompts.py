@@ -397,6 +397,43 @@ def test_phase2_user_message_router_node_with_no_end_pages_signals_router_hint()
     assert "router/dispatcher node" in msg
 
 
+def test_phase2_user_message_router_node_lists_other_blueprint_nodes_as_targets():
+    bp = _make_blueprint()
+    extra = NodeCandidate(
+        proposed_id="battery-issue",
+        domain_intent="Handles devices reporting low battery health or rapid drain.",
+        scope_keywords=["battery", "drain"],
+        triggering_examples=["Battery dies fast"],
+        required_conditions=[],
+        optional_conditions=[],
+        closing_step_required=True,
+        suggested_end_pages=["battery-replacement"],
+        references_research_section=["Battery flow"],
+    )
+    router = bp.nodes[0].model_copy(update={
+        "proposed_id": "complaint-intake",
+        "suggested_end_pages": [],
+    })
+    bp = bp.model_copy(update={"nodes": [router, extra]})
+    ctx = _make_context(blueprint=bp)
+    msg = build_phase2_user_message(ctx)
+
+    assert "ROUTER TARGETS" in msg
+    assert "battery-issue" in msg
+    assert "low battery health" in msg
+    # The router itself MUST NOT appear in its own target list.
+    assert "  - complaint-intake:" not in msg
+
+
+def test_phase2_user_message_router_targets_omitted_for_regular_nodes():
+    bp = _make_blueprint()
+    ctx = _make_context(blueprint=bp)
+    msg = build_phase2_user_message(ctx)
+    # `doa-no-power` has suggested_end_pages, so the router-targets block
+    # should NOT appear.
+    assert "ROUTER TARGETS" not in msg
+
+
 def test_phase2_user_message_invokes_generate_node_at_end():
     bp = _make_blueprint()
     ctx = _make_context(blueprint=bp)

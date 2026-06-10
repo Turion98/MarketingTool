@@ -347,6 +347,20 @@ def build_phase2_user_message(context: GenerationContext) -> str:
             "  (none — this looks like a router/dispatcher node; "
             "use other accepted node ids as goto targets.)"
         )
+        # Router targets: enumerate the rest of the blueprint so the
+        # dispatcher has a concrete, valid set of `goto` ids even on the
+        # very first generation when accepted_nodes_summary is empty.
+        other_nodes = [
+            n for n in bp.nodes if n.proposed_id != cand.proposed_id
+        ]
+        if other_nodes:
+            parts.append("")
+            parts.append("ROUTER TARGETS (other AI-nodes you may branch TO):")
+            for n in other_nodes:
+                intent = n.domain_intent
+                if len(intent) > 110:
+                    intent = intent[:107] + "..."
+                parts.append(f"  - {n.proposed_id}: {intent}")
     parts.append("")
 
     if context.accepted_nodes_summary:

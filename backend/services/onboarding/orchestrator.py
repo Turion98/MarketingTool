@@ -456,6 +456,15 @@ class OnboardingOrchestrator:
                 known_pages.add(o.node_id)
         for ep in blueprint.end_pages:
             known_pages.add(ep.id)
+        # Router heuristic: ha a target node nem deklarál `suggested_end_pages`-t,
+        # valószínűleg dispatcher-szerepkörű (pl. complaint-intake), ami más
+        # AI-node-okra branch-el. Ilyenkor a teljes blueprint node-grafot
+        # ismertnek tekintjük — különben az első generáláskor (üres
+        # accepted_so_far) nem lenne valid `goto` target. Az AI prompt is
+        # listázza ezeket a `build_phase2_user_message`-ben (ROUTER TARGETS).
+        if not candidate.suggested_end_pages:
+            for n in blueprint.nodes:
+                known_pages.add(n.proposed_id)
 
         meta_under_construction: dict[str, Any] = {
             "runtime": dict(_DEFAULT_RUNTIME),
@@ -605,7 +614,18 @@ class OnboardingOrchestrator:
         story = assemble_story(
             job=job, blueprint=job.blueprint, accepted_outcomes=accepted
         )
-        report = lint_full_story(story)
+        # A blueprint domain-specifikus mező-javaslatait átadjuk a lint-nek
+        # mint extended pool. Ha a generált story `meta.order_context_mapping`
+        # ezekre hivatkozik, a lint `note()` (info) szintet ad — nem warn
+        # vagy err. A globális pool változatlan; csak a javasolt mezők
+        # kapnak "domain-specific, backend implementation pending" jelölést.
+        proposed_field_names = {
+            p.field_name for p in job.blueprint.proposed_new_external_fields
+        }
+        report = lint_full_story(
+            story,
+            extra_known_external_fields=proposed_field_names,
+        )
         result = StructuralLintResult.from_report(report)
         self._storage.save_structural_lint(job_id, result)
         self._storage.save_final_story(job_id, story, version=1)
