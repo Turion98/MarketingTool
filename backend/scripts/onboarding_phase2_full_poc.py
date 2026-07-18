@@ -246,9 +246,30 @@ def _assemble_story(
     blueprint: DomainBlueprint,
     accepted_outcomes: list[NodeGenerationOutcome],
     domain_name: str,
+    apply_cross_node_linker: bool = True,
+    apply_meta: bool = True,
+    apply_step_enrichment: bool = True,
 ) -> dict[str, Any]:
     """Local copy of `orchestrator.assemble_story`, decoupled from
-    OnboardingJob (which would require a storage-backed job in this PoC)."""
+    OnboardingJob (which would require a storage-backed job in this PoC).
+
+    The `apply_cross_node_linker` flag (default True) runs Phase 2.5
+    deterministic cross-node linker over the assembled story:
+    `complete_session_facts_whitelist` + `wire_cross_node_inject_conditions`.
+
+    The `apply_meta` flag (default True) runs Phase 3a deterministic
+    meta-builder: `order_context_mapping`, `condition_labels`, `reply_style`,
+    `precedence_rules`, `question_detection_hint`, `computed_condition_ids`,
+    `session_state_keys`, `reference_id_pattern`, `validation_pattern_ref`
+    (page-level). Runs AFTER the linker so the inject_conditions it added
+    are visible to the OCM derive pass.
+
+    The `apply_step_enrichment` flag (default True) runs Phase 3b
+    deterministic step-enricher: `done_when` backfill, internal_conditions
+    expansion, `auto_satisfy_after_reply` heuristic, `chain_on_complete`
+    + `skippable: false` heuristic, post-expand `validation_pattern_ref`.
+    Runs AFTER meta-builder.
+    """
     pages: dict[str, Any] = {}
     for outcome in accepted_outcomes:
         if outcome.final_status == "accepted" and outcome.final_node_dict:
@@ -265,7 +286,7 @@ def _assemble_story(
     start_page_id = first_accepted.node_id if first_accepted else "start"
     story_id = _slug(domain_name)
 
-    return {
+    story: dict[str, Any] = {
         "schemaVersion": "1.0",
         "storyId": story_id,
         "locale": blueprint.locale,
@@ -280,6 +301,73 @@ def _assemble_story(
         },
         "pages": pages,
     }
+
+    if apply_cross_node_linker:
+        from services.onboarding.cross_node_linker import link_cross_nodes
+        report = link_cross_nodes(story)
+        wl = report["whitelist"]
+        ic = report["inject_conditions"]
+        print(
+            f"  Phase 2.5 linker: whitelist +{wl['total_additions']}"
+            f" (in {len(wl['added_per_node'])} nodes); "
+            f"inject_conditions +{ic['total_additions']}"
+            f" rules wired."
+        )
+
+    if apply_meta:
+        from services.onboarding.meta_builder import apply_meta_builder
+        proposed = [
+            f.field_name
+            for f in (blueprint.proposed_new_external_fields or [])
+            if getattr(f, "field_name", None)
+        ]
+        meta_report = apply_meta_builder(
+            story,
+            locale=blueprint.locale,
+            extra_known_fields=proposed or None,
+            session_collected_fields=proposed or None,
+        )
+        print(
+            f"  Phase 3a meta-builder: "
+            f"field_rules +{meta_report['order_context_mapping']['field_rules_added']}, "
+            f"labels +{meta_report['condition_labels']['labels_added']}, "
+            f"reply_style locale={meta_report['reply_style']['locale_used']}."
+        )
+        ocm = meta_report.get("order_context_mapping", {})
+        prec = ocm.get("precedence_rules_added", 0)
+        ccid = ocm.get("computed_condition_ids_added", 0)
+        ssk = ocm.get("session_state_keys_added", 0)
+        vpr = meta_report.get("validation_pattern_ref", {})
+        vref_p = vpr.get("page_conds_touched", 0)
+        rip_added = vpr.get("reference_id_pattern_added", False)
+        qdh = meta_report.get("question_detection_hint", {})
+        qdh_added = qdh.get("added", False)
+        print(
+            f"  Phase 3a layers: precedence +{prec}, "
+            f"computed_cond_ids +{ccid}, session_state_keys +{ssk}, "
+            f"validation_ref(page) +{vref_p}, "
+            f"question_hint_added={qdh_added}, "
+            f"ref_id_pattern_added={rip_added}."
+        )
+
+    if apply_step_enrichment:
+        from services.onboarding.step_enricher import apply_step_enricher
+        enr_report = apply_step_enricher(story, locale=blueprint.locale)
+        dw = enr_report.get("done_when_filled", 0)
+        ic_exp = enr_report.get("conditions_expanded", 0)
+        autos = enr_report.get("auto_satisfy_flagged", 0)
+        nrf = enr_report.get("do_not_reask_flagged", 0)
+        chain = enr_report.get("chain_on_complete_set_true", 0)
+        skip_f = enr_report.get("skippable_set_false", 0)
+        vref_s = enr_report.get("validation_pattern_ref_post_attached", 0)
+        print(
+            f"  Phase 3b step-enricher: done_when +{dw}, "
+            f"int_cond_expanded +{ic_exp}, auto_satisfy +{autos}, "
+            f"do_not_reask +{nrf}, chain_on_complete +{chain}, "
+            f"skippable=false +{skip_f}, validation_ref(step) +{vref_s}."
+        )
+
+    return story
 
 
 def _print_node_progress(

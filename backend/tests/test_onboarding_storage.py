@@ -137,6 +137,9 @@ def test_foreign_keys_are_enabled(storage: OnboardingStorage):
 
 
 def test_schema_version_recorded(storage: OnboardingStorage):
+    """Friss DB-ben az `_CURRENT_SCHEMA_VERSION`-t kell tükrözze (v2)."""
+    from services.onboarding.storage import _CURRENT_SCHEMA_VERSION
+
     conn = storage._connect()
     try:
         row = conn.execute(
@@ -144,7 +147,8 @@ def test_schema_version_recorded(storage: OnboardingStorage):
         ).fetchone()
     finally:
         conn.close()
-    assert row["version"] == 1
+    assert row["version"] == _CURRENT_SCHEMA_VERSION
+    assert _CURRENT_SCHEMA_VERSION == 2
 
 
 # --------------------------------------------------------------------------- #
@@ -490,4 +494,283 @@ def test_list_events_filtered_by_phase(storage: OnboardingStorage):
 def test_log_event_for_missing_job_raises(storage: OnboardingStorage):
     with pytest.raises(JobNotFound):
         storage.log_event("ghost", phase="phase1", kind="x")
+
+
+# --------------------------------------------------------------------------- #
+# 10. Schema v2 — brief & Phase 0 result perzisztencia                       #
+# --------------------------------------------------------------------------- #
+
+
+def _sample_support_brief():
+    """Minimális, érvényes `SupportChatbotBrief` v2 tesztekhez."""
+    from services.onboarding.brief_contracts import (
+        Card1CompanyBasics,
+        Card2Operations,
+        Card2aReturns,
+        Card2bRemedy,
+        Card2cShipping,
+        Card3Backend,
+        Card3aHelpdesk,
+        Card5aOffTopic,
+        Card5bSupportAvailability,
+        Card5Boundaries,
+        SupportChatbotBrief,
+    )
+    return SupportChatbotBrief(
+        card1=Card1CompanyBasics(
+            vendor_name="Storage Test Vendor",
+            business_model="own_inventory",
+            target_market="b2c",
+            locale="hu",
+        ),
+        card2=Card2Operations(
+            returns=Card2aReturns(
+                return_window_days=14,
+                return_window_starts_from="delivery",
+                return_shipping_paid_by="customer",
+            ),
+            remedy=Card2bRemedy(
+                has_own_repair_capacity=False,
+                primary_remedy_order=["refund"],
+                instant_replacement="no",
+                refund_timeline="3_business_days",
+            ),
+            shipping=Card2cShipping(
+                carriers=["DPD"],
+                lost_package_handled_by="company",
+                damage_report_window_value=24,
+                damage_report_window_unit="hours",
+            ),
+        ),
+        card3=Card3Backend(helpdesk=Card3aHelpdesk(has_helpdesk=False)),
+        card5=Card5Boundaries(
+            off_topic=Card5aOffTopic(),
+            support_availability=Card5bSupportAvailability(
+                has_support_team=False
+            ),
+        ),
+    )
+
+
+def _sample_phase0_result(brief_id: str = "brief-xyz"):
+    from services.onboarding.brief_contracts import BriefExpansionResult
+
+    return BriefExpansionResult(
+        research_text="# Storage Test Vendor\n\n" + ("Lorem ipsum dolor. " * 30),
+        domain_name="Storage Test Vendor — Customer support intake",
+        locale="hu",
+        vendor_name="Storage Test Vendor",
+        source_brief_id=brief_id,
+        metadata={"enricher_used": False},
+    )
+
+
+def test_save_brief_round_trip(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-brief-rt", domain_name="dom", target_locale="hu"
+    )
+    brief = _sample_support_brief()
+    storage.save_brief("job-brief-rt", brief)
+    loaded = storage.get_brief("job-brief-rt")
+    assert loaded is not None
+    assert loaded.brief_id == brief.brief_id
+    assert loaded.card1.vendor_name == "Storage Test Vendor"
+    assert loaded.card2.returns.return_window_days == 14
+
+
+def test_save_brief_upserts_on_resave(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-brief-up", domain_name="dom", target_locale="hu"
+    )
+    brief = _sample_support_brief()
+    storage.save_brief("job-brief-up", brief)
+    # Módosít és újrament.
+    brief.card1.vendor_name = "Renamed Vendor"
+    storage.save_brief("job-brief-up", brief)
+    loaded = storage.get_brief("job-brief-up")
+    assert loaded is not None
+    assert loaded.card1.vendor_name == "Renamed Vendor"
+
+
+def test_get_brief_returns_none_when_missing(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-no-brief", domain_name="dom", target_locale="hu"
+    )
+    assert storage.get_brief("job-no-brief") is None
+
+
+def test_save_phase0_result_round_trip(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-p0", domain_name="dom", target_locale="hu"
+    )
+    result = _sample_phase0_result(brief_id="brief-abc")
+    storage.save_phase0_result("job-p0", result)
+    loaded = storage.get_phase0_result("job-p0")
+    assert loaded is not None
+    assert loaded.domain_name == "Storage Test Vendor — Customer support intake"
+    assert loaded.source_brief_id == "brief-abc"
+    assert loaded.vendor_policy == "specific"
+
+
+def test_save_phase0_result_upserts(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-p0-up", domain_name="dom", target_locale="hu"
+    )
+    r1 = _sample_phase0_result(brief_id="b1")
+    storage.save_phase0_result("job-p0-up", r1)
+    r2 = _sample_phase0_result(brief_id="b2")
+    storage.save_phase0_result("job-p0-up", r2)
+    loaded = storage.get_phase0_result("job-p0-up")
+    assert loaded is not None
+    assert loaded.source_brief_id == "b2"
+
+
+def test_load_job_includes_brief_and_phase0(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-full-v2", domain_name="dom", target_locale="hu"
+    )
+    brief = _sample_support_brief()
+    result = _sample_phase0_result(brief_id=brief.brief_id)
+    storage.save_brief("job-full-v2", brief)
+    storage.save_phase0_result("job-full-v2", result)
+    job = storage.load_job("job-full-v2")
+    assert job.brief is not None
+    assert job.brief.card1.vendor_name == "Storage Test Vendor"
+    assert job.phase0_result is not None
+    assert job.phase0_result.domain_name.startswith("Storage Test Vendor")
+
+
+def test_load_job_brief_is_none_when_not_saved(storage: OnboardingStorage):
+    storage.create_job(
+        job_id="job-no-brief2", domain_name="dom", target_locale="hu"
+    )
+    job = storage.load_job("job-no-brief2")
+    assert job.brief is None
+    assert job.phase0_result is None
+
+
+def test_brief_save_requires_existing_job(storage: OnboardingStorage):
+    """A v1-es mintát követve: FK-validáció a brief mentésekor is."""
+    brief = _sample_support_brief()
+    with pytest.raises(JobNotFound):
+        storage.save_brief("ghost-job", brief)
+
+
+def test_brief_and_phase0_cascade_with_job_delete(
+    storage: OnboardingStorage,
+):
+    storage.create_job(
+        job_id="job-cascade-v2", domain_name="dom", target_locale="hu"
+    )
+    brief = _sample_support_brief()
+    storage.save_brief("job-cascade-v2", brief)
+    storage.save_phase0_result(
+        "job-cascade-v2", _sample_phase0_result(brief_id=brief.brief_id)
+    )
+    storage.delete_job("job-cascade-v2")
+    assert storage.get_brief("job-cascade-v2") is None
+    assert storage.get_phase0_result("job-cascade-v2") is None
+
+
+# --------------------------------------------------------------------------- #
+# 11. Schema v1 → v2 migráció                                                #
+# --------------------------------------------------------------------------- #
+
+
+def test_v1_db_is_migrated_to_v2_idempotently(tmp_path):
+    """Egy "v1-stílusú" DB-t felépítünk kézzel, majd init_schema migrál."""
+    import sqlite3
+
+    db = tmp_path / "v1_migration.db"
+
+    # Manuálisan szimulálunk egy v1 állapotú DB-t: csak a v1 táblák + a
+    # verzió rekord létezik (v=1). Nincs benne `onboarding_briefs` vagy
+    # `onboarding_phase0_results`.
+    conn = sqlite3.connect(str(db))
+    try:
+        conn.execute(
+            """
+            CREATE TABLE onboarding_schema_version (
+                version INTEGER PRIMARY KEY,
+                applied_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE onboarding_jobs (
+                job_id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                status TEXT NOT NULL,
+                status_detail TEXT,
+                domain_name TEXT NOT NULL,
+                target_locale TEXT NOT NULL,
+                vendor_policy TEXT NOT NULL,
+                vendor_name TEXT,
+                research_source_path TEXT,
+                retry_config_json TEXT NOT NULL,
+                current_node_index INTEGER NOT NULL DEFAULT 0,
+                blueprint_error TEXT
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO onboarding_schema_version (version, applied_at) "
+            "VALUES (1, '2026-01-01T00:00:00+00:00')"
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    # init_schema-nak idempotens migrációt kell csinálnia.
+    storage = OnboardingStorage(db)
+    storage.init_schema()
+
+    conn = storage._connect()
+    try:
+        version_rows = conn.execute(
+            "SELECT version FROM onboarding_schema_version ORDER BY version ASC"
+        ).fetchall()
+        table_rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    versions = {r["version"] for r in version_rows}
+    assert 2 in versions
+    table_names = {r["name"] for r in table_rows}
+    assert "onboarding_briefs" in table_names
+    assert "onboarding_phase0_results" in table_names
+
+    # Második meghívás → változatlan állapot (no-op).
+    storage.init_schema()
+
+
+def test_init_schema_panics_on_future_version(tmp_path):
+    import sqlite3
+
+    db = tmp_path / "future_version.db"
+    conn = sqlite3.connect(str(db))
+    try:
+        conn.execute(
+            """
+            CREATE TABLE onboarding_schema_version (
+                version INTEGER PRIMARY KEY,
+                applied_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO onboarding_schema_version (version, applied_at) "
+            "VALUES (99, '2099-01-01T00:00:00+00:00')"
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    storage = OnboardingStorage(db)
+    with pytest.raises(StorageError):
+        storage.init_schema()
 

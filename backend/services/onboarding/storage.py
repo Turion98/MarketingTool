@@ -38,6 +38,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
+from services.onboarding.brief_contracts import (
+    BriefExpansionResult,
+    SupportChatbotBrief,
+)
 from services.onboarding.contracts import (
     DomainBlueprint,
     NodeGenerationAttempt,
@@ -51,7 +55,7 @@ from services.onboarding.contracts import (
 )
 
 
-_CURRENT_SCHEMA_VERSION = 1
+_CURRENT_SCHEMA_VERSION = 2
 
 
 # --------------------------------------------------------------------------- #
@@ -159,6 +163,25 @@ _SCHEMA_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS idx_events_job_at
         ON onboarding_events (job_id, event_id)
     """,
+    # ----------------------------------------------------------------- #
+    # Schema v2 — brief-driven flow (Phase 0)                            #
+    # ----------------------------------------------------------------- #
+    """
+    CREATE TABLE IF NOT EXISTS onboarding_briefs (
+        job_id TEXT PRIMARY KEY,
+        brief_json TEXT NOT NULL,
+        saved_at TEXT NOT NULL,
+        FOREIGN KEY (job_id) REFERENCES onboarding_jobs(job_id) ON DELETE CASCADE
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS onboarding_phase0_results (
+        job_id TEXT PRIMARY KEY,
+        expansion_json TEXT NOT NULL,
+        saved_at TEXT NOT NULL,
+        FOREIGN KEY (job_id) REFERENCES onboarding_jobs(job_id) ON DELETE CASCADE
+    )
+    """,
 )
 
 
@@ -246,10 +269,21 @@ class OnboardingStorage:
     # ------------------------------------------------------------------ #
 
     def init_schema(self) -> None:
-        """Idempotens schema-bootstrap.
+        """Idempotens schema-bootstrap, automatikus v1→v2 migrációval.
 
-        Ha a schema már létezik a kívánt verzióval, no-op. Ha verzió-
-        eltérés, `StorageError`-t dob (a hívó dönt: drop & recreate).
+        Viselkedés:
+
+        * **Friss DB** (verzió rekord nincs): minden DDL lefut, a verzió
+          rekord `_CURRENT_SCHEMA_VERSION` (`2`) lesz.
+        * **v1 DB** (`onboarding_briefs` + `onboarding_phase0_results` még
+          nincs): a `CREATE TABLE IF NOT EXISTS` ezeket idempotensen
+          hozzáadja, és a verzió rekordot `2`-re frissíti.
+        * **v2 DB**: no-op (minden DDL `IF NOT EXISTS`-szel idempotens).
+        * **v >2** vagy ha drop-recreate-re lenne szükség: `StorageError`.
+
+        A migráció csak additív (új táblák + bump). Adatvesztés nincs;
+        a v1 időszakban létrejött jobok továbbra is `brief=None` /
+        `phase0_result=None` állapotban olvasódnak vissza.
         """
         conn = self._connect()
         try:
@@ -257,8 +291,6 @@ class OnboardingStorage:
             for stmt in _SCHEMA_DDL:
                 conn.execute(stmt)
 
-            # A `onboarding_schema_version` táblába írjuk az aktuális verziót,
-            # ha még üres. Verzió-mismatch detektálás:
             row = conn.execute(
                 "SELECT MAX(version) AS v FROM onboarding_schema_version"
             ).fetchone()
@@ -276,10 +308,13 @@ class OnboardingStorage:
                     "kódot vagy migrálj le."
                 )
             elif current < _CURRENT_SCHEMA_VERSION:
-                raise StorageError(
-                    f"Schema verzió {current} < {_CURRENT_SCHEMA_VERSION}. "
-                    "Migráció szükséges; ezt a réteg jelenleg nem támogatja "
-                    "(drop & recreate ajánlott a fejlesztés alatt)."
+                # Additív migráció: a fenti DDL-ek `IF NOT EXISTS`-szel
+                # már létrehozták a hiányzó táblákat. Csak a verzió-rekordot
+                # kell felülírni.
+                conn.execute(
+                    "INSERT INTO onboarding_schema_version (version, applied_at) "
+                    "VALUES (?, ?)",
+                    (_CURRENT_SCHEMA_VERSION, _to_iso(_utcnow())),
                 )
             conn.execute("COMMIT")
         except Exception:
@@ -388,6 +423,57 @@ class OnboardingStorage:
         finally:
             conn.close()
 
+    def update_job_meta(
+        self,
+        job_id: str,
+        *,
+        domain_name: Optional[str] = None,
+        target_locale: Optional[str] = None,
+        vendor_policy: Optional[VendorPolicyKind] = None,
+        vendor_name: Optional[str] = None,
+        research_source_path: Optional[str] = None,
+    ) -> None:
+        """Job-meta frissítés (domain_name, locale, vendor_*, research_source_path).
+
+        A brief-driven flow használja, amikor a user a brief-en módosít
+        (pl. átírja a `card1.vendor_name`-et). A job-rekordon is le kell
+        ülnie a változásnak, hogy a dashboard listán helyes header
+        jelenjen meg.
+
+        Csak az explicit megadott mezőket írja át; a többi változatlan.
+        Üres `set` esetén no-op. `JobNotFound`-ot dob ismeretlen `job_id`-re.
+        """
+        sets: list[str] = ["updated_at = ?"]
+        args: list[Any] = [_to_iso(_utcnow())]
+        if domain_name is not None:
+            sets.append("domain_name = ?")
+            args.append(domain_name)
+        if target_locale is not None:
+            sets.append("target_locale = ?")
+            args.append(target_locale)
+        if vendor_policy is not None:
+            sets.append("vendor_policy = ?")
+            args.append(vendor_policy)
+        if vendor_name is not None:
+            sets.append("vendor_name = ?")
+            args.append(vendor_name)
+        if research_source_path is not None:
+            sets.append("research_source_path = ?")
+            args.append(research_source_path)
+        if len(sets) == 1:  # csak az updated_at — no-op
+            return
+        args.append(job_id)
+        conn = self._connect()
+        try:
+            cur = conn.execute(
+                f"UPDATE onboarding_jobs SET {', '.join(sets)} WHERE job_id = ?",
+                args,
+            )
+            if cur.rowcount == 0:
+                raise JobNotFound(job_id)
+        finally:
+            conn.close()
+
     def list_jobs(
         self,
         *,
@@ -465,6 +551,17 @@ class OnboardingStorage:
                 "SELECT story_json, version FROM onboarding_final_stories WHERE job_id = ?",
                 (job_id,),
             ).fetchone()
+
+            brief_row = conn.execute(
+                "SELECT brief_json FROM onboarding_briefs WHERE job_id = ?",
+                (job_id,),
+            ).fetchone()
+
+            phase0_row = conn.execute(
+                "SELECT expansion_json FROM onboarding_phase0_results "
+                "WHERE job_id = ?",
+                (job_id,),
+            ).fetchone()
         finally:
             conn.close()
 
@@ -515,6 +612,18 @@ class OnboardingStorage:
             final_story = json.loads(story_row["story_json"])
             final_story_version = int(story_row["version"])
 
+        brief: Optional[SupportChatbotBrief] = None
+        if brief_row is not None:
+            brief = SupportChatbotBrief.model_validate_json(
+                brief_row["brief_json"]
+            )
+
+        phase0_result: Optional[BriefExpansionResult] = None
+        if phase0_row is not None:
+            phase0_result = BriefExpansionResult.model_validate_json(
+                phase0_row["expansion_json"]
+            )
+
         return OnboardingJob(
             job_id=row["job_id"],
             created_at=_from_iso(row["created_at"]),
@@ -535,6 +644,8 @@ class OnboardingStorage:
             semantic_audit=semantic_audit,
             final_story=final_story,
             final_story_version=final_story_version,
+            brief=brief,
+            phase0_result=phase0_result,
         )
 
     # ------------------------------------------------------------------ #
@@ -575,6 +686,95 @@ class OnboardingStorage:
         if row is None:
             return None
         return DomainBlueprint.model_validate_json(row["blueprint_json"])
+
+    # ------------------------------------------------------------------ #
+    # Phase 0 — brief & expansion result                                  #
+    # ------------------------------------------------------------------ #
+
+    def save_brief(self, job_id: str, brief: SupportChatbotBrief) -> None:
+        """A user által kitöltött `SupportChatbotBrief` mentése (UPSERT).
+
+        Egy job-hoz egyetlen "current" brief tartozik — ha a user vissza-
+        lép és módosítja, ez UPSERT-elődik. A korábbi snapshot-okat NEM
+        verziózzuk a v2 schema-ban (audit-igény esetén v3-ra).
+        """
+        self._require_job_exists(job_id)
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO onboarding_briefs (job_id, brief_json, saved_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(job_id) DO UPDATE SET
+                    brief_json = excluded.brief_json,
+                    saved_at = excluded.saved_at
+                """,
+                (job_id, brief.model_dump_json(), _to_iso(_utcnow())),
+            )
+            conn.execute(
+                "UPDATE onboarding_jobs SET updated_at = ? WHERE job_id = ?",
+                (_to_iso(_utcnow()), job_id),
+            )
+        finally:
+            conn.close()
+
+    def get_brief(self, job_id: str) -> Optional[SupportChatbotBrief]:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT brief_json FROM onboarding_briefs WHERE job_id = ?",
+                (job_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if row is None:
+            return None
+        return SupportChatbotBrief.model_validate_json(row["brief_json"])
+
+    def save_phase0_result(
+        self, job_id: str, result: BriefExpansionResult
+    ) -> None:
+        """Phase 0 derived result (`research_text` + metadata) mentése (UPSERT).
+
+        A brief változására a Phase 0-t a hívó (orchestrator) ismét lefuttatja,
+        és ez a metódus UPSERT-eli az új resulttal. Idempotens.
+        """
+        self._require_job_exists(job_id)
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO onboarding_phase0_results
+                    (job_id, expansion_json, saved_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(job_id) DO UPDATE SET
+                    expansion_json = excluded.expansion_json,
+                    saved_at = excluded.saved_at
+                """,
+                (job_id, result.model_dump_json(), _to_iso(_utcnow())),
+            )
+            conn.execute(
+                "UPDATE onboarding_jobs SET updated_at = ? WHERE job_id = ?",
+                (_to_iso(_utcnow()), job_id),
+            )
+        finally:
+            conn.close()
+
+    def get_phase0_result(
+        self, job_id: str
+    ) -> Optional[BriefExpansionResult]:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT expansion_json FROM onboarding_phase0_results "
+                "WHERE job_id = ?",
+                (job_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if row is None:
+            return None
+        return BriefExpansionResult.model_validate_json(row["expansion_json"])
 
     # ------------------------------------------------------------------ #
     # Phase 2                                                             #

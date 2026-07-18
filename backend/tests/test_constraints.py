@@ -45,6 +45,7 @@ from services.onboarding.constraints import (
     build_constraint_catalog,
     render_catalog_for_prompt,
 )
+from services.onboarding.contracts import ProposedNewExternalField
 
 
 # --------------------------------------------------------------------------- #
@@ -226,4 +227,110 @@ def test_routing_allowed_forms_include_default_and_if_form() -> None:
     assert '"goto"' in forms_str
     assert '"default"' in forms_str
     assert '"inject_conditions"' in forms_str
+
+
+# --------------------------------------------------------------------------- #
+# 7. Domain-specific extended pool (proposed_external_fields)                 #
+# --------------------------------------------------------------------------- #
+#
+# A Phase 1 `DomainBlueprint.proposed_new_external_fields` listája egy
+# job-scope, domain-specifikus pool, ami rétegelve a globális
+# `KNOWN_OCM_FIELDS` fölé. A `build_constraint_catalog(proposed_external_fields=...)`
+# beengedi, és a render markdown-jában külön szekcióban listázza
+# "BACKEND IMPLEMENTATION PENDING" markerrel.
+
+
+def _sample_proposed() -> list[ProposedNewExternalField]:
+    return [
+        ProposedNewExternalField(
+            field_name="device_model",
+            description="The exact model/SKU of the refurbished device.",
+            rationale="Critical for wrong-item detection and device-specific troubleshooting.",
+            suggested_type="str",
+        ),
+        ProposedNewExternalField(
+            field_name="issue_start_date",
+            description="The date when the customer first noticed the issue.",
+            rationale="Required for warranty eligibility and proof-burden timing.",
+            suggested_type="date",
+        ),
+    ]
+
+
+def test_default_catalog_has_no_proposed_fields() -> None:
+    cat = build_constraint_catalog()
+    assert cat.order_context.proposed_external_fields == []
+
+
+def test_catalog_with_proposed_fields_round_trips() -> None:
+    cat = build_constraint_catalog(proposed_external_fields=_sample_proposed())
+    restored = ConstraintCatalog.model_validate(cat.model_dump())
+    assert restored == cat
+    assert {p.field_name for p in cat.order_context.proposed_external_fields} == {
+        "device_model",
+        "issue_start_date",
+    }
+
+
+def test_proposed_fields_with_global_pool_collision_are_dropped() -> None:
+    # Ha a Phase 1 modell véletlenül a globális poolban szereplő mezőt is
+    # propozálná (pl. `purchase_date`), a katalógus a duplikációt eldobja.
+    proposals = list(_sample_proposed()) + [
+        ProposedNewExternalField(
+            field_name="purchase_date",  # globális poolban van
+            description="Already in the runtime pool.",
+            rationale="Should be deduplicated by the catalog builder.",
+            suggested_type="date",
+        ),
+    ]
+    cat = build_constraint_catalog(proposed_external_fields=proposals)
+    names = {p.field_name for p in cat.order_context.proposed_external_fields}
+    assert "purchase_date" not in names
+    assert names == {"device_model", "issue_start_date"}
+
+
+def test_proposed_fields_dedupe_within_input_list() -> None:
+    proposals = list(_sample_proposed()) + [
+        ProposedNewExternalField(
+            field_name="device_model",  # ismétlés
+            description="Duplicate proposal — different rationale.",
+            rationale="Should be deduplicated; first occurrence wins.",
+            suggested_type="str",
+        ),
+    ]
+    cat = build_constraint_catalog(proposed_external_fields=proposals)
+    occurrences = [
+        p for p in cat.order_context.proposed_external_fields
+        if p.field_name == "device_model"
+    ]
+    assert len(occurrences) == 1
+
+
+def test_render_includes_proposed_fields_section() -> None:
+    cat = build_constraint_catalog(proposed_external_fields=_sample_proposed())
+    rendered = render_catalog_for_prompt(cat)
+    # A szekció címke + minden mező nevének és típusának benne kell lennie.
+    assert "Domain-specific extensions" in rendered
+    assert "BACKEND IMPLEMENTATION PENDING" in rendered
+    assert "device_model" in rendered and "(str)" in rendered
+    assert "issue_start_date" in rendered and "(date)" in rendered
+    # A markert a Phase 2 prompt felismerheti, hogy hogyan kezelje:
+    assert "domain-specific" in rendered.lower()
+
+
+def test_render_omits_proposed_section_when_empty() -> None:
+    # Default (no proposed fields): a "Domain-specific" szekció ne
+    # jelenjen meg, hogy ne zavarja a prompt-ot.
+    cat = build_constraint_catalog()
+    rendered = render_catalog_for_prompt(cat)
+    assert "Domain-specific extensions" not in rendered
+    assert "BACKEND IMPLEMENTATION PENDING" not in rendered
+
+
+def test_render_global_pool_prefix_changed_to_global_pool_label() -> None:
+    # A globális pool listázás label-je explicit "GLOBAL POOL" — segít a
+    # modellnek megkülönböztetni a 2 réteget.
+    cat = build_constraint_catalog(proposed_external_fields=_sample_proposed())
+    rendered = render_catalog_for_prompt(cat)
+    assert "GLOBAL POOL" in rendered
 

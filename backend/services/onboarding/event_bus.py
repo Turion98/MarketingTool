@@ -38,7 +38,15 @@ from typing import Any, Callable, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-OnboardingEventPhase = Literal["phase1", "phase2", "phase3a", "phase3b", "pipeline"]
+OnboardingEventPhase = Literal[
+    "phase0",  # brief-driven flow Phase 0 (expander + brief_received/updated)
+    "phase1",
+    "phase2",
+    "phase3a",
+    "phase3b",
+    "end_node_generation",  # Card 4A AI hívás
+    "pipeline",
+]
 
 
 class OnboardingEvent(BaseModel):

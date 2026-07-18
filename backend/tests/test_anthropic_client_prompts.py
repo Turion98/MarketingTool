@@ -228,6 +228,46 @@ def test_phase2_system_prompt_embeds_catalog_and_instructions():
     assert "VENDOR POLICY: generic_blended" in p
 
 
+def test_phase2_prompt_describes_closing_step_bundle():
+    catalog = build_constraint_catalog()
+    p = build_phase2_system_prompt(
+        catalog, target_locale="en", vendor_policy="generic_blended"
+    )
+    assert "CLOSING STEPS" in p
+    assert "is_terminal" in p
+    assert "permit_goto_auto_ack" in p
+    assert "silent_on_matched_goto" in p
+    assert "fallback_reason" in p
+
+
+def test_phase2_prompt_describes_condition_implications_pattern():
+    catalog = build_constraint_catalog()
+    p = build_phase2_system_prompt(
+        catalog, target_locale="en", vendor_policy="generic_blended"
+    )
+    assert "condition_implications" in p
+    assert "when_all" in p and '"then"' in p
+
+
+def test_phase2_prompt_describes_session_facts_whitelist_contract():
+    catalog = build_constraint_catalog()
+    p = build_phase2_system_prompt(
+        catalog, target_locale="en", vendor_policy="generic_blended"
+    )
+    assert "session_facts_whitelist" in p
+    # The "explicit propagation contract" wording is the load-bearing term.
+    assert "propagation contract" in p
+
+
+def test_phase2_prompt_describes_inject_conditions_handoff_payload():
+    catalog = build_constraint_catalog()
+    p = build_phase2_system_prompt(
+        catalog, target_locale="en", vendor_policy="generic_blended"
+    )
+    assert "inject_conditions" in p
+    assert "cross-node handoff payload" in p
+
+
 def test_phase2_system_prompt_surfaces_domain_specific_extensions():
     proposals = [
         ProposedNewExternalField(

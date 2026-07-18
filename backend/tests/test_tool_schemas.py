@@ -399,3 +399,124 @@ def test_report_payload_validates_against_pydantic(report_tool):
     assert audit.findings[0].kind == "routing_logic"
     assert audit.verdict == "warnings_only"
 
+
+# --------------------------------------------------------------------------- #
+# 7. Phase 3 step extensions: reply_rules + internal_conditions új flag-ek    #
+# --------------------------------------------------------------------------- #
+#
+# A Phase 3c (reply_rules generator) és Phase 3b/B (internal_conditions
+# dict-feltöltés) új mezőket vezet be a step + condition schemába:
+#
+# - step.reply_rules: 1-6 string, 8-240 char/elem (LLM system-prompt blokk)
+# - internal_conditions[i].auto_satisfy_after_reply: bool (runtime-flag)
+# - internal_conditions[i].do_not_reask_hint: 1-300 char string
+#
+# A schema ezeket explicit-en engedélyezi és tipikus hibákra rejection-t ad.
+
+
+def test_generate_accepts_step_reply_rules(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["reply_rules"] = [
+        "Csak a téma típusát kérd — semmi mást.",
+        "Ne magyarázd el a következő lépéseket.",
+    ]
+    jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_reply_rules_non_list(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["reply_rules"] = "single string not a list"
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_reply_rules_too_short_item(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["reply_rules"] = ["short"]  # 5 char < 8
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_reply_rules_too_long_item(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["reply_rules"] = ["x" * 241]  # 241 char > 240
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_reply_rules_too_many_items(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["reply_rules"] = [
+        "Item one — minimum eight chars.",
+        "Item two — minimum eight chars.",
+        "Item three — minimum eight chars.",
+        "Item four — minimum eight chars.",
+        "Item five — minimum eight chars.",
+        "Item six — minimum eight chars.",
+        "Item seven — minimum eight chars.",  # 7 > maxItems 6
+    ]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_accepts_internal_condition_auto_satisfy_and_hint(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["internal_conditions"] = [
+        {
+            "id": "user_provided_topic",
+            "description": "A felhasználó megadta a témát.",
+            "do_not_reask_if_satisfied": True,
+            "auto_satisfy_after_reply": False,
+            "do_not_reask_hint": "Ha az ügyfél már említette a témát, ne kérdezd újra.",
+        }
+    ]
+    jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_internal_condition_non_bool_auto_satisfy(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["internal_conditions"] = [
+        {
+            "id": "user_provided_topic",
+            "description": "A felhasználó megadta a témát.",
+            "auto_satisfy_after_reply": "yes",
+        }
+    ]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_internal_condition_empty_hint(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["internal_conditions"] = [
+        {
+            "id": "user_provided_topic",
+            "description": "A felhasználó megadta a témát.",
+            "do_not_reask_hint": "",
+        }
+    ]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_rejects_internal_condition_hint_too_long(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["steps"][0]["internal_conditions"] = [
+        {
+            "id": "user_provided_topic",
+            "description": "A felhasználó megadta a témát.",
+            "do_not_reask_hint": "x" * 301,  # 301 > 300
+        }
+    ]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, generate_tool["input_schema"])
+
+
+def test_generate_accepts_page_condition_auto_satisfy_and_hint(generate_tool):
+    payload = _valid_generate_node_payload()
+    payload["conditions"][0]["auto_satisfy_after_reply"] = True
+    payload["conditions"][0]["do_not_reask_hint"] = (
+        "Ha az ügyfél már elmondta — ne ismételd vissza."
+    )
+    jsonschema.validate(payload, generate_tool["input_schema"])
+

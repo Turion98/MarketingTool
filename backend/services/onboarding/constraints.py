@@ -25,10 +25,11 @@ hív, és a teljes pipeline ugyanazt a snapshot-ot látja.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Iterable, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from services.onboarding.contracts import ProposedNewExternalField
 from services.story_lint import (
     KNOWN_OCM_FIELDS,
     REQUIRED_COMPUTED_KEYS,
@@ -190,11 +191,25 @@ class StepConstraints(BaseModel):
         default_factory=lambda: ["id", "type"],
     )
     optional_string_fields: list[str] = Field(
-        default_factory=lambda: ["goal", "ai_action", "done_when", "default_next"],
+        default_factory=lambda: [
+            "goal", "ai_action", "done_when", "default_next", "fallback_reason",
+        ],
     )
     boolean_flag_fields: list[str] = Field(
         default_factory=lambda: list(KNOWN_STEP_BOOL_FLAGS),
         description="Csak bool érték — string/int rejection.",
+    )
+    closing_step_required_bundle: list[str] = Field(
+        default_factory=lambda: [
+            "is_terminal", "permit_goto_auto_ack",
+            "silent_on_matched_goto", "fallback_reason",
+        ],
+        description=(
+            "Ha `is_closing: true`, ezek MIND kötelezőek a step-en: "
+            "`is_terminal: true`, `permit_goto_auto_ack: true`, "
+            "`silent_on_matched_goto: true`, és nem-üres `fallback_reason` string. "
+            "A runtime ezen a bundle-on alapul a session lezárásához."
+        ),
     )
     branches_form: str = Field(
         default=(
@@ -304,6 +319,17 @@ class OrderContextConstraints(BaseModel):
         ...,
         description="Engedélyezett OrderContext mezők. Új mezőhöz a `services.order_context.OrderContext` BaseModel-t kell bővíteni + a `KNOWN_OCM_FIELDS` halmazt.",
     )
+    proposed_external_fields: list[ProposedNewExternalField] = Field(
+        default_factory=list,
+        description=(
+            "Job-scope, domain-specifikus extended pool — a Phase 1 blueprint "
+            "`proposed_new_external_fields` listájából rétegezve a globális pool "
+            "fölé. Ezek a mezők NINCSENEK a runtime `OrderContext`-ben, ezért a "
+            "feltételek konverzációból / manuális extrakcióból kell hogy "
+            "kielégüljenek a backend bővítéséig. A lint nem `warn()`-ol, "
+            "csak `note()`-ot ad ezekre."
+        ),
+    )
     field_rule_when_modes: list[str] = Field(
         default_factory=lambda: list(ALLOWED_FIELD_RULE_WHEN_VALUES),
         description="A `when` mező megengedett értékei. Alternatíva: `when_value` (egzakt match) vagy `when_any_value` (lista membership).",
@@ -403,13 +429,37 @@ class ConstraintCatalog(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
-def build_constraint_catalog() -> ConstraintCatalog:
+def build_constraint_catalog(
+    *,
+    proposed_external_fields: Iterable[ProposedNewExternalField] = (),
+) -> ConstraintCatalog:
     """A katalógus a kódbeli konstansokból építkezik (single source of truth).
 
     Bármely kulcs hozzáadása a runtime / lint oldalon AUTOMATIKUSAN
     átkerül a katalógusba — nincs duplikáció. A regresszió-tesztek
     biztosítják, hogy a hozzáadás után sem törik a katalógus build-je.
+
+    A `proposed_external_fields` egy opcionális, job-scope, domain-specifikus
+    pool — tipikusan a `DomainBlueprint.proposed_new_external_fields` lista.
+    A globális `KNOWN_OCM_FIELDS` ALAP, a domain-specifikus csak HOZZÁAD,
+    soha nem felülír. A katalógus rendere (`render_catalog_for_prompt`)
+    külön szekcióban listázza, és a Phase 3a lint a rétegelt poolt
+    használja a `meta.order_context_mapping.field_rules` ellenőrzéséhez.
+    A javaslat-listából deduplikálódnak azok a mezők, amelyek már a
+    globális poolban vannak (sosem fordulhatna elő, de a Phase 1 modell
+    elvileg javasolhat egy létezőt is — a katalógus normalizálva tartja).
     """
+    proposed = list(proposed_external_fields)
+    deduped: list[ProposedNewExternalField] = []
+    seen_names: set[str] = set()
+    for p in proposed:
+        if p.field_name in KNOWN_OCM_FIELDS:
+            continue
+        if p.field_name in seen_names:
+            continue
+        seen_names.add(p.field_name)
+        deduped.append(p)
+
     return ConstraintCatalog(
         routing=RoutingConstraints(),
         condition=ConditionConstraints(),
@@ -417,6 +467,7 @@ def build_constraint_catalog() -> ConstraintCatalog:
         page=PageConstraints(),
         order_context=OrderContextConstraints(
             known_external_fields=sorted(KNOWN_OCM_FIELDS),
+            proposed_external_fields=deduped,
             required_computed_condition_keys=sorted(REQUIRED_COMPUTED_KEYS),
         ),
         meta=MetaConstraints(
@@ -489,6 +540,14 @@ def render_catalog_for_prompt(catalog: ConstraintCatalog) -> str:
     sections.append(f"- Required: {step.required_fields}")
     sections.append(f"- Optional string fields: {step.optional_string_fields}")
     sections.append(f"- Boolean flags (only `true`/`false`): {step.boolean_flag_fields}")
+    sections.append(
+        f"- Closing-step required bundle: when `is_closing: true`, ALL of "
+        f"these MUST be set on the same step: "
+        f"`is_terminal: true`, `permit_goto_auto_ack: true`, "
+        f"`silent_on_matched_goto: true`, and a non-empty `fallback_reason` "
+        f"string. The runtime relies on this bundle to close the session "
+        f"safely. Lint rejects any closing step missing one of these."
+    )
     sections.append(f"- `branches`: {step.branches_form}")
     sections.append(f"- `internal_conditions`: {step.internal_conditions_form}")
     sections.append(f"- `image_conditions`: {step.image_conditions_form}")
@@ -506,12 +565,31 @@ def render_catalog_for_prompt(catalog: ConstraintCatalog) -> str:
 
     sections.append("## External data (OrderContext)")
     sections.append(
-        f"- Allowed external fields ({len(oc.known_external_fields)}): "
+        f"- Allowed external fields, GLOBAL POOL ({len(oc.known_external_fields)}): "
         f"{oc.known_external_fields}"
     )
     sections.append(
-        "  New fields require extending the `OrderContext` BaseModel; do NOT invent fields."
+        "  These are wired into the runtime `OrderContext`. Reference any of "
+        "these freely in `meta.order_context_mapping.field_rules`."
     )
+    if oc.proposed_external_fields:
+        sections.append(
+            f"- Domain-specific extensions for THIS job, "
+            f"BACKEND IMPLEMENTATION PENDING ({len(oc.proposed_external_fields)}):"
+        )
+        for p in oc.proposed_external_fields:
+            sections.append(
+                f"{_INDENT * 2}- `{p.field_name}` ({p.suggested_type}): {p.description}"
+            )
+        sections.append(
+            "  These fields are NOT yet in the runtime `OrderContext`. The "
+            "runtime cannot derive them automatically; any condition that "
+            "references them must be set via conversation / manual extraction "
+            "(e.g. an `internal_conditions` ask step) until the backend is "
+            "extended. You MAY reference them in `field_rules` — the lint "
+            "marks such usage as `info` (`domain-specific, backend "
+            "implementation pending`), not as a warning or error."
+        )
     sections.append(f"- `field_rules.when` modes: {oc.field_rule_when_modes}")
     sections.append(f"- Value-match keys: {oc.field_rule_value_match_keys}")
     sections.append(f"- Modifier keys: {oc.field_rule_modifier_keys}")

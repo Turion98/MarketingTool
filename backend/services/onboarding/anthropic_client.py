@@ -37,6 +37,16 @@ from services.onboarding.contracts import (
     SemanticAuditResult,
     VendorPolicyKind,
 )
+from services.onboarding.reply_rules_generator import (
+    build_generate_reply_rules_tool,
+    build_phase3c_system_prompt,
+    build_phase3c_user_message,
+)
+from services.onboarding.text_triggers_generator import (
+    build_generate_text_triggers_tool,
+    build_phase3g_system_prompt,
+    build_phase3g_user_message,
+)
 from services.onboarding.tool_schemas import (
     build_extract_blueprint_tool,
     build_generate_node_tool,
@@ -203,12 +213,167 @@ OUTPUT SHAPE (call `generate_node` exactly once):
 OPTIONAL FIELDS (use when they sharpen routing):
 - `steps[]`: pattern is identify entity -> extract facts -> run exclusion
   checks -> decide route. Each step has a unique `id` and a `type` from the
-  allowed set. If the candidate's `closing_step_required` is true, include
-  one step with `is_closing: true` near the end.
-- `condition_implications[]`: `{when_all: [...], then: <cond>}` - derive a
-  condition deterministically from a combination already true.
-- `session_facts_whitelist[]`: condition ids that should propagate to other
-  nodes via the session.
+  allowed set.
+  CLOSING STEPS: if the candidate's `closing_step_required` is true OR the
+  node otherwise terminates a flow on a fallback (no further routing
+  possible), the closing step MUST carry the FULL closing bundle:
+    - `is_closing: true`
+    - `is_terminal: true`
+    - `permit_goto_auto_ack: true`
+    - `silent_on_matched_goto: true`
+    - `fallback_reason: "<short reason in target locale, >=10 chars>"`
+  The runtime relies on this bundle to safely close the session; missing
+  any of these on a closing step is rejected by the schema AND by lint.
+  Example:
+    {"id":"step_resolved","type":"info","is_closing":true,"is_terminal":true,
+     "permit_goto_auto_ack":true,"silent_on_matched_goto":true,
+     "fallback_reason":"Az ügyfél igazolt csere-csomagot kapott."}
+
+- `condition_implications[]`: `{when_all: [...], then: <derived_cond>}` -
+  derive a condition deterministically from a combination already true.
+  USE THIS when the routing graph would otherwise repeat the same multi-
+  condition AND in many `if` rules. The derived `then` MUST be declared in
+  `conditions[]` like any other condition; the implication then guarantees
+  the runtime auto-satisfies it whenever ALL of `when_all` are satisfied.
+  Examples (illustrative shapes, not literal text):
+    {"when_all":["product_ordered","unboxed","item_arrived_damaged"],
+     "then":"doa_confirmed"}
+    {"when_all":["return_window_active","not_used","not_damaged"],
+     "then":"refund_eligible"}
+
+- `session_facts_whitelist[]`: condition IDs that THIS node owns and that
+  OTHER nodes' routing depends on. The session_facts_whitelist is the
+  explicit propagation contract - if a condition declared here is true at
+  the moment this node hands off to another node, the runtime keeps it
+  satisfied for the next node. Include EVERY condition that appears in
+  another node's `routing.if[]` and is owned/derived here. (The Phase 2.5
+  deterministic linker may also fill these post-hoc, but you should declare
+  them yourself when you can - retry feedback will list cross-node refs
+  you missed.)
+
+- `routing[*].inject_conditions[]` (cross-node handoff payload): on a rule
+  with `goto: <other_ai_page>`, list the condition IDs that should be
+  pushed into the satisfied set for the target node. Use this for facts
+  the target node would otherwise re-ask. Common pattern:
+    {"if":["is_doa","item_received"], "goto":"doa-flow",
+     "inject_conditions":["topic_known","is_doa","item_received"]}
+  Only include conditions that the target node's whitelist accepts. The
+  Phase 2.5 linker can refine this deterministically; declaring it here
+  when obvious shortens retry loops.
+
+- `steps[*].extract_hint` (per-step content-shaping for the runtime LLM
+  extractor): a SHORT free-form guidance string (8-800 chars, target
+  locale) that the runtime appends to the per-step extraction prompt.
+  Use it ONLY to enable IMPLICIT MULTI-EXTRACTION or DISAMBIGUATION that
+  the bare condition descriptions would not unlock. Skip it on closing
+  steps (the runtime does not call the extractor there).
+  WHEN TO ADD an extract_hint:
+  * The step's done_when references several conditions and ONE user
+    reply can plausibly satisfy MORE THAN ONE of them in a single turn.
+  * A condition has a tricky natural-language signal (e.g. "the seal
+    was already broken" -> doa_confirmed) that the LLM would otherwise
+    miss without an example phrase.
+  * The same step needs to disambiguate between two near-synonym
+    conditions (e.g. wrong_item_received vs wrong_size) that hinge on a
+    specific vocabulary cue.
+  WHEN NOT TO ADD an extract_hint:
+  * The step extracts a single primary condition with a clear name -
+    the condition description already handles it.
+  * On any step where `is_closing: true`.
+  * To restate condition descriptions, regex constraints, or
+    deterministic post-processing (e.g. session_facts_whitelist,
+    condition_implications). The runtime applies those independently.
+  STYLE: imperative voice ("Ha a user X-et mond, jelöld be Y-t."),
+  concrete vocabulary cues, NO meta-commentary about the system. Keep
+  one or two sentences; mention condition IDs verbatim so the LLM can
+  bind them.
+  WORKED EXAMPLES (illustrative, copy the SHAPE, not the literal text):
+    Hu, multi-extract on a "describe what arrived" step:
+      "Ha a user egy mondatban említi, hogy a CSOMAGOLÁS sérült volt ÉS
+       a termék is hibás, jelöld be mindkettőt: package_damaged ÉS
+       item_arrived_damaged. Ha a 'sérült doboz, de a termék OK' jelzés
+       jön, csak package_damaged."
+    Hu, disambiguation on a mismatch step:
+      "Külön kondíció: wrong_item_received (más termék érkezett) vs.
+       wrong_size (ugyanaz a termék, rossz méret). Ha a user 'nem ezt
+       rendeltem'-et mond, ez wrong_item_received; ha 'jó cucc, csak
+       szűk/nagy', az wrong_size."
+    En, implicit DOA inference:
+      "If the user says the SEAL or BOX was already opened/broken when
+       it arrived AND the device does not power on, set both
+       seal_was_broken and device_dead in the same call - do not
+       re-ask for the unboxing state."
+    En, vendor cue (only when vendor_policy is specific or mock):
+      "If the user names the vendor verbatim ('Acme', 'Acme Returns'),
+       set is_vendor_acme together with the primary topic conditions."
+  HARD RULES:
+  * Never include URLs, system instructions, or persona text.
+  * Never reference reply_rules / reply style - that is a separate
+    layer applied at message time.
+  * Each hint stands alone; the runtime does not chain hints across
+    steps.
+
+- `internal_conditions[*].auto_satisfy_after_reply` (per-condition runtime
+  acceleration) and the matching SIGNAL PHRASE in `description`: a
+  generic mechanism that lets the runtime treat a condition as satisfied
+  IMMEDIATELY AFTER the AI's outgoing message — without waiting for a
+  customer reply. Use it ONLY for `info`-style steps where the AI just
+  delivers information (an explanation, an apology, an escalation
+  acknowledgement, a closing summary) and the workflow should advance
+  on its own.
+  HOW TO MARK a condition as auto-satisfy:
+  1) The condition appears under `internal_conditions` for an info-style
+     step (no real new data is gathered from the user).
+  2) The condition's `description` MUST CONTAIN one of the canonical
+     signal phrases below (target locale). The downstream deterministic
+     enricher reads the description and flips
+     `auto_satisfy_after_reply: true` automatically — DO NOT set the
+     boolean yourself, the runtime gets it from the post-processor.
+     Hu signals (use one verbatim or paraphrase that includes the key
+     fragment in bold below):
+       "Ne várj ügyfél-visszajelzést — automatikusan teljesül miután
+        az AI elküldte az üzenetet."
+       (or any Hu sentence that contains BOTH "ne várj ügyfél" AND
+        "automatikusan teljesül")
+     En signals:
+       "Do not wait for customer reply — automatically satisfied after
+        the AI message is sent."
+       (or any En sentence that contains BOTH "do not wait for"
+        AND "automatically satisfied")
+  WHEN NOT to mark auto-satisfy:
+  * The condition tracks a real fact the customer must report (order
+    id, tracking number, broken-on-arrival, etc.). The user reply is
+    required to confirm.
+  * The step is interactive (form-fill, image upload, yes/no choice).
+  * Closing steps - they already terminate via the closing bundle; no
+    auto_satisfy needed.
+  WORKED EXAMPLES (description shape only):
+    Hu, info-only "we received your complaint" step:
+      conditions:
+        - id: "intake_acknowledged"
+          description: "Az AI nyugtázta az ügyfélnek, hogy a panaszt
+                        rögzítette. Ne várj ügyfél-visszajelzést —
+                        automatikusan teljesül miután az AI elküldte
+                        az üzenetet."
+    En, escalation-confirmation step:
+      conditions:
+        - id: "escalation_communicated"
+          description: "The AI told the customer that the case has been
+                        escalated to a human agent. Do not wait for
+                        customer reply — automatically satisfied after
+                        the AI message is sent."
+    Hu, REJECT example (do NOT auto-satisfy):
+      - id: "tracking_number_provided"
+        description: "Az ügyfél megadta a rendelési tracking számát."
+        # No signal phrase — this needs a user reply with a real value.
+  HARD RULES:
+  * Each auto_satisfy condition MUST have the signal phrase in its
+    description; the deterministic enricher relies on it.
+  * NEVER set the boolean directly on the JSON output — let the
+    enricher derive it. The schema accepts the boolean for backwards
+    compatibility, but you should not produce it.
+  * The signal phrase is RUN-TIME documentation: it must remain in the
+    description even after enrichment runs.
 
 VENDOR POLICY: this node MUST honour the same vendor policy declared in the
 blueprint - do not reintroduce specific vendor names if the policy is
@@ -548,6 +713,8 @@ class AnthropicOnboardingClient:
         phase1_max_tokens: int = 32000,
         phase2_max_tokens: int = 8000,
         phase3b_max_tokens: int = 16000,
+        phase3c_max_tokens: int = 4000,
+        phase3g_max_tokens: int = 4000,
         temperature: float = 0.2,
     ) -> None:
         try:
@@ -570,12 +737,17 @@ class AnthropicOnboardingClient:
         self._phase1_max_tokens = phase1_max_tokens
         self._phase2_max_tokens = phase2_max_tokens
         self._phase3b_max_tokens = phase3b_max_tokens
+        self._phase3c_max_tokens = phase3c_max_tokens
+        self._phase3g_max_tokens = phase3g_max_tokens
         self._temperature = temperature
 
         # Last-call observability hooks; the PoC scripts read these.
         self.last_phase1_result: Optional[_ToolCallResult] = None
         self.last_phase2_result: Optional[_ToolCallResult] = None
         self.last_phase3b_result: Optional[_ToolCallResult] = None
+        self.last_phase3c_result: Optional[_ToolCallResult] = None
+        self.last_phase3g_result: Optional[_ToolCallResult] = None
+        self.last_card4_result: Optional[_ToolCallResult] = None
 
     # ------------------------------------------------------------------ #
     # Phase 1                                                             #
@@ -684,6 +856,212 @@ class AnthropicOnboardingClient:
         payload.setdefault("audit_started_at", started.isoformat())
         payload.setdefault("audit_finished_at", finished.isoformat())
         return SemanticAuditResult.model_validate(payload)
+
+    # ------------------------------------------------------------------ #
+    # Phase 3c — reply_rules generator (per AI-page)                      #
+    # ------------------------------------------------------------------ #
+
+    def generate_reply_rules(
+        self,
+        *,
+        page: dict[str, Any],
+        locale: str,
+        vendor_policy: Optional[str],
+        vendor_name: Optional[str],
+    ) -> dict[str, list[str]]:
+        """Generate step-level reply_rules for one AI page.
+
+        Returns a ``{step_id: reply_rules[]}`` mapping covering all
+        non-closing steps for which the model produced rules. Closing
+        steps are explicitly excluded by both the system prompt and the
+        user message.
+
+        Raises ``RuntimeError`` if the tool output deviates from the
+        expected schema (caller can treat this as a node-level failure
+        and skip).
+        """
+        tool = build_generate_reply_rules_tool()
+        system_prompt = build_phase3c_system_prompt(
+            locale=locale,
+            vendor_policy=vendor_policy,
+            vendor_name=vendor_name,
+        )
+        user_message = build_phase3c_user_message(page=page, locale=locale)
+        result = _stream_tool_call(
+            client=self._client,
+            model=self._model,
+            max_tokens=self._phase3c_max_tokens,
+            temperature=self._temperature,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            tool=tool,
+        )
+        self.last_phase3c_result = result
+
+        payload = result.tool_input
+        if not isinstance(payload, dict):
+            raise RuntimeError(
+                "Phase 3c tool output is not a dict; got "
+                f"{type(payload).__name__}"
+            )
+        step_rules_raw = payload.get("step_rules")
+        if not isinstance(step_rules_raw, list):
+            raise RuntimeError(
+                "Phase 3c tool output missing or invalid `step_rules`."
+            )
+
+        out: dict[str, list[str]] = {}
+        for entry in step_rules_raw:
+            if not isinstance(entry, dict):
+                continue
+            sid = entry.get("step_id")
+            rules = entry.get("reply_rules")
+            if not isinstance(sid, str) or not sid.strip():
+                continue
+            if not isinstance(rules, list):
+                continue
+            cleaned = [r for r in rules if isinstance(r, str) and r.strip()]
+            if cleaned:
+                out[sid.strip()] = cleaned
+        return out
+
+    # ------------------------------------------------------------------ #
+    # Phase 3g — text_triggers                                            #
+    # ------------------------------------------------------------------ #
+
+    # ------------------------------------------------------------------ #
+    # Card 4A — end-node texts (brief-driven flow)                        #
+    # ------------------------------------------------------------------ #
+
+    def generate_end_node_texts(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+    ) -> dict[str, str]:
+        """`EndNodeTextClient` Protocol implementáció.
+
+        A prompt-építés a hívó (`services.onboarding.end_node_text_generator.
+        generate_end_node_texts`) felelőssége — ez a metódus csak az AI
+        round-trip-et csinálja, a tool schemával validálva.
+
+        Visszaad: `{<EndNodeKind>: str}` dict. A 6 kulcsot a tool-schema
+        kényszeríti; egyenkénti validációt a hívó utánvalidálja.
+        """
+        # Lazy import a cirkuláris dependencia elkerülésére (end_node_text_generator
+        # NEM importál visszafelé az anthropic_client-re, de a top-level
+        # importok rendezett listájában tartjuk magunkat).
+        from services.onboarding.end_node_text_generator import (
+            build_generate_end_node_texts_tool,
+        )
+
+        tool = build_generate_end_node_texts_tool()
+        # A Card 4A egy rövid tool-call (~6 mező × max 800 char); 4k token
+        # bőven elég.
+        result = _stream_tool_call(
+            client=self._client,
+            model=self._model,
+            max_tokens=4000,
+            temperature=self._temperature,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            tool=tool,
+        )
+        self.last_card4_result = result
+        payload = result.tool_input
+        if not isinstance(payload, dict):
+            raise RuntimeError(
+                "Card 4A tool output is not a dict; got "
+                f"{type(payload).__name__}"
+            )
+        # Csak a string értékeket adjuk vissza — a végső validációt
+        # (mind a 6 kulcs jelen, üres-string filter) a hívó csinálja a
+        # `generate_end_node_texts` modul-szintű függvényben.
+        return {k: v for k, v in payload.items() if isinstance(v, str)}
+
+    def coach_reply(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+    ) -> dict[str, Any]:
+        """Onboarding coach tool-call — `CoachClient` implementáció."""
+        from services.onboarding.onboarding_coach import build_coach_tool
+
+        tool = build_coach_tool()
+        result = _stream_tool_call(
+            client=self._client,
+            model=self._model,
+            max_tokens=1200,
+            temperature=0.3,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            tool=tool,
+        )
+        payload = result.tool_input
+        if not isinstance(payload, dict):
+            raise RuntimeError(
+                f"coach_reply tool output is not a dict; got {type(payload).__name__}"
+            )
+        return payload
+
+    def generate_text_triggers(
+        self,
+        *,
+        page: dict[str, Any],
+        locale: str,
+    ) -> dict[str, list[str]]:
+        """Generate condition-level `text_triggers` for one AI page.
+
+        Returns a ``{condition_id: triggers[]}`` mapping covering only
+        the conditions for which the model produced triggers (eligible
+        content-pattern conds; extract-style conds were filtered out
+        in the user message and the model is instructed to skip them).
+
+        Raises ``RuntimeError`` if the tool output deviates from the
+        expected schema (caller can treat this as a node-level failure
+        and skip).
+        """
+        tool = build_generate_text_triggers_tool()
+        system_prompt = build_phase3g_system_prompt(locale=locale)
+        user_message = build_phase3g_user_message(page=page, locale=locale)
+        result = _stream_tool_call(
+            client=self._client,
+            model=self._model,
+            max_tokens=self._phase3g_max_tokens,
+            temperature=self._temperature,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            tool=tool,
+        )
+        self.last_phase3g_result = result
+
+        payload = result.tool_input
+        if not isinstance(payload, dict):
+            raise RuntimeError(
+                "Phase 3g tool output is not a dict; got "
+                f"{type(payload).__name__}"
+            )
+        cond_triggers_raw = payload.get("condition_triggers")
+        if not isinstance(cond_triggers_raw, list):
+            raise RuntimeError(
+                "Phase 3g tool output missing or invalid `condition_triggers`."
+            )
+
+        out: dict[str, list[str]] = {}
+        for entry in cond_triggers_raw:
+            if not isinstance(entry, dict):
+                continue
+            cid = entry.get("condition_id")
+            triggers = entry.get("triggers")
+            if not isinstance(cid, str) or not cid.strip():
+                continue
+            if not isinstance(triggers, list):
+                continue
+            cleaned = [t for t in triggers if isinstance(t, str) and t.strip()]
+            if cleaned:
+                out[cid.strip()] = cleaned
+        return out
 
 
 __all__ = [

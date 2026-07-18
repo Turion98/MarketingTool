@@ -46,6 +46,11 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from services.onboarding.brief_contracts import (
+    BriefExpansionResult,
+    SupportChatbotBrief,
+)
+
 if TYPE_CHECKING:
     from services.story_lint import Report as _LintReport
 
@@ -583,12 +588,22 @@ class SemanticAuditResult(BaseModel):
 
 OnboardingJobStatus = Literal[
     "created",
+    # Brief-driven flow (Phase 0). A klasszikus `start_job(...)` flow ezeket
+    # kihagyja és közvetlenül `blueprint_extracting`-re ugrik.
+    "brief_received",
+    "phase0_expanding",
+    "phase0_ready",
+    "end_node_generating",
+    # Klasszikus pipeline fázisok.
     "blueprint_extracting",
     "blueprint_ready",
     "node_generating",
     "structural_linting",
     "semantic_auditing",
     "done",
+    "failed_brief",
+    "failed_phase0",
+    "failed_end_node_generation",
     "failed_blueprint",
     "failed_generation",
     "failed_lint",
@@ -677,6 +692,30 @@ class OnboardingJob(BaseModel):
         description="A story_versions táblába írt rekord verziószáma",
     )
 
+    # ------------------------------------------------------------------ #
+    # Brief-driven flow (Phase 0) — opcionálisan jelenlévő mezők          #
+    # ------------------------------------------------------------------ #
+    # Ezek a mezők ÚJ briefs alapú flow termékei. Klasszikus
+    # `start_job(research_text=...)` esetén None-on maradnak.
+    # `brief_contracts` egyirányú dependency (nem importál visszafelé),
+    # így a top-level import biztonságos.
+
+    brief: Optional[SupportChatbotBrief] = Field(
+        default=None,
+        description=(
+            "A user által kitöltött 6-kártyás brief. None = klasszikus flow "
+            "(direkt research_text-tel indított job)."
+        ),
+    )
+    phase0_result: Optional[BriefExpansionResult] = Field(
+        default=None,
+        description=(
+            "A Phase 0 derived artifact: a brief-ből generált research_text + "
+            "metadata. Idempotens — ha a brief változik és a Phase 0 újrafut, "
+            "ez UPSERT-elődik."
+        ),
+    )
+
 
 __all__ = [
     "VendorPolicyKind",
@@ -700,5 +739,7 @@ __all__ = [
     # Pipeline
     "OnboardingJobStatus",
     "RetryConfig",
+    # Brief-driven flow late-binding helper
+    "_rebuild_onboarding_job_with_brief_types",
     "OnboardingJob",
 ]

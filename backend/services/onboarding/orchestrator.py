@@ -38,6 +38,15 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol
 
+from services.onboarding.brief_contracts import (
+    BriefExpansionResult,
+    EndNodeKind,
+    SupportChatbotBrief,
+)
+from services.onboarding.brief_expander import (
+    BriefExpanderClient,
+    expand_brief_to_research,
+)
 from services.onboarding.contracts import (
     DomainBlueprint,
     GenerationContext,
@@ -51,7 +60,23 @@ from services.onboarding.contracts import (
     StructuralLintResult,
     VendorPolicyKind,
 )
+from services.onboarding.cross_node_linker import link_cross_nodes
+from services.onboarding.end_node_text_generator import (
+    EndNodeTextClient,
+    apply_generated_end_node_texts,
+    generate_end_node_texts,
+)
 from services.onboarding.event_bus import EventBus, OnboardingEvent
+from services.onboarding.meta_builder import apply_meta_builder
+from services.onboarding.reply_rules_generator import (
+    ReplyRulesClient,
+    generate_reply_rules_for_story,
+)
+from services.onboarding.step_enricher import apply_step_enricher
+from services.onboarding.text_triggers_generator import (
+    TextTriggersClient,
+    generate_text_triggers_for_story,
+)
 from services.onboarding.storage import OnboardingStorage
 from services.story_lint import lint_full_story, lint_single_node
 
@@ -138,6 +163,15 @@ def assemble_story(
     job: OnboardingJob,
     blueprint: DomainBlueprint,
     accepted_outcomes: list[NodeGenerationOutcome],
+    apply_cross_node_linker: bool = True,
+    apply_meta: bool = True,
+    apply_step_enrichment: bool = True,
+    reply_rules_client: Optional[ReplyRulesClient] = None,
+    reply_rules_overwrite_existing: bool = False,
+    reply_rules_summary_out: Optional[dict[str, Any]] = None,
+    text_triggers_client: Optional[TextTriggersClient] = None,
+    text_triggers_overwrite_existing: bool = False,
+    text_triggers_summary_out: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Összeállítja a story dict-et a Phase 3a (lint_full_story) számára.
 
@@ -149,6 +183,54 @@ def assemble_story(
     - `meta.startPageId` az első accepted node id-ja.
     - `pages` dict: minden accepted node + minden blueprint.end_page
       (utóbbi `_scaffold_end_page`-pel).
+
+    Az `apply_cross_node_linker=True` (default) esetén a story-t a
+    `services.onboarding.cross_node_linker.link_cross_nodes` determinisztikus
+    pass-szal egészíti ki: kitölti a `session_facts_whitelist`-et a
+    cross-node referenciákkal és bedrótozza az `inject_conditions`
+    listákat a cross-node routing rule-okra. Ez Phase 2.5 — pure-Python,
+    zero AI cost.
+
+    Az `apply_meta=True` (default) esetén a story-meta szekciót a
+    `services.onboarding.meta_builder.apply_meta_builder` deterministically
+    bővíti: `order_context_mapping.field_rules`, `condition_labels`,
+    `reply_style`. A blueprint `proposed_new_external_fields` field_name
+    listája átkerül `extra_known_fields` paraméterként, hogy a domain-
+    specifikus mezők is OCM derive-elhetők legyenek. Ez Phase 3a —
+    szintén pure-Python, zero AI cost. A linker UTÁN fut, hogy az általa
+    bevitt `inject_conditions` is benne legyen a referenced-conditions
+    halmazban.
+
+    Az `apply_step_enrichment=True` (default) esetén a Phase 3b/A + 3b/B
+    determinisztikus step-bővítést is alkalmazza:
+    `services.onboarding.step_enricher.apply_step_enricher`. Ez minden
+    AI-page non-closing step-jén kitölti a hiányzó `done_when` string-eket
+    (locale-specifikusan: Hu / En) és konvertálja a string-form
+    `internal_conditions` ID-ket dict-formára (`{id, description,
+    do_not_reask_if_satisfied: true}`). Pure-Python, zero AI cost.
+
+    Az `reply_rules_client` (default ``None``) opcionálisan átadható
+    egy ``ReplyRulesClient``-kompatibilis objektum (production:
+    ``AnthropicOnboardingClient``). Ha megadott, a Phase 3c
+    `generate_reply_rules_for_story` AI-pass node-onkénti hívásokkal
+    feltölti minden non-closing step `reply_rules` mezőjét. Ez NEM
+    deterministic és AI-cost-tal jár (~$0.015/node). A pipeline
+    hibatűrő: egy node sikertelen generálása nem dönti le a többit.
+    Default `None` esetén ez a pass kihagyott — a szóló `assemble_story`
+    továbbra is pure-deterministic.
+
+    A `reply_rules_summary_out` (opcionális mutable dict) belekerül a
+    `generate_reply_rules_for_story` summary-je, ha a 3c pass lefutott.
+    Hasznos a hívó fél (orchestrator / PoC) számára.
+
+    A `text_triggers_client` (default ``None``) opcionálisan átadható
+    egy ``TextTriggersClient``-kompatibilis objektum (production:
+    ``AnthropicOnboardingClient``). Ha megadott, a Phase 3g
+    `generate_text_triggers_for_story` AI-pass node-onkénti hívásokkal
+    feltölti az eligible content-pattern condition-ök ``text_triggers``
+    mezőjét rövid, locale-helyes substring-mintákkal. NEM deterministic,
+    AI-cost-tal jár (~$0.05–0.10/full story-build), és a 3c-hez hasonlóan
+    hibatűrő. Default ``None`` esetén a pass kihagyott.
 
     Hiba: ha egyetlen accepted node sincs, ValueError-t dob — a hívó
     (orchestrator) ezt `failed_generation` állapotba fordítja.
@@ -171,7 +253,7 @@ def assemble_story(
 
     start_page_id = accepted_outcomes[0].node_id
 
-    return {
+    story = {
         "schemaVersion": "1.0",
         "storyId": story_id,
         "locale": blueprint.locale,
@@ -186,6 +268,49 @@ def assemble_story(
         },
         "pages": pages,
     }
+
+    if apply_cross_node_linker:
+        link_cross_nodes(story)
+
+    if apply_meta:
+        proposed = [
+            f.field_name
+            for f in (blueprint.proposed_new_external_fields or [])
+            if getattr(f, "field_name", None)
+        ]
+        apply_meta_builder(
+            story,
+            locale=blueprint.locale,
+            extra_known_fields=proposed or None,
+            session_collected_fields=proposed or None,
+        )
+
+    if apply_step_enrichment:
+        apply_step_enricher(story, locale=blueprint.locale)
+
+    if reply_rules_client is not None:
+        rr_summary = generate_reply_rules_for_story(
+            story,
+            client=reply_rules_client,
+            locale=blueprint.locale,
+            vendor_policy=blueprint.vendor_policy,
+            vendor_name=blueprint.vendor_name,
+            overwrite_existing=reply_rules_overwrite_existing,
+        )
+        if reply_rules_summary_out is not None:
+            reply_rules_summary_out.update(rr_summary)
+
+    if text_triggers_client is not None:
+        tt_summary = generate_text_triggers_for_story(
+            story,
+            client=text_triggers_client,
+            locale=blueprint.locale,
+            overwrite_existing=text_triggers_overwrite_existing,
+        )
+        if text_triggers_summary_out is not None:
+            text_triggers_summary_out.update(tt_summary)
+
+    return story
 
 
 # --------------------------------------------------------------------------- #
@@ -284,6 +409,175 @@ class OnboardingOrchestrator:
             # státuszt és kibocsátották az error eventet.
             pass
         return self._storage.load_job(job_id)
+
+    # ------------------------------------------------------------------ #
+    # Phase 0 — brief-driven flow belépő                                  #
+    # ------------------------------------------------------------------ #
+
+    def start_job_from_brief(
+        self,
+        *,
+        job_id: str,
+        brief: SupportChatbotBrief,
+        retry_config: Optional[RetryConfig] = None,
+        brief_enricher: Optional[BriefExpanderClient] = None,
+    ) -> OnboardingJob:
+        """Új job létrehozása `SupportChatbotBrief`-ből.
+
+        Lépések:
+
+        1. **Phase 0** — `expand_brief_to_research()` lefuttatása (alapból
+           determinisztikus, opcionálisan `brief_enricher`-rel AI-pass).
+        2. **Job rekord létrehozása** a Phase 0 result derived mezőivel
+           (`domain_name`, `locale`, `vendor_policy='specific'`, `vendor_name`).
+        3. **Perzisztálás**: a brief és a phase0_result külön táblákba.
+        4. **In-memory cache**: a `research_text` a `_research_cache`-be
+           kerül, így a `run_phase1` ugyanúgy működik mint a klasszikus
+           `start_job` esetén.
+        5. **Status**: `created` → `brief_received` → `phase0_expanding` →
+           `phase0_ready`.
+
+        Visszaad: a frissen létrehozott `OnboardingJob`-ot (teljes
+        aggregátum, brief és phase0_result mezőkkel).
+
+        Hiba: a Phase 0 nem hibázhat el determinisztikus módban; ha az
+        opcionális `brief_enricher` kivételt dob, az `expand_brief_to_research`
+        belül fallback-el a determinisztikusra (lásd ott). Pydantic validációs
+        hiba (érvénytelen brief) közvetlenül a hívóhoz felszáll.
+        """
+        # 0. lépés: emit "brief_received" — de még nincs job rekord, így
+        # ezt egy `create_job` UTÁN tudjuk csak loggolni. Stratégia: először
+        # létrehozzuk a job-ot `brief_received` státusszal, aztán futtatjuk a
+        # Phase 0-t.
+
+        # A Phase 0-t a brief-ből származtatjuk; ez nem AI hívás default-ban.
+        result: BriefExpansionResult = expand_brief_to_research(
+            brief, enricher=brief_enricher
+        )
+
+        job = self._storage.create_job(
+            job_id=job_id,
+            domain_name=result.domain_name,
+            target_locale=result.locale,
+            vendor_policy=result.vendor_policy,
+            vendor_name=result.vendor_name,
+            retry_config=retry_config,
+            status="brief_received",
+            status_detail="Brief received, expanding to research_text",
+        )
+        self._storage.save_brief(job_id, brief)
+        self._emit(
+            job_id, phase="phase0", kind="brief_received",
+            payload={
+                "brief_id": brief.brief_id,
+                "vendor_name": result.vendor_name,
+                "locale": result.locale,
+            },
+        )
+
+        # Phase 0 már lefutott; a state-átmeneteket csak audit-trail
+        # céljából írjuk.
+        self._set_status(job_id, "phase0_expanding", "Phase 0 expander")
+        self._emit(job_id, phase="phase0", kind="started")
+        self._storage.save_phase0_result(job_id, result)
+        self._set_status(
+            job_id,
+            "phase0_ready",
+            f"Phase 0 done, research_text length={len(result.research_text)}",
+        )
+        self._emit(
+            job_id, phase="phase0", kind="completed",
+            payload={
+                "research_text_length": len(result.research_text),
+                "enricher_used": result.metadata.get("enricher_used", False),
+            },
+        )
+
+        # In-memory cache, hogy a Phase 1 (klasszikus run_phase1) működjön.
+        self._research_cache[job_id] = result.research_text
+
+        # Visszaadjuk a frissen összeolvasott aggregátumot (brief +
+        # phase0_result már perzisztáltak).
+        return self._storage.load_job(job_id)
+
+    # ------------------------------------------------------------------ #
+    # Card 4A — end-node text generálás (külön AI hívás)                  #
+    # ------------------------------------------------------------------ #
+
+    def run_end_node_generation(
+        self,
+        *,
+        job_id: str,
+        client: EndNodeTextClient,
+        overwrite_user_edits: bool = False,
+    ) -> dict[EndNodeKind, str]:
+        """Card 4A AI hívás a brief alapján.
+
+        A user spec szerint a Card 2 első mentésekor a frontend ezt egy
+        background-task-tal indítja. Az eredmény az `apply_generated_end_node_texts`
+        helperrel a `brief.card4.end_node_texts` dict-jébe kerül,
+        state-tudatosan (a `user_edited` slotokat NEM írja felül default
+        módban — a frontend explicit "overwrite" gombbal képes csak).
+
+        A frissített brief perzisztálódik (`save_brief` UPSERT). A hívó
+        a visszaadott `{EndNodeKind: str}` map-ből látja, hogy MELYIK
+        slotok módosultak ténylegesen.
+
+        Hiba: ha a job-hoz nincs brief mentve, `OrchestratorError`. Ha az
+        AI client hibázik vagy hibás kulcsokat ad vissza, `OrchestratorError`
+        + status `failed_end_node_generation`.
+        """
+        job = self._storage.load_job(job_id)
+        if job.brief is None:
+            raise OrchestratorError(
+                f"run_end_node_generation: a {job_id} job-hoz nincs brief "
+                "(start_job_from_brief nem futott le)."
+            )
+
+        self._set_status(
+            job_id, "end_node_generating", "Card 4A generálás indul"
+        )
+        self._emit(job_id, phase="end_node_generation", kind="started")
+
+        try:
+            generated = generate_end_node_texts(brief=job.brief, client=client)
+        except Exception as exc:  # noqa: BLE001
+            err = f"{type(exc).__name__}: {exc}"
+            self._storage.update_job_status(
+                job_id, "failed_end_node_generation", status_detail=err
+            )
+            self._emit(
+                job_id, phase="end_node_generation", kind="error",
+                payload={"error": err},
+            )
+            raise OrchestratorError(err) from exc
+
+        applied = apply_generated_end_node_texts(
+            card4=job.brief.card4,
+            generated=generated,
+            generated_at=datetime.now(timezone.utc),
+            overwrite_user_edits=overwrite_user_edits,
+        )
+        # A módosított brief-et UPSERT-eljük; a card4.end_node_texts slot-jai
+        # mostantól `ai_prefilled` status-szal és a generált content-tel
+        # mennek.
+        self._storage.save_brief(job_id, job.brief)
+
+        # A státuszt visszaállítjuk a "phase0_ready"-re (a Card 4A generálás
+        # nem haladja a fő pipeline-t — csak egy oldalsó AI-kiegészítés).
+        self._set_status(
+            job_id, "phase0_ready",
+            f"Card 4A: {len(applied)} slot frissítve, "
+            f"{6 - len(applied)} érintetlen (user_edited védett)",
+        )
+        self._emit(
+            job_id, phase="end_node_generation", kind="completed",
+            payload={
+                "applied_kinds": sorted(applied.keys()),
+                "skipped_user_edited_count": 6 - len(applied),
+            },
+        )
+        return generated
 
     # ------------------------------------------------------------------ #
     # Phase 1 — blueprint extraction                                      #

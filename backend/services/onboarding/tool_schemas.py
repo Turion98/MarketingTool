@@ -391,7 +391,14 @@ def _step_schema(catalog: ConstraintCatalog) -> dict[str, Any]:
     """Egy step objektum sémája (ai-page steps[] elem).
 
     A `step.type` enum a `catalog.step.allowed_step_types`-ból. A boolean
-    flag-ek a `catalog.step.boolean_flag_fields`-ből — mind opcionális.
+    flag-ek a `catalog.step.boolean_flag_fields`-ből — mind opcionális,
+    KIVÉVE ha `is_closing: true`. Closing step esetén a
+    `closing_step_required_bundle` minden tagja kötelező:
+    `is_terminal: true`, `permit_goto_auto_ack: true`,
+    `silent_on_matched_goto: true`, és nem-üres `fallback_reason` string.
+    A schema `allOf.if/then` blokkja Anthropic JSON Schema validáció
+    szintjén kéri meg ezeket; a `lint_single_node` ground-truth backstop
+    a runtime-ban.
     """
     bool_flag_props: dict[str, Any] = {
         flag: {"type": "boolean"}
@@ -402,6 +409,28 @@ def _step_schema(catalog: ConstraintCatalog) -> dict[str, Any]:
         "type": "object",
         "additionalProperties": False,
         "required": ["id", "type"],
+        "allOf": [
+            {
+                "if": {
+                    "properties": {"is_closing": {"const": True}},
+                    "required": ["is_closing"],
+                },
+                "then": {
+                    "required": [
+                        "is_terminal",
+                        "permit_goto_auto_ack",
+                        "silent_on_matched_goto",
+                        "fallback_reason",
+                    ],
+                    "properties": {
+                        "is_terminal": {"const": True},
+                        "permit_goto_auto_ack": {"const": True},
+                        "silent_on_matched_goto": {"const": True},
+                        "fallback_reason": {"type": "string", "minLength": 10},
+                    },
+                },
+            }
+        ],
         "properties": {
             "id": _step_id_string(),
             "type": {
@@ -411,6 +440,7 @@ def _step_schema(catalog: ConstraintCatalog) -> dict[str, Any]:
             "goal": {"type": "string"},
             "ai_action": {"type": "string"},
             "done_when": {"type": "string"},
+            "fallback_reason": {"type": "string"},
             "internal_conditions": {
                 "type": "array",
                 "items": {
@@ -426,10 +456,41 @@ def _step_schema(catalog: ConstraintCatalog) -> dict[str, Any]:
                                 "required": {"type": "boolean"},
                                 "validation_pattern_ref": {"type": "string"},
                                 "do_not_reask_if_satisfied": {"type": "boolean"},
+                                "auto_satisfy_after_reply": {"type": "boolean"},
+                                "do_not_reask_hint": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 300,
+                                },
+                                "text_triggers": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "maxItems": 8,
+                                    "items": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 60,
+                                    },
+                                },
                             },
                         },
                     ]
                 },
+            },
+            "reply_rules": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 6,
+                "items": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 240,
+                },
+            },
+            "extract_hint": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 800,
             },
             "image_conditions": {
                 "type": "array",
@@ -529,6 +590,22 @@ def build_generate_node_tool(catalog: ConstraintCatalog) -> dict[str, Any]:
                             "required": {"type": "boolean"},
                             "validation_pattern_ref": {"type": "string"},
                             "do_not_reask_if_satisfied": {"type": "boolean"},
+                            "auto_satisfy_after_reply": {"type": "boolean"},
+                            "do_not_reask_hint": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 300,
+                            },
+                            "text_triggers": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 8,
+                                "items": {
+                                    "type": "string",
+                                    "minLength": 3,
+                                    "maxLength": 60,
+                                },
+                            },
                         },
                     },
                 },

@@ -376,6 +376,306 @@ def test_assemble_story_no_accepted_raises(storage: OnboardingStorage):
         assemble_story(job=job, blueprint=bp, accepted_outcomes=[])
 
 
+def test_assemble_story_runs_phase3a_meta_builder_by_default(
+    storage: OnboardingStorage,
+):
+    """Phase 3a meta-builder runs as part of `assemble_story` and produces
+    `order_context_mapping`, `condition_labels`, and `reply_style` on the
+    story meta. The locale comes from the blueprint."""
+    job = storage.create_job(
+        job_id="job-meta", domain_name="Meta Domain", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    node_dict = _make_valid_node_dict("intake-node")
+    # Inject a `has_<known_field>` condition so the OCM derive pass has
+    # something to work with.
+    node_dict["conditions"].append(
+        {"id": "has_order_id", "description": "Order ID present in context."}
+    )
+    node_dict["routing"][0]["if"].append("has_order_id")
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=node_dict,
+            declared_condition_ids=["user_provided_topic", "has_order_id"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+    story = assemble_story(job=job, blueprint=bp, accepted_outcomes=accepted)
+
+    meta = story["meta"]
+    # OCM rule auto-derived from `has_order_id`.
+    assert "order_context_mapping" in meta
+    fields = [
+        r["field"] for r in meta["order_context_mapping"]["field_rules"]
+    ]
+    assert "order_id" in fields
+    # Labels include both seeded and added conditions.
+    assert "condition_labels" in meta
+    assert meta["condition_labels"].get("has_order_id") == (
+        "Order ID present in context"
+    )
+    # Reply style is the blueprint's locale (hu in this fixture chain).
+    assert "reply_style" in meta
+    assert isinstance(meta["reply_style"]["global_rules"], list)
+
+
+def test_assemble_story_meta_builder_can_be_skipped(storage: OnboardingStorage):
+    job = storage.create_job(
+        job_id="job-no-meta", domain_name="No Meta", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=_make_valid_node_dict("intake-node"),
+            declared_condition_ids=["user_provided_topic"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+    story = assemble_story(
+        job=job, blueprint=bp, accepted_outcomes=accepted, apply_meta=False
+    )
+    assert "order_context_mapping" not in story["meta"]
+    assert "condition_labels" not in story["meta"]
+    assert "reply_style" not in story["meta"]
+
+
+def _make_node_dict_with_steps(
+    node_id: str,
+    *,
+    end_target: str = "end-default",
+) -> dict[str, Any]:
+    """Lint-clean ai-page steps[]-szel, ahol az internal_conditions string-form
+    és a done_when hiányzik — a step-enricher tesztelésére."""
+    return {
+        "id": node_id,
+        "type": "ai",
+        "fallback_message": "Sajnálom, nem értettem.",
+        "knowledge": {
+            "description": "Test node steps-szel.",
+            "scope": "Steps integration teszt.",
+            "examples": ["Hello", "Új ügyem"],
+        },
+        "conditions": [
+            {
+                "id": "user_provided_topic",
+                "description": "Az ügyfél megadta a téma típusát.",
+                "required": True,
+            },
+            {
+                "id": "tracking_seen",
+                "description": "Tracking ellenőrizve.",
+            },
+        ],
+        "steps": [
+            {
+                "id": "step_collect",
+                "type": "prompt",
+                "goal": "Gyűjtsd be a témát és a tracking státuszt.",
+                "internal_conditions": ["user_provided_topic", "tracking_seen"],
+            },
+            {
+                "id": "step_close",
+                "type": "info",
+                "is_closing": True,
+                "is_terminal": True,
+                "permit_goto_auto_ack": True,
+                "silent_on_matched_goto": True,
+                "fallback_reason": "A flow lezárult — manuális handoff szükséges.",
+            },
+        ],
+        "routing": [
+            {"if": ["user_provided_topic"], "goto": end_target},
+            {"default": "ask"},
+        ],
+    }
+
+
+def test_assemble_story_runs_phase3b_step_enricher_by_default(
+    storage: OnboardingStorage,
+):
+    """Phase 3b/A + 3b/B: a step-enricher alapértelmezetten lefut és:
+    - a non-closing step `done_when`-jét kitölti (Hu locale → 'és'/'teljesül')
+    - a string-form `internal_conditions` ID-ket dict-formára konvertálja
+      (description + do_not_reask_if_satisfied: True)
+    - a closing step érintetlen marad (nem populálja a done_when-t)."""
+    job = storage.create_job(
+        job_id="job-3b", domain_name="Phase 3b Domain", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=_make_node_dict_with_steps("intake-node"),
+            declared_condition_ids=["user_provided_topic", "tracking_seen"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+    story = assemble_story(job=job, blueprint=bp, accepted_outcomes=accepted)
+
+    page = story["pages"]["intake-node"]
+    collect_step = page["steps"][0]
+    close_step = page["steps"][1]
+
+    assert collect_step["done_when"] == (
+        "user_provided_topic és tracking_seen teljesül"
+    )
+    assert all(
+        isinstance(ic, dict) for ic in collect_step["internal_conditions"]
+    )
+    assert collect_step["internal_conditions"][0] == {
+        "id": "user_provided_topic",
+        "description": "Az ügyfél megadta a téma típusát.",
+        "do_not_reask_if_satisfied": True,
+    }
+    assert collect_step["internal_conditions"][1] == {
+        "id": "tracking_seen",
+        "description": "Tracking ellenőrizve.",
+        "do_not_reask_if_satisfied": True,
+    }
+    assert "done_when" not in close_step
+
+
+def test_assemble_story_step_enricher_can_be_skipped(storage: OnboardingStorage):
+    job = storage.create_job(
+        job_id="job-no-3b", domain_name="No 3b", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=_make_node_dict_with_steps("intake-node"),
+            declared_condition_ids=["user_provided_topic", "tracking_seen"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+    story = assemble_story(
+        job=job,
+        blueprint=bp,
+        accepted_outcomes=accepted,
+        apply_step_enrichment=False,
+    )
+    page = story["pages"]["intake-node"]
+    collect_step = page["steps"][0]
+    # Sem done_when-t nem kapott, sem dict-tre nem konvertált.
+    assert "done_when" not in collect_step
+    assert collect_step["internal_conditions"] == [
+        "user_provided_topic",
+        "tracking_seen",
+    ]
+
+
+def test_assemble_story_runs_phase3c_reply_rules_when_client_given(
+    storage: OnboardingStorage,
+):
+    """Phase 3c wire-up: ha `reply_rules_client` átadott az
+    `assemble_story`-nak, a non-closing AI step-ek megkapják a
+    reply_rules listát. A summary_out dict a hívó fél számára kitölthető."""
+    job = storage.create_job(
+        job_id="job-3c", domain_name="Phase 3c Domain", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    class _StubClient:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def generate_reply_rules(self, **kwargs: Any) -> dict[str, list[str]]:
+            self.calls.append(kwargs["page"]["id"])
+            return {
+                "step_collect": [
+                    "Csak a témát kérd — semmi mást.",
+                    "Maximum 2 mondat.",
+                    "Ne magyarázd el a következő lépéseket.",
+                ],
+            }
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=_make_node_dict_with_steps("intake-node"),
+            declared_condition_ids=["user_provided_topic", "tracking_seen"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+
+    rr_summary: dict[str, Any] = {}
+    client = _StubClient()
+    story = assemble_story(
+        job=job,
+        blueprint=bp,
+        accepted_outcomes=accepted,
+        reply_rules_client=client,
+        reply_rules_summary_out=rr_summary,
+    )
+
+    page = story["pages"]["intake-node"]
+    collect_step = page["steps"][0]
+    assert collect_step["reply_rules"] == [
+        "Csak a témát kérd — semmi mást.",
+        "Maximum 2 mondat.",
+        "Ne magyarázd el a következő lépéseket.",
+    ]
+    # Closing step érintetlen — a reply_rules ott NEM jelenik meg.
+    assert "reply_rules" not in page["steps"][1]
+    # Stub client csak az AI page-re hívódott (nem az end page-re).
+    assert client.calls == ["intake-node"]
+    # Summary-be került a generation report.
+    assert rr_summary["nodes_processed"] == 1
+    assert rr_summary["nodes_succeeded"] == 1
+    assert rr_summary["total_steps_rules_applied"] == 1
+
+
+def test_assemble_story_phase3c_default_skipped_without_client(
+    storage: OnboardingStorage,
+):
+    """Default-ban (client=None) a Phase 3c teljesen kihagyott — nincs
+    reply_rules a steps-en."""
+    job = storage.create_job(
+        job_id="job-no-3c", domain_name="No 3c", target_locale="hu"
+    )
+    bp = _make_blueprint()
+    from services.onboarding.contracts import NodeGenerationOutcome
+
+    accepted = [
+        NodeGenerationOutcome(
+            node_id="intake-node",
+            attempts=[],
+            final_status="accepted",
+            final_node_dict=_make_node_dict_with_steps("intake-node"),
+            declared_condition_ids=["user_provided_topic", "tracking_seen"],
+            exposed_handoff_condition_ids=[],
+        )
+    ]
+    story = assemble_story(
+        job=job, blueprint=bp, accepted_outcomes=accepted
+    )
+    page = story["pages"]["intake-node"]
+    for s in page["steps"]:
+        assert "reply_rules" not in s
+
+
 # --------------------------------------------------------------------------- #
 # 3. start_job                                                                #
 # --------------------------------------------------------------------------- #
