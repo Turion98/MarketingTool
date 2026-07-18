@@ -8,8 +8,9 @@ type Option = { value: string; label: string };
 const MAIN_GOALS: Option[] = [
   { value: "", label: "Select use case" },
   { value: "product-finder", label: "Product finder" },
-  { value: "campaign-flows", label: "Campaign flows" },
-  { value: "onboarding-flows", label: "Onboarding flows" },
+  { value: "support-chatbot", label: "Support chatbot" },
+  { value: "sales-qualification", label: "Sales qualification" },
+  { value: "other", label: "Other" },
 ];
 
 type BriefFormData = {

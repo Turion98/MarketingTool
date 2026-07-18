@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, type KeyboardEvent } from "react";
 import VisualPlaceholder from "./VisualPlaceholder";
 import type { FeatureCardData, StepBlock } from "./featuresContent";
 import s from "./featuresMarketing.module.scss";
@@ -9,10 +12,31 @@ function FeatureCardArticle({
   card: FeatureCardData;
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const toggle = () => setOpen((v) => !v);
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggle();
+    }
+  };
   return (
-    <article className={[s.featureCard, className].filter(Boolean).join(" ")}>
+    <article
+      className={[s.featureCard, open ? s.featureCardOpen : "", className]
+        .filter(Boolean)
+        .join(" ")}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      onClick={toggle}
+      onKeyDown={onKeyDown}
+    >
       <h3 className={s.featureCardTitle}>{card.title}</h3>
-      <p className={s.featureCardSentence}>{card.sentence}</p>
+      <div className={s.featureCardBody}>
+        <div className={s.featureCardBodyInner}>
+          <p className={s.featureCardSentence}>{card.sentence}</p>
+        </div>
+      </div>
       <ul className={s.featureCardList}>
         {card.bullets.map((b) => (
           <li key={b}>{b}</li>

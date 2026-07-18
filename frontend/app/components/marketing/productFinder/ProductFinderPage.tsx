@@ -121,7 +121,10 @@ export default function ProductFinderPage() {
               </p>
               <div className={s.heroActions}>
                 <Link href="/about" className={s.btnPrimary}>
-                  {isHu ? "Építsd fel a termékeid mögötti logikát" : "Build the logic behind your products"}
+                  {isHu ? "Készítsd el a saját chatbotodat" : "Build your own chatbot"}
+                </Link>
+                <Link href="/test-chat" className={s.btnSecondary}>
+                  {isHu ? "Próbáld ki élőben" : "Try the live demo"}
                 </Link>
               </div>
             </div>
@@ -1024,7 +1027,10 @@ export default function ProductFinderPage() {
             </div>
             <div className={s.ctaPanelActions}>
               <Link href="/about" className={s.btnPrimary}>
-                {isHu ? "Építsd fel a termékeid mögötti logikát" : "Build the logic behind your products"}
+                {isHu ? "Készítsd el a saját chatbotodat" : "Build your own chatbot"}
+              </Link>
+              <Link href="/test-chat" className={s.btnSecondary}>
+                {isHu ? "Próbáld ki élőben" : "Try the live demo"}
               </Link>
             </div>
           </div>

@@ -4,11 +4,11 @@ import IntegrationsPage from "@/app/components/marketing/integrations/Integratio
 export const metadata: Metadata = {
   title: "Integrations",
   description:
-    "Questell runs inside your existing page. One script or iframe, no rebuild, no separate microsite.",
+    "Questell connects behind your existing chatbot. One endpoint for the chat, one adapter for your order system, one sink for your helpdesk.",
   openGraph: {
     title: "Integrations | Questell",
     description:
-      "Questell runs inside your existing page. One script or iframe, no rebuild, no separate microsite.",
+      "Questell connects behind your existing chatbot. One endpoint for the chat, one adapter for your order system, one sink for your helpdesk.",
   },
 };
 

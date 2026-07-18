@@ -43,6 +43,8 @@ type FeaturesCopy = {
     bullets: [string, string, string];
     supporting: string;
     primaryCta: { label: string; href: string };
+    /** Másodlagos CTA — a /test-chat demo oldalra vezet (Try the live demo). */
+    secondaryCta?: { label: string; href: string };
     heroVisualLabel: string;
   };
   featureSteps: StepBlock[];
@@ -54,6 +56,8 @@ type FeaturesCopy = {
     title: string;
     body: string;
     primaryCta: { label: string; href: string };
+    /** Másodlagos CTA — a /test-chat demo oldalra vezet (Try the live demo). */
+    secondaryCta?: { label: string; href: string };
     visualLabel: string;
   };
 };
@@ -61,242 +65,310 @@ type FeaturesCopy = {
 export const FEATURES_COPY: Record<UiLang, FeaturesCopy> = {
   en: {
     featuresHero: {
-      eyebrow: "Questell Features",
-      headline: "A quiz collects answers. A decision system interprets them.",
+      eyebrow: "Questell",
+      headline: "AI understands what the user says. Questell retains that, and structures a process around it.",
       subheadline:
-        "Most interactive flows evaluate each response in isolation. Questell tracks what answers imply together:",
+        "Modern AI chatbots can already extract meaning from complex human input. Interpretation is no longer the primary challenge.",
       bullets: [
-        "which paths they close",
-        "which directions they strengthen",
-        "what the combination says about this specific person",
+        "Context is lost as conversations progress",
+        "Earlier information gradually loses weight",
+        "The system cannot track what has already been resolved",
       ],
-      supporting: "That is not a feature. It is a different architecture.",
-      primaryCta: { label: "Request your first flow", href: "/about" },
-      heroVisualLabel: "[Visual placeholder: Questell decision flow interface preview]",
+      supporting:
+        "This is not a language problem. It is an architecture problem.",
+      primaryCta: { label: "Build your own chatbot", href: "/about" },
+      secondaryCta: { label: "Try the live demo", href: "/test-chat" },
+      heroVisualLabel: "[Visual placeholder: Questell conversation flow preview]",
     },
     featureSteps: [
       {
-        stepLabel: "Step 1",
-        title: "Build the knowledge base",
-        subtitle: "The system learns your business before it builds anything.",
-        introLine:
-          "Before a decision flow can guide anyone, the system needs to understand your business. Not from a brief you fill in - from your site itself. Questell crawls your URLs, extracts product logic and user paths, and asks targeted questions while it works. What comes back is a structured knowledge base you can read, correct, and refine. That base is what every subsequent step builds from.",
+        stepLabel: "The problem",
+        title: "LLMs were designed for interpretation. Not for process control.",
+        subtitle:
+          "Today, virtually anyone can deploy an AI assistant quickly and without technical expertise. It can respond, communicate, and remain continuously available. But once a process involves direction, conditions, or operational rules, significant limitations begin to emerge.",
+        introLine: undefined,
         closingLine:
-          "At this point the decision system is testable. No skin, no live page - just the logic, working.",
+          "Addressing these three challenges typically requires specialized engineering teams, extended timelines, and substantial investment. Even then, most systems remain opaque and inaccessible to non-technical teams.",
         cards: [
           {
-            title: "Knowledge base",
+            title: "A context window is not structure",
             sentence:
-              "The pipeline crawls your site and extracts your business logic. You review what it found, correct what it missed, and iterate until it is accurate.",
+              "The model can access everything that has been written, but cannot determine which information should retain importance. In extended conversations, earlier context gradually loses weight.",
             bullets: [
-              "Site structure and subpages mapped",
-              "Product pages and their role identified",
-              "User paths and business logic captured",
+              "Earlier inputs diminish in relevance",
+              "No awareness of what already matters",
+              "Long conversations lose continuity",
             ],
           },
           {
-            title: "Decision logic",
+            title: "Prompt rules are not business logic",
             sentence:
-              "The knowledge base gets reverse-engineered into a decision network. You walk through every path, adjust what does not fit, and iterate until the logic holds.",
+              "The LLM interprets instructions rather than enforcing them consistently. Two nearly identical situations may produce different decisions — neither of which is fully traceable.",
             bullets: [
-              "Decision network generated from your data",
-              "Every path visible and adjustable",
-              "Testable before any content is added",
+              "Instructions interpreted, not followed",
+              "Inconsistent outcomes across similar cases",
+              "No audit trail for decisions made",
             ],
           },
           {
-            title: "Content",
+            title: "Persistent state does not exist",
             sentence:
-              "The flow fills with base content. You refine the language until it reflects how your users actually think and decide.",
+              "The model cannot reliably maintain awareness of whether a condition has already been satisfied. With each new message, it reassesses the conversation from the beginning.",
             bullets: [
-              "Base content generated from your knowledge base",
-              "Every step editable",
-              "Flow ready when the content fits",
+              "Completed steps are not remembered",
+              "Conditions re-evaluated every turn",
+              "Process position is never certain",
             ],
           },
         ],
       },
       {
-        stepLabel: "Step 2",
-        title: "Embed without rebuilding",
-        subtitle: "The flow goes where the hesitation is, not where it is convenient.",
+        stepLabel: "The solution",
+        title: "Questell introduces structure behind every conversation.",
+        subtitle:
+          "Once a user provides information, it is retained accurately. It does not disappear or become distorted. The system does not request it again.",
         introLine:
-          "A decision flow that lives on a separate page asks users to leave the moment they were already in. When the knowledge base is ready and the flow is generated, it goes directly into the page where the decision is already happening. No rebuild. No new infrastructure. It looks like it belongs there because it was built from what was already there.",
+          "Every new message is interpreted within the context of all preceding interactions. Users communicate naturally, while Questell maintains awareness of what has already been completed, what remains outstanding, and what should logically occur next.",
         cards: [
           {
-            title: "Embeddable experience",
-            sentence: "Place decision flows directly inside existing pages.",
-            bullets: ["Use iframe or script", "Keep your current site", "Avoid full redesigns"],
+            title: "State lives outside the model",
+            sentence:
+              "Conditions recognized during the conversation are stored in session state — not in the LLM's context window. What was once satisfied stays satisfied.",
+            bullets: [
+              "Conditions tracked across turns",
+              "No repeated questions",
+              "State persists for the full session",
+            ],
           },
           {
-            title: "Custom styling",
-            sentence: "Make the flow feel native to your brand.",
-            bullets: ["Match colors and typography", "Adjust layout feel", "Keep visual consistency"],
+            title: "Routing is deterministic",
+            sentence:
+              "The LLM extracts what the user communicated. Business logic decides what happens next. The two responsibilities never mix.",
+            bullets: [
+              "AI handles language understanding only",
+              "Rules handle all branching decisions",
+              "Every path is auditable",
+            ],
           },
           {
-            title: "Adaptive interface",
-            sentence: "Flows that work across devices and contexts.",
-            bullets: ["Desktop friendly", "Mobile ready", "Campaign flexible"],
+            title: "The process is yours to define",
+            sentence:
+              "Every business process has its own logic, steps, conditions, branches. Questell lets you describe that logic and run it, without writing a single line of code.",
+            bullets: [
+              "Define steps and conditions in plain structure",
+              "Adjust logic without engineering support",
+              "See exactly why each decision was made",
+            ],
           },
         ],
-        visualLabel: "[Visual placeholder: embedded Questell widget inside a live page]",
+        visualLabel: "[Visual placeholder: Questell structured session state view]",
       },
       {
-        stepLabel: "Step 3",
-        title: "Read the combination, not the answer",
-        subtitle: "What users decide together matters more than what they say once.",
-        introLine:
-          "Once the flow is live, the system starts reading. Not individual answers - the pattern of answers together. The user does not land on a category. They land on the direction that fits what they actually described. That specificity is what makes the difference between a result they trust and one they second-guess. And every session that passes through the flow makes the logic easier to improve.",
+        stepLabel: "What this means",
+        title: "A decision-capable AI identity that operates according to your logic.",
+        subtitle:
+          "The most fundamental business expectation is not fulfilled simply by introducing AI. It is fulfilled when an assistant serves customers with the same consistency and understanding as the business itself.",
+        introLine: undefined,
         cards: [
           {
-            title: "Choice tracking",
-            sentence: "See what users select at each step.",
-            bullets: ["Track decisions", "Identify patterns", "Spot hesitation"],
+            title: "Transparent",
+            sentence:
+              "Every step of the conversation is visible. You can see what condition was recognized, what triggered the next step, and where the process currently stands.",
+            bullets: [
+              "Full session state visible",
+              "Every routing decision traceable",
+              "No black-box outcomes",
+            ],
           },
           {
-            title: "Intent segmentation",
-            sentence: "Group users based on real preferences and needs.",
-            bullets: ["Segment by choices", "Reveal user intent", "Support follow-up"],
+            title: "Controllable",
+            sentence:
+              "You define the process. You adjust it when something does not fit. The same way you would train and refine a human support agent.",
+            bullets: [
+              "Logic defined outside the model",
+              "Adjustable without redeployment",
+              "Non-technical teams can manage it",
+            ],
           },
           {
-            title: "Decision insights",
-            sentence: "Understand how decisions actually happen.",
-            bullets: ["See common paths", "Detect drop-offs", "Improve flow logic"],
+            title: "Consistent",
+            sentence:
+              "Two identical situations produce the same outcome. Every time. Not because the model happened to interpret them the same way — but because the rules said so.",
+            bullets: [
+              "Deterministic routing",
+              "No improvisation on business rules",
+              "Reliable at scale",
+            ],
           },
         ],
-        visualLabel: "[Visual placeholder: decision paths turning into insights]",
+        visualLabel: "[Visual placeholder: decision paths and session state side by side]",
       },
     ],
     trustSection: {
-      title: "You are never working alone",
+      title: "Questell is not a one-size-fits-all solution.",
       subtitle:
-        "Every workstation has its own agent. Each one built for that stage, that task, that decision. Not a general assistant you redirect. One that already knows where you are.",
+        "Every process is unique. Every organization makes decisions differently, communicates differently, and manages operations differently. Questell is a system designed to adapt to your organization's specific logic.",
     },
     finalCtaSection: {
-      title: "One flow on a live page is worth more than a perfect system that never ships.",
-      body: "Start with one decision moment. Map the logic, embed the flow, and see how users actually move through it. The first flow teaches you more than any planning session.",
-      primaryCta: { label: "Request your first flow", href: "/about" },
-      visualLabel: "[Visual placeholder: final CTA product mockup or mini flow preview]",
+      title: "The first step is a conversation.",
+      body: "Start with one process. Define the steps, describe the conditions, and see the logic run. The first flow teaches you more than any planning session.",
+      primaryCta: { label: "Build your own chatbot", href: "/about" },
+      secondaryCta: { label: "Try the live demo", href: "/test-chat" },
+      visualLabel: "[Visual placeholder: final CTA — Questell session flow preview]",
     },
   },
   hu: {
     featuresHero: {
-      eyebrow: "Questell funkciók",
-      headline: "A quiz válaszokat gyűjt. A döntési rendszer értelmezi őket.",
+      eyebrow: "Questell",
+      headline: "Az AI megérti, mit mondtál. A Questell megőrzi és folyamatot épít belőle.",
       subheadline:
-        "A legtöbb interaktív flow izoláltan értékeli a válaszokat. A Questell azt követi, mit jelentenek együtt:",
+        "Egy AI chatbot ma már képes komplex emberi inputból kiszűrni a lényeget. A probléma nem az értelmezés.",
       bullets: [
-        "milyen útvonalakat zárnak le",
-        "milyen irányokat erősítenek",
-        "mit mond a kombináció erről az adott emberről",
+        "A kontextus elvész a beszélgetés során",
+        "A korai információk súlya fokozatosan csökken",
+        "A rendszer nem tartja számon mi teljesült már",
       ],
-      supporting: "Ez nem egy extra feature. Ez egy másik architektúra.",
-      primaryCta: { label: "Kérem az első flow-t", href: "/about" },
-      heroVisualLabel: "[Vizuális helykitöltő: Questell döntési flow felület előnézet]",
+      supporting:
+        "Ez nem nyelvi probléma. Ez architektúrális probléma.",
+      primaryCta: { label: "Készítsd el a saját chatbotodat", href: "/about" },
+      secondaryCta: { label: "Próbáld ki élőben", href: "/test-chat" },
+      heroVisualLabel: "[Vizuális helykitöltő: Questell beszélgetési folyamat előnézet]",
     },
     featureSteps: [
       {
-        stepLabel: "1. lépés",
-        title: "Tudásbázis felépítése",
-        subtitle: "A rendszer először a businessedet tanulja meg, és csak utána épít.",
-        introLine:
-          "Mielőtt egy döntési flow bárkit vezetni tudna, a rendszernek értenie kell a businessedet. Nem egy kitöltött briefből, hanem magából az oldaladból. A Questell bejárja az URL-eket, kinyeri a terméklogikát és felhasználói útvonalakat, majd célzott kérdéseket tesz fel közben. Az eredmény egy strukturált tudásbázis, amit átnézhetsz, javíthatsz és finomíthatsz. Minden következő lépés erre épül.",
+        stepLabel: "A probléma",
+        title: "Az LLM értelmezésre lett tervezve. Nem folyamatvezetésre.",
+        subtitle:
+          "Egy AI asszisztenst ma már bárki bevezethet. Gyorsan, olcsón, technikai tudás nélkül. Válaszol, kommunikál, rendelkezésre áll. De amint a folyamatnak iránya van, feltételei vannak, szabályai vannak — komoly korlátok jelennek meg.",
+        introLine: undefined,
         closingLine:
-          "Ezen a ponton a döntési rendszer már tesztelhető. Nincs skin, nincs live oldal - csak működő logika.",
+          "Ezt a három problémát külön fejlesztőcsapat, hónapok és jelentős költség nélkül nem lehet megoldani. És ha megoldják, a rendszer még mindig nem látható, nem javítható, és nem tanítható nem technikai embernek.",
         cards: [
           {
-            title: "Tudásbázis",
+            title: "A kontextus ablaka nem struktúra",
             sentence:
-              "A pipeline bejárja az oldalad és kinyeri a business logikát. Átnézed, mit talált, javítod, amit eltévesztett, és iterálsz, amíg pontos nem lesz.",
+              "A modell lát mindent amit leírtál, de nem tudja eldönteni mi fontos és mi nem. Egy hosszabb beszélgetésben a korai információk súlya fokozatosan csökken.",
             bullets: [
-              "Oldalstruktúra és aloldalak feltérképezve",
-              "Termékoldalak és szerepük azonosítva",
-              "Felhasználói utak és business logika rögzítve",
+              "A korai inputok elveszítik súlyukat",
+              "Nincs tudatosság arról, mi számít",
+              "A hosszú beszélgetések elveszítik a fonalat",
             ],
           },
           {
-            title: "Döntési logika",
+            title: "A promptba írt szabályok nem üzleti logika",
             sentence:
-              "A tudásbázist a rendszer döntési hálóvá fordítja vissza. Végigmész minden útvonalon, módosítod, ami nem illeszkedik, és iterálsz, amíg a logika tart.",
+              "Az LLM értelmezi az utasításokat, nem következetesen hajtja végre őket. Két hasonló helyzetben két különböző döntést hozhat, és egyik sem lesz nyomon követhető.",
             bullets: [
-              "Döntési háló a saját adataidból",
-              "Minden útvonal látható és módosítható",
-              "Tartalom előtt tesztelhető",
+              "Az utasítások értelmezve lesznek, nem követve",
+              "Hasonló esetekben eltérő kimenet",
+              "Nincs audit trail a döntésekhez",
             ],
           },
           {
-            title: "Tartalom",
+            title: "State nem létezik",
             sentence:
-              "A flow feltöltődik alap tartalommal. A nyelvezetet addig finomítod, amíg tényleg azt tükrözi, ahogy a felhasználóid gondolkodnak és döntenek.",
+              "Az LLM nem tudja számon tartani, hogy egy feltétel már teljesült. Minden válasznál újraértelmez mindent az elejétől.",
             bullets: [
-              "Alap tartalom a tudásbázisból generálva",
-              "Minden lépés szerkeszthető",
-              "A flow kész, amikor a tartalom pontos",
+              "A teljesített lépések nem maradnak meg",
+              "A feltételek minden körben újraértékelődnek",
+              "A folyamat pozíciója soha nem biztos",
             ],
           },
         ],
       },
       {
-        stepLabel: "2. lépés",
-        title: "Beágyazás újraépítés nélkül",
-        subtitle: "A flow oda kerül, ahol a bizonytalanság van, nem oda, ahol kényelmes.",
+        stepLabel: "A megoldás",
+        title: "A Questell minden beszélgetés mögé egy struktúrát épít.",
+        subtitle:
+          "Amit a felhasználó egyszer megadott, az nem veszik el. Nem torzul. A rendszer nem kérdezi meg újra.",
         introLine:
-          "A külön oldalra tett döntési flow azt kéri a usertől, hogy pont akkor hagyja el a kontextust, amikor már benne volt. Amikor kész a tudásbázis és legenerálódik a flow, közvetlenül arra az oldalra kerül, ahol a döntés amúgy is történik. Nincs rebuild. Nincs új infrastruktúra. Azért hat natívnak, mert abból épült, ami már ott volt.",
+          "Minden új válasz az előzőek kontextusában értelmeződik. A felhasználó természetes nyelven ír. A Questell számon tartja mi teljesült már, mi hiányzik még, és mi következik ebből.",
         cards: [
           {
-            title: "Beágyazható élmény",
-            sentence: "A döntési flow közvetlenül a meglévő oldalaidba kerül.",
-            bullets: ["iframe vagy script", "meglévő oldal megtartása", "nincs teljes redesign"],
+            title: "A state az LLM-en kívül él",
+            sentence:
+              "A beszélgetés során felismert feltételek session state-be kerülnek — nem az LLM kontextus ablakában. Ami egyszer teljesült, megmarad.",
+            bullets: [
+              "Feltételek körök között megmaradnak",
+              "Nincs ismételt visszakérdezés",
+              "A state a teljes session alatt él",
+            ],
           },
           {
-            title: "Egyedi megjelenés",
-            sentence: "A flow vizuálisan a branded részének hat.",
-            bullets: ["színek és tipó illesztése", "layout-hangolás", "vizuális konzisztencia"],
+            title: "A routing determinisztikus",
+            sentence:
+              "Az LLM kinyeri amit a felhasználó közölt. Az üzleti logika dönti el mi következik. A két felelősség sosem keveredik.",
+            bullets: [
+              "Az AI csak a nyelvértelmezést végzi",
+              "A szabályok kezelik az összes elágazást",
+              "Minden útvonal auditálható",
+            ],
           },
           {
-            title: "Adaptív felület",
-            sentence: "A flow különböző eszközökön és kontextusokban is működik.",
-            bullets: ["desktop-barát", "mobilra kész", "kampányra rugalmas"],
+            title: "A folyamatot te határozod meg",
+            sentence:
+              "Minden üzleti folyamatnak saját logikája van — lépések, feltételek, elágazások. A Questell lehetővé teszi hogy ezt leírd és futtasd, egyetlen sor kód nélkül.",
+            bullets: [
+              "Lépések és feltételek plain struktúrában",
+              "A logika módosítható fejlesztői segítség nélkül",
+              "Pontosan látható miért született minden döntés",
+            ],
           },
         ],
-        visualLabel: "[Vizuális helykitöltő: beágyazott Questell widget élő oldalon]",
+        visualLabel: "[Vizuális helykitöltő: Questell strukturált session state nézet]",
       },
       {
-        stepLabel: "3. lépés",
-        title: "A kombináció számít, nem az egyedi válasz",
-        subtitle: "Az együtt meghozott döntések többet mondanak, mint egyetlen válasz.",
-        introLine:
-          "Amint a flow éles, a rendszer olvasni kezd. Nem az egyes válaszokat, hanem a válaszok mintázatát együtt. A user nem egy általános kategóriára érkezik. Arra az irányra érkezik, ami arra illik, amit valójában leírt. Ez adja a különbséget aközött, hogy bízik-e a kimenetben vagy megkérdőjelezi. És minden session, ami végigmegy a flow-n, könnyebbé teszi a logika javítását.",
+        stepLabel: "Mit jelent ez",
+        title: "Egy döntésre képes AI identitás, amely a te logikád szerint működik.",
+        subtitle:
+          "A legalapvetőbb üzleti elvárás nem teljesül automatikusan attól, hogy AI-t vezetsz be. Attól teljesül, hogy a saját asszisztensed úgy szolgálja a vevőidet, ahogy te is tennéd.",
+        introLine: undefined,
         cards: [
           {
-            title: "Választáskövetés",
-            sentence: "Látod, mit választanak a felhasználók lépésről lépésre.",
-            bullets: ["döntések követése", "mintázatok azonosítása", "bizonytalanság felismerése"],
+            title: "Átlátható",
+            sentence:
+              "A beszélgetés minden lépése látható. Látod melyik feltétel teljesült, mi váltotta ki a következő lépést, és hol tart jelenleg a folyamat.",
+            bullets: [
+              "Teljes session state látható",
+              "Minden routing döntés követhető",
+              "Nincs fekete doboz kimenet",
+            ],
           },
           {
-            title: "Intent szegmentáció",
-            sentence: "Valós preferenciák és igények alapján csoportosíthatsz.",
-            bullets: ["szegmentálás választások alapján", "valódi szándék feltárása", "follow-up támogatás"],
+            title: "Kontrollálható",
+            sentence:
+              "Te határozod meg a folyamatot. Te javítod ha valami nem stimmel. Ugyanúgy, ahogy egy munkatársat betanítanál és folyamatosan finomítanád a munkáját.",
+            bullets: [
+              "A logika a modellen kívül van definiálva",
+              "Módosítható újradeployálás nélkül",
+              "Nem technikai csapatok is kezelhetik",
+            ],
           },
           {
-            title: "Döntési insightok",
-            sentence: "Megérted, hogyan történnek a döntések a gyakorlatban.",
-            bullets: ["gyakori utak láthatók", "lemorzsolódási pontok", "flow logika fejlesztése"],
+            title: "Következetes",
+            sentence:
+              "Két azonos helyzet ugyanazt az eredményt adja. Mindig. Nem azért mert a modell véletlenül ugyanúgy értelmezte — hanem mert a szabályok így mondták.",
+            bullets: [
+              "Determinisztikus routing",
+              "Nincs improvizáció az üzleti szabályoknál",
+              "Megbízható skálán",
+            ],
           },
         ],
-        visualLabel: "[Vizuális helykitöltő: döntési útvonalakból insight]",
+        visualLabel: "[Vizuális helykitöltő: döntési útvonalak és session state egymás mellett]",
       },
     ],
     trustSection: {
-      title: "Nem egyedül dolgozol",
+      title: "A Questell nem egy kész megoldás.",
       subtitle:
-        "Minden workstationnek saját agentje van. Mindegyik adott szakaszra, feladatra és döntésre épül. Nem egy általános asszisztens, amit folyton át kell irányítani, hanem egy, ami eleve tudja, hol tartasz.",
+        "Minden folyamat egyedi. Minden üzlet másképp dönt, másképp kommunikál, másképp vezeti az ügyeit. A Questell egy rendszer, amit a saját logikád szerint építesz fel.",
     },
     finalCtaSection: {
-      title: "Egy éles oldalon futó flow többet ér, mint egy tökéletes rendszer, ami sosem indul el.",
-      body: "Kezdj egyetlen döntési ponttal. Térképezd fel a logikát, ágyazd be a flow-t, és nézd meg, hogyan mozognak benne valójában a felhasználók. Az első flow többet tanít, mint bármelyik tervezési meeting.",
-      primaryCta: { label: "Kérem az első flow-t", href: "/about" },
-      visualLabel: "[Vizuális helykitöltő: záró CTA termék mockup vagy mini flow előnézet]",
+      title: "Az első lépés egy beszélgetés.",
+      body: "Kezdj egyetlen folyamattal. Határozd meg a lépéseket, írd le a feltételeket, és nézd meg ahogy a logika fut. Az első flow többet tanít, mint bármelyik tervezési meeting.",
+      primaryCta: { label: "Készítsd el a saját chatbotodat", href: "/about" },
+      secondaryCta: { label: "Próbáld ki élőben", href: "/test-chat" },
+      visualLabel: "[Vizuális helykitöltő: záró CTA — Questell session flow előnézet]",
     },
   },
 };

@@ -31,161 +31,118 @@ type UiLang = "en" | "hu";
 
 function getSplitBlocks(lang: UiLang): SplitBlock[] {
   return [
-  {
-    key: "structure",
-    eyebrow: lang === "hu" ? "Struktúra" : "Structure",
-    title:
-      lang === "hu"
-        ? "Ne órákat adj el. Rendszert adj el."
-        : "Stop selling hours. Start selling a system.",
-    body: (
-      <>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "A legtöbb ügynökség azt adja le, amit az ügyfél kér. A Questell flow viszont olyan formátum, amit te hozol az asztalra: olyasmi, amit az ügyfél nem is tudott volna pontosan kérni, mégis működik iparágakon, termékeken és kampánytípusokon át."
-            : "Most agencies deliver what the client asks for. A Questell flow is something you bring to the table: a format the client did not know to ask for, built on a decision architecture that works across industries, products, and campaign types."}
-        </p>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "A logika egyszer lesz felépítve. Utána a következő ügyfélre újraírható, áthangolható és újradeployolható anélkül, hogy nulláról kellene újrakezdeni. Ez nem egy egyszeri projekt. Ez egy képesség."
-            : "The logic is structured once. After that, it can be adapted, rewritten, and redeployed for the next client without rebuilding from scratch. That is not a project. That is a capability."}
-        </p>
-      </>
-    ),
-    visualLabel:
-      lang === "hu"
-        ? "[Visual placeholder: újrahasznosítható döntési architektúra több ügyfélkampányon]"
-        : "[Visual placeholder: reusable decision architecture across multiple client campaigns]",
-  },
-  {
-    key: "deploy",
-    eyebrow: lang === "hu" ? "Deploy" : "Deploy",
-    title:
-      lang === "hu"
-        ? "Oda kerül, ahol a bizonytalanság van, nem oda, ahol kényelmes."
-        : "It goes where the hesitation is, not where it's convenient.",
-    body: (
-      <>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "A decision flow közvetlenül beágyazható product oldalakba, kampány landingekbe és gyűjtőoldalakba. Nincs külön microsite. Nincs platformfüggőség. Nincs kötelező fejlesztői handoff, mielőtt élőbe megy."
-            : "Decision flows embed directly into product pages, campaign landing pages, and collection hubs. No separate microsite. No platform dependency. No handoff to a dev team before you can go live."}
-        </p>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Az ügyfélnek nem kell újraépítenie az oldalát, hogy döntési réteget kapjon. Oda teszed be, ahová a felhasználó már most is érkezik, és onnan változik meg a mozgása."
-            : "The client does not need to rebuild their site to add a decision layer. You drop it in where users are already arriving and change how they move from there."}
-        </p>
-      </>
-    ),
-    visualLabel:
-      lang === "hu"
-        ? "[Visual placeholder: döntési flow beágyazva különböző ügyféloldal-típusokba]"
-        : "[Visual placeholder: decision flow embedded across different client page types]",
-  },
-  {
-    key: "scale",
-    eyebrow: lang === "hu" ? "Skálázás" : "Scale",
-    title:
-      lang === "hu"
-        ? "Ami skálázódik, az a logika, nem a munkaóra."
-        : "What scales is the logic, not the workload.",
-    body: (
-      <>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Minden flow ugyanarra az alapstruktúrára épül:"
-            : "Every flow is built on the same underlying structure:"}
-        </p>
-        <ul className={s.heroBullets}>
-          <li>{lang === "hu" ? "állapotalapú" : "stateful"}</li>
-          <li>{lang === "hu" ? "kombináció-alapú" : "combination-driven"}</li>
-          <li>{lang === "hu" ? "útvonal-szűkítő" : "path-narrowing"}</li>
-        </ul>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Ha egyszer tudsz egyet építeni, a következő már gyorsabb. Nem új formátumot találsz ki, hanem ugyanazt alkalmazod új tartalomra."
-            : "Once you know how to build one, the next one is faster. You are not reinventing the format. You are applying it to new content."}
-        </p>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Egy food hall flow, egy skincare termékajánló és egy B2B onboarding ugyanazon döntési architektúrán fut. Az ügyfél tartalma változik. A folyamatod nem."
-            : "A food hall flow and a skincare product finder and a B2B onboarding sequence all run on the same decision architecture. The client's content changes. Your process does not."}
-        </p>
-      </>
-    ),
-    visualLabel:
-      lang === "hu"
-        ? "[Visual placeholder: egyetlen döntési keretrendszer több ügyfélszegmensben]"
-        : "[Visual placeholder: single decision framework applied across multiple client verticals]",
-  },
-  {
-    key: "insight",
-    eyebrow: lang === "hu" ? "Insight" : "Insight",
-    title:
-      lang === "hu"
-        ? "Nem az számít, mire kattintottak. Az számít, hogyan gondolkodtak."
-        : "Not what they clicked. How they reasoned.",
-    body: (
-      <>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Minden flow strukturált döntési adatot generál:"
-            : "Every flow generates structured decision data:"}
-        </p>
-        <ul className={s.heroBullets}>
-          <li>{lang === "hu" ? "melyik útvonalakat választották" : "which paths were taken"}</li>
-          <li>{lang === "hu" ? "hol bizonytalanodtak el" : "where users hesitated"}</li>
-          <li>
-            {lang === "hu"
-              ? "mely jel-kombinációk vezettek befejezéshez"
-              : "which signal combinations led to completion"}
-          </li>
-          <li>
-            {lang === "hu"
-              ? "mely kombinációk vezettek lemorzsolódáshoz"
-              : "which combinations led to drop-off"}
-          </li>
-        </ul>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Ez nem sima kampányriport. Ez egy térkép arról, hogyan gondolkodik az ügyfél célközönsége az opciókról. Ez a térkép alakítja a következő kampányt, a következő termékdöntést és a következő márkaüzenetet."
-            : "This is not campaign reporting. It is a map of how your client's audience thinks about their options. That map informs the next campaign, the next product decision, and the next conversation about what the brand should be saying."}
-        </p>
-      </>
-    ),
-    visualLabel:
-      lang === "hu"
-        ? "[Visual placeholder: döntési útvonal analitika ügyfél-flow-kon át]"
-        : "[Visual placeholder: decision path analytics across client flows]",
-  },
-  {
-    key: "result",
-    eyebrow: lang === "hu" ? "Eredmény" : "Result",
-    title:
-      lang === "hu"
-        ? '"A felhasználónként reagáló flow-t építettünk" erősebb mondat, mint az, hogy "futtattunk egy kvízt."'
-        : '"We built a flow that responded to each user individually" is a stronger sentence than "we ran a quiz."',
-    body: (
-      <>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "A decision flow olyan eredmény, amit meg lehet mutatni, nem csak riportálni. Befejezési arány, útvonaladatok, az a pont, amikor a márka a broadcastból valódi reakcióba váltott: ezeket az ügyfél megjegyzi, és ezek működnek a következő pitchben is."
-            : "A decision flow is a result you can show, not just report. The completion rate, the path data, the moment a brand stopped broadcasting and started responding: these are things a client remembers, and things that travel when you pitch the next one."}
-        </p>
-        <p className={s.prose}>
-          {lang === "hu"
-            ? "Nem kell újratervezni az ügyfél teljes oldalát ahhoz, hogy javuljon a felhasználói út. Elég a döntési pont logikáját átalakítani. Ez gyorsabb, olcsóbb és jobban védhető beavatkozás, ráadásul erős narratívával."
-            : "You do not need to redesign the client's site to improve how users move through it. You need to change the logic at the decision point. That is a faster, cheaper, and more defensible intervention, and it has a story attached to it."}
-        </p>
-      </>
-    ),
-    visualLabel:
-      lang === "hu"
-        ? "[Visual placeholder: előtte/utána döntési flow hatás konverzióra és engagementre]"
-        : "[Visual placeholder: before / after decision flow impact on conversion and engagement]",
-  },
-];
+    {
+      key: "structure",
+      eyebrow: lang === "hu" ? "Support" : "Support",
+      title:
+        lang === "hu"
+          ? "Egy ügyfélszolgálatos betanítható. Most már az AI is az."
+          : "A support agent can be trained. Now AI can be too.",
+      body: (
+        <div className={s.prosePanels}>
+          <div className={s.prosePanel} data-panel="1">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy jó ügyintéző ismeri a szabályokat, számon tartja mi hangzott el, és két hasonló helyzetben ugyanúgy dönt. Nem improvizál. Nem felejt el fontos részleteket. Tudja mikor kell eszkalálni."
+                : "A good agent knows the rules, remembers what was said, and handles similar situations consistently. They don't improvise. They don't miss the moment to escalate."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="2">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy chatbot nem azért hibázik mert buta. Hanem mert nincs mögötte struktúra. A promptba írt szabályokat az LLM értelmezi, nem követi. Két hasonló helyzetben két különböző döntést hoz, és egyik sem lesz nyomon követhető."
+                : "A chatbot doesn't fail because it's unintelligent. It fails because there's no structure behind it. Rules written in a prompt get interpreted, not followed. Two similar cases, two different outcomes, and neither is traceable."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="3">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "A Questell-lel te határozod meg a folyamatot. Látod hol tart az ügy, mi teljesült már, mi hiányzik még. Ha valami nem stimmel, javítod. Ugyanúgy ahogy egy munkatársat betanítanál, és a munkáját folyamatosan finomítanád."
+                : "With Questell, you define the process. You see where each case stands, what's done, what's missing. If something's off, you fix it, the same way you'd retrain a colleague."}
+            </p>
+          </div>
+        </div>
+      ),
+      visualLabel:
+        lang === "hu"
+          ? "[Visual placeholder: Questell support folyamat — strukturált ügyintézés]"
+          : "[Visual placeholder: Questell support flow — structured case handling]",
+    },
+    {
+      key: "deploy",
+      eyebrow: lang === "hu" ? "Sales" : "Sales",
+      title:
+        lang === "hu"
+          ? "Egy jó kérdés többet ér mint tíz válasz."
+          : "One good question beats ten answers.",
+      body: (
+        <div className={s.prosePanels}>
+          <div className={s.prosePanel} data-panel="1">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy jó sales qualification nem előre megírt kérdéssor. A tapasztalt saleses folyamatosan próbálja megérteni milyen helyzetben van a cég, hol a valódi probléma, mennyire sürgős, és mi akadályozza a döntést. Ugyanaz a válasz két különböző cégnél teljesen mást jelenthet."
+                : "Good qualification isn't a fixed script. Experienced salespeople constantly read the room, the company's situation, the real problem, the urgency, what's blocking the decision."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="2">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy LLM ezt nem tudja stabilan végigvezetni. Nem azért mert nem érti a nyelvet, hanem mert nincs mögötte folyamatstruktúra. A fontos információk elvesznek, a qualification iránya szétesik, és nem látható mi alapján jutott következtetésre."
+                : "An LLM can't run this reliably. Not because it doesn't understand, but because there's no process structure behind it. Key details slip, the qualification drifts, and you can't see why it reached its conclusion."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="3">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "A Questell strukturált állapotot épít a qualification mögött. A fontos információk számon vannak tartva, a rendszer tudja mi derült ki és mi hiányzik még. A qualification nem improvizált chat marad, hanem kontrollált és javítható folyamat."
+                : "Questell builds structured state behind qualification. What's been uncovered is tracked. What's still missing is visible. Qualification stops being an improvised chat and becomes a controllable, refinable process."}
+            </p>
+          </div>
+        </div>
+      ),
+      visualLabel:
+        lang === "hu"
+          ? "[Visual placeholder: Questell sales qualification — strukturált feltárás]"
+          : "[Visual placeholder: Questell sales qualification — structured discovery]",
+    },
+    {
+      key: "scale",
+      eyebrow: lang === "hu" ? "Tudás" : "Knowledge",
+      title:
+        lang === "hu"
+          ? "Mindenki ugyanazt tanulja. Mégsem ugyanott tart."
+          : "Same material. Different gaps.",
+      body: (
+        <div className={s.prosePanels}>
+          <div className={s.prosePanel} data-panel="1">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy jó mentor nem ugyanazt kérdezi mindenkitől. Észreveszi hol van lyuk, és ott megy mélyebbre ahol szükséges. Ugyanaz az anyag két embernél teljesen különböző hiányosságokat takar."
+                : "A good mentor doesn't ask everyone the same thing. They spot the gap and go deeper there. The same material can hide completely different weaknesses in different people."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="2">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "Egy LLM ezt nem tudja stabilan végigvezetni. Nem azért mert nem ismeri az anyagot, hanem mert nem tartja számon hol tart az adott ember. Minden válasznál újraértelmez mindent. A hiányosságok láthatatlanok maradnak."
+                : "An LLM can't run this reliably, not because it doesn't know the material, but because it doesn't track where someone actually stands. Every response starts from scratch. Gaps stay invisible."}
+            </p>
+          </div>
+          <div className={s.prosePanel} data-panel="3">
+            <p className={s.prose}>
+              {lang === "hu"
+                ? "A Questell-lel a tudásellenőrzés nem egységes folyamat többé. Mindenki ott folytatja ahol valóban tart, és addig tart ameddig a hiányosság meg nem szűnt. A mentori munka logikája leírható, futtatható és javítható."
+                : "With Questell, knowledge checks aren't one-size-fits-all. Everyone picks up where they actually are, and the process runs until the gap is closed. The logic of mentorship becomes something you can define, run, and improve."}
+            </p>
+          </div>
+        </div>
+      ),
+      visualLabel:
+        lang === "hu"
+          ? "[Visual placeholder: Questell tudásellenőrzés — személyre szabott haladás]"
+          : "[Visual placeholder: Questell knowledge evaluation — personalized progression]",
+    },
+  ];
 }
 
 function SplitSection({
@@ -284,50 +241,34 @@ export default function AgenciesPage() {
         aria-labelledby="agencies-hero-heading"
       >
         <div className={s.sectionInner}>
-          <div className={s.agZigzagRow}>
-            <div className={s.zigzagText}>
-              <p className={s.eyebrow}>{lang === "hu" ? "Ügynökségek" : "Agencies"}</p>
-              <h1 id="agencies-hero-heading" className={s.heroTitle}>
+          <div className={s.heroAgCenter}>
+            <p className={s.eyebrow}>{lang === "hu" ? "Miért Questell" : "Why Questell"}</p>
+            <h1 id="agencies-hero-heading" className={s.heroTitle}>
+              {lang === "hu"
+                ? "Az LLM értelmezésre lett tervezve. Nem folyamatvezetésre."
+                : "LLMs were designed for interpretation. Not for process control."}
+            </h1>
+            <div className={s.heroLeadStack}>
+              <p className={s.lead}>
                 {lang === "hu"
-                  ? "Adj az ügyfeleidnek valamit, amit még nem láttak tőled."
-                  : "Give your clients something they haven't seen from you before."}
-              </h1>
-              <div className={s.heroLeadStack}>
-                <p className={s.lead}>
-                  {lang === "hu"
-                    ? "A Questell flow nem kvíz, nem chatbot és nem microsite. Ez egy döntési élmény:"
-                    : "A Questell flow is not a quiz, a chatbot, or a microsite. It is a decision experience:"}
-                </p>
-                <ul className={s.heroBullets}>
-                  <li>{lang === "hu" ? "felhasználónként reagál" : "responds to each user individually"}</li>
-                  <li>{lang === "hu" ? "beágyazható bármely meglévő oldalba" : "embeds into any existing page"}</li>
-                  <li>
-                    {lang === "hu"
-                      ? "a megjelenésen és kattintáson túl is értelmezhető adatot ad"
-                      : "generates data beyond impressions and clicks"}
-                  </li>
-                </ul>
-                <p className={s.lead}>
-                  {lang === "hu"
-                    ? "Az ügynökség egyszer építi meg. Az ügyfél emlékezni fog rá."
-                    : "The agency builds it once. The client remembers it."}
-                </p>
-              </div>
-              <div className={s.heroActions}>
-                <Link href="/about" className={s.btnPrimary}>
-                  {lang === "hu" ? "Kérem az első flow-t" : "Request your first flow"}
-                </Link>
-              </div>
+                  ? "Egy AI asszisztenst ma már bárki bevezethet. Gyorsan, olcsón, technikai tudás nélkül. Válaszol, kommunikál, rendelkezésre áll. De amint a folyamatnak iránya van, feltételei vannak, szabályai vannak:"
+                  : "Anyone can deploy an AI assistant today. Fast, cheap, no technical expertise needed. It responds, communicates, stays available. But once a process has direction, conditions, rules:"}
+              </p>
+              <ul className={s.heroBullets}>
+                <li>{lang === "hu" ? "a korai információk elvesznek a beszélgetés során" : "early information gets lost along the way"}</li>
+                <li>{lang === "hu" ? "ugyanarra a helyzetre két különböző döntést hoz" : "the same situation leads to different decisions"}</li>
+                <li>{lang === "hu" ? "nem tartja számon mi teljesült már és mi nem" : "it doesn't track what's done and what isn't"}</li>
+              </ul>
+              <p className={s.heroClosing}>
+                {lang === "hu"
+                  ? "Egy LLM önmagában nem tud üzleti folyamatot vezetni. Nem azért mert buta, hanem mert nem erre tervezték."
+                  : "An LLM can't run a business process on its own. Not because it's not smart enough, because it wasn't built for that."}
+              </p>
             </div>
-            <div className={s.zigzagVisual}>
-              <VisualPlaceholder
-                label={
-                  lang === "hu"
-                    ? "[Visual placeholder: több ügyféloldal beágyazott döntési flow-val]"
-                    : "[Visual placeholder: multiple client sites with embedded decision flows]"
-                }
-                variant="hero"
-              />
+            <div className={s.heroActions}>
+              <Link href="/about" className={s.btnPrimary}>
+                {lang === "hu" ? "Készítsd el a saját chatbotodat" : "Build your own chatbot"}
+              </Link>
             </div>
           </div>
         </div>
@@ -353,17 +294,17 @@ export default function AgenciesPage() {
           <div className={s.ctaPanel}>
             <h2 id="agencies-final" className={s.finalStatement}>
               {lang === "hu"
-                ? "Az első flow a legnehezebben eladható. Utána maga a munka adja el önmagát."
-                : "The first flow is the hardest one to sell. After that, the work sells itself."}
+                ? "Ezt a három problémát külön fejlesztőcsapat, hónapok és jelentős költség nélkül nem lehet megoldani."
+                : "Solving these three problems usually takes a dedicated engineering team, months of work, and serious budget."}
             </h2>
             <p className={s.finalLead}>
               {lang === "hu"
-                ? "Segítünk feltérképezni a döntési logikát, és elindítani az első flow-t egy élő ügyféloldalon, hogy legyen valós eredményed, mielőtt skálázol."
-                : "We help you map the decision logic and launch the first flow on a live client site, so you have something real to show before you scale."}
+                ? "És ha megoldják, a rendszer még mindig nem látható, nem javítható, és nem tanítható nem technikai embernek. A Questell ezt architektúrával oldja meg."
+                : "And even then, the system is often opaque, hard to adjust, and out of reach for non-technical people. Questell solves this through architecture."}
             </p>
             <div className={s.ctaPanelActions}>
               <Link href="/about" className={s.btnPrimary}>
-                {lang === "hu" ? "Kérem az első flow-t" : "Request your first flow"}
+                {lang === "hu" ? "Készítsd el a saját chatbotodat" : "Build your own chatbot"}
               </Link>
             </div>
             <footer className={s.siteFooter}>

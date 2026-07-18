@@ -1,4 +1,4 @@
-/* Industry layout (Agencies, SaaS): shared module — hero copy first (3fr) + visual (2fr); scroll reveal + typography aligned with use-case pages */
+/* Industry layout (Agencies): hero copy first (3fr) + visual (2fr); scroll reveal + typography aligned with use-case pages */
 @use "../marketingTokens" as tokens;
 
 .page {
@@ -81,29 +81,20 @@
 
 /* Hero: copy first (wider column), visual second */
 @media (min-width: 880px) {
-  .heroAg .agZigzagRow {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    align-items: center;
-    column-gap: clamp(2rem, 4vw, 3rem);
-    row-gap: 0;
+  .heroAg .sectionInner {
+    display: flex;
+    justify-content: center;
   }
+}
 
-  .heroAg .zigzagVisual {
-    flex: unset;
-    max-width: none;
-    width: 100%;
-    min-width: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-
-  .heroAg .zigzagText {
-    flex: unset;
-    max-width: none;
-    width: 100%;
-    min-width: 0;
-  }
+.heroAgCenter {
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .zigzagVisual {
@@ -157,13 +148,13 @@
 
 .heroTitle {
   font-family: var(--font-cormorant), Georgia, serif;
-  font-size: clamp(1.65rem, 3.2vw, 2.45rem);
-  font-weight: 500;
-  line-height: 1.14;
+  font-size: clamp(1.95rem, 3.8vw, 2.85rem);
+  font-weight: 600;
+  line-height: 1.1;
   letter-spacing: -0.02em;
-  margin: 0 0 1rem;
-  color: rgba(252, 252, 255, 0.98);
-  max-width: 34ch;
+  margin: 0 auto 1.5rem;
+  max-width: min(34ch, 96%);
+  color: #0f172a;
   overflow-wrap: anywhere;
 }
 
@@ -171,28 +162,35 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  max-width: 36rem;
+  width: 100%;
+  max-width: 56rem;
+  align-items: center;
 }
 
 .lead {
-  font-size: clamp(0.9rem, 1.35vw, 0.98rem);
-  line-height: 1.58;
-  color: rgba(232, 236, 244, 0.78);
-  margin: 0;
-  max-width: 36rem;
+  font-size: clamp(1rem, 1.45vw, 1.1rem);
+  line-height: 1.7;
+  color: rgba(51, 65, 85, 0.7);
+  margin: 0 auto 1rem;
+  max-width: min(46rem, 100%);
 }
 
 .heroBullets {
-  margin: -0.15rem 0 0.15rem;
-  padding-left: 1.1rem;
-  max-width: 36rem;
-  color: rgba(232, 236, 244, 0.82);
-  font-size: clamp(0.88rem, 1.3vw, 0.95rem);
-  line-height: 1.52;
+  list-style: none;
+  padding: 0 0 0 1.75rem;
+  margin: 0.25rem auto 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(46rem, 100%);
+  text-align: left;
 }
 
 .heroBullets li {
-  margin-bottom: 0.3rem;
+  font-size: clamp(0.875rem, 1.2vw, 0.965rem);
+  line-height: 1.55;
+  color: rgba(15, 23, 42, 0.82);
+  font-weight: 500;
 }
 
 .heroBullets li:last-child {
@@ -428,7 +426,7 @@
   }
 
   .heroBullets {
-    padding-left: 1rem;
+    padding: 0 0 0 1.1rem;
   }
 
   .splitProse {
@@ -559,4 +557,67 @@
 .finalSection {
   background: transparent;
   border: none;
+}
+
+/* —— Prose panels —— */
+.prosePanels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.prosePanel {
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid tokens.$mk-container-border-soft;
+  box-shadow: 0 4px 12px tokens.$mk-container-shadow;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+/* Háttérárnyalatok */
+.prosePanel[data-panel="1"] {
+  background: color-mix(in srgb, tokens.$mk-surface 72%, tokens.$mk-container-bg);
+  transform: translateX(0);
+}
+
+.prosePanel[data-panel="2"] {
+  background: color-mix(in srgb, tokens.$mk-surface 58%, tokens.$mk-container-bg-strong);
+  transform: translateX(1.75rem);
+}
+
+.prosePanel[data-panel="3"] {
+  background: color-mix(in srgb, tokens.$mk-surface 72%, tokens.$mk-container-bg);
+  transform: translateX(0);
+}
+
+/* Vizuál-első sorokban (páros indexű splitblokk) a középső panel balra tolódik */
+.agZigzagRow > :first-child .prosePanel[data-panel="2"] {
+  transform: translateX(-1.75rem);
+}
+
+/* Mobilon nincs eltolás */
+@media (max-width: 768px) {
+  .prosePanel[data-panel="2"] {
+    transform: translateX(0);
+  }
+
+  .agZigzagRow > :first-child .prosePanel[data-panel="2"] {
+    transform: translateX(0);
+  }
+}
+
+.heroClosing {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.2rem, 1.95vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.4;
+  color: #0f172a;
+  margin: 0.75rem auto 2rem;
+  max-width: min(56rem, 100%);
+  padding: 1.15rem 1.6rem;
+  background: color-mix(in srgb, tokens.$mk-topbar-bg 8%, transparent);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, tokens.$mk-topbar-bg 22%, transparent);
 }
