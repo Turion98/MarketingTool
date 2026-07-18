@@ -1,0 +1,477 @@
+@use "../marketingTokens" as t;
+
+.page {
+  width: 100%;
+  color: t.$mk-text;
+}
+
+.container {
+  width: 100%;
+  max-width: 66rem;
+  margin: 0 auto;
+  padding: 0 clamp(1.1rem, 5vw, 2.5rem);
+}
+
+/* ---------- §1 Hero ---------- */
+.hero {
+  padding: clamp(2.5rem, 8vw, 5rem) 0 clamp(1.8rem, 5vw, 3rem);
+}
+
+.eyebrow {
+  margin: 0 0 1.1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: t.$mk-accent-strong;
+}
+
+.headline {
+  margin: 0 0 1.4rem;
+  max-width: 22ch;
+  font-size: clamp(1.9rem, 5.2vw, 3.1rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: t.$mk-text-strong;
+}
+
+.subtitle {
+  margin: 0 0 2rem;
+  max-width: 48ch;
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  line-height: 1.6;
+  color: t.$mk-text-muted;
+}
+
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.72rem 1.45rem;
+  border-radius: 999px;
+  background: t.$mk-cta-bg;
+  color: t.$mk-cta-text;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+.heroCta:hover {
+  background: t.$mk-cta-bg-hover;
+  transform: translateY(-1px);
+}
+
+/* ---------- Proof-csempesor ---------- */
+.proof {
+  padding: clamp(1.6rem, 5vw, 2.6rem) 0 clamp(2rem, 6vw, 3.4rem);
+  border-top: 1px solid t.$mk-border;
+  border-bottom: 1px solid t.$mk-border;
+}
+.proofCaption {
+  margin: 0 0 1.1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: t.$mk-text-muted;
+}
+
+/* §2 — kód-artifact: valódi node a story JSON-ből (az „olvasható szabálykönyv" tézis). */
+.codeCard {
+  margin: 1.9rem 0 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: t.$mk-closing-bg;
+  border: 1px solid t.$mk-closing-border;
+  box-shadow: 0 6px 20px t.$mk-container-shadow;
+}
+.codeCardLabel {
+  padding: 0.55rem 0.95rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(240, 246, 255, 0.62);
+  background: t.$mk-closing-bg-strong;
+  border-bottom: 1px solid t.$mk-closing-border;
+}
+.codeCardPre {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.62;
+  color: rgba(240, 246, 255, 0.92);
+  white-space: pre;
+  tab-size: 2;
+}
+.proofGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: clamp(0.7rem, 2vw, 1rem);
+}
+.proofTile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: 12px;
+  background: t.$mk-surface;
+  border: 1px solid t.$mk-container-border-soft;
+}
+.proofValue {
+  font-size: clamp(1.9rem, 4.6vw, 2.6rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: t.$mk-accent-strong;
+}
+.proofLabel {
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: t.$mk-text;
+}
+.proofEmphasis {
+  color: t.$mk-accent-strong;
+  font-weight: 700;
+}
+
+/* ---------- Szekció (§2, §3, §4) ---------- */
+.section {
+  padding: clamp(2.4rem, 6vw, 3.8rem) 0;
+  border-bottom: 1px solid t.$mk-border;
+
+  /* Anchor-scroll a hero CTA-ról a fix nav alá pozicionál. */
+  scroll-margin-top: clamp(3.6rem, 7vw, 5rem);
+}
+
+.sectionHead {
+  margin-bottom: 1.1rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.7rem;
+  font-size: clamp(1.4rem, 3.4vw, 2rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: t.$mk-text-strong;
+}
+
+.sectionBar {
+  width: 2.4rem;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, t.$mk-accent, t.$mk-accent-strong);
+}
+
+.sectionLead {
+  margin: 0 0 1.9rem;
+  max-width: 60ch;
+  font-size: clamp(1.02rem, 2.4vw, 1.18rem);
+  line-height: 1.6;
+  color: t.$mk-text-strong;
+  font-weight: 600;
+}
+
+/* §2 Why — tördelt elrendezés. */
+.whyLead {
+  margin: 0 0 1.4rem;
+  max-width: 60ch;
+  font-size: clamp(1.08rem, 2.6vw, 1.3rem);
+  line-height: 1.55;
+  color: t.$mk-text-strong;
+  font-weight: 600;
+}
+.pullQuote {
+  margin: 0 0 1.7rem;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  max-width: 30ch;
+  border-left: 4px solid t.$mk-accent;
+  font-size: clamp(1.4rem, 3.8vw, 2.1rem);
+  line-height: 1.26;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: t.$mk-text-strong;
+}
+.whyPara {
+  margin: 0 0 1.2rem;
+  max-width: 60ch;
+  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
+  line-height: 1.72;
+  color: t.$mk-text;
+}
+.whyEvidence {
+  display: grid;
+  gap: clamp(1rem, 3vw, 1.8rem);
+  align-items: start;
+  margin: 0 0 1.5rem;
+
+  @media (min-width: 52rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.whyEvidence .whyPara {
+  margin-bottom: 0;
+}
+.codeCardInEvidence {
+  margin-top: 0;
+}
+.whySignpost {
+  margin: 0;
+  max-width: 60ch;
+  padding-top: 1.2rem;
+  border-top: 1px solid t.$mk-border;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: t.$mk-text-muted;
+}
+
+/* §4 — trust-blokk a lépcső után: mit NEM bízok az AI-ra. */
+.turnOutro {
+  margin: 1.9rem 0 0;
+  max-width: 64ch;
+  padding: 0.2rem 0 0.2rem 1.15rem;
+  border-left: 3px solid t.$mk-accent;
+  font-size: clamp(0.99rem, 2.2vw, 1.08rem);
+  line-height: 1.68;
+  color: t.$mk-text;
+}
+
+/* ---------- Stepper (közös §2 / §4) ---------- */
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.step {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: clamp(0.9rem, 2.5vw, 1.5rem);
+  padding-bottom: 1.9rem;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+.stepRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: linear-gradient(160deg, t.$mk-accent, t.$mk-accent-strong);
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px t.$mk-container-shadow;
+}
+/* Összekötő vonal a badge-ek között. */
+.step:not(:last-child) .stepRail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 0.4rem;
+  border-radius: 2px;
+  background: linear-gradient(180deg, t.$mk-accent-soft-strong 0%, transparent 100%);
+}
+.stepContent {
+  padding-top: 0.15rem;
+}
+.stepHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-bottom: 0.7rem;
+}
+.stepLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: t.$mk-text-strong;
+  letter-spacing: 0.01em;
+}
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chip {
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  background: t.$mk-accent-soft;
+  border: 1px solid t.$mk-container-border-soft;
+  color: t.$mk-accent-strong;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stepBody {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(0.98rem, 2.2vw, 1.06rem);
+  line-height: 1.68;
+  color: t.$mk-text;
+}
+
+/* ---------- §3 Demó ---------- */
+.demoSection {
+  background: linear-gradient(180deg, t.$mk-accent-soft 0%, transparent 46%);
+}
+.demoTitle {
+  font-size: clamp(1.7rem, 4.4vw, 2.5rem);
+}
+.tryLabel {
+  margin: 0 0 0.9rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: t.$mk-text-muted;
+}
+.tryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: clamp(0.7rem, 2vw, 1rem);
+  margin-bottom: 1.8rem;
+}
+.tryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid t.$mk-border;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.tryCard:hover {
+  border-color: t.$mk-accent;
+  transform: translateY(-2px);
+}
+.tryPrompt {
+  position: relative;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: t.$mk-text-strong;
+}
+.tryQuote {
+  position: absolute;
+  left: 0;
+  top: -0.15rem;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: t.$mk-accent;
+}
+.tryOutcome {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: t.$mk-text-muted;
+}
+
+/* ---------- §3 Demó-mount (placeholder — ide kerül az EmbeddedSupportDemo) ---------- */
+.demoMount {
+  padding: clamp(2.4rem, 7vw, 4rem) 1.5rem;
+  border: 1px dashed t.$mk-border-strong;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+.demoNote {
+  margin: 0;
+  font-size: 0.92rem;
+  color: t.$mk-text-muted;
+  font-style: italic;
+}
+.bugLine {
+  margin: 1.6rem 0 0;
+  max-width: 60ch;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: t.$mk-text;
+}
+
+.inlineLink {
+  color: t.$mk-accent-strong;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.14s ease;
+}
+.inlineLink:hover {
+  color: t.$mk-accent;
+}
+
+/* ---------- §4 fázisok ---------- */
+.phasesCaption {
+  margin: 0 0 1.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: t.$mk-accent-strong;
+}
+.pipelineCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-top: 2rem;
+  padding: 0.68rem 1.3rem;
+  border-radius: 999px;
+  border: 1px solid t.$mk-accent-strong;
+  background: t.$mk-accent-soft;
+  color: t.$mk-accent-strong;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.16s ease;
+}
+.pipelineCta:hover {
+  background: t.$mk-accent-soft-strong;
+}
+
+/* ---------- §5 Zárás ---------- */
+.closing {
+  margin: clamp(2.5rem, 7vw, 4rem) 0 clamp(3rem, 8vw, 5rem);
+  padding: clamp(2rem, 6vw, 3.2rem);
+  border-radius: 16px;
+  background: t.$mk-closing-bg;
+  text-align: center;
+}
+.closingText {
+  margin: 0 0 1rem;
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  color: t.$mk-closing-text;
+}
+.closingLinks {
+  margin: 0;
+  font-size: 1rem;
+}
+.closingLink {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid t.$mk-accent;
+  padding-bottom: 1px;
+  transition: color 0.14s ease;
+}
+.closingLink:hover {
+  color: t.$mk-accent;
+}
+.dot {
+  color: t.$mk-closing-border;
+}

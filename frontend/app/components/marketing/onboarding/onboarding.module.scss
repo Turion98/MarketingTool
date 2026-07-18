@@ -1,0 +1,480 @@
+@use "../marketingTokens" as t;
+
+$mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+.page {
+  width: 100%;
+  color: t.$mk-text;
+}
+.container {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 clamp(1.1rem, 5vw, 2.5rem);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  padding: clamp(2.5rem, 8vw, 5rem) 0 clamp(1.8rem, 5vw, 3rem);
+  border-bottom: 1px solid t.$mk-border;
+}
+.eyebrow {
+  margin: 0 0 1.1rem;
+  font-family: $mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: t.$mk-accent-strong;
+}
+.title {
+  margin: 0 0 1.4rem;
+  max-width: 24ch;
+  font-size: clamp(1.9rem, 5.2vw, 3rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: t.$mk-text-strong;
+}
+.lead {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(1.02rem, 2.4vw, 1.2rem);
+  line-height: 1.6;
+  color: t.$mk-text-muted;
+}
+
+/* ---------- Lépések ---------- */
+.section {
+  padding: clamp(2.2rem, 6vw, 3.4rem) 0;
+  border-bottom: 1px solid t.$mk-border;
+}
+.stepsCaption {
+  margin: 0 0 1.5rem;
+  font-family: $mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: t.$mk-text-muted;
+}
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.step {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: clamp(0.9rem, 2.5vw, 1.5rem);
+  padding-bottom: 1.9rem;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+.stepRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: linear-gradient(160deg, t.$mk-accent, t.$mk-accent-strong);
+  color: #fff;
+  font-family: $mono;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px t.$mk-container-shadow;
+}
+.step:not(:last-child) .stepRail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 0.4rem;
+  border-radius: 2px;
+  background: linear-gradient(180deg, t.$mk-accent-soft-strong 0%, transparent 100%);
+}
+.stepContent {
+  padding-top: 0.15rem;
+}
+.stepHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin-bottom: 0.7rem;
+}
+.stepLabel {
+  font-family: $mono;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: t.$mk-text-strong;
+}
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chip {
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  background: t.$mk-accent-soft;
+  border: 1px solid t.$mk-container-border-soft;
+  color: t.$mk-accent-strong;
+  font-family: $mono;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stepBody {
+  margin: 0;
+  max-width: 60ch;
+  font-size: clamp(0.98rem, 2.2vw, 1.06rem);
+  line-height: 1.68;
+  color: t.$mk-text;
+}
+
+/* ---------- Idő + költség (két azonos, szám-vezérelt csempe) ---------- */
+.meta {
+  padding: clamp(2rem, 5vw, 2.8rem) 0;
+}
+.metaCaption {
+  margin: 0 0 1.1rem;
+  font-family: $mono;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: t.$mk-text-muted;
+}
+.metaGrid {
+  display: grid;
+  gap: clamp(0.7rem, 2vw, 1rem);
+  grid-template-columns: 1fr;
+
+  @media (min-width: 40rem) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.metaTile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem 1.3rem;
+  border-radius: 12px;
+  background: t.$mk-surface;
+  border: 1px solid t.$mk-container-border-soft;
+}
+.metaValue {
+  font-size: clamp(1.7rem, 4.2vw, 2.3rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: t.$mk-accent-strong;
+}
+.metaLabel {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: t.$mk-text;
+}
+.metaKeyNote {
+  display: block;
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid t.$mk-accent;
+  border-radius: 0 8px 8px 0;
+  background: t.$mk-accent-soft;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: t.$mk-text;
+}
+
+/* ---------- Brief-kapu (lenyitható + API-kulcs) ---------- */
+.gate {
+  margin: 0 0 1.8rem;
+}
+.gateCollapsed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.3rem, 4vw, 1.9rem);
+  border: 1px solid t.$mk-border-strong;
+  border-radius: 14px;
+  background: t.$mk-surface;
+}
+.gateKey,
+.gateReady {
+  padding: clamp(1.3rem, 4vw, 1.9rem);
+  border: 1px solid t.$mk-border-strong;
+  border-radius: 14px;
+  background: #fff;
+}
+.gateTitle {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: t.$mk-text-strong;
+}
+.gateNote {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: t.$mk-text-muted;
+}
+.gatePrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+  padding: 0.68rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: t.$mk-cta-bg;
+  color: t.$mk-cta-text;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+.gatePrimary:not(:disabled):hover {
+  background: t.$mk-cta-bg-hover;
+  transform: translateY(-1px);
+}
+.gatePrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gateKeyRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+.gateInput {
+  flex: 1;
+  min-width: 14rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid t.$mk-border-strong;
+  border-radius: 10px;
+  background: #fff;
+  color: t.$mk-text;
+  font-family: $mono;
+  font-size: 0.9rem;
+}
+.gateInput:focus {
+  outline: none;
+  border-color: t.$mk-accent;
+  box-shadow: 0 0 0 3px t.$mk-accent-soft;
+}
+.gateReadyHead {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.gateKeyBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: t.$mk-accent-strong;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.gateGhost {
+  margin-left: auto;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid t.$mk-border-strong;
+  border-radius: 999px;
+  background: transparent;
+  color: t.$mk-text-strong;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gateGhost:hover {
+  border-color: t.$mk-accent;
+}
+
+/* ---------- Form-mount (placeholder — a kiemelt brief-mag ide kerül, #4b) ---------- */
+.formMount {
+  margin: 0 0 1.8rem;
+  padding: clamp(2.4rem, 7vw, 4rem) 1.5rem;
+  border: 1px dashed t.$mk-border-strong;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+.formMountNote {
+  margin: 0;
+  font-size: 0.92rem;
+  font-style: italic;
+  color: t.$mk-text-muted;
+}
+
+/* ---------- Kiemelt brief-mag (portfólió-keret) ---------- */
+.briefLoading {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: t.$mk-text-muted;
+  font-size: 0.95rem;
+}
+.briefFrame {
+  margin-top: 1.4rem;
+}
+.briefLayout {
+  display: grid;
+  gap: clamp(1rem, 3vw, 1.6rem);
+  grid-template-columns: 1fr;
+
+  @media (min-width: 58rem) {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+}
+.briefMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-width: 0;
+}
+.briefCards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.briefSide {
+  min-width: 0;
+
+  @media (min-width: 58rem) {
+    position: sticky;
+    top: clamp(4rem, 8vw, 5.5rem);
+  }
+}
+.briefFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid t.$mk-border;
+}
+.briefSavedHint {
+  font-size: 0.8rem;
+  color: t.$mk-text-muted;
+}
+.briefFooterActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.briefError {
+  margin: 0;
+  font-size: 0.82rem;
+  color: t.$mk-cta-bg;
+  flex-basis: 100%;
+}
+.briefGhost {
+  padding: 0.55rem 1rem;
+  border: 1px solid t.$mk-border-strong;
+  border-radius: 999px;
+  background: transparent;
+  color: t.$mk-text-strong;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.briefGhost:not(:disabled):hover {
+  border-color: t.$mk-accent;
+}
+.briefGhost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.briefSubmit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: t.$mk-accent-strong;
+  color: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.briefSubmit:not(:disabled):hover {
+  background: t.$mk-accent;
+}
+.briefSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.briefSubmitted {
+  padding: clamp(1.6rem, 5vw, 2.4rem);
+  border: 1px solid t.$mk-container-border-soft;
+  border-radius: 14px;
+  background: t.$mk-surface;
+  text-align: center;
+}
+.briefSubmittedCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: t.$mk-accent-strong;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+.briefSubmittedTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: t.$mk-text-strong;
+}
+.briefSubmittedNote {
+  margin: 0 auto;
+  max-width: 46ch;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: t.$mk-text-muted;
+
+  code {
+    font-family: $mono;
+    font-size: 0.85em;
+    color: t.$mk-text-strong;
+  }
+}
+
+/* ---------- Útjelző ---------- */
+.signpost {
+  margin: 0 0 clamp(3rem, 8vw, 5rem);
+  max-width: 60ch;
+  padding-top: 1.2rem;
+  border-top: 1px solid t.$mk-border;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: t.$mk-text-muted;
+}
