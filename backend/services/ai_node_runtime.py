@@ -98,7 +98,12 @@ CONDITION_EXTRACT_TOOL = {
     ),
     "input_schema": {
         "type": "object",
-        "required": ["satisfied", "missing"],
+        "required": [
+            "satisfied",
+            "missing",
+            "userHasOpenQuestion",
+            "userQuestionSummary",
+        ],
         "additionalProperties": False,
         "properties": {
             "satisfied": {
@@ -112,6 +117,21 @@ CONDITION_EXTRACT_TOOL = {
                 "description": (
                     "Még nem teljesült kondíciók ID listája "
                     "amelyek relevánsak lehetnek."
+                ),
+            },
+            "userHasOpenQuestion": {
+                "type": "boolean",
+                "description": (
+                    "True ha a felhasználó kérdést tett fel. "
+                    "A részletes szabályokat a system prompt question-detection "
+                    "blokkja tartalmazza."
+                ),
+            },
+            "userQuestionSummary": {
+                "type": ["string", "null"],
+                "description": (
+                    "Ha userHasOpenQuestion true: egy rövid mondat összefoglalója "
+                    "a kérdésről. Ha false: null."
                 ),
             },
         },
@@ -233,11 +253,24 @@ def _apply_step_tracking_meta(
         result["effectiveStepId"] = eff
         if entry and entry != eff:
             result["skippedFromStepId"] = entry
+        _ensure_question_flags_dict(result)
     elif isinstance(result, AssistantStreamBundle):
         result.meta["effectiveStepId"] = eff
         if entry and entry != eff:
             result.meta["skippedFromStepId"] = entry
+        _ensure_question_flags_dict(result.meta)
     return result
+
+
+def _ensure_question_flags_dict(target: dict) -> None:
+    """Biztosítja a question detection flag-ek jelenlétét a result/meta dict-ben.
+
+    Az early-return ágak (skip, preset-satisfied) nem futtatnak LLM-extractet,
+    ezért default False/None kerül beillesztésre. A fő ágban az értékek már
+    kitöltöttek — itt felülírás nem történik.
+    """
+    target.setdefault("userHasOpenQuestion", False)
+    target.setdefault("userQuestionSummary", None)
 
 
 def _build_node_candidates_block(candidate_nodes: list[StoryPage]) -> str:
@@ -523,6 +556,12 @@ def _run_step_extract_only(
     preset.update(auto_added)
     inject_added = _apply_matched_branch_inject_conditions(branches, preset, step)
     for cid in inject_added:
+        if cid not in start_set:
+            work_satisfied.append(cid)
+            start_set.add(cid)
+            newly.append(cid)
+
+    for cid in _auto_satisfy_after_reply_ids(step):
         if cid not in start_set:
             work_satisfied.append(cid)
             start_set.add(cid)
@@ -1121,7 +1160,9 @@ def _assistant_message_for_goto_end(
     story: dict | None = None,
 ) -> str:
     """Goto végoldal: fix end content, vagy rövid generate_reply (soha nyers ai_action)."""
-    end_content = resolve_end_page_content(story_pages, next_page_id)
+    end_content = resolve_end_page_content(
+        story_pages, next_page_id, order_context=order_context
+    )
     if end_content:
         return end_content
 
@@ -1166,6 +1207,251 @@ def _format_reply_rules_block(step: dict | None) -> str:
     return (
         "Válasz-szabályok (kötelező — a generate_reply assistantMessage betartandó):\n"
         f"{bullets}\n"
+    )
+
+
+def _format_tone_hint_block(active_node: dict | None) -> str:
+    """Node-szintű tone_hint → LLM system prompt blokk (üres ha nincs vagy hiányos)."""
+    if not isinstance(active_node, dict):
+        return ""
+    tone_hint = active_node.get("tone_hint")
+    if not isinstance(tone_hint, dict):
+        return ""
+    style = tone_hint.get("style")
+    note = tone_hint.get("note")
+    if not isinstance(style, str) or not style.strip():
+        return ""
+    if not isinstance(note, str) or not note.strip():
+        return ""
+    return (
+        "## Kommunikációs stílus\n"
+        f"Stílus: {style.strip()}\n"
+        f"Instrukció: {note.strip()}\n"
+    )
+
+
+def _format_question_detection_block(story: dict | None) -> str:
+    """meta.question_detection_hint → system_extract prompt blokk (üres ha nincs)."""
+    if not isinstance(story, dict):
+        return ""
+    meta = story.get("meta")
+    if not isinstance(meta, dict):
+        return ""
+    hint = meta.get("question_detection_hint")
+    if not isinstance(hint, dict):
+        return ""
+    true_if = hint.get("true_if") or []
+    false_if = hint.get("false_if") or []
+    uncertain = hint.get("uncertain", "false")
+    lines = ["## Kérdés-detekció (userHasOpenQuestion)"]
+    if isinstance(true_if, list) and true_if:
+        lines.append("True ha:")
+        lines.extend(f"- {item}" for item in true_if if isinstance(item, str) and item)
+    if isinstance(false_if, list) and false_if:
+        lines.append("False ha:")
+        lines.extend(f"- {item}" for item in false_if if isinstance(item, str) and item)
+    if isinstance(uncertain, str) and uncertain:
+        lines.append(f"Ha bizonytalan: {uncertain}")
+    lines.append(
+        "Ha userHasOpenQuestion=true, userQuestionSummary egy rövid mondat "
+        "összefoglaló legyen a kérdésről; ha false, akkor null."
+    )
+    return "\n".join(lines) + "\n"
+
+
+_QUESTION_INDICATOR_KEYWORDS: tuple[str, ...] = (
+    "miért", "hogyan", "mikor", "meddig", "mennyi", "mit", "mire",
+    "hol", "ki ", "kinek", "melyik", "milyen", "mi az", "mi a ",
+    "nem értem", "magyarázd", "magyarázz", "szeretném tudni",
+    "kíváncsi vagyok", "mit jelent", "lehet-e", "kell-e",
+    "muszáj-e", "kérdezem", "kérdésem van", "lenne egy kérdés",
+)
+
+
+def _message_might_contain_question(user_prompt: str) -> bool:
+    """Pre-filter: True ha az üzenet potenciálisan kérdést tartalmaz.
+
+    SZIGORÚAN biztonságos negatív szűrő — csak akkor ad False-t, ha sem
+    kérdőjel, sem ismert magyar kérdés-indikátor szó/kifejezés nincs az
+    üzenetben. A pre-filter szerepe a téves LLM-pozitívok kiszűrése; soha
+    nem szabad False-t adnia olyan üzenetre amiben tényleg van kérdés.
+    """
+    if not isinstance(user_prompt, str) or not user_prompt.strip():
+        return False
+    lower = user_prompt.lower()
+    if "?" in lower:
+        return True
+    return any(kw in lower for kw in _QUESTION_INDICATOR_KEYWORDS)
+
+
+def _format_question_block(
+    user_has_open_question: bool,
+    user_question_summary: str,
+) -> str:
+    """Reaktív kérdéskezelés → reply prompt blokk (üres ha nincs nyitott kérdés)."""
+    if not user_has_open_question:
+        return ""
+    summary_line = ""
+    if isinstance(user_question_summary, str) and user_question_summary.strip():
+        summary_line = (
+            f"A felhasználó kérdése: {user_question_summary.strip()}\n"
+        )
+    return (
+        "### Reaktív kérdéskezelés\n"
+        "A felhasználó kérdést tett fel. Először válaszolj röviden (1-2 mondat) "
+        "a kérdésre. Az üzenet VÉGÉN — egy mondatban — udvariasan ismételd meg "
+        "az aktuális adatkérést. Ne fordítsd meg a sorrendet. Ne adj 2 mondatnál "
+        "hosszabb választ a kérdésre.\n"
+        f"{summary_line}"
+    )
+
+
+def _extract_user_facing_context(node: dict | None) -> dict | None:
+    """Visszaadja a node `knowledge.user_facing_context` dict-jét, vagy None-t."""
+    if not isinstance(node, dict):
+        return None
+    knowledge = node.get("knowledge")
+    if not isinstance(knowledge, dict):
+        return None
+    ufc = knowledge.get("user_facing_context")
+    if isinstance(ufc, dict):
+        return ufc
+    return None
+
+
+def _format_single_user_facing_context(
+    node: dict,
+    *,
+    is_current: bool,
+) -> str:
+    """Egyetlen node UFC formázása kompakt prompt-szegmenssé.
+
+    Csak akkor ad vissza nem üres stringet, ha a node-nak van user_facing_context
+    blokkja. A formátum:
+        - Aktuális node: "Aktuális csomópont (id) — context, topics, fallback"
+        - Korábbi node: "Korábban érintett: id — context, topics, fallback"
+    """
+    ufc = _extract_user_facing_context(node)
+    if not ufc:
+        return ""
+    node_id = node.get("id", "") if isinstance(node.get("id"), str) else ""
+    header = (
+        f"#### Aktuális csomópont kontextusa ({node_id})"
+        if is_current
+        else f"#### Korábbi témakör kontextusa ({node_id})"
+    )
+    lines: list[str] = [header]
+
+    context_val = ufc.get("context")
+    if isinstance(context_val, str) and context_val.strip():
+        lines.append(f"Kontextus: {context_val.strip()}")
+
+    topics_raw = ufc.get("topics")
+    if isinstance(topics_raw, list):
+        topic_lines: list[str] = []
+        for topic in topics_raw:
+            if not isinstance(topic, dict):
+                continue
+            keys = topic.get("keys")
+            guidance = topic.get("guidance")
+            if not isinstance(guidance, str) or not guidance.strip():
+                continue
+            if isinstance(keys, list):
+                keys_clean = [k for k in keys if isinstance(k, str) and k.strip()]
+            else:
+                keys_clean = []
+            if keys_clean:
+                key_str = " / ".join(keys_clean)
+                topic_lines.append(f"- {key_str} → {guidance.strip()}")
+            else:
+                topic_lines.append(f"- {guidance.strip()}")
+        if topic_lines:
+            lines.append("Témák:")
+            lines.extend(topic_lines)
+
+    fallback_val = ufc.get("fallback")
+    if isinstance(fallback_val, str) and fallback_val.strip():
+        lines.append(f"Fallback: {fallback_val.strip()}")
+
+    return "\n".join(lines)
+
+
+def _format_user_facing_context_block(
+    *,
+    active_node: dict | None,
+    story_pages: dict | None,
+    session_id: str | None,
+    user_has_open_question: bool,
+    max_previous: int = 3,
+) -> str:
+    """Cross-node UFC blokk a reply prompthoz — csak nyitott kérdésnél nem üres.
+
+    Logika:
+      1. Aktuális node UFC-je (ha van) → primary blokk.
+      2. Korábbi látogatott node-ok UFC-i (session event log alapján,
+         legfeljebb `max_previous` darab) → secondary blokk.
+         Az aktuális node-ot kihagyjuk a korábbiak közül.
+      3. Ha sem aktuális, sem korábbi UFC nincs → üres string.
+    """
+    if not user_has_open_question:
+        return ""
+
+    sections: list[str] = []
+    active_id = (
+        active_node.get("id")
+        if isinstance(active_node, dict) and isinstance(active_node.get("id"), str)
+        else None
+    )
+
+    current_block = (
+        _format_single_user_facing_context(active_node, is_current=True)
+        if isinstance(active_node, dict)
+        else ""
+    )
+    if current_block:
+        sections.append(current_block)
+
+    if (
+        max_previous > 0
+        and isinstance(session_id, str)
+        and session_id.strip()
+        and isinstance(story_pages, dict)
+        and story_pages
+    ):
+        try:
+            from services.session_event_sink import read_visited_nodes
+
+            visited = read_visited_nodes(
+                session_id.strip(), max_items=max(max_previous * 4, max_previous)
+            )
+        except Exception:
+            visited = []
+
+        previous_blocks: list[str] = []
+        for node_id in reversed(visited):
+            if not isinstance(node_id, str) or not node_id.strip():
+                continue
+            nid = node_id.strip()
+            if active_id and nid == active_id:
+                continue
+            page = story_pages.get(nid) if isinstance(story_pages, dict) else None
+            if not isinstance(page, dict):
+                continue
+            block = _format_single_user_facing_context(page, is_current=False)
+            if not block:
+                continue
+            previous_blocks.append(block)
+            if len(previous_blocks) >= max_previous:
+                break
+        sections.extend(previous_blocks)
+
+    if not sections:
+        return ""
+
+    return (
+        "### Témaspecifikus háttér (válasz a felhasználói kérdéshez)\n"
+        + "\n\n".join(sections)
+        + "\n"
     )
 
 
@@ -1403,39 +1689,102 @@ def _matched_goto_branch_prerequisites(
     satisfied_set: set[str],
     active_node: dict | None,
 ) -> bool:
+    """
+    Auto-ack engedély elsősorban EXPLICIT matched `branches[*]` alapján:
+    ha van olyan `goto` vagy `next_step` branch, amelynek minden `if`
+    feltétele teljesül, True. Ilyenkor `next_step` esetén a closing step
+    child-chain ellenőrzése fut a célon.
+
+    Ha a step `branches` listája hiányzik vagy üres (tipikusan „pure
+    closing" step: csak nyugtázó üzenet + `default_next` cross-node
+    célra), a `default_next` cross-node célt elfogadjuk explicit
+    routing szándékként — ez tartja életben a battery-issue/step_safety,
+    payment-refund/step_4 stb. silent auto-ack mintát.
+
+    Ha a step deklarált `branches` listával rendelkezik, de egyik sem
+    matchel: alapértelmezésben False (ez akadályozza meg a túl korai
+    auto-ack-et olyan closing step-ekben, mint a product-defect step_5,
+    ahol több explicit ág van, de egyik sem teljesül). Kivétel: ha a
+    step `permit_goto_auto_ack: true` flaggel rendelkezik és a
+    `default_next` cross-node célra mutat, az explicit „opt-in" jel arra,
+    hogy a default fallback is silent routing path — pl. payment-refund/
+    step_4, ahol több specifikus end node mellett egy „általános"
+    process-refund a fallback. A `suppress_goto_auto_ack: true` flag
+    a `_permit_closing_auto_ack`-ben mindenképp felülírja.
+    """
     step_branches = current_step.get("branches") or []
     if not isinstance(step_branches, list):
-        return False
+        step_branches = []
 
+    has_declared_branches = any(
+        isinstance(b, dict)
+        and (
+            (isinstance(b.get("goto"), str) and b["goto"].strip())
+            or (isinstance(b.get("next_step"), str) and b["next_step"].strip())
+        )
+        for b in step_branches
+    )
+
+    matched_branch: dict | None = None
     for branch in step_branches:
         if not isinstance(branch, dict):
             continue
         goto = branch.get("goto")
-        if not isinstance(goto, str) or not goto.strip():
+        next_step = branch.get("next_step")
+        has_goto = isinstance(goto, str) and goto.strip()
+        has_next_step = isinstance(next_step, str) and next_step.strip()
+        if not (has_goto or has_next_step):
             continue
         conds = branch.get("if") or []
-        if conds and all(c in satisfied_set for c in conds):
+        if not conds:
+            continue
+        if all(c in satisfied_set for c in conds):
+            matched_branch = branch
+            break
+
+    if matched_branch is not None:
+        if isinstance(matched_branch.get("goto"), str) and matched_branch["goto"].strip():
             return True
-
-    if active_node is None:
-        return False
-
-    transition = _resolve_step_transition(
-        step_branches,
-        current_step.get("default_next"),
-        satisfied_set,
-        active_node,
-    )
-    if transition.next_page_id:
-        return True
-    if transition.next_step_id and _is_closing_step(current_step):
+        if active_node is None or not _is_closing_step(current_step):
+            return False
+        next_step_id = matched_branch.get("next_step")
+        if not isinstance(next_step_id, str) or not next_step_id.strip():
+            return False
         return _child_chain_reaches_terminal(
-            transition.next_step_id,
+            next_step_id.strip(),
             list(satisfied_set),
             active_node,
             story=None,
         )
-    return False
+
+    if active_node is None:
+        return False
+
+    default_next = current_step.get("default_next")
+    if not isinstance(default_next, str) or not default_next.strip():
+        return False
+
+    step_ids = _step_ids_in_node(active_node)
+    target = default_next.strip()
+    is_cross_node = bool(step_ids) and target not in step_ids
+
+    if has_declared_branches:
+        if not current_step.get("permit_goto_auto_ack", False):
+            return False
+        return is_cross_node
+
+    if is_cross_node:
+        return True
+
+    if not _is_closing_step(current_step):
+        return False
+
+    return _child_chain_reaches_terminal(
+        target,
+        list(satisfied_set),
+        active_node,
+        story=None,
+    )
 
 
 def _is_terminal_closing_step(step: dict) -> bool:
@@ -1453,7 +1802,14 @@ def _permit_closing_auto_ack(
     """
     Goto-lezáró ack (remedy_communicated, case_summary_confirmed) csak akkor,
     ha a step ténylegesen lezárható, vagy skip/lánc kontextusban vagyunk.
+
+    `suppress_goto_auto_ack: true` mindig elsőbbséget élvez: ha a step
+    explicit kéri a suppress-t, sem a `force_closing_permit`, sem az
+    `after_entry_skip`, sem a `permit_goto_auto_ack: true` nem engedheti
+    át az auto-ack-et.
     """
+    if current_step.get("suppress_goto_auto_ack", False):
+        return False
     if force_closing_permit:
         return True
     if after_entry_skip and _is_closing_step(current_step):
@@ -1478,8 +1834,6 @@ def _permit_closing_auto_ack(
         return False
     if current_step.get("permit_goto_auto_ack", False):
         return True
-    if current_step.get("suppress_goto_auto_ack", False):
-        return False
     return _is_terminal_closing_step(current_step)
 
 
@@ -1545,6 +1899,23 @@ def _auto_satisfy_on_matched_goto_branch(
             satisfied_set.add(cid)
             added.append(cid)
     return added
+
+
+def _auto_satisfy_after_reply_ids(step: dict) -> list[str]:
+    """Step internal_conditions közül azok ID-ja, amelyeken
+    `auto_satisfy_after_reply: true` szerepel.
+
+    Az engine ezt a listát hozzáadja a satisfied halmazokhoz az extract
+    fázis után, de a step_done kiszámítása előtt. Generikus mechanizmus:
+    sem node-, sem step-, sem condition-specifikus logikát nem tartalmaz.
+    """
+    out: list[str] = []
+    for c in step.get("internal_conditions") or []:
+        if isinstance(c, dict) and c.get("auto_satisfy_after_reply") is True:
+            cid = c.get("id")
+            if isinstance(cid, str) and cid:
+                out.append(cid)
+    return out
 
 
 def _should_advance_after_step_completion(
@@ -1620,16 +1991,36 @@ class _EntrySkipResolution:
     terminal_result: ProcessStepStreamResult | None = None
 
 
+_DONE_WHEN_SUFFIXES_TO_STRIP: tuple[str, ...] = (
+    "teljesül",
+    "are satisfied",
+    "is satisfied",
+)
+
+
 def _parse_done_when_condition_groups(done_when: str) -> list[list[str]]:
-    """done_when → AND-csoportok; egy csoporton belül OR alternatívák."""
+    """done_when → AND-csoportok; egy csoporton belül OR alternatívák.
+
+    Mindkét locale done_when format-ot támogatja:
+    * Hu: ``"<a> és <b> teljesül"`` (vagy `"<a> vagy <b>"`)
+    * En: ``"<a> and <b> are satisfied"`` (vagy `"<a> or <b>"`)
+    """
     if not done_when.strip():
         return []
     text = done_when.strip().lower()
-    text = text.replace("vagy", "|").replace("(", " ").replace(")", " ")
+    text = (
+        text
+        .replace("vagy", "|")
+        .replace(" or ", " | ")
+        .replace("(", " ")
+        .replace(")", " ")
+    )
     parts = re.split(r"\s+és\s+|\s+and\s+", text)
     groups: list[list[str]] = []
     for part in parts:
-        part = part.replace("teljesül", "").strip()
+        for suffix in _DONE_WHEN_SUFFIXES_TO_STRIP:
+            part = part.replace(suffix, "")
+        part = part.strip()
         if not part:
             continue
         if "|" in part:
@@ -1916,7 +2307,12 @@ def _build_goto_end_result(
     - ha a matched branch-en van `message`, azt küldjük el rövid bubble-ként;
     - különben üres assistantMessage (csak az end node fix szövege jelenik meg).
     """
-    end_content = (resolve_end_page_content(story_pages, next_page_id) or "").strip()
+    end_content = (
+        resolve_end_page_content(
+            story_pages, next_page_id, order_context=order_context
+        )
+        or ""
+    ).strip()
     if closing_step.get("silent_on_matched_goto", False):
         if isinstance(branch_message, str) and branch_message.strip():
             closing_ack = branch_message.strip()
@@ -2197,6 +2593,24 @@ def build_order_context_block(
         lines.append(f"- Rendelésben ígért tartozékok: {', '.join(ctx.accessories_in_order)}")
     if ctx.purchase_date:
         lines.append(f"- Vásárlás dátuma: {ctx.purchase_date}")
+    if ctx.payment_method:
+        lines.append(f"- Fizetési mód: {ctx.payment_method}")
+
+    if ctx.return_initiated_date:
+        lines.append(f"- Visszaküldés kezdeményezve: {ctx.return_initiated_date}")
+    if ctx.return_received_date:
+        lines.append(f"- Visszaküldés beérkezett a raktárba: {ctx.return_received_date}")
+    if ctx.original_complaint_type:
+        lines.append(f"- Eredeti panasz típusa: {ctx.original_complaint_type}")
+    if ctx.refund_initiated_date:
+        lines.append(f"- Visszatérítés elindítva: {ctx.refund_initiated_date}")
+    if ctx.refund_eta_date:
+        lines.append(f"- Visszatérítés várható dátuma: {ctx.refund_eta_date}")
+    if ctx.refund_amount is not None and ctx.refund_currency:
+        amount_text = f"{ctx.refund_amount:.2f}".rstrip("0").rstrip(".")
+        lines.append(f"- Visszatérítendő összeg: {amount_text} {ctx.refund_currency}")
+    if ctx.prior_case_id:
+        lines.append(f"- Korábbi ügyazonosító: {ctx.prior_case_id}")
 
     if image_provided:
         lines.append(image_line)
@@ -2460,12 +2874,14 @@ def _step_start_reply_prompts(
 
     opening = _assistant_opening_line(session_id, node_id, turn_count)
     skip_block = _format_skipped_steps_ack_block(skipped_steps_goals or [])
+    tone_hint_block = _format_tone_hint_block(active_node)
 
     system_prompt = (
         f"{opening} "
         f"Az aktív node: {node_id}. "
         f"A node szerepe és háttere (kötelező kontextus): {node_description}. "
         f"{skip_block}"
+        f"{tone_hint_block}"
         f"Jelenleg az első lépésen vagy. A lépés célja: {goal}. "
         "Utasítás számodra (ezt végezd el a beszélgetésben, ne idézd vissza szó szerint): "
         f"{ai_action} "
@@ -3336,6 +3752,8 @@ def _process_step_impl(
             "Ne adj meg más ID-t. "
         )
 
+    question_detection_block = _format_question_detection_block(story)
+
     system_extract = (
         f"Te egy AI asszisztens vagy egy döntési rendszerben. "
         f"Az aktív node: {node_id}. "
@@ -3348,6 +3766,7 @@ def _process_step_impl(
         "Csak az extract_conditions toolt hívd meg: "
         "azonosítsd mely belső kondíciók teljesülnek a felhasználó üzenete alapján. "
         f"{_EXTRACT_IMAGE_CONDITION_HINT}"
+        f"{question_detection_block}"
     )
 
     user_message = _compose_llm_user_message(
@@ -3373,6 +3792,14 @@ def _process_step_impl(
     )
 
     condition_result = _tool_input_from_response(extract_response, "extract_conditions")
+
+    user_has_open_question = bool(condition_result.get("userHasOpenQuestion", False))
+    raw_summary = condition_result.get("userQuestionSummary")
+    user_question_summary = raw_summary.strip() if isinstance(raw_summary, str) else ""
+    if user_has_open_question and not _message_might_contain_question(user_prompt):
+        user_has_open_question = False
+        user_question_summary = ""
+
     condition_result = _filter_extract_image_conditions(
         condition_result,
         current_step,
@@ -3431,6 +3858,12 @@ def _process_step_impl(
         if cid not in all_satisfied:
             all_satisfied.append(cid)
             new_satisfied.append(cid)
+    if not user_has_open_question:
+        for cid in _auto_satisfy_after_reply_ids(current_step):
+            if cid not in all_satisfied:
+                all_satisfied.append(cid)
+                new_satisfied.append(cid)
+                satisfied_set.add(cid)
     step_done = _step_completion_satisfied(
         node_id, step_id, current_step, satisfied_set
     )
@@ -3442,6 +3875,13 @@ def _process_step_impl(
         original_satisfied=original_satisfied,
         new_satisfied=new_satisfied,
     )
+
+    # Reaktív kérdéskezelés: ha az ügyfél kérdést tett fel ÉS a step amúgy
+    # lezárna + routolna, a routing felfüggesztve. A kondíció-állapot
+    # (satisfied, missing, newlySatisfied) változatlan; csak az átlépés
+    # késleltetett, hogy az AI először válaszoljon a kérdésre.
+    if user_has_open_question and advance_after_done and step_done:
+        advance_after_done = False
 
     transition = StepTransition()
     if advance_after_done:
@@ -3606,7 +4046,17 @@ def _process_step_impl(
         else ""
     )
     tone_instruction = _fallback_tone_instruction(_node_fallback_message(active_node))
+    tone_hint_block = _format_tone_hint_block(active_node)
     skip_ack_block = _format_skipped_steps_ack_block(skipped_steps_goals)
+    question_block = _format_question_block(
+        user_has_open_question, user_question_summary
+    )
+    user_facing_context_block = _format_user_facing_context_block(
+        active_node=active_node,
+        story_pages=story_pages,
+        session_id=session_id,
+        user_has_open_question=user_has_open_question,
+    )
     validation_rejection_block = _build_validation_rejection_block(
         condition_result.get("_validation_rejected"),
         active_node=active_node,
@@ -3624,10 +4074,13 @@ def _process_step_impl(
         f"Node leírása: {node_description}. "
         f"{tone_instruction}"
         f"{skip_ack_block}"
+        f"{tone_hint_block}"
         f"Jelenlegi lépés célja: {goal}. "
         f"{done_when_line}"
         f"{ai_action_line}"
         f"{reply_rules_block}"
+        f"{question_block}"
+        f"{user_facing_context_block}"
         f"{repetition_hint}"
         f"{_build_satisfied_do_not_reask_instruction(active_node)}"
         "A kondíció-felismerés és a lépés-routing már megtörtént (determinisztikus eredmény):\n"
@@ -3650,7 +4103,9 @@ def _process_step_impl(
     ):
         end_page_content_silent: str | None = None
         end_content_silent = resolve_end_page_content(
-            story_pages, transition.next_page_id
+            story_pages,
+            transition.next_page_id,
+            order_context=order_context,
         )
         if end_content_silent and end_content_silent.strip():
             end_page_content_silent = end_content_silent.strip()
@@ -3669,6 +4124,8 @@ def _process_step_impl(
             return AssistantStreamBundle(silent_meta, iter([""]))
         return silent_meta
 
+    question_summary_for_meta = user_question_summary or None
+
     if stream_assistant:
         meta = {
             "satisfied": all_satisfied,
@@ -3678,6 +4135,8 @@ def _process_step_impl(
             "nextStepId": effective_next_step_id if advance_after_done else None,
             "nextPageId": transition.next_page_id if advance_after_done else None,
             "assistantMessage": "",
+            "userHasOpenQuestion": user_has_open_question,
+            "userQuestionSummary": question_summary_for_meta,
         }
         return AssistantStreamBundle(
             meta,
@@ -3699,7 +4158,11 @@ def _process_step_impl(
     )
     end_page_content: str | None = None
     if advance_after_done and transition.next_page_id:
-        end_content = resolve_end_page_content(story_pages, transition.next_page_id)
+        end_content = resolve_end_page_content(
+            story_pages,
+            transition.next_page_id,
+            order_context=order_context,
+        )
         if end_content:
             end_page_content = end_content.strip()
 
@@ -3711,6 +4174,8 @@ def _process_step_impl(
         "nextStepId": effective_next_step_id if advance_after_done else None,
         "nextPageId": transition.next_page_id if advance_after_done else None,
         "assistantMessage": assistant_msg,
+        "userHasOpenQuestion": user_has_open_question,
+        "userQuestionSummary": question_summary_for_meta,
     }
     if end_page_content:
         result["endPageContent"] = end_page_content

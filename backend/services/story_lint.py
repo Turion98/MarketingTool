@@ -184,12 +184,27 @@ def validate_meta(story: dict, rep: Report) -> dict:
 # --------------------------------------------------------------------------- #
 
 
-def validate_order_context_mapping(meta: dict, rep: Report) -> tuple[set[str], set[str]]:
+def validate_order_context_mapping(
+    meta: dict,
+    rep: Report,
+    *,
+    extra_known_fields: Iterable[str] | None = None,
+) -> tuple[set[str], set[str]]:
     """Visszatér: (computed_condition_ids halmaz, derive-elt kondíció IDs halmaz).
 
     derive-elt kondíció IDs = field_rules.condition értékek
     + computed_condition_ids.values()
+
+    A `extra_known_fields` egy job-scope, domain-specifikus extended pool
+    (tipikusan a `DomainBlueprint.proposed_new_external_fields` field_name
+    listája). Ha egy `field_rules[i].field` (vagy `requires_field_*`
+    modifier) ebbe a poolba esik — DE nem a globális `KNOWN_OCM_FIELDS`-be
+    —, akkor a riport `note()` (info) szintű jelzést kap "domain-specific,
+    backend implementation pending" üzenettel; nem `warn()` és nem `err()`.
+    Ha a mező egyik pool-ban sincs → marad a `warn()` (mint korábban).
     """
+    extra_pool: frozenset[str] = frozenset(extra_known_fields or ())
+
     ocm = meta.get("order_context_mapping")
     derived_ids: set[str] = set()
     computed_ids: set[str] = set()
@@ -228,10 +243,16 @@ def validate_order_context_mapping(meta: dict, rep: Report) -> tuple[set[str], s
                 if not isinstance(f, str) or not f:
                     rep.err(f"field_rules[{i}].field hiányzik.")
                 elif f not in KNOWN_OCM_FIELDS:
-                    rep.warn(
-                        f"field_rules[{i}].field ismeretlen OrderContext mező: {f!r} "
-                        f"(ismertek: {sorted(KNOWN_OCM_FIELDS)})"
-                    )
+                    if f in extra_pool:
+                        rep.note(
+                            f"field_rules[{i}].field {f!r}: domain-specific extension "
+                            "(backend implementation pending)."
+                        )
+                    else:
+                        rep.warn(
+                            f"field_rules[{i}].field ismeretlen OrderContext mező: {f!r} "
+                            f"(ismertek: {sorted(KNOWN_OCM_FIELDS)})"
+                        )
                 if not isinstance(c, str) or not c:
                     rep.err(f"field_rules[{i}].condition hiányzik.")
                 else:
@@ -259,10 +280,26 @@ def validate_order_context_mapping(meta: dict, rep: Report) -> tuple[set[str], s
                         rep.err(f"field_rules[{i}].{opt} string kellene legyen.")
                 rf = rule.get("requires_field_not_null")
                 if isinstance(rf, str) and rf not in KNOWN_OCM_FIELDS:
-                    rep.warn(f"field_rules[{i}].requires_field_not_null ismeretlen mező: {rf!r}")
+                    if rf in extra_pool:
+                        rep.note(
+                            f"field_rules[{i}].requires_field_not_null {rf!r}: "
+                            "domain-specific extension (backend implementation pending)."
+                        )
+                    else:
+                        rep.warn(
+                            f"field_rules[{i}].requires_field_not_null ismeretlen mező: {rf!r}"
+                        )
                 lf = rule.get("requires_field_lt_today")
                 if isinstance(lf, str) and lf not in KNOWN_OCM_FIELDS:
-                    rep.warn(f"field_rules[{i}].requires_field_lt_today ismeretlen mező: {lf!r}")
+                    if lf in extra_pool:
+                        rep.note(
+                            f"field_rules[{i}].requires_field_lt_today {lf!r}: "
+                            "domain-specific extension (backend implementation pending)."
+                        )
+                    else:
+                        rep.warn(
+                            f"field_rules[{i}].requires_field_lt_today ismeretlen mező: {lf!r}"
+                        )
 
     cci = ocm.get("computed_condition_ids")
     if cci is not None:
@@ -472,12 +509,59 @@ def validate_conditions(
                         f"[{page_id}].conditions['{cid}'].validation_pattern_ref={ref!r} "
                         "nem hivatkozik létező meta string kulcsra."
                     )
+        # text_triggers (page-level conditions[]): array of short phrases.
+        # Lint-side cap (12) > AI-tool cap (8): we tolerate hand-crafted
+        # legacy stories that may include slightly larger trigger lists.
+        triggers = c.get("text_triggers")
+        if triggers is not None:
+            if not isinstance(triggers, list):
+                rep.err(
+                    f"[{page_id}].conditions['{cid}'].text_triggers nem lista."
+                )
+            elif not triggers:
+                rep.err(
+                    f"[{page_id}].conditions['{cid}'].text_triggers üres lista."
+                )
+            elif len(triggers) > 12:
+                rep.err(
+                    f"[{page_id}].conditions['{cid}'].text_triggers túl sok elem "
+                    f"({len(triggers)}, max 12)."
+                )
+            else:
+                for i, trig in enumerate(triggers):
+                    if not isinstance(trig, str) or not trig.strip():
+                        rep.err(
+                            f"[{page_id}].conditions['{cid}'].text_triggers[{i}] "
+                            "nem nem-üres string."
+                        )
+                    elif not (2 <= len(trig) <= 60):
+                        rep.err(
+                            f"[{page_id}].conditions['{cid}'].text_triggers[{i}] "
+                            f"hossza érvénytelen ({len(trig)}, elvárt 2-60)."
+                        )
         if "do_not_reask_if_satisfied" in c and not isinstance(
             c["do_not_reask_if_satisfied"], bool
         ):
             rep.err(
                 f"[{page_id}].conditions['{cid}'].do_not_reask_if_satisfied nem bool."
             )
+        if "auto_satisfy_after_reply" in c and not isinstance(
+            c["auto_satisfy_after_reply"], bool
+        ):
+            rep.err(
+                f"[{page_id}].conditions['{cid}'].auto_satisfy_after_reply nem bool."
+            )
+        if "do_not_reask_hint" in c:
+            hint = c["do_not_reask_hint"]
+            if not isinstance(hint, str) or not hint.strip():
+                rep.err(
+                    f"[{page_id}].conditions['{cid}'].do_not_reask_hint nem üres string kell."
+                )
+            elif len(hint) > 300:
+                rep.err(
+                    f"[{page_id}].conditions['{cid}'].do_not_reask_hint túl hosszú "
+                    f"(>{300} char)."
+                )
     return declared
 
 
@@ -601,6 +685,8 @@ def validate_steps(
     valid_page_ids: Iterable[str],
     rep: Report,
     routing_refs: dict[str, set[str]],
+    *,
+    strict_closing_bundle: bool = True,
 ) -> set[str]:
     steps = page.get("steps")
     if steps is None:
@@ -621,14 +707,64 @@ def validate_steps(
         if sid in step_ids:
             rep.err(f"[{page_id}].steps duplikált id: {sid!r}")
         step_ids.add(sid)
-        for k in ("goal", "ai_action", "done_when"):
+        for k in ("goal", "ai_action", "done_when", "fallback_reason", "extract_hint"):
             if k in s and not isinstance(s[k], str):
                 rep.err(f"[{page_id}].steps['{sid}'].{k} nem string.")
+        # extract_hint extra validáció: hossz + closing-step warning
+        eh = s.get("extract_hint")
+        if isinstance(eh, str):
+            if eh.strip() == "":
+                rep.err(
+                    f"[{page_id}].steps['{sid}'].extract_hint üres string "
+                    "(használj None-t, ha nincs hint)."
+                )
+            elif len(eh) > 800:
+                rep.err(
+                    f"[{page_id}].steps['{sid}'].extract_hint túl hosszú "
+                    f"({len(eh)} char, max 800)."
+                )
+            elif s.get("is_closing") is True:
+                rep.warn(
+                    f"[{page_id}].steps['{sid}'].extract_hint closing step-en — "
+                    "a runtime closing step-en nem futtatja az extract toolt, "
+                    "így a hint hatástalan."
+                )
         for k in ("is_closing", "is_terminal", "skippable", "silent_on_matched_goto",
                   "suppress_goto_auto_ack", "permit_goto_auto_ack",
                   "advance_requires_new_satisfaction", "chain_on_complete"):
             if k in s and not isinstance(s[k], bool):
                 rep.err(f"[{page_id}].steps['{sid}'].{k} nem bool.")
+        # Closing-step ground truth: ha `is_closing: true`, a runtime az alábbi
+        # bundle minden tagját elvárja a session helyes lezárásához. A schema
+        # if/then blokkja az AI-határon próbál kérni; a lint a backstop arra
+        # az esetre, ha bármilyen úton (manuális szerkesztés, régi story)
+        # closing step a bundle nélkül érkezne. Strict mode (default) → err;
+        # legacy mode (`strict_closing_bundle=False`) → warn (ahogy a v3
+        # production story-t kezeljük átmenetileg).
+        if s.get("is_closing") is True:
+            emit = rep.err if strict_closing_bundle else rep.warn
+            if s.get("is_terminal") is not True:
+                emit(
+                    f"[{page_id}].steps['{sid}']: is_closing=true, de "
+                    "is_terminal nem true (closing-bundle követelmény)."
+                )
+            if s.get("permit_goto_auto_ack") is not True:
+                emit(
+                    f"[{page_id}].steps['{sid}']: is_closing=true, de "
+                    "permit_goto_auto_ack nem true (closing-bundle követelmény)."
+                )
+            if s.get("silent_on_matched_goto") is not True:
+                emit(
+                    f"[{page_id}].steps['{sid}']: is_closing=true, de "
+                    "silent_on_matched_goto nem true (closing-bundle követelmény)."
+                )
+            fb = s.get("fallback_reason")
+            if not isinstance(fb, str) or not fb.strip():
+                emit(
+                    f"[{page_id}].steps['{sid}']: is_closing=true, de "
+                    "fallback_reason hiányzik vagy üres "
+                    "(closing-bundle követelmény)."
+                )
         internal = s.get("internal_conditions")
         if internal is not None:
             if not isinstance(internal, list):
@@ -661,6 +797,22 @@ def validate_steps(
                             rep.err(
                                 f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].do_not_reask_if_satisfied nem bool."
                             )
+                        if "auto_satisfy_after_reply" in ic and not isinstance(
+                            ic["auto_satisfy_after_reply"], bool
+                        ):
+                            rep.err(
+                                f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].auto_satisfy_after_reply nem bool."
+                            )
+                        if "do_not_reask_hint" in ic:
+                            hint = ic["do_not_reask_hint"]
+                            if not isinstance(hint, str) or not hint.strip():
+                                rep.err(
+                                    f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].do_not_reask_hint nem üres string kell."
+                                )
+                            elif len(hint) > 300:
+                                rep.err(
+                                    f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].do_not_reask_hint túl hosszú (>300 char)."
+                                )
                         vref = ic.get("validation_pattern_ref")
                         if vref is not None:
                             if not isinstance(vref, str) or not vref.strip():
@@ -671,6 +823,33 @@ def validate_steps(
                                 routing_refs[cid].add(
                                     f"{page_id}.step.{sid}.internal['{cid}'].vref={vref}"
                                 )
+                        triggers = ic.get("text_triggers")
+                        if triggers is not None:
+                            if not isinstance(triggers, list):
+                                rep.err(
+                                    f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].text_triggers nem lista."
+                                )
+                            elif not triggers:
+                                rep.err(
+                                    f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].text_triggers üres lista."
+                                )
+                            elif len(triggers) > 12:
+                                rep.err(
+                                    f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].text_triggers "
+                                    f"túl sok elem ({len(triggers)}, max 12)."
+                                )
+                            else:
+                                for ti, trig in enumerate(triggers):
+                                    if not isinstance(trig, str) or not trig.strip():
+                                        rep.err(
+                                            f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].text_triggers[{ti}] "
+                                            "nem nem-üres string."
+                                        )
+                                    elif not (2 <= len(trig) <= 60):
+                                        rep.err(
+                                            f"[{page_id}].steps['{sid}'].internal_conditions['{cid}'].text_triggers[{ti}] "
+                                            f"hossza érvénytelen ({len(trig)}, elvárt 2-60)."
+                                        )
                     else:
                         rep.err(
                             f"[{page_id}].steps['{sid}'].internal_conditions: ismeretlen elem típus {type(ic).__name__}"
@@ -687,6 +866,35 @@ def validate_steps(
                             "nem deklarált sehol (sem node, sem derive, sem implication)."
                         )
                     routing_refs[cid].add(f"{page_id}.step.{sid}.internal")
+        reply_rules = s.get("reply_rules")
+        if reply_rules is not None:
+            if not isinstance(reply_rules, list):
+                rep.err(f"[{page_id}].steps['{sid}'].reply_rules nem lista.")
+            elif not reply_rules:
+                rep.err(f"[{page_id}].steps['{sid}'].reply_rules üres lista.")
+            elif len(reply_rules) > 10:
+                rep.err(
+                    f"[{page_id}].steps['{sid}'].reply_rules: túl sok elem "
+                    f"({len(reply_rules)}, max 10). A runtime LLM-prompt nem bír többet."
+                )
+            else:
+                for ri, rr in enumerate(reply_rules):
+                    if not isinstance(rr, str) or not rr.strip():
+                        rep.err(
+                            f"[{page_id}].steps['{sid}'].reply_rules[{ri}]: "
+                            "nem üres string kell."
+                        )
+                    elif len(rr) < 8:
+                        rep.err(
+                            f"[{page_id}].steps['{sid}'].reply_rules[{ri}]: "
+                            f"túl rövid ({len(rr)} char, min 8). "
+                            "A reply_rules tartalmi utasítás, nem kulcsszó."
+                        )
+                    elif len(rr) > 240:
+                        rep.err(
+                            f"[{page_id}].steps['{sid}'].reply_rules[{ri}]: "
+                            f"túl hosszú ({len(rr)} char, max 240)."
+                        )
         for img_key in ("image_conditions",):
             v = s.get(img_key)
             if v is not None and not isinstance(v, list):
@@ -805,6 +1013,8 @@ def validate_page(
     page_targets: dict[str, set[str]],
     routing_refs: dict[str, set[str]],
     declared_conds_global: set[str],
+    *,
+    strict_closing_bundle: bool = True,
 ) -> None:
     if not isinstance(page, dict):
         rep.err(f"pages['{page_id}'] nem dict.")
@@ -843,7 +1053,8 @@ def validate_page(
 
     targets = validate_routing(page_id, page, valid_cond_ids, valid_page_ids, rep, routing_refs)
     step_targets = validate_steps(
-        page_id, page, valid_cond_ids, valid_page_ids, rep, routing_refs
+        page_id, page, valid_cond_ids, valid_page_ids, rep, routing_refs,
+        strict_closing_bundle=strict_closing_bundle,
     )
     validate_condition_implications(page_id, page, valid_cond_ids, rep, routing_refs)
     validate_session_facts_whitelist(page_id, page, valid_cond_ids, rep, routing_refs)
@@ -919,7 +1130,12 @@ def validate_condition_usage(
 # --------------------------------------------------------------------------- #
 
 
-def lint_full_story(story: dict) -> Report:
+def lint_full_story(
+    story: dict,
+    *,
+    extra_known_external_fields: Iterable[str] | None = None,
+    strict_closing_bundle: bool = True,
+) -> Report:
     """Teljes story lint — ugyanazokat az ellenőrzéseket futtatja, mint a CLI.
 
     Visszatér: `Report` (errors / warnings / info gyűjtve). A hívó dönt arról,
@@ -927,6 +1143,14 @@ def lint_full_story(story: dict) -> Report:
 
     A top-level `schemaVersion`, `storyId`, `locale` validálását is itt
     végezzük (a CLI eddig külön nyomtatott infót, de a Report ezt nem érintette).
+
+    A `extra_known_external_fields` opcionális, job-scope, domain-specifikus
+    extended pool — tipikusan a `DomainBlueprint.proposed_new_external_fields`
+    field_name listája. Az `meta.order_context_mapping.field_rules` ellenőrzése
+    ezt a poolt rétegezi a globális `KNOWN_OCM_FIELDS` fölé: ha egy field a
+    domain-specifikus pool-ban van, a riport `note()` (info) szintű jelzést
+    kap "domain-specific, backend implementation pending" üzenettel — nem
+    `warn()` és nem `err()`.
     """
     rep = Report()
 
@@ -944,7 +1168,9 @@ def lint_full_story(story: dict) -> Report:
         return rep
 
     meta = validate_meta(story, rep)
-    _computed_ids, derived_cond_ids = validate_order_context_mapping(meta, rep)
+    _computed_ids, derived_cond_ids = validate_order_context_mapping(
+        meta, rep, extra_known_fields=extra_known_external_fields
+    )
 
     valid_page_ids = set(pages.keys())
     page_targets: dict[str, set[str]] = {}
@@ -962,6 +1188,7 @@ def lint_full_story(story: dict) -> Report:
         validate_page(
             pid, page, meta, valid_page_ids, valid_global_cond_ids,
             rep, page_targets, routing_refs, declared_conds_global,
+            strict_closing_bundle=strict_closing_bundle,
         )
 
     validate_graph(meta, pages, page_targets, rep)
@@ -978,6 +1205,7 @@ def lint_single_node(
     meta: dict,
     global_condition_pool: Iterable[str],
     known_page_ids: Iterable[str] | None = None,
+    strict_closing_bundle: bool = True,
 ) -> Report:
     """Egy frissen generált AI-node strukturális lint-je (Phase 2 retry loop).
 
@@ -1037,6 +1265,7 @@ def lint_single_node(
         page_targets,
         routing_refs,
         declared_conds_global,
+        strict_closing_bundle=strict_closing_bundle,
     )
 
     return rep

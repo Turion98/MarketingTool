@@ -68,6 +68,10 @@ def test_first_step_entry_uses_process_step_not_step_start_reply(client: TestCli
 def _tool_block(name: str, data: dict):
     from types import SimpleNamespace
 
+    if name == "extract_conditions":
+        data = dict(data)
+        data.setdefault("userHasOpenQuestion", False)
+        data.setdefault("userQuestionSummary", None)
     return SimpleNamespace(type="tool_use", name=name, input=data)
 
 
@@ -115,7 +119,7 @@ def test_first_step_delivered_not_received_advances_to_step_3a_mocked() -> None:
         out = air.process_step(
             (
                 "A tracking szerint kézbesítve van, de nem kaptam meg a csomagot. "
-                "Rendelési szám: ORD-DEL-002."
+                "Rendelési szám: ORD-CUST-003."
             ),
             node,
             step_1,
@@ -141,7 +145,7 @@ def test_complaint_intake_routes_to_battery_single_turn_handoff(
     first_step = battery["steps"][0]
     full_prompt = (
         "Nagyon lassan tölt, még gyors töltővel is 4 óra kell teli töltéshez. "
-        "Rendelési szám: ORD-BAT-003."
+        "Rendelési szám: ORD-CUST-002."
     )
     intake_handoff_msg = "Átirányítalak az akkumulátor csapathoz."
 

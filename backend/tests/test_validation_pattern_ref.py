@@ -29,6 +29,10 @@ def _load_story() -> dict:
 
 
 def _tool_block(name: str, data: dict):
+    if name == "extract_conditions":
+        data = dict(data)
+        data.setdefault("userHasOpenQuestion", False)
+        data.setdefault("userQuestionSummary", None)
     return SimpleNamespace(type="tool_use", name=name, input=data)
 
 
@@ -66,7 +70,7 @@ def test_filter_satisfied_valid_pattern_keeps_condition() -> None:
         {"satisfied": ["has_order_id"], "missing": []},
         defs,
         story,
-        "Rendelési szám: ORD-DEL-001.",
+        "Rendelési szám: ORD-CUST-001.",
     )
     assert result["satisfied"] == ["has_order_id"]
     assert result["missing"] == []
@@ -171,7 +175,7 @@ def test_process_step_valid_order_id_keeps_has_order_id() -> None:
         side_effect=[extract_resp, reply_resp],
     ):
         out = air.process_step(
-            "A tracking szerint kézbesítve, de nem kaptam meg. Rendelési szám: ORD-DEL-001.",
+            "A tracking szerint kézbesítve, de nem kaptam meg. Rendelési szám: ORD-CUST-001.",
             node,
             step_1,
             [],
@@ -341,7 +345,7 @@ def test_filter_keeps_valid_order_id_across_node_steps() -> None:
         active_node=node,
         current_step=step_4,
         story=story,
-        user_prompt="Rendelési szám: ORD-DEL-001.",
+        user_prompt="Rendelési szám: ORD-CUST-001.",
     )
     assert filtered["satisfied"] == ["has_order_id"]
     assert filtered["missing"] == []
@@ -381,7 +385,7 @@ def test_filter_no_rejection_does_not_add_underscore_key() -> None:
         active_node=node,
         current_step=step_1,
         story=story,
-        user_prompt="Rendelésszám: ORD-DEL-001.",
+        user_prompt="Rendelésszám: ORD-CUST-001.",
     )
     assert "_validation_rejected" not in filtered
 
@@ -499,7 +503,7 @@ def test_process_step_valid_order_id_no_rejection_block_in_reply_system_prompt()
         side_effect=[extract_resp, reply_resp],
     ) as mock_create:
         air.process_step(
-            "Rendelésszám: ORD-DEL-001.",
+            "Rendelésszám: ORD-CUST-001.",
             node,
             step_1,
             [],
@@ -591,7 +595,7 @@ def test_extract_conditions_valid_order_id_keeps_has_order_id() -> None:
         air.client.messages, "create", side_effect=[extract_resp]
     ):
         out = air.extract_conditions(
-            user_prompt="A csomagom elveszett. Rendelési szám: ORD-DEL-001.",
+            user_prompt="A csomagom elveszett. Rendelési szám: ORD-CUST-001.",
             active_node=intake,
             already_satisfied=[],
             generate_reply=False,

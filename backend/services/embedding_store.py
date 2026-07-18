@@ -4,20 +4,10 @@ import json
 import os
 from pathlib import Path
 
-import anthropic
 import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
-
-_api_key = os.getenv("ANTHROPIC_API_KEY")
-if not _api_key:
-    raise RuntimeError(
-        "ANTHROPIC_API_KEY hiányzik a környezeti változókból. "
-        "Add hozzá a backend/.env fájlhoz."
-    )
-
-client = anthropic.Anthropic(api_key=_api_key)
 
 EMBEDDING_MODEL = "voyage-3"
 EMBEDDINGS_FILE = Path(__file__).parent.parent / "data" / "node_embeddings.json"
@@ -51,13 +41,8 @@ def preload_embeddings() -> None:
 
 def _embed_text(text: str) -> list[float]:
     """Egyetlen szöveg embedding-je Voyage AI-on keresztül."""
-    response = client.beta.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1,
-        messages=[{"role": "user", "content": text}],
-    )
-    # Voyage AI embedding hívás az Anthropic kliensen keresztül
     import voyageai
+
     vo = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
     result = vo.embed([text], model=EMBEDDING_MODEL)
     return result.embeddings[0]
