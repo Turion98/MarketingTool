@@ -3,12 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import {
-  MARKETING_NAV_INDUSTRIES,
-  MARKETING_NAV_PRODUCT,
-  MARKETING_NAV_USE_CASES,
-} from "@/config/marketingPages";
+import { useCallback, useEffect, useState } from "react";
+import { MARKETING_NAV_LINKS } from "@/config/marketingPages";
 import type { PresentLang } from "@/app/present/presentDeck.types";
 import {
   notifyPresentLangChanged,
@@ -18,37 +14,10 @@ import {
 } from "@/app/present/presentLangSync";
 import s from "./MarketingNav.module.scss";
 
-type DropdownId = "product" | "industries" | "useCases" | null;
-
-function useClickOutside(
-  ref: RefObject<HTMLElement | null>,
-  onOutside: () => void,
-  active: boolean
-) {
-  useEffect(() => {
-    if (!active) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onOutside();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [active, onOutside, ref]);
-}
-
 export default function MarketingNav() {
   const pathname = usePathname();
-  const [openDropdown, setOpenDropdown] = useState<DropdownId>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [lang, setLang] = useState<PresentLang>("hu");
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  const closeAll = useCallback(() => {
-    setOpenDropdown(null);
-  }, []);
-
-  useClickOutside(wrapRef, closeAll, openDropdown !== null);
 
   useEffect(() => {
     const saved = readPresentLangFromStorage();
@@ -67,7 +36,6 @@ export default function MarketingNav() {
 
   useEffect(() => {
     setMobileOpen(false);
-    setOpenDropdown(null);
   }, [pathname]);
 
   const setLangPersist = useCallback((next: PresentLang) => {
@@ -76,16 +44,15 @@ export default function MarketingNav() {
     notifyPresentLangChanged(next);
   }, []);
 
-  const toggleDropdown = (id: Exclude<DropdownId, null>) => {
-    setOpenDropdown((cur) => (cur === id ? null : id));
-  };
+  const topLinkClass = (href: string) =>
+    pathname === href ? `${s.topLink} ${s.topLinkActive}` : s.topLink;
 
-  const dropdownItemClass = (href: string) =>
-    pathname === href ? `${s.dropdownLink} ${s.dropdownLinkActive}` : s.dropdownLink;
+  const mobileLinkClass = (href: string) =>
+    pathname === href ? `${s.mobileLink} ${s.mobileLinkActive}` : s.mobileLink;
 
   return (
     <header className={s.header}>
-      <div className={s.inner} ref={wrapRef}>
+      <div className={s.inner}>
         <Link href="/present" className={s.logo} aria-label="Questell present">
           <Image
             src="/assets/my_logo_line.png"
@@ -98,90 +65,15 @@ export default function MarketingNav() {
         </Link>
 
         <nav className={s.navDesktop} aria-label="Primary">
-          <div className={s.dropdownWrap}>
-            <button
-              type="button"
-              className={s.dropdownTrigger}
-              aria-expanded={openDropdown === "product"}
-              aria-haspopup="true"
-              onClick={() => toggleDropdown("product")}
+          {MARKETING_NAV_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={topLinkClass(item.href)}
             >
-              Product <span className={s.chevron}>▾</span>
-            </button>
-            {openDropdown === "product" ? (
-              <div className={s.dropdownPanel} role="menu">
-                {MARKETING_NAV_PRODUCT.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={dropdownItemClass(item.href)}
-                    role="menuitem"
-                    onClick={closeAll}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className={s.dropdownWrap}>
-            <button
-              type="button"
-              className={s.dropdownTrigger}
-              aria-expanded={openDropdown === "industries"}
-              aria-haspopup="true"
-              onClick={() => toggleDropdown("industries")}
-            >
-              Industries <span className={s.chevron}>▾</span>
-            </button>
-            {openDropdown === "industries" ? (
-              <div className={s.dropdownPanel} role="menu">
-                {MARKETING_NAV_INDUSTRIES.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={dropdownItemClass(item.href)}
-                    role="menuitem"
-                    onClick={closeAll}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className={s.dropdownWrap}>
-            <button
-              type="button"
-              className={s.dropdownTrigger}
-              aria-expanded={openDropdown === "useCases"}
-              aria-haspopup="true"
-              onClick={() => toggleDropdown("useCases")}
-            >
-              Use cases <span className={s.chevron}>▾</span>
-            </button>
-            {openDropdown === "useCases" ? (
-              <div className={s.dropdownPanel} role="menu">
-                {MARKETING_NAV_USE_CASES.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={dropdownItemClass(item.href)}
-                    role="menuitem"
-                    onClick={closeAll}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <Link href="/pricing" className={s.topLink}>
-            Pricing
-          </Link>
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div className={s.actions}>
@@ -255,40 +147,16 @@ export default function MarketingNav() {
 
       {mobileOpen ? (
         <div id="marketing-nav-mobile" className={s.mobilePanel}>
-          <div>
-            <p className={s.mobileGroupTitle}>Product</p>
-            <div className={s.mobileLinks}>
-              {MARKETING_NAV_PRODUCT.map((item) => (
-                <Link key={item.href} href={item.href} className={s.mobileLink}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className={s.mobileGroupTitle}>Industries</p>
-            <div className={s.mobileLinks}>
-              {MARKETING_NAV_INDUSTRIES.map((item) => (
-                <Link key={item.href} href={item.href} className={s.mobileLink}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className={s.mobileGroupTitle}>Use cases</p>
-            <div className={s.mobileLinks}>
-              {MARKETING_NAV_USE_CASES.map((item) => (
-                <Link key={item.href} href={item.href} className={s.mobileLink}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
           <div className={s.mobileLinks}>
-            <Link href="/pricing" className={s.mobileLink}>
-              Pricing
-            </Link>
+            {MARKETING_NAV_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={mobileLinkClass(item.href)}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
           <div className={s.mobileActions}>
             <Link href="/login" className={s.ghost}>

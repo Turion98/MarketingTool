@@ -48,20 +48,6 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
     ctaLabel: "View demo flows",
     ctaHref: "/demos",
   },
-  solutions: {
-    slug: "solutions",
-    title: "Solutions",
-    description:
-      "Choose a use case to explore how Questell works in real scenarios.",
-    category: "product",
-    template: "marketing",
-    heroEyebrow: "Product",
-    heroTitle: "Solutions",
-    heroSubtitle: "Routing hub for use-case pages.",
-    bullets: ["Product finder", "Campaign flows", "Onboarding flows"],
-    ctaLabel: "See demos",
-    ctaHref: "/demos",
-  },
   integrations: {
     slug: "integrations",
     title: "Integrations",
@@ -146,8 +132,8 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
       "Placeholder — team",
       "Placeholder — careers link later",
     ],
-    ctaLabel: "Pricing",
-    ctaHref: "/pricing",
+    ctaLabel: "Try the live demo",
+    ctaHref: "/test-chat",
   },
   resources: {
     slug: "resources",
@@ -181,36 +167,6 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
     ctaLabel: "Request your first flow",
     ctaHref: "/about",
   },
-  ecommerce: {
-    slug: "ecommerce",
-    title: "E-commerce",
-    description:
-      "A shopper alone with your catalog is not a browsing problem. It is a selling problem. Questell puts decision logic where your best salesperson would stand.",
-    category: "industry",
-    template: "industry",
-    heroEyebrow: "Industries",
-    heroTitle: "E-commerce",
-    heroSubtitle:
-      "Questell is the closing layer between what shoppers need and what the catalog shows—before they leave.",
-    bullets: ["Catalog responds", "Expertise on-page", "Intent to structure"],
-    ctaLabel: "Product finder",
-    ctaHref: "/product-finder",
-  },
-  saas: {
-    slug: "saas",
-    title: "SaaS",
-    description:
-      "Most SaaS churn does not start at cancellation. It starts at the first wrong turn inside the product. Questell builds the decision layer that keeps users on the right path from the beginning.",
-    category: "industry",
-    template: "industry",
-    heroEyebrow: "Industries",
-    heroTitle: "SaaS",
-    heroSubtitle:
-      "Decision guidance inside the product—so the right path is clear before the wrong one becomes a habit.",
-    bullets: ["Context before default", "Plan fit early", "Churn signals in paths"],
-    ctaLabel: "Request your first flow",
-    ctaHref: "/about",
-  },
   "product-finder": {
     slug: "product-finder",
     title: "Product finder",
@@ -226,45 +182,7 @@ export const MARKETING_PAGES: Record<string, MarketingPageConfig> = {
       "Narrow the decision space with every step",
       "Embed on product, campaign, or collection pages",
     ],
-    ctaLabel: "E-commerce",
-    ctaHref: "/ecommerce",
-  },
-  "campaign-flows": {
-    slug: "campaign-flows",
-    title: "Campaign flows",
-    description:
-      "A decision flow is not a quiz you attach to a campaign. It is the campaign — the moment a brand stops broadcasting and starts responding.",
-    category: "use-case",
-    template: "use-case",
-    heroEyebrow: "Use cases",
-    heroTitle: "Campaign flows",
-    heroSubtitle:
-      "Stateful campaign experiences: read signals in combination, narrow paths in the moment, and deliver outcomes that feel like the brand was paying attention.",
-    bullets: [
-      "Decision-level personalisation — the path changes, not just the message",
-      "Agency-ready — embeddable, measurable, brand-safe, reusable logic",
-      "Same architecture as product finders and onboarding — applied to campaigns",
-    ],
-    ctaLabel: "Build a campaign flow",
-    ctaHref: "/about",
-  },
-  "onboarding-flows": {
-    slug: "onboarding-flows",
-    title: "Onboarding flows",
-    description:
-      "Interpret combined answers, not isolated clicks: stateful flows where paths narrow as context accumulates — questionnaire scale with decision-system outcomes.",
-    category: "use-case",
-    template: "use-case",
-    heroEyebrow: "Use cases",
-    heroTitle: "Onboarding flows",
-    heroSubtitle:
-      "Questell is stateful: each step changes what the next question means; the outcome reflects the full pattern, not the last response.",
-    bullets: [
-      "Combination logic — not quiz branching on single answers",
-      "One content set, many paths; insight from decision patterns",
-      "Business case: relevance, scalable architecture, trust through attention",
-    ],
-    ctaLabel: "About Questell",
+    ctaLabel: "Build your own chatbot",
     ctaHref: "/about",
   },
 };
@@ -293,22 +211,14 @@ export function marketingPageMetadata(slug: string): Metadata {
 export const MARKETING_PLACEHOLDER_PROBLEM = placeholderProblem;
 export const MARKETING_PLACEHOLDER_EXPLAINS = placeholderExplains;
 
-/** Nav links — hrefs must match existing routes. */
-export const MARKETING_NAV_PRODUCT = [
+/**
+ * Top navigation links — flat one-row list, no dropdowns.
+ * Order: Features · Integrations · Agencies · Product finder.
+ * Pricing is intentionally NOT listed: the page is hidden from the public nav.
+ */
+export const MARKETING_NAV_LINKS = [
   { label: "Features", href: "/features" },
-  { label: "Solutions", href: "/solutions" },
   { label: "Integrations", href: "/integrations" },
-] as const;
-
-export const MARKETING_NAV_INDUSTRIES = [
   { label: "Agencies", href: "/agencies" },
-  { label: "E-commerce", href: "/ecommerce" },
-  { label: "SaaS", href: "/saas" },
-] as const;
-
-/** Same four use cases as `/solutions` hub cards — order must match. */
-export const MARKETING_NAV_USE_CASES = [
   { label: "Product finder", href: "/product-finder" },
-  { label: "Campaign flows", href: "/campaign-flows" },
-  { label: "Onboarding flows", href: "/onboarding-flows" },
 ] as const;

@@ -33,9 +33,6 @@ function AdventuresHeaderBar() {
     <div className={styles.headerBar}>
       <h1>Adventures</h1>
       <div className={styles.headerActions}>
-        <button type="button" onClick={() => router.push("/landing/space")}>
-          Atlasz
-        </button>
         <button type="button" onClick={() => router.push("/")}>
           Vissza
         </button>

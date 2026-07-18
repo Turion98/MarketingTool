@@ -239,10 +239,6 @@ export default function HomeEntry() {
                 {sidePanelOpen ? "Panel bezárása" : "Panel megnyitása"}
               </button>
             </section>
-
-            <p className={s.footer}>
-              <Link href="/landing">Közvetlenül a demó / játék indítóhoz</Link>
-            </p>
             </div>
           </div>
         </div>
