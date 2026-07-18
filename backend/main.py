@@ -14,6 +14,7 @@ from routers.analytics import router as analytics_router
 from routers.ai_node_routes import router as ai_node_router
 from routers.media import router as media_router
 from routers.embed_access import router as embed_access_router
+from routers.onboarding_brief_routes import router as onboarding_brief_router
 from routers.reports import router as reports_router
 from routers.runtime import router as runtime_router
 from services.reports import start_report_scheduler
@@ -58,6 +59,7 @@ app.include_router(analytics_router)
 app.include_router(reports_router)
 app.include_router(embed_access_router, prefix="/api")
 app.include_router(ai_node_router, prefix="/api")
+app.include_router(onboarding_brief_router, prefix="/api")
 
 if os.path.isdir("assets"):
     app.mount("/assets", StaticFiles(directory="assets"), name="assets")
