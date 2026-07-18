@@ -11,3 +11,13 @@ backend/data/analytics/
 
 # Onboarding pipeline run artifacts (blueprints, etc. — generated, run-specific)
 backend/data/onboarding/
+
+# Runtime ticket / session event output (JSONL written by the ticket sinks)
+backend/data/tickets/
+backend/data/session_events/
+
+# Local working notes, not part of the codebase
+docs/portfolio_evidence.md
+
+# Dev screenshots
+*-dev-screenshot.png
