@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.storage.OnboardingStorage`.
+"""Pytest cases for `support_engine.services.onboarding.storage.OnboardingStorage`.
 
 Lefedett területek:
 
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.contracts import (
     DomainBlueprint,
     NodeCandidate,
     NodeGenerationAttempt,
@@ -37,7 +37,7 @@ from services.onboarding.contracts import (
     SemanticAuditResult,
     StructuralLintResult,
 )
-from services.onboarding.storage import (
+from support_engine.services.onboarding.storage import (
     JobNotFound,
     OnboardingStorage,
     StorageError,
@@ -138,7 +138,7 @@ def test_foreign_keys_are_enabled(storage: OnboardingStorage):
 
 def test_schema_version_recorded(storage: OnboardingStorage):
     """Friss DB-ben az `_CURRENT_SCHEMA_VERSION`-t kell tükrözze (v2)."""
-    from services.onboarding.storage import _CURRENT_SCHEMA_VERSION
+    from support_engine.services.onboarding.storage import _CURRENT_SCHEMA_VERSION
 
     conn = storage._connect()
     try:
@@ -503,7 +503,7 @@ def test_log_event_for_missing_job_raises(storage: OnboardingStorage):
 
 def _sample_support_brief():
     """Minimális, érvényes `SupportChatbotBrief` v2 tesztekhez."""
-    from services.onboarding.brief_contracts import (
+    from support_engine.services.onboarding.brief_contracts import (
         Card1CompanyBasics,
         Card2Operations,
         Card2aReturns,
@@ -553,7 +553,7 @@ def _sample_support_brief():
 
 
 def _sample_phase0_result(brief_id: str = "brief-xyz"):
-    from services.onboarding.brief_contracts import BriefExpansionResult
+    from support_engine.services.onboarding.brief_contracts import BriefExpansionResult
 
     return BriefExpansionResult(
         research_text="# Storage Test Vendor\n\n" + ("Lorem ipsum dolor. " * 30),

@@ -27,14 +27,14 @@ def _load_story() -> dict:
 
 
 def test_resolve_step_routing_no_steps():
-    from services.story_runtime import resolve_step_routing
+    from decision_engine.services.story_runtime import resolve_step_routing
 
     out = resolve_step_routing({"id": "x"}, "anything", [])
     assert out == {"nextStepId": None, "nodeRoutingReady": True}
 
 
 def test_resolve_step_routing_last_step_triggers_node_routing():
-    from services.story_runtime import resolve_step_routing
+    from decision_engine.services.story_runtime import resolve_step_routing
 
     node = {"steps": [{"id": "a"}, {"id": "b"}]}
     out = resolve_step_routing(node, "b", [])
@@ -42,7 +42,7 @@ def test_resolve_step_routing_last_step_triggers_node_routing():
 
 
 def test_resolve_step_routing_middle_step_goes_next():
-    from services.story_runtime import resolve_step_routing
+    from decision_engine.services.story_runtime import resolve_step_routing
 
     node = {
         "steps": [
@@ -56,7 +56,7 @@ def test_resolve_step_routing_middle_step_goes_next():
 
 
 def test_resolve_step_routing_from_real_story_delivery_issue():
-    from services.story_runtime import resolve_step_routing
+    from decision_engine.services.story_runtime import resolve_step_routing
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -119,7 +119,7 @@ def _mock_llm_create_side_effect(
 
 
 def test_extract_conditions_empty_conditions_skips_extract_uses_fallback_tone_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     reply_resp = SimpleNamespace(
         content=[
@@ -165,7 +165,7 @@ def test_off_topic_node_routing_and_conditions():
 
 
 def test_extract_conditions_filters_missing_already_satisfied_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -202,7 +202,7 @@ def test_extract_conditions_filters_missing_already_satisfied_mocked():
 
 
 def test_process_step_no_internal_conditions_immediate_done():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {"id": "n1", "knowledge": {"description": "d"}}
     step = {
@@ -220,7 +220,7 @@ def test_process_step_no_internal_conditions_immediate_done():
 
 
 def test_process_step_delivered_not_received_skips_tracking_and_targets_step_3a_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -278,7 +278,7 @@ def test_process_step_delivered_not_received_skips_tracking_and_targets_step_3a_
 
 def test_packaging_extracted_step_1_skips_step_2_same_turn():
     """packaging_damaged from extract → inference before transition skip → step_3b."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -331,7 +331,7 @@ def test_packaging_extracted_step_1_skips_step_2_same_turn():
 
 
 def test_format_reply_rules_block():
-    from services.ai_node_runtime import _format_reply_rules_block
+    from decision_engine.services.ai_node_runtime import _format_reply_rules_block
 
     assert _format_reply_rules_block(None) == ""
     assert _format_reply_rules_block({}) == ""
@@ -347,7 +347,7 @@ def test_format_reply_rules_block():
 
 
 def test_append_global_reply_rules():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         GLOBAL_REPLY_RULES,
         _append_global_reply_rules,
     )
@@ -359,7 +359,7 @@ def test_append_global_reply_rules():
 
 
 def test_get_global_reply_rules_from_story_meta():
-    from services.ai_node_runtime import GLOBAL_REPLY_RULES, _get_global_reply_rules
+    from decision_engine.services.ai_node_runtime import GLOBAL_REPLY_RULES, _get_global_reply_rules
 
     story = _load_story()
     rules = _get_global_reply_rules(story)
@@ -373,14 +373,14 @@ def test_get_global_reply_rules_from_story_meta():
 
 
 def test_get_global_reply_rules_fallback_without_meta():
-    from services.ai_node_runtime import GLOBAL_REPLY_RULES, _get_global_reply_rules
+    from decision_engine.services.ai_node_runtime import GLOBAL_REPLY_RULES, _get_global_reply_rules
 
     assert _get_global_reply_rules({}).strip() == GLOBAL_REPLY_RULES.strip()
     assert _get_global_reply_rules(None).strip() == GLOBAL_REPLY_RULES.strip()
 
 
 def test_get_ack_and_paragraph_instruction_from_story_meta():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _REPLY_ACK_AND_PARAGRAPH_INSTRUCTION,
         _get_ack_and_paragraph_instruction,
     )
@@ -392,7 +392,7 @@ def test_get_ack_and_paragraph_instruction_from_story_meta():
 
 
 def test_get_model_from_story_meta():
-    from services.ai_node_runtime import _DEFAULT_MODEL, _get_model
+    from decision_engine.services.ai_node_runtime import _DEFAULT_MODEL, _get_model
 
     story = _load_story()
     assert _get_model(story) == story["meta"]["runtime"]["model"]
@@ -402,7 +402,7 @@ def test_get_model_from_story_meta():
 
 
 def test_get_max_tokens_from_story_meta():
-    from services.ai_node_runtime import _DEFAULT_MAX_TOKENS, _get_max_tokens
+    from decision_engine.services.ai_node_runtime import _DEFAULT_MAX_TOKENS, _get_max_tokens
 
     story = _load_story()
     assert _get_max_tokens(story) == story["meta"]["runtime"]["max_tokens"]
@@ -413,7 +413,7 @@ def test_get_max_tokens_from_story_meta():
 
 
 def test_process_step_includes_global_reply_rules_in_prompt():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -453,7 +453,7 @@ def test_process_step_includes_global_reply_rules_in_prompt():
 
 
 def test_process_step_includes_reply_rules_in_generate_reply_prompt():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -487,7 +487,7 @@ def test_process_step_includes_reply_rules_in_generate_reply_prompt():
 
 
 def test_step_start_reply_prompts_include_reply_rules():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -538,7 +538,7 @@ def test_product_defect_step_3_story_shape():
 
 
 def test_step_completion_product_defect_step_3_done_when():
-    from services.ai_node_runtime import _step_completion_satisfied
+    from decision_engine.services.ai_node_runtime import _step_completion_satisfied
 
     story = _load_story()
     step_3 = next(
@@ -556,7 +556,7 @@ def test_step_completion_product_defect_step_3_done_when():
 
 
 def test_condition_triggered_by_text_accent_normalization():
-    from services.ai_node_runtime import _condition_triggered_by_text
+    from decision_engine.services.ai_node_runtime import _condition_triggered_by_text
 
     cond = {
         "id": "exclusion_check_done",
@@ -570,7 +570,7 @@ def test_condition_triggered_by_text_accent_normalization():
 
 
 def test_apply_text_triggers_exclusion_on_product_defect_step_1():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_text_triggers,
         _session_facts_whitelist,
     )
@@ -592,7 +592,7 @@ def test_apply_text_triggers_exclusion_on_product_defect_step_1():
 
 
 def test_apply_text_triggers_accent_normalization():
-    from services.ai_node_runtime import _apply_text_triggers
+    from decision_engine.services.ai_node_runtime import _apply_text_triggers
 
     node = {"conditions": []}
     step = {
@@ -616,7 +616,7 @@ def test_apply_text_triggers_accent_normalization():
 
 
 def test_apply_text_triggers_skips_without_triggers():
-    from services.ai_node_runtime import _apply_text_triggers
+    from decision_engine.services.ai_node_runtime import _apply_text_triggers
 
     node = {"conditions": []}
     step = {
@@ -637,7 +637,7 @@ def test_apply_text_triggers_skips_without_triggers():
 
 
 def test_build_step_extract_hint_blocks_uses_json_extract_hint():
-    from services.ai_node_runtime import _build_step_extract_hint_blocks
+    from decision_engine.services.ai_node_runtime import _build_step_extract_hint_blocks
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -657,7 +657,7 @@ def test_build_step_extract_hint_blocks_uses_json_extract_hint():
 
 def test_troubleshooting_done_trigger_default_fallback_from_json():
     """troubleshooting_done text trigger → defect_persists fallback a JSON mezőkből."""
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -686,7 +686,7 @@ def test_troubleshooting_done_trigger_default_fallback_from_json():
 
 
 def test_filter_extract_to_known_conditions_drops_hallucinated_ids():
-    from services.ai_node_runtime import _filter_extract_to_known_conditions
+    from decision_engine.services.ai_node_runtime import _filter_extract_to_known_conditions
 
     raw = {
         "satisfied": [
@@ -711,7 +711,7 @@ def test_filter_extract_to_known_conditions_drops_hallucinated_ids():
 
 def test_process_step_product_defect_step_1_timing_and_exclusion_denial_mocked():
     """Turn #2 jellegű üzenet: érkezéskor hiba + nincs külső behatás → exclusion_check_done."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -760,7 +760,7 @@ def test_process_step_product_defect_step_1_timing_and_exclusion_denial_mocked()
 
 def test_process_step_product_defect_step_4_strips_hallucinated_image_flags():
     """LLM téves image/evidence flag step_4 image_conditions alapján kiszűrése kép nélkül."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -817,7 +817,7 @@ def test_process_step_product_defect_step_4_strips_hallucinated_image_flags():
 
 def test_process_step_product_defect_step_3_implicit_persists_advances_mocked():
     """„már megvolt” + frissítés nem elérhető → step_3 skip, step_4 egy válasz."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -857,7 +857,7 @@ def test_process_step_product_defect_step_3_implicit_persists_advances_mocked():
 
 
 def test_process_step_product_defect_step_3_resolved_branch_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -913,7 +913,7 @@ def test_process_step_product_defect_step_3_resolved_branch_mocked():
 
 
 def test_auto_satisfy_closing_step_requires_step_done_before_goto_ack():
-    from services.ai_node_runtime import _auto_satisfy_on_matched_goto_branch
+    from decision_engine.services.ai_node_runtime import _auto_satisfy_on_matched_goto_branch
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -931,7 +931,7 @@ def test_auto_satisfy_closing_step_requires_step_done_before_goto_ack():
 
 
 def test_auto_satisfy_closing_step_adds_ack_when_step_already_done():
-    from services.ai_node_runtime import _auto_satisfy_on_matched_goto_branch
+    from decision_engine.services.ai_node_runtime import _auto_satisfy_on_matched_goto_branch
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -968,7 +968,7 @@ def test_story_stepped_nodes_have_session_facts_whitelist():
 
 
 def test_deterministic_session_facts_troubleshooting_on_product_defect():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -992,7 +992,7 @@ def test_deterministic_session_facts_troubleshooting_on_product_defect():
 
 
 def test_deterministic_session_facts_delivery_packaging_implies_situation():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -1013,7 +1013,7 @@ def test_deterministic_session_facts_delivery_packaging_implies_situation():
 
 
 def test_deterministic_packaging_implies_tracking_checked():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -1039,7 +1039,7 @@ def test_step_1_skip_chain_through_step_3d_to_investigate_delivery():
     chain_on_complete=true miatt láncolódik step_4-re → delay_duration_known ág
     → goto investigate-delivery. Egy fordulón belül lezárul a flow.
     """
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -1081,7 +1081,7 @@ def test_step_1_skip_chain_through_step_3d_to_investigate_delivery():
 
 
 def test_step_followup_uses_effective_step_when_clarification():
-    from routers.ai_node_routes import _step_followup_payload, AiNodeProcessRequest
+    from decision_engine.routers.ai_node_routes import _step_followup_payload, AiNodeProcessRequest
 
     body = AiNodeProcessRequest(
         src="ai_complaint_story_v3",
@@ -1116,7 +1116,7 @@ def test_step_3d_preknown_delay_chains_to_investigate_delivery():
     pre-known delay_duration_known esetén step_3d done_when azonnal teljesül,
     és láncolódik step_4-re → investigate-delivery — egy fordulóban.
     """
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -1159,8 +1159,8 @@ def test_step_3d_preknown_delay_chains_to_investigate_delivery():
 
 
 def test_step_3d_completes_when_delay_extracted():
-    from services.ai_node_runtime import _step_completion_satisfied
-    from services import ai_node_runtime as air
+    from decision_engine.services.ai_node_runtime import _step_completion_satisfied
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -1235,7 +1235,7 @@ def test_step_3d_completes_when_delay_extracted():
 
 def test_step_4_delay_routes_to_investigate_delivery():
     """delay_duration_known ág a story-ban most investigate-delivery-re megy."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -1277,7 +1277,7 @@ def test_step_4_delay_routes_to_investigate_delivery():
 
 
 def test_deterministic_session_facts_battery_intake_implies_symptom():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -1298,7 +1298,7 @@ def test_deterministic_session_facts_battery_intake_implies_symptom():
 
 
 def test_battery_implication_problem_persists_implies_charger_tested():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_deterministic_session_facts,
         _session_facts_whitelist,
     )
@@ -1324,7 +1324,7 @@ def test_battery_implication_problem_persists_implies_charger_tested():
 
 
 def test_build_skipped_steps_context_block_includes_skipped_step_conditions():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _build_skipped_steps_context_block,
         _compose_conditions_block_for_extract,
     )
@@ -1348,7 +1348,7 @@ def test_build_skipped_steps_context_block_includes_skipped_step_conditions():
 
 
 def test_resolve_step_entry_skip_collects_skipped_steps():
-    from services.ai_node_runtime import _resolve_step_entry_with_skip
+    from decision_engine.services.ai_node_runtime import _resolve_step_entry_with_skip
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -1378,7 +1378,7 @@ def test_resolve_step_entry_skip_collects_skipped_steps():
 
 def test_process_step_battery_step_1_skip_runs_extract_without_reply():
     """step_1 entry-skip: extract a step_1 kondícióin, reply csak step_2-n."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -1443,7 +1443,7 @@ def test_process_step_battery_step_1_skip_runs_extract_without_reply():
 
 def test_battery_step3_image_backfill_before_implication():
     """image_provided előbb; implication utána evidence_provided — redundáns, nem ütközik."""
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _apply_condition_implications,
         _apply_deterministic_image_conditions,
     )
@@ -1471,7 +1471,7 @@ def test_battery_step3_image_backfill_before_implication():
 
 def test_process_step_product_defect_step_3_skips_when_troubleshooting_in_session():
     """Session tényekből step_3 kihagyva → skip extract + step_4 extract+reply."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1509,7 +1509,7 @@ def test_process_step_product_defect_step_3_skips_when_troubleshooting_in_sessio
 
 
 def test_check_step_already_done_parses_done_when_or_groups():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         _check_step_already_done,
         _parse_done_when_condition_groups,
     )
@@ -1542,7 +1542,7 @@ def test_check_step_already_done_parses_done_when_or_groups():
 def test_parse_done_when_supports_english_locale_format():
     """En locale done_when string-ek szintén parsolhatók: a runtime mindkét
     nyelvű story-t ki kell szolgálnia (Phase 3b/A backfill format)."""
-    from services.ai_node_runtime import _parse_done_when_condition_groups
+    from decision_engine.services.ai_node_runtime import _parse_done_when_condition_groups
 
     # Plural "are satisfied" suffix.
     assert _parse_done_when_condition_groups(
@@ -1566,7 +1566,7 @@ def test_parse_done_when_supports_english_locale_format():
 def test_check_step_already_done_works_with_english_done_when():
     """En-locale done_when string a skip-detection-hez használt
     parser-rel ugyanúgy kell működjön, mint a Hu-locale."""
-    from services.ai_node_runtime import _check_step_already_done
+    from decision_engine.services.ai_node_runtime import _check_step_already_done
 
     step = {
         "id": "step_x",
@@ -1596,7 +1596,7 @@ def test_check_step_already_done_works_with_english_done_when():
 
 
 def test_build_satisfied_do_not_reask_instruction_includes_tracking_checked_hint():
-    from services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
+    from decision_engine.services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -1607,14 +1607,14 @@ def test_build_satisfied_do_not_reask_instruction_includes_tracking_checked_hint
 
 
 def test_build_satisfied_do_not_reask_instruction_empty_without_flagged():
-    from services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
+    from decision_engine.services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
 
     node = {"id": "minimal", "steps": [{"id": "s1", "internal_conditions": []}]}
     assert _build_satisfied_do_not_reask_instruction(node) == ""
 
 
 def test_build_satisfied_do_not_reask_instruction_general_only_without_hint():
-    from services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
+    from decision_engine.services.ai_node_runtime import _build_satisfied_do_not_reask_instruction
 
     node = {
         "id": "test",
@@ -1638,7 +1638,7 @@ def test_build_satisfied_do_not_reask_instruction_general_only_without_hint():
 
 
 def test_infer_skip_backfill_adds_then_when_rule_matches():
-    from services.ai_node_runtime import _infer_skip_backfill_conditions
+    from decision_engine.services.ai_node_runtime import _infer_skip_backfill_conditions
 
     story = _load_story()
     step_exclusion = next(
@@ -1652,7 +1652,7 @@ def test_infer_skip_backfill_adds_then_when_rule_matches():
 
 
 def test_infer_skip_backfill_skips_when_requires_missing():
-    from services.ai_node_runtime import _infer_skip_backfill_conditions
+    from decision_engine.services.ai_node_runtime import _infer_skip_backfill_conditions
 
     story = _load_story()
     step_exclusion = next(
@@ -1664,7 +1664,7 @@ def test_infer_skip_backfill_skips_when_requires_missing():
 
 
 def test_infer_skip_backfill_skips_when_then_already_satisfied():
-    from services.ai_node_runtime import _infer_skip_backfill_conditions
+    from decision_engine.services.ai_node_runtime import _infer_skip_backfill_conditions
 
     story = _load_story()
     step_exclusion = next(
@@ -1681,7 +1681,7 @@ def test_infer_skip_backfill_skips_when_then_already_satisfied():
 
 def test_process_step_product_defect_step_2_entry_skips_to_step_4_single_reply():
     """Session tények: step_2/3 kihagyva — skip extract, majd step_4 extract+reply."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1749,7 +1749,7 @@ def test_process_step_product_defect_step_2_entry_skips_to_step_4_single_reply()
 
 def test_process_step_product_defect_step_2_transition_skips_to_step_4_mocked():
     """physical_impact + exclusion_risk session → implications skip step_2–3 → step_4."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1817,7 +1817,7 @@ def test_process_step_product_defect_step_2_transition_skips_to_step_4_mocked():
 
 def test_process_step_product_defect_step_3_latches_troubleshooting_via_text_triggers():
     """step_3 text_triggers + session_facts determinisztikusan (nem step_1-en)."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -1872,7 +1872,7 @@ def test_process_step_product_defect_step_3_latches_troubleshooting_via_text_tri
 
 
 def test_deterministic_image_backfill_from_session_on_step_4():
-    from services.ai_node_runtime import _apply_deterministic_image_conditions
+    from decision_engine.services.ai_node_runtime import _apply_deterministic_image_conditions
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1893,7 +1893,7 @@ def test_deterministic_image_backfill_from_session_on_step_4():
 
 def test_product_defect_image_latched_on_step_3_not_evidence_yet():
     """Kép step_3-on: csak image_provided latch, evidence csak step_4-en."""
-    from services.ai_node_runtime import _apply_deterministic_image_conditions
+    from decision_engine.services.ai_node_runtime import _apply_deterministic_image_conditions
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1912,7 +1912,7 @@ def test_product_defect_image_latched_on_step_3_not_evidence_yet():
 
 def test_product_defect_step_4_backfills_evidence_from_session_image():
     """Korábbi körben küldött kép → step_4-en evidence_provided automatikusan."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -1952,7 +1952,7 @@ def test_product_defect_step_4_backfills_evidence_from_session_image():
 
 def test_process_step_product_defect_step_4_chains_to_agent_handoff_end():
     """step_4 (kép) után step_5 agent-handoff: egy kör nyugtázás, remedy nélkül."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     pages = story["pages"]
@@ -1995,7 +1995,7 @@ def test_process_step_product_defect_step_4_chains_to_agent_handoff_end():
 
 def test_process_step_product_defect_step_4_chains_to_step_5_remedy_question():
     """defect_confirmed ág: step_4 után step_5 remedy kérdés — product-return csak utána."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     pages = story["pages"]
@@ -2040,7 +2040,7 @@ def test_process_step_product_defect_step_4_chains_to_step_5_remedy_question():
 
 def test_product_defect_step_5_remedy_then_product_return():
     """step_5 product-return ág: remedy kérdés, majd handoff."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["product-defect"]
@@ -2094,7 +2094,7 @@ def test_product_defect_step_5_remedy_then_product_return():
 
 
 def test_child_chain_reaches_terminal_cosmetic_step_5():
-    from services.ai_node_runtime import _child_chain_reaches_terminal
+    from decision_engine.services.ai_node_runtime import _child_chain_reaches_terminal
 
     story = _load_story()
     node = story["pages"]["cosmetic-dispute"]
@@ -2112,7 +2112,7 @@ def test_child_chain_reaches_terminal_cosmetic_step_5():
 
 
 def test_cosmetic_step_4_routes_to_step_5_when_within_window():
-    from services.ai_node_runtime import _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import _resolve_step_transition
 
     story = _load_story()
     node = story["pages"]["cosmetic-dispute"]
@@ -2132,7 +2132,7 @@ def test_cosmetic_step_4_routes_to_step_5_when_within_window():
 
 
 def test_cosmetic_step_5_remedy_then_product_return():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["cosmetic-dispute"]
@@ -2186,7 +2186,7 @@ def test_cosmetic_step_5_remedy_then_product_return():
 
 
 def test_cosmetic_step_functional_redirect_remedy_then_product_return():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["cosmetic-dispute"]
@@ -2239,7 +2239,7 @@ def test_cosmetic_step_functional_redirect_remedy_then_product_return():
 
 
 def test_process_step_payment_refund_step_4_chains_to_process_refund_end():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     pages = story["pages"]
@@ -2279,7 +2279,7 @@ def test_process_step_payment_refund_step_4_chains_to_process_refund_end():
 
 def test_process_step_battery_issue_step_3_chains_to_step_4_remedy_question():
     """step_3 (kép) után step_4 remedy kérdéssel — product-return csak remedy után."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     pages = story["pages"]
@@ -2332,7 +2332,7 @@ def test_process_step_battery_issue_step_3_chains_to_step_4_remedy_question():
 
 
 def test_battery_issue_step_4_physical_damage_routes_agent_handoff():
-    from services.ai_node_runtime import _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import _resolve_step_transition
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2352,7 +2352,7 @@ def test_battery_issue_step_4_physical_damage_routes_agent_handoff():
 
 
 def test_battery_issue_routing_warranty_goes_product_return():
-    from services.story_runtime import resolve_ai_node_routing
+    from decision_engine.services.story_runtime import resolve_ai_node_routing
 
     story = _load_story()
     routing = story["pages"]["battery-issue"]["routing"]
@@ -2365,7 +2365,7 @@ def test_battery_issue_routing_warranty_goes_product_return():
 
 
 def test_battery_step_1_branch_routes_to_step_4_when_below_sold_threshold():
-    from services.ai_node_runtime import _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import _resolve_step_transition
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2385,7 +2385,7 @@ def test_battery_step_1_branch_routes_to_step_4_when_below_sold_threshold():
 
 
 def test_battery_step_1_issue_since_arrival_still_requires_evidence_for_step_4():
-    from services.ai_node_runtime import _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import _resolve_step_transition
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2417,7 +2417,7 @@ def test_battery_step_1_issue_since_arrival_still_requires_evidence_for_step_4()
 
 def test_battery_step_1_skips_charger_path_when_below_sold_threshold():
     """below_sold_threshold az első üzenetben → step_4, nem step_2 töltő kérdés."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2474,7 +2474,7 @@ def test_battery_step_1_skips_charger_path_when_below_sold_threshold():
 
 def test_battery_step_2_skips_to_step_4_when_below_sold_threshold_in_session():
     """Session-ben below_sold_threshold → step_2 routing step_4, nem step_3."""
-    from services.ai_node_runtime import _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import _resolve_step_transition
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2497,7 +2497,7 @@ def test_battery_step_2_skips_to_step_4_when_below_sold_threshold_in_session():
 
 def test_battery_issue_step_4_remedy_then_handoff_to_product_return():
     """step_4: első kör remedy kérdés; második kör remedy → case_summary → product-return."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["battery-issue"]
@@ -2561,7 +2561,7 @@ def test_battery_issue_step_4_remedy_then_handoff_to_product_return():
 
 def test_activation_lock_step_4a_remedy_then_handoff_to_product_return():
     """step_4a: első kör remedy kérdés; második kör remedy → lock_handoff → product-return."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["activation-lock"]
@@ -2718,7 +2718,7 @@ def test_delivery_issue_steps_have_reply_rules():
 
 
 def test_resolve_step_transition_goto_to_end_page():
-    from services.ai_node_runtime import StepTransition, _resolve_step_transition
+    from decision_engine.services.ai_node_runtime import StepTransition, _resolve_step_transition
 
     node = {
         "id": "delivery-issue",
@@ -2747,7 +2747,7 @@ def test_resolve_step_transition_goto_to_end_page():
 
 
 def test_apply_late_image_backfill_adds_then_when_when_all_match():
-    from services.ai_node_runtime import _apply_late_image_backfill
+    from decision_engine.services.ai_node_runtime import _apply_late_image_backfill
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2759,7 +2759,7 @@ def test_apply_late_image_backfill_adds_then_when_when_all_match():
 
 
 def test_apply_late_image_backfill_skips_when_when_all_missing():
-    from services.ai_node_runtime import _apply_late_image_backfill
+    from decision_engine.services.ai_node_runtime import _apply_late_image_backfill
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2770,7 +2770,7 @@ def test_apply_late_image_backfill_skips_when_when_all_missing():
 
 
 def test_apply_late_image_backfill_skips_when_then_already_satisfied():
-    from services.ai_node_runtime import _apply_late_image_backfill
+    from decision_engine.services.ai_node_runtime import _apply_late_image_backfill
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2786,7 +2786,7 @@ def test_apply_late_image_backfill_skips_when_then_already_satisfied():
 
 
 def test_apply_deterministic_image_step_3a():
-    from services.ai_node_runtime import _apply_deterministic_image_conditions
+    from decision_engine.services.ai_node_runtime import _apply_deterministic_image_conditions
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2804,7 +2804,7 @@ def test_apply_deterministic_image_step_3a():
 
 def test_delivery_issue_step_3a_image_conditions_from_json():
     """image_conditions a story JSON-ból jön, nem hardcoded runtime dict-ből."""
-    from services.ai_node_runtime import _apply_deterministic_image_conditions
+    from decision_engine.services.ai_node_runtime import _apply_deterministic_image_conditions
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2839,7 +2839,7 @@ def test_delivery_issue_step_3a_image_conditions_from_json():
 
 
 def test_filter_extract_removes_false_tracking_screenshot_without_image():
-    from services.ai_node_runtime import _filter_extract_image_conditions
+    from decision_engine.services.ai_node_runtime import _filter_extract_image_conditions
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -2860,7 +2860,7 @@ def test_filter_extract_removes_false_tracking_screenshot_without_image():
 
 
 def test_process_step_3a_image_only_chains_to_end_without_llm():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
     from unittest.mock import patch
 
     story = _load_story()
@@ -2907,7 +2907,7 @@ def test_process_step_3a_image_only_chains_to_end_without_llm():
 
 def test_process_step_3a_text_chains_to_end_when_goto_ready_mocked():
     """step_3a extract után step_4 automatikus goto — nincs külön user forduló."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -2967,7 +2967,7 @@ def test_process_step_3a_text_chains_to_end_when_goto_ready_mocked():
 
 def test_process_step_4_fast_path_returns_end_page_content_without_llm():
     """Goto gyorsút: ne szivárogjon ki a belső ai_action, hanem end node content."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
     from unittest.mock import patch
 
     story = _load_story()
@@ -3012,7 +3012,7 @@ def test_process_step_4_fast_path_returns_end_page_content_without_llm():
 
 
 def test_process_step_4_routes_to_delivery_investigation_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     story = _load_story()
     node = story["pages"]["delivery-issue"]
@@ -3054,7 +3054,7 @@ def test_process_step_4_routes_to_delivery_investigation_mocked():
 
 
 def test_step_followup_payload_uses_next_page_id_from_step():
-    from routers.ai_node_routes import _step_followup_payload, AiNodeProcessRequest
+    from decision_engine.routers.ai_node_routes import _step_followup_payload, AiNodeProcessRequest
 
     body = AiNodeProcessRequest(
         src="ai_complaint_story_v3",
@@ -3089,8 +3089,8 @@ def test_sse_goto_end_done_payload_does_not_duplicate_end_in_assistant_message()
     """SSE done: assistantMessage = csak nyugtázás, endPageContent = végoldal (nem összefűzve)."""
     import json
 
-    from routers.ai_node_routes import _sse_step_stream, AiNodeProcessRequest
-    from services.ai_node_runtime import AssistantStreamBundle
+    from decision_engine.routers.ai_node_routes import _sse_step_stream, AiNodeProcessRequest
+    from decision_engine.services.ai_node_runtime import AssistantStreamBundle
 
     ack = "Köszönöm, megkaptuk a képet."
     end = "Szállítási ügyedet rögzítettük. Futárszolgálatnál nyomozást indítunk."
@@ -3138,7 +3138,7 @@ def test_sse_goto_end_done_payload_does_not_duplicate_end_in_assistant_message()
 
 
 def test_process_step_partial_conditions_mocked_api():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -3181,7 +3181,7 @@ def test_process_step_partial_conditions_mocked_api():
 
 
 def test_process_step_all_done_default_next_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -3223,7 +3223,7 @@ def test_process_step_all_done_default_next_mocked():
 
 def test_process_step_filters_missing_already_satisfied_mocked():
     """Modell tévesen missing-be tesz sessionben már teljesült ID-t — ne kerüljön a válaszba."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -3275,7 +3275,7 @@ def test_process_step_filters_missing_already_satisfied_mocked():
 
 def test_process_step_all_required_preset_skips_llm_mocked():
     """Minden kötelező már a sessionben — nincs Anthropic hívás, üres missing."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {"id": "delivery-issue", "knowledge": {"description": "x"}}
     step = {
@@ -3307,7 +3307,7 @@ def test_process_step_all_required_preset_skips_llm_mocked():
 
 
 def test_process_step_branch_wins_over_default_mocked():
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     extract_resp = SimpleNamespace(
         content=[
@@ -3355,7 +3355,7 @@ def test_process_step_branch_wins_over_default_mocked():
 
 
 def test_resolve_ai_clarification_fallback_message_intake_node():
-    from services.story_runtime import resolve_ai_clarification_fallback_message
+    from decision_engine.services.story_runtime import resolve_ai_clarification_fallback_message
 
     story = _load_story()
     msg = resolve_ai_clarification_fallback_message(story, "complaint-intake")
@@ -3363,7 +3363,7 @@ def test_resolve_ai_clarification_fallback_message_intake_node():
 
 
 def test_resolve_ai_clarification_fallback_message_meta_when_page_unknown():
-    from services.story_runtime import resolve_ai_clarification_fallback_message
+    from decision_engine.services.story_runtime import resolve_ai_clarification_fallback_message
 
     story = _load_story()
     msg = resolve_ai_clarification_fallback_message(story, "no-such-page-id")
@@ -3398,7 +3398,7 @@ def test_ai_pages_have_expected_shape(page_id: str):
 
 
 def test_silent_on_matched_goto_helper_flag_off():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         StepTransition,
         _should_silently_route_on_goto,
     )
@@ -3409,7 +3409,7 @@ def test_silent_on_matched_goto_helper_flag_off():
 
 
 def test_silent_on_matched_goto_helper_flag_on_with_next_page():
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         StepTransition,
         _should_silently_route_on_goto,
     )
@@ -3421,7 +3421,7 @@ def test_silent_on_matched_goto_helper_flag_on_with_next_page():
 
 def test_silent_on_matched_goto_helper_flag_on_but_internal_next_step():
     """silent_on_matched_goto csak goto (cross-node) esetén aktív; internal step-re nem."""
-    from services.ai_node_runtime import (
+    from decision_engine.services.ai_node_runtime import (
         StepTransition,
         _should_silently_route_on_goto,
     )
@@ -3434,7 +3434,7 @@ def test_silent_on_matched_goto_helper_flag_on_but_internal_next_step():
 def test_silent_on_matched_goto_skips_llm_reply_and_returns_empty_message():
     """silent flag aktív + matched goto branch → nincs generate_reply hívás,
     assistantMessage üres, routing helyesen történik."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {
         "id": "n_silent",
@@ -3488,7 +3488,7 @@ def test_silent_on_matched_goto_skips_llm_reply_and_returns_empty_message():
 def test_silent_on_matched_goto_flag_off_still_calls_llm_reply():
     """Visszafelé kompatibilitás: ha a flag hiányzik vagy False, az LLM-et hívni kell
     a normál `_sync_generate_reply` (create API) ágon — nem closing step."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {
         "id": "n_loud",
@@ -3536,7 +3536,7 @@ def test_silent_on_matched_goto_flag_off_still_calls_llm_reply():
 def test_silent_on_matched_goto_in_build_goto_end_result_skips_generate_step_start_reply():
     """A chain/skip path is honorálja a flag-et: `_build_goto_end_result` nem hív
     `generate_step_start_reply`-t silent step esetén, és az assistantMessage üres."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {
         "id": "n_chain",
@@ -3580,7 +3580,7 @@ def test_silent_on_matched_goto_in_build_goto_end_result_skips_generate_step_sta
 
 def test_build_goto_end_result_without_silent_still_calls_generate_step_start_reply():
     """Visszafelé kompatibilitás: flag nélkül `_build_goto_end_result` továbbra is hív."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {
         "id": "n_chain_loud",
@@ -3622,7 +3622,7 @@ def test_build_goto_end_result_without_silent_still_calls_generate_step_start_re
 
 def test_silent_on_matched_goto_inactive_when_no_goto_branch_matches():
     """Flag aktív, de egyik goto sem matchel → default_next belső step → LLM-et hívni kell."""
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
 
     node = {
         "id": "n_partial",

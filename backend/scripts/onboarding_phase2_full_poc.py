@@ -19,7 +19,7 @@ Outputs live in ``--output-dir`` (default: alongside the blueprint):
 * ``node_<id>_<timestamp>.json`` — one per accepted node (page_dict + lint
   report + token meta) — same shape as the single-node PoC.
 * ``story_<timestamp>.json`` — the assembled story produced by
-  ``services.onboarding.orchestrator.assemble_story``.
+  ``support_engine.services.onboarding.orchestrator.assemble_story``.
 * ``run_summary_<timestamp>.json`` — a single roll-up file with per-node
   attempt counts, lint verdicts, and total token usage.
 
@@ -47,26 +47,26 @@ _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from services.onboarding.anthropic_client import (  # noqa: E402
+from support_engine.services.onboarding.anthropic_client import (  # noqa: E402
     AnthropicOnboardingClient,
     build_phase2_system_prompt,
     build_phase2_user_message,
 )
-from services.onboarding.constraints import build_constraint_catalog  # noqa: E402
-from services.onboarding.contracts import (  # noqa: E402
+from support_engine.services.onboarding.constraints import build_constraint_catalog  # noqa: E402
+from support_engine.services.onboarding.contracts import (  # noqa: E402
     DomainBlueprint,
     GenerationContext,
     NodeCandidate,
     NodeGenerationOutcome,
 )
-from services.onboarding.orchestrator import (  # noqa: E402
+from support_engine.services.onboarding.orchestrator import (  # noqa: E402
     _collect_declared_conditions,
     _collect_handoff_conditions,
     _DEFAULT_RUNTIME,
     _scaffold_end_page,
     _slug,
 )
-from services.story_lint import lint_full_story, lint_single_node  # noqa: E402
+from shared.story_lint import lint_full_story, lint_single_node  # noqa: E402
 
 
 def _load_blueprint(path: Path) -> DomainBlueprint:
@@ -303,7 +303,7 @@ def _assemble_story(
     }
 
     if apply_cross_node_linker:
-        from services.onboarding.cross_node_linker import link_cross_nodes
+        from support_engine.services.onboarding.cross_node_linker import link_cross_nodes
         report = link_cross_nodes(story)
         wl = report["whitelist"]
         ic = report["inject_conditions"]
@@ -315,7 +315,7 @@ def _assemble_story(
         )
 
     if apply_meta:
-        from services.onboarding.meta_builder import apply_meta_builder
+        from support_engine.services.onboarding.meta_builder import apply_meta_builder
         proposed = [
             f.field_name
             for f in (blueprint.proposed_new_external_fields or [])
@@ -351,7 +351,7 @@ def _assemble_story(
         )
 
     if apply_step_enrichment:
-        from services.onboarding.step_enricher import apply_step_enricher
+        from support_engine.services.onboarding.step_enricher import apply_step_enricher
         enr_report = apply_step_enricher(story, locale=blueprint.locale)
         dw = enr_report.get("done_when_filled", 0)
         ic_exp = enr_report.get("conditions_expanded", 0)

@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from services.session_event_sink import (
+from decision_engine.services.session_event_sink import (
     SessionEventSink,
     read_last_event,
     read_visited_nodes,
@@ -109,7 +109,7 @@ def test_read_last_event(tmp_path):
 
 
 def test_format_user_facing_context_block_empty_when_no_question():
-    from services.ai_node_runtime import _format_user_facing_context_block
+    from decision_engine.services.ai_node_runtime import _format_user_facing_context_block
 
     node = {
         "id": "n1",
@@ -130,7 +130,7 @@ def test_format_user_facing_context_block_empty_when_no_question():
 
 
 def test_format_user_facing_context_block_current_only_when_no_history():
-    from services.ai_node_runtime import _format_user_facing_context_block
+    from decision_engine.services.ai_node_runtime import _format_user_facing_context_block
 
     node = {
         "id": "n1",
@@ -161,8 +161,8 @@ def test_format_user_facing_context_block_current_only_when_no_history():
 
 def test_format_user_facing_context_block_uses_conftest_path():
     """A conftest fixture már a SESSION_EVENTS_DIR-t állítja — ennek elérhetőnek kell lennie a runtime-ban."""
-    from services.ai_node_runtime import _format_user_facing_context_block
-    from services.session_event_sink import get_default_session_event_sink
+    from decision_engine.services.ai_node_runtime import _format_user_facing_context_block
+    from decision_engine.services.session_event_sink import get_default_session_event_sink
 
     sink = get_default_session_event_sink()
     sink.submit(_make_event(session_id="sess-C", turn=1, to_node="delivery"))
@@ -202,7 +202,7 @@ def test_format_user_facing_context_block_uses_conftest_path():
 def test_default_sink_uses_env_var(monkeypatch, tmp_path):
     """A get_default_session_event_sink() az aktuális SESSION_EVENTS_DIR-t használja
     miután a fixture resetelte a singletont."""
-    from services import session_event_sink as ses
+    from decision_engine.services import session_event_sink as ses
 
     custom = tmp_path / "custom_session_events"
     custom.mkdir()

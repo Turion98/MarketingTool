@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.tool_schemas`.
+"""Pytest cases for `support_engine.services.onboarding.tool_schemas`.
 
 Lefedett területek:
 
@@ -25,14 +25,14 @@ from typing import Any
 import jsonschema
 import pytest
 
-from services.onboarding.constraints import build_constraint_catalog
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.constraints import build_constraint_catalog
+from support_engine.services.onboarding.contracts import (
     DomainBlueprint,
     SemanticAuditFinding,
     SemanticAuditResult,
     SemanticIssueKind,
 )
-from services.onboarding.tool_schemas import (
+from support_engine.services.onboarding.tool_schemas import (
     build_extract_blueprint_tool,
     build_generate_node_tool,
     build_report_semantic_issues_tool,

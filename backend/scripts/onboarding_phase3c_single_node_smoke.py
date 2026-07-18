@@ -39,12 +39,12 @@ try:
 except ImportError:
     pass
 
-from services.onboarding.anthropic_client import AnthropicOnboardingClient  # noqa: E402
-from services.onboarding.reply_rules_generator import (  # noqa: E402
+from support_engine.services.onboarding.anthropic_client import AnthropicOnboardingClient  # noqa: E402
+from support_engine.services.onboarding.reply_rules_generator import (  # noqa: E402
     apply_reply_rules_to_node,
     find_closing_adjacent_step_ids,
 )
-from services.story_lint import lint_single_node  # noqa: E402
+from shared.story_lint import lint_single_node  # noqa: E402
 
 
 def _load_blueprint(path: Path) -> dict[str, Any]:

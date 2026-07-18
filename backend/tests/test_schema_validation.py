@@ -1,6 +1,6 @@
 import json
-from backend.validation.schema_validator import validate_schema, version_whitelist_ok
-from backend.validation.business_rules import cross_field_checks
+from decision_engine.validation.schema_validator import validate_schema, version_whitelist_ok
+from decision_engine.validation.business_rules import cross_field_checks
 from pathlib import Path
 
 def _load(name: str):

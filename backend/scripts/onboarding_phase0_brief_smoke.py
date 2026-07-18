@@ -43,7 +43,7 @@ _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from services.onboarding.brief_contracts import (  # noqa: E402
+from support_engine.services.onboarding.brief_contracts import (  # noqa: E402
     Card1CompanyBasics,
     Card2Operations,
     Card2aReturns,
@@ -60,7 +60,7 @@ from services.onboarding.brief_contracts import (  # noqa: E402
     Card6Sources,
     SupportChatbotBrief,
 )
-from services.onboarding.brief_expander import (  # noqa: E402
+from support_engine.services.onboarding.brief_expander import (  # noqa: E402
     expand_brief_to_research,
     render_brief_to_research_text,
 )
@@ -329,7 +329,7 @@ def main() -> int:
             return 0
         print("[4/4] Calling Phase 1 (AnthropicOnboardingClient.extract_blueprint) ...")
         try:
-            from services.onboarding.anthropic_client import (
+            from support_engine.services.onboarding.anthropic_client import (
                 AnthropicOnboardingClient,
             )
 

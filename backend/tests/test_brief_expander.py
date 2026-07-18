@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.brief_expander`.
+"""Pytest cases for `support_engine.services.onboarding.brief_expander`.
 
 A Phase 0 expander deterministic — semmi API hívás nincs a tesztekben. Az
 opcionális `BriefExpanderClient` Protocol-t egy MockBriefExpanderClient
@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import pytest
 
-from services.onboarding.brief_contracts import (
+from support_engine.services.onboarding.brief_contracts import (
     AiPrefilledText,
     Attachment,
     Card1CompanyBasics,
@@ -60,7 +60,7 @@ from services.onboarding.brief_contracts import (
     SupportChatbotBrief,
     WebhookCredentials,
 )
-from services.onboarding.brief_expander import (
+from support_engine.services.onboarding.brief_expander import (
     BriefExpanderClient,
     derive_domain_name,
     expand_brief_to_research,

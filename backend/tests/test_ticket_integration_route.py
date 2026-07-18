@@ -12,12 +12,12 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from services.ticket_integration import (
+from decision_engine.services.ticket_integration import (
     get_default_sink,
     reset_session_ticket_cache,
     set_default_sink,
 )
-from services.ticket_sinks import JsonlFileTicketSink
+from decision_engine.services.ticket_sinks import JsonlFileTicketSink
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 STORY_PATH = BACKEND_ROOT / "stories" / "ai_complaint_story_v3.json"
@@ -49,16 +49,16 @@ def _delivery_node() -> dict:
 def _patches_for_delivery_step(fake_process_step):
     node = _delivery_node()
     return (
-        patch("routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
+        patch("decision_engine.routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
         patch(
-            "routers.ai_node_routes.match_active_node",
+            "decision_engine.routers.ai_node_routes.match_active_node",
             return_value={
                 "activeNodeId": "delivery-issue",
                 "askClarification": False,
             },
         ),
         patch(
-            "routers.ai_node_routes.process_step",
+            "decision_engine.routers.ai_node_routes.process_step",
             side_effect=fake_process_step,
         ),
     )

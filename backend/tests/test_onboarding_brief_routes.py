@@ -1,4 +1,4 @@
-"""Pytest cases for `routers.onboarding_brief_routes` (FastAPI integration).
+"""Pytest cases for `support_engine.routers.onboarding_brief_routes` (FastAPI integration).
 
 Lefedett területek:
 
@@ -27,7 +27,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from services.onboarding.brief_contracts import (
+from support_engine.services.onboarding.brief_contracts import (
     Card1CompanyBasics,
     Card2Operations,
     Card2aReturns,
@@ -40,7 +40,7 @@ from services.onboarding.brief_contracts import (
     Card5Boundaries,
     SupportChatbotBrief,
 )
-from services.onboarding.storage import OnboardingStorage
+from support_engine.services.onboarding.storage import OnboardingStorage
 
 
 # --------------------------------------------------------------------------- #
@@ -93,7 +93,7 @@ def _end_node_payload() -> dict[str, str]:
 @pytest.fixture
 def client(tmp_path: Path) -> TestClient:
     """TestClient — minden teszthez tiszta DB + mock AnthropicClient."""
-    from routers import onboarding_brief_routes as routes_mod
+    from support_engine.routers import onboarding_brief_routes as routes_mod
     from main import app
 
     db = tmp_path / "routes_test.db"
@@ -307,7 +307,7 @@ def test_post_generate_end_nodes_409_when_job_has_no_brief(
     client: TestClient, brief_payload: dict[str, Any]
 ) -> None:
     """Klasszikus start_job (NEM brief-driven) → 409."""
-    from routers.onboarding_brief_routes import _get_storage
+    from support_engine.routers.onboarding_brief_routes import _get_storage
 
     storage = _get_storage()
     storage.create_job(
@@ -337,7 +337,7 @@ def test_post_build_accepts_when_phase0_ready(
 
     # A BG task-ot lecseréljük no-op-ra, hogy a stub-nélküli pipeline ne
     # bukjon el. Csak az route-szintű 202-t teszteljük.
-    from routers import onboarding_brief_routes as routes_mod
+    from support_engine.routers import onboarding_brief_routes as routes_mod
 
     called: list[str] = []
 
@@ -359,7 +359,7 @@ def test_post_build_409_without_phase0(
     client: TestClient, brief_payload: dict[str, Any]
 ) -> None:
     """Klasszikus start_job → phase0_result=None → 409."""
-    from routers.onboarding_brief_routes import _get_storage
+    from support_engine.routers.onboarding_brief_routes import _get_storage
 
     storage = _get_storage()
     storage.create_job(

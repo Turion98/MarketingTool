@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.orchestrator` + `event_bus`.
+"""Pytest cases for `support_engine.services.onboarding.orchestrator` + `event_bus`.
 
 Lefedett területek:
 
@@ -28,7 +28,7 @@ from typing import Any, Optional
 
 import pytest
 
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.contracts import (
     ConditionCandidate,
     DomainBlueprint,
     EndPageSpec,
@@ -38,13 +38,13 @@ from services.onboarding.contracts import (
     SemanticAuditResult,
     VendorPolicyKind,
 )
-from services.onboarding.event_bus import EventBus, OnboardingEvent
-from services.onboarding.orchestrator import (
+from support_engine.services.onboarding.event_bus import EventBus, OnboardingEvent
+from support_engine.services.onboarding.orchestrator import (
     OnboardingOrchestrator,
     OrchestratorError,
     assemble_story,
 )
-from services.onboarding.storage import OnboardingStorage
+from support_engine.services.onboarding.storage import OnboardingStorage
 
 
 # --------------------------------------------------------------------------- #
@@ -344,7 +344,7 @@ def test_assemble_story_minimal_skeleton(storage: OnboardingStorage):
         target_locale="hu",
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     accepted = [
         NodeGenerationOutcome(
@@ -386,7 +386,7 @@ def test_assemble_story_runs_phase3a_meta_builder_by_default(
         job_id="job-meta", domain_name="Meta Domain", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     node_dict = _make_valid_node_dict("intake-node")
     # Inject a `has_<known_field>` condition so the OCM derive pass has
@@ -430,7 +430,7 @@ def test_assemble_story_meta_builder_can_be_skipped(storage: OnboardingStorage):
         job_id="job-no-meta", domain_name="No Meta", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     accepted = [
         NodeGenerationOutcome(
@@ -513,7 +513,7 @@ def test_assemble_story_runs_phase3b_step_enricher_by_default(
         job_id="job-3b", domain_name="Phase 3b Domain", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     accepted = [
         NodeGenerationOutcome(
@@ -555,7 +555,7 @@ def test_assemble_story_step_enricher_can_be_skipped(storage: OnboardingStorage)
         job_id="job-no-3b", domain_name="No 3b", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     accepted = [
         NodeGenerationOutcome(
@@ -593,7 +593,7 @@ def test_assemble_story_runs_phase3c_reply_rules_when_client_given(
         job_id="job-3c", domain_name="Phase 3c Domain", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     class _StubClient:
         def __init__(self) -> None:
@@ -656,7 +656,7 @@ def test_assemble_story_phase3c_default_skipped_without_client(
         job_id="job-no-3c", domain_name="No 3c", target_locale="hu"
     )
     bp = _make_blueprint()
-    from services.onboarding.contracts import NodeGenerationOutcome
+    from support_engine.services.onboarding.contracts import NodeGenerationOutcome
 
     accepted = [
         NodeGenerationOutcome(
@@ -1061,7 +1061,7 @@ def _blueprint_with_proposed(
     node_ids: tuple[str, ...] = ("intake-node",),
     end_page_ids: tuple[str, ...] = ("end-default",),
 ) -> DomainBlueprint:
-    from services.onboarding.contracts import ProposedNewExternalField
+    from support_engine.services.onboarding.contracts import ProposedNewExternalField
 
     bp = _make_blueprint(node_ids=node_ids, end_page_ids=end_page_ids)
     return bp.model_copy(update={
@@ -1127,7 +1127,7 @@ def test_phase3a_passes_extra_known_external_fields_to_lint(
 
     captured_kwargs: dict[str, Any] = {}
     real = __import__(
-        "services.onboarding.orchestrator", fromlist=["lint_full_story"]
+        "support_engine.services.onboarding.orchestrator", fromlist=["lint_full_story"]
     ).lint_full_story
 
     def spy(story, *, extra_known_external_fields=None):
@@ -1135,7 +1135,7 @@ def test_phase3a_passes_extra_known_external_fields_to_lint(
         return real(story, extra_known_external_fields=extra_known_external_fields)
 
     monkeypatch.setattr(
-        "services.onboarding.orchestrator.lint_full_story", spy
+        "support_engine.services.onboarding.orchestrator.lint_full_story", spy
     )
     orchestrator.run_phase3a("job-p3pp")
 

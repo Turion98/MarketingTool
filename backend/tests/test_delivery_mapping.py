@@ -3,7 +3,7 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
-from services.order_context import (
+from decision_engine.services.order_context import (
     OrderContext,
     _apply_field_rules,
     derive_conditions,
@@ -11,8 +11,8 @@ from services.order_context import (
     get_order_context_mapping,
     resolve_satisfied_precedence,
 )
-from services.order_context_providers import MOCK_ORDERS
-from services.story_runtime import get_story_runtime_date
+from decision_engine.services.order_context_providers import MOCK_ORDERS
+from decision_engine.services.story_runtime import get_story_runtime_date
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 STORY_PATH = BACKEND_ROOT / "stories" / "ai_complaint_story_v3.json"
@@ -134,7 +134,7 @@ def test_mock_today_fallback_uses_date_today_when_missing():
         "meta": {**story["meta"], "runtime": runtime},
     }
     ctx = MOCK_ORDERS["ORD-CUST-001"]
-    with patch("services.order_context.date_type") as mock_date_module:
+    with patch("decision_engine.services.order_context.date_type") as mock_date_module:
         mock_date_module.today.return_value = MOCK_TODAY
         result = derive_conditions(ctx, {}, story=story_no_mock)
     assert "within_return_window" in result
@@ -375,7 +375,7 @@ def test_derive_conditions_uses_story_mapping():
 
 
 def test_ord_cust_001_mock_is_delivered_not_lost():
-    from services.order_context_providers import MOCK_ORDERS
+    from decision_engine.services.order_context_providers import MOCK_ORDERS
 
     ctx = MOCK_ORDERS["ORD-CUST-001"]
     assert ctx.tracking_status == "delivered"

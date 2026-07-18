@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 import pytest
 
-from services import ai_node_runtime as air
-from services.order_context import (
+from decision_engine.services import ai_node_runtime as air
+from decision_engine.services.order_context import (
     collect_validation_patterns,
     filter_satisfied_by_pattern_validation,
 )
@@ -542,9 +542,9 @@ def test_internal_rejected_key_does_not_leak_to_api_response() -> None:
     )
 
     with (
-        patch("routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
+        patch("decision_engine.routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
         patch(
-            "routers.ai_node_routes.match_active_node",
+            "decision_engine.routers.ai_node_routes.match_active_node",
             return_value={"activeNodeId": "delivery-issue", "askClarification": False},
         ),
         patch.object(

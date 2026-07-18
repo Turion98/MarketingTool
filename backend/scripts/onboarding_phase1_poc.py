@@ -43,13 +43,13 @@ _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from services.onboarding.constraints import build_constraint_catalog  # noqa: E402
-from services.onboarding.contracts import (  # noqa: E402
+from support_engine.services.onboarding.constraints import build_constraint_catalog  # noqa: E402
+from support_engine.services.onboarding.contracts import (  # noqa: E402
     DomainBlueprint,
     VendorPolicyKind,
 )
-from services.onboarding.tool_schemas import build_extract_blueprint_tool  # noqa: E402
-from services.story_lint import KNOWN_OCM_FIELDS  # noqa: E402
+from support_engine.services.onboarding.tool_schemas import build_extract_blueprint_tool  # noqa: E402
+from shared.story_lint import KNOWN_OCM_FIELDS  # noqa: E402
 
 
 # OrderContext mező pool — a `services/story_lint.KNOWN_OCM_FIELDS`-ből
@@ -112,11 +112,11 @@ def preprocess_research_text(text: str) -> str:
 # A schema szigorúbb mint amit a Pydantic előír (additionalProperties: false,
 # minimumok). A Pydantic második védvonal — itt a primer védelem.
 
-# A canonical schema-builder a `services.onboarding.tool_schemas` modulban él;
+# A canonical schema-builder a `support_engine.services.onboarding.tool_schemas` modulban él;
 # itt a constraint katalógusból (single source of truth) szóló példányt
 # cache-eljük process-szinten. A katalógus mezőit (KNOWN_OCM_FIELDS,
-# `vendor_policy` enum, stb.) a builder a `services.story_lint`-ből és a
-# `services.onboarding.constraints`-ból húzza össze.
+# `vendor_policy` enum, stb.) a builder a `shared.story_lint`-ből és a
+# `support_engine.services.onboarding.constraints`-ból húzza össze.
 EXTRACT_BLUEPRINT_TOOL: dict[str, Any] = build_extract_blueprint_tool(
     build_constraint_catalog()
 )

@@ -1,4 +1,4 @@
-"""Tests for `services.onboarding.cross_node_linker`.
+"""Tests for `support_engine.services.onboarding.cross_node_linker`.
 
 The two passes have orthogonal concerns:
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from services.onboarding.cross_node_linker import (
+from support_engine.services.onboarding.cross_node_linker import (
     complete_session_facts_whitelist,
     link_cross_nodes,
     wire_cross_node_inject_conditions,

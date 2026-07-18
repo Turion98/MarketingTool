@@ -1,4 +1,4 @@
-"""Pytest cases for `services.story_lint`.
+"""Pytest cases for `shared.story_lint`.
 
 Lefedett területek:
 
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from services.story_lint import (
+from shared.story_lint import (
     Report,
     lint_full_story,
     lint_single_node,

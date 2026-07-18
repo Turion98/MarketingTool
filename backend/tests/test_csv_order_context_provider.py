@@ -14,8 +14,8 @@ from textwrap import dedent
 
 import pytest
 
-from services.order_context import OrderContext
-from services.order_context_providers import (
+from decision_engine.services.order_context import OrderContext
+from decision_engine.services.order_context_providers import (
     DEFAULT_MOCK_ORDERS_CSV,
     MOCK_ORDERS,
     CsvOrderContextProvider,

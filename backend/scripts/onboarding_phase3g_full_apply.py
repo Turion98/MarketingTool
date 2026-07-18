@@ -40,11 +40,11 @@ try:
 except ImportError:
     pass
 
-from services.onboarding.anthropic_client import AnthropicOnboardingClient  # noqa: E402
-from services.onboarding.text_triggers_generator import (  # noqa: E402
+from support_engine.services.onboarding.anthropic_client import AnthropicOnboardingClient  # noqa: E402
+from support_engine.services.onboarding.text_triggers_generator import (  # noqa: E402
     generate_text_triggers_for_story,
 )
-from services.story_lint import lint_full_story  # noqa: E402
+from shared.story_lint import lint_full_story  # noqa: E402
 
 
 def _load_blueprint(path: Path) -> dict[str, Any]:

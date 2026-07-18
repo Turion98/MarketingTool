@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.step_enricher`.
+"""Pytest cases for `support_engine.services.onboarding.step_enricher`.
 
 Lefedett területek:
 
@@ -21,7 +21,7 @@ import copy
 
 import pytest
 
-from services.onboarding.step_enricher import (
+from support_engine.services.onboarding.step_enricher import (
     _DONE_WHEN_TEMPLATES,
     _extract_condition_ids,
     _format_done_when,

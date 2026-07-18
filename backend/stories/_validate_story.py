@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from backend.services.story_lint import Report, lint_full_story
+from shared.story_lint import Report, lint_full_story
 
 STORY_PATH = Path(__file__).with_name("ai_complaint_story_v3.json")
 

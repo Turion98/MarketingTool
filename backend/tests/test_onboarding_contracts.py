@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.contracts` Phase 2/3 modellek.
+"""Pytest cases for `support_engine.services.onboarding.contracts` Phase 2/3 modellek.
 
 Lefedett területek:
 
@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.contracts import (
     ConditionCandidate,
     DomainBlueprint,
     EndPageSpec,
@@ -39,7 +39,7 @@ from services.onboarding.contracts import (
     SemanticAuditResult,
     StructuralLintResult,
 )
-from services.story_lint import Report
+from shared.story_lint import Report
 
 
 # --------------------------------------------------------------------------- #

@@ -1,4 +1,4 @@
-"""Smoke tests for the prompt builders in `services.onboarding.anthropic_client`.
+"""Smoke tests for the prompt builders in `support_engine.services.onboarding.anthropic_client`.
 
 No Anthropic API calls. The tests cover:
 
@@ -19,7 +19,7 @@ present and stay invisible when absent.
 """
 from __future__ import annotations
 
-from services.onboarding.anthropic_client import (
+from support_engine.services.onboarding.anthropic_client import (
     build_phase1_system_prompt,
     build_phase1_user_message,
     build_phase2_system_prompt,
@@ -27,8 +27,8 @@ from services.onboarding.anthropic_client import (
     build_phase3b_system_prompt,
     build_phase3b_user_message,
 )
-from services.onboarding.constraints import build_constraint_catalog
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.constraints import build_constraint_catalog
+from support_engine.services.onboarding.contracts import (
     ConditionCandidate,
     DomainBlueprint,
     EndPageSpec,
@@ -176,7 +176,7 @@ def test_phase1_system_prompt_specific_vendor_anchors_name():
 
 
 def test_phase1_system_prompt_lists_every_known_field():
-    from services.story_lint import KNOWN_OCM_FIELDS
+    from shared.story_lint import KNOWN_OCM_FIELDS
 
     p = build_phase1_system_prompt(
         target_locale="en",

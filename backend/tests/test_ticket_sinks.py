@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from services.ticket_contracts import Ticket, TicketTemplate
-from services.ticket_sinks import JsonlFileTicketSink, LoggingTicketSink
+from decision_engine.services.ticket_contracts import Ticket, TicketTemplate
+from decision_engine.services.ticket_sinks import JsonlFileTicketSink, LoggingTicketSink
 
 
 def _make_ticket(**kwargs) -> Ticket:

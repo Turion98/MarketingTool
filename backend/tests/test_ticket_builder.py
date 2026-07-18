@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from services.order_context import OrderContext
-from services.ticket_builder import build_ticket
-from services.ticket_contracts import Ticket
+from decision_engine.services.order_context import OrderContext
+from decision_engine.services.ticket_builder import build_ticket
+from decision_engine.services.ticket_contracts import Ticket
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 STORY_PATH = BACKEND_ROOT / "stories" / "ai_complaint_story_v3.json"

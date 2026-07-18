@@ -1,6 +1,6 @@
 """Unit tesztek az onboarding coach modulhoz."""
 
-from services.onboarding.onboarding_coach import (
+from support_engine.services.onboarding.onboarding_coach import (
     CoachRequest,
     deterministic_coach_fallback,
     run_coach,

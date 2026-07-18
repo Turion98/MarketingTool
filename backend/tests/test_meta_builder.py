@@ -1,4 +1,4 @@
-"""Tests for `services.onboarding.meta_builder`.
+"""Tests for `support_engine.services.onboarding.meta_builder`.
 
 Three independent functions + a combined `apply_meta_builder` entry. Each
 function is deterministic, idempotent, and side-effect free except where
@@ -9,7 +9,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from services.onboarding.meta_builder import (
+from support_engine.services.onboarding.meta_builder import (
     apply_meta_builder,
     build_condition_labels,
     build_order_context_mapping,

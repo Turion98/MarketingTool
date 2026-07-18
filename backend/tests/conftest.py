@@ -28,7 +28,7 @@ def _isolated_session_event_sink(tmp_path, monkeypatch):
     session_dir = tmp_path / "session_events"
     session_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("SESSION_EVENTS_DIR", str(session_dir))
-    from services import session_event_sink as ses_mod
+    from decision_engine.services import session_event_sink as ses_mod
 
     monkeypatch.setattr(ses_mod, "SESSION_EVENTS_DIR", str(session_dir), raising=True)
     ses_mod.reset_default_session_event_sink()

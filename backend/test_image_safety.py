@@ -1,4 +1,4 @@
-from generate_image import _run_image_safety
+from shared.generate_image import _run_image_safety
 
 if __name__ == "__main__":
     # 1) kép, amin VAN szöveg

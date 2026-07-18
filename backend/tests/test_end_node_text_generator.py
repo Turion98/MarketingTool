@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.end_node_text_generator`.
+"""Pytest cases for `support_engine.services.onboarding.end_node_text_generator`.
 
 A modul a Card 4A (`AiPrefilledText` state machine) AI-generálását kapszulázza.
 A tesztek minden réteget lefednek:
@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from services.onboarding.brief_contracts import (
+from support_engine.services.onboarding.brief_contracts import (
     AiPrefilledText,
     Card1CompanyBasics,
     Card2Operations,
@@ -52,7 +52,7 @@ from services.onboarding.brief_contracts import (
     EndNodeKind,
     SupportChatbotBrief,
 )
-from services.onboarding.end_node_text_generator import (
+from support_engine.services.onboarding.end_node_text_generator import (
     EndNodeTextClient,
     apply_generated_end_node_texts,
     build_end_node_system_prompt,

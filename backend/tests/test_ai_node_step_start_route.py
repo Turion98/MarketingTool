@@ -37,12 +37,12 @@ def test_first_step_entry_uses_process_step_not_step_start_reply(client: TestCli
         }
 
     with (
-        patch("routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
+        patch("decision_engine.routers.ai_node_routes.get_top_k_nodes", return_value=[node]),
         patch(
-            "routers.ai_node_routes.match_active_node",
+            "decision_engine.routers.ai_node_routes.match_active_node",
             return_value={"activeNodeId": "delivery-issue", "askClarification": False},
         ),
-        patch("routers.ai_node_routes.process_step", side_effect=fake_process_step),
+        patch("decision_engine.routers.ai_node_routes.process_step", side_effect=fake_process_step),
     ):
         r = client.post(
             "/api/ai-node/process",
@@ -76,7 +76,7 @@ def _tool_block(name: str, data: dict):
 
 
 def test_first_step_delivered_not_received_advances_to_step_3a_mocked() -> None:
-    from services import ai_node_runtime as air
+    from decision_engine.services import ai_node_runtime as air
     from types import SimpleNamespace
 
     story = json.loads(STORY_PATH.read_text(encoding="utf-8"))
@@ -207,16 +207,16 @@ def test_complaint_intake_routes_to_battery_single_turn_handoff(
         }
 
     with (
-        patch("routers.ai_node_routes.get_top_k_nodes", return_value=[intake]),
+        patch("decision_engine.routers.ai_node_routes.get_top_k_nodes", return_value=[intake]),
         patch(
-            "routers.ai_node_routes.match_active_node",
+            "decision_engine.routers.ai_node_routes.match_active_node",
             return_value={"activeNodeId": "complaint-intake", "askClarification": False},
         ),
         patch(
-            "routers.ai_node_routes.extract_conditions",
+            "decision_engine.routers.ai_node_routes.extract_conditions",
             side_effect=fake_extract_conditions,
         ),
-        patch("routers.ai_node_routes.process_step", side_effect=fake_process_step),
+        patch("decision_engine.routers.ai_node_routes.process_step", side_effect=fake_process_step),
     ):
         r = client.post(
             "/api/ai-node/process",

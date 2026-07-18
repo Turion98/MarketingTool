@@ -1,5 +1,5 @@
 """Pytest cases for the brief-driven flow in
-`services.onboarding.orchestrator`:
+`support_engine.services.onboarding.orchestrator`:
 
 * `OnboardingOrchestrator.start_job_from_brief(brief)` — Phase 0 expander
   + job rekord + brief és phase0_result perzisztálás.
@@ -50,7 +50,7 @@ from typing import Any, Optional
 
 import pytest
 
-from services.onboarding.brief_contracts import (
+from support_engine.services.onboarding.brief_contracts import (
     AiPrefilledText,
     Card1CompanyBasics,
     Card2Operations,
@@ -64,18 +64,18 @@ from services.onboarding.brief_contracts import (
     Card5Boundaries,
     SupportChatbotBrief,
 )
-from services.onboarding.contracts import (
+from support_engine.services.onboarding.contracts import (
     DomainBlueprint,
     GenerationContext,
     NodeCandidate,
     SemanticAuditResult,
     VendorPolicyKind,
 )
-from services.onboarding.orchestrator import (
+from support_engine.services.onboarding.orchestrator import (
     OnboardingOrchestrator,
     OrchestratorError,
 )
-from services.onboarding.storage import OnboardingStorage
+from support_engine.services.onboarding.storage import OnboardingStorage
 
 
 # --------------------------------------------------------------------------- #

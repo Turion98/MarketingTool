@@ -1,8 +1,8 @@
-"""Pytest cases for `services.onboarding.constraints`.
+"""Pytest cases for `support_engine.services.onboarding.constraints`.
 
 Lefedett területek:
 
-1. **Drift detection** — a katalógus értékei a `services.story_lint`
+1. **Drift detection** — a katalógus értékei a `shared.story_lint`
    modul-szintű konstansaiból táplálkoznak. Ha valaki egy mezőt hozzáad
    a `KNOWN_OCM_FIELDS` halmazhoz vagy a `RUNTIME_INT_KEYS`-hez de
    elfelejti frissíteni a katalógus prompt-renderét, ez a teszt elbukik.
@@ -23,13 +23,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from services.story_lint import (
+from shared.story_lint import (
     KNOWN_OCM_FIELDS,
     REQUIRED_COMPUTED_KEYS,
     RUNTIME_INT_KEYS,
     RUNTIME_STR_KEYS,
 )
-from services.onboarding.constraints import (
+from support_engine.services.onboarding.constraints import (
     ALLOWED_FIELD_RULE_MODIFIERS,
     ALLOWED_FIELD_RULE_WHEN_VALUES,
     ALLOWED_PAGE_TYPES,
@@ -45,7 +45,7 @@ from services.onboarding.constraints import (
     build_constraint_catalog,
     render_catalog_for_prompt,
 )
-from services.onboarding.contracts import ProposedNewExternalField
+from support_engine.services.onboarding.contracts import ProposedNewExternalField
 
 
 # --------------------------------------------------------------------------- #

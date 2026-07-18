@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.reply_rules_generator`.
+"""Pytest cases for `support_engine.services.onboarding.reply_rules_generator`.
 
 Lefedett területek:
 
@@ -25,7 +25,7 @@ from typing import Any
 import jsonschema
 import pytest
 
-from services.onboarding.reply_rules_generator import (
+from support_engine.services.onboarding.reply_rules_generator import (
     apply_reply_rules_to_node,
     build_generate_reply_rules_tool,
     build_phase3c_system_prompt,

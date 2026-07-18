@@ -1,4 +1,4 @@
-"""Pytest cases for `services.onboarding.brief_contracts`.
+"""Pytest cases for `support_engine.services.onboarding.brief_contracts`.
 
 Lefedett területek (`questell_onboarding_flow.md` 6-kártya struktúra szerint):
 
@@ -55,7 +55,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from services.onboarding.brief_contracts import (
+from support_engine.services.onboarding.brief_contracts import (
     AiPrefilledText,
     Attachment,
     BriefExpansionResult,

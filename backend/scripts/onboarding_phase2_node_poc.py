@@ -41,19 +41,19 @@ _BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from services.onboarding.anthropic_client import (  # noqa: E402
+from support_engine.services.onboarding.anthropic_client import (  # noqa: E402
     AnthropicOnboardingClient,
     build_phase2_system_prompt,
     build_phase2_user_message,
 )
-from services.onboarding.constraints import build_constraint_catalog  # noqa: E402
-from services.onboarding.contracts import (  # noqa: E402
+from support_engine.services.onboarding.constraints import build_constraint_catalog  # noqa: E402
+from support_engine.services.onboarding.contracts import (  # noqa: E402
     DomainBlueprint,
     GenerationContext,
     NodeCandidate,
 )
-from services.onboarding.tool_schemas import build_generate_node_tool  # noqa: E402
-from services.story_lint import lint_single_node  # noqa: E402
+from support_engine.services.onboarding.tool_schemas import build_generate_node_tool  # noqa: E402
+from shared.story_lint import lint_single_node  # noqa: E402
 
 
 def _load_blueprint(path: Path) -> DomainBlueprint:

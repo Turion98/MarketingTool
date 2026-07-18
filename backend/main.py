@@ -6,21 +6,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from feedback_routes import router as feedback_router
-from middleware.http import NoCacheStoriesMiddleware, SecurityHeadersMiddleware
-from router.white_label import router as white_label_router
-from routers.admin import router as admin_router
-from routers.analytics import router as analytics_router
-from routers.ai_node_routes import router as ai_node_router
-from routers.media import router as media_router
-from routers.embed_access import router as embed_access_router
-from routers.onboarding_brief_routes import router as onboarding_brief_router
-from routers.reports import router as reports_router
-from routers.runtime import router as runtime_router
-from services.reports import start_report_scheduler
-from services.embedding_store import preload_embeddings
-from services.runtime_config import STORIES_DIR
-from storysvc.router import router as stories_router
+from decision_engine.routers.feedback_routes import router as feedback_router
+from shared.middleware.http import NoCacheStoriesMiddleware, SecurityHeadersMiddleware
+from decision_engine.router.white_label import router as white_label_router
+from decision_engine.routers.admin import router as admin_router
+from decision_engine.routers.analytics import router as analytics_router
+from decision_engine.routers.ai_node_routes import router as ai_node_router
+from decision_engine.routers.media import router as media_router
+from decision_engine.routers.embed_access import router as embed_access_router
+from support_engine.routers.onboarding_brief_routes import router as onboarding_brief_router
+from decision_engine.routers.reports import router as reports_router
+from decision_engine.routers.runtime import router as runtime_router
+from decision_engine.services.reports import start_report_scheduler
+from decision_engine.services.embedding_store import preload_embeddings
+from decision_engine.services.runtime_config import STORIES_DIR
+from decision_engine.storysvc.router import router as stories_router
 
 
 def _cors_allow_origins() -> list[str]:

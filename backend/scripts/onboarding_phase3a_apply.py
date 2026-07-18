@@ -47,10 +47,10 @@ _BACKEND = _HERE.parent
 if str(_BACKEND) not in sys.path:
     sys.path.insert(0, str(_BACKEND))
 
-from services.onboarding.cross_node_linker import link_cross_nodes  # noqa: E402
-from services.onboarding.meta_builder import apply_meta_builder  # noqa: E402
-from services.onboarding.step_enricher import apply_step_enricher  # noqa: E402
-from services.story_lint import lint_full_story  # noqa: E402
+from support_engine.services.onboarding.cross_node_linker import link_cross_nodes  # noqa: E402
+from support_engine.services.onboarding.meta_builder import apply_meta_builder  # noqa: E402
+from support_engine.services.onboarding.step_enricher import apply_step_enricher  # noqa: E402
+from shared.story_lint import lint_full_story  # noqa: E402
 
 
 def _load_blueprint(path: Path) -> dict[str, Any]:

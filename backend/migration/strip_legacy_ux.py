@@ -1,7 +1,7 @@
 # backend/migration/strip_legacy_ux.py
 from __future__ import annotations
 
-from services.contracts import JSONValue
+from shared.contracts import JSONValue
 
 LEGACY_KEYS_EXACT: set[str] = {"layout", "globalUI"}
 LEGACY_PREFIXES: set[str] = {"ux", "ux_", "ux-"}
