@@ -28,7 +28,12 @@ from services.order_context import (
     merge_session_and_derived_satisfied,
     resolve_satisfied_precedence,
 )
-from services.order_context_providers import MockOrderContextProvider
+from services.order_context_providers import get_default_order_context_provider
+from services.session_event_sink import (
+    get_default_session_event_sink,
+    read_last_event,
+    utc_now_iso,
+)
 from services.story_runtime import (
     get_ai_node_payload,
     get_story_meta_string,
@@ -38,6 +43,7 @@ from services.story_runtime import (
     resolve_ai_clarification_fallback_message,
     resolve_end_page_content,
 )
+from services.ticket_integration import emit_ticket_for_end_page
 
 router = APIRouter(tags=["ai-node"])
 logger = logging.getLogger(__name__)
@@ -66,6 +72,137 @@ def _sse(event: str, payload: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
+def _attach_ticket_to_response(
+    response: dict,
+    *,
+    story: dict | None,
+    body: "AiNodeProcessRequest",
+    order_context: OrderContext | None,
+) -> dict:
+    """End page-re mutató válaszhoz csatolja a `ticket` mezőt (vagy `None`-t).
+
+    A `nextPageId` alapján kéri a `ticket_integration.emit_ticket_for_end_page`-t,
+    ami egyúttal a JsonlFileTicketSink-re is submitál (kivéve ha cache-hit van).
+    """
+    response["ticket"] = None
+    if not isinstance(story, dict):
+        return response
+    next_page_id = response.get("nextPageId")
+    if not isinstance(next_page_id, str) or not next_page_id.strip():
+        return response
+    session_id_raw = body.sessionId if isinstance(body.sessionId, str) else ""
+    session_id = session_id_raw.strip()
+    satisfied = response.get("satisfiedConditions") or []
+    satisfied_list = [s for s in satisfied if isinstance(s, str)] if isinstance(satisfied, list) else []
+    customer_message = body.prompt if isinstance(body.prompt, str) else ""
+    try:
+        ticket = emit_ticket_for_end_page(
+            story=story,
+            end_page_id=next_page_id.strip(),
+            session_id=session_id,
+            customer_message=customer_message,
+            order_context=order_context,
+            satisfied_conditions=satisfied_list,
+        )
+    except Exception as exc:  # ne tegyük tönkre a választ ticket-hibán
+        logger.exception("Ticket emit hiba: %s", exc)
+        return response
+    if ticket is not None:
+        response["ticket"] = ticket.model_dump(mode="json")
+    return response
+
+
+def _attach_session_event_to_response(
+    response: dict,
+    *,
+    body: "AiNodeProcessRequest",
+    step_result: dict | None,
+) -> dict:
+    """Session-szintű turn event JSONL log írása.
+
+    Minden turn végén meghívódik (step path + clarification path + handoff path).
+    Az event tartalmazza a turn input/output állapotát (from→to node/step, satisfied,
+    újonnan satisfied, kérdés-flag-ek, branch). Az írás silently fails (logoljuk),
+    hogy a választ ne befolyásolja.
+
+    Az idempotens kulcs `(sessionId, turn)` — duplikált hívás esetén csak az első ír.
+    """
+    session_id_raw = body.sessionId if isinstance(body.sessionId, str) else ""
+    session_id = session_id_raw.strip()
+    if not session_id:
+        return response
+    turn = body.turnCount if isinstance(body.turnCount, int) and body.turnCount >= 1 else 1
+
+    step_data = step_result if isinstance(step_result, dict) else {}
+
+    previous = None
+    try:
+        previous = read_last_event(session_id)
+    except Exception as exc:
+        logger.debug("read_last_event hiba: %s", exc)
+
+    from_node_id = (
+        previous.get("toNodeId") if isinstance(previous, dict) else None
+    )
+    from_step_id = (
+        previous.get("toStepId") if isinstance(previous, dict) else None
+    )
+
+    to_node_id_raw = response.get("activeNodeId")
+    to_node_id = to_node_id_raw if isinstance(to_node_id_raw, str) and to_node_id_raw else None
+
+    to_step_id_raw = response.get("currentStepId")
+    to_step_id = to_step_id_raw if isinstance(to_step_id_raw, str) and to_step_id_raw else None
+
+    satisfied_before = list(body.satisfiedConditions or [])
+    satisfied_after_raw = response.get("satisfiedConditions") or []
+    satisfied_after = (
+        [s for s in satisfied_after_raw if isinstance(s, str)]
+        if isinstance(satisfied_after_raw, list)
+        else []
+    )
+    newly_raw = response.get("newlySatisfied") or []
+    newly = (
+        [s for s in newly_raw if isinstance(s, str)]
+        if isinstance(newly_raw, list)
+        else []
+    )
+
+    user_has_question_raw = step_data.get("userHasOpenQuestion")
+    user_has_question = bool(user_has_question_raw) if user_has_question_raw is not None else False
+    summary_raw = step_data.get("userQuestionSummary")
+    user_question_summary = summary_raw if isinstance(summary_raw, str) and summary_raw else None
+
+    next_page_raw = response.get("nextPageId")
+    end_page_id = next_page_raw if isinstance(next_page_raw, str) and next_page_raw else None
+
+    branch_taken: str | None = None
+    if from_node_id and to_node_id and from_node_id != to_node_id:
+        branch_taken = f"{from_node_id}->{to_node_id}"
+
+    event = {
+        "sessionId": session_id,
+        "turn": turn,
+        "timestamp": utc_now_iso(),
+        "fromNodeId": from_node_id,
+        "toNodeId": to_node_id,
+        "fromStepId": from_step_id,
+        "toStepId": to_step_id,
+        "satisfied_before": satisfied_before,
+        "satisfied_after": satisfied_after,
+        "newlySatisfied": newly,
+        "userHasOpenQuestion": user_has_question,
+        "userQuestionSummary": user_question_summary,
+        "branchTaken": branch_taken,
+        "endPageId": end_page_id,
+    }
+    try:
+        get_default_session_event_sink().submit(event)
+    except Exception as exc:
+        logger.exception("SessionEvent submit hiba: %s", exc)
+    return response
+
+
 def _step_followup_payload(
     *,
     active_node_id: str,
@@ -75,6 +212,7 @@ def _step_followup_payload(
     entry_step_id: str | None = None,
     story_pages: dict | None = None,
     story: dict | None = None,
+    order_context: OrderContext | None = None,
 ) -> dict:
     """Egységes válasz-objektum a `process_step` eredményéből (lépéskövetés)."""
     mapping = get_order_context_mapping(story)
@@ -125,7 +263,12 @@ def _step_followup_payload(
         end_content = (
             end_from_step.strip()
             if isinstance(end_from_step, str) and end_from_step.strip()
-            else (resolve_end_page_content(pages_for_end, page_id) or "").strip()
+            else (
+                resolve_end_page_content(
+                    pages_for_end, page_id, order_context=order_context
+                )
+                or ""
+            ).strip()
         )
         out = {
             **base_fields,
@@ -142,7 +285,12 @@ def _step_followup_payload(
             out["assistantMessage"] = end_content
             if not out.get("endPageContent"):
                 out["endPageContent"] = end_content
-        return out
+        _attach_ticket_to_response(
+            out, story=story, body=body, order_context=order_context
+        )
+        return _attach_session_event_to_response(
+            out, body=body, step_result=step_result
+        )
 
     if step_done and not next_step_id:
         routing_result = get_ai_node_payload(
@@ -150,21 +298,33 @@ def _step_followup_payload(
             src=src,
             satisfied_conditions=all_satisfied,
         )
-        return {
+        out = {
             **base_fields,
             "status": "ok",
             "currentStepId": None,
             "nextStepId": None,
             "nextPageId": routing_result.get("nextPageId"),
         }
+        _attach_ticket_to_response(
+            out, story=story, body=body, order_context=order_context
+        )
+        return _attach_session_event_to_response(
+            out, body=body, step_result=step_result
+        )
 
-    return {
+    out = {
         **base_fields,
         "status": "ok" if step_done else "clarification",
         "currentStepId": current_step_id,
         "nextStepId": next_step_id if step_done else None,
         "nextPageId": None,
     }
+    _attach_ticket_to_response(
+        out, story=story, body=body, order_context=order_context
+    )
+    return _attach_session_event_to_response(
+        out, body=body, step_result=step_result
+    )
 
 
 def _sse_step_stream(
@@ -176,6 +336,7 @@ def _sse_step_stream(
     entry_step_id: str | None = None,
     story_pages: dict | None = None,
     story: dict | None = None,
+    order_context: OrderContext | None = None,
 ) -> Iterator[str]:
     """Meta (üres assistantMessage) → delta tokenek → done teljes payload."""
     acc: list[str] = []
@@ -189,6 +350,7 @@ def _sse_step_stream(
         entry_step_id=entry_step_id,
         story_pages=story_pages,
         story=story,
+        order_context=order_context,
     )
     yield _sse("meta", base)
     for piece in bundle.text_deltas:
@@ -214,6 +376,7 @@ def _sse_step_stream(
         entry_step_id=entry_step_id,
         story_pages=story_pages,
         story=story,
+        order_context=order_context,
     )
     yield _sse("done", done_payload)
 
@@ -280,6 +443,7 @@ def _routing_handoff_to_step(
                     entry_step_id=entry_step_id,
                     story_pages=story_pages,
                     story=story,
+                    order_context=order_context,
                 ),
                 media_type="text/event-stream",
             )
@@ -291,6 +455,7 @@ def _routing_handoff_to_step(
             entry_step_id=entry_step_id,
             story_pages=story_pages,
             story=story,
+            order_context=order_context,
         )
 
     step_result = process_step(
@@ -314,6 +479,7 @@ def _routing_handoff_to_step(
         entry_step_id=entry_step_id,
         story_pages=story_pages,
         story=story,
+        order_context=order_context,
     )
 
 
@@ -345,7 +511,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
             pattern=reference_id_pattern if isinstance(reference_id_pattern, str) else None,
         )
     if resolved_order_id:
-        provider = MockOrderContextProvider()
+        provider = get_default_order_context_provider()
         order_context = await provider.get_order_context(resolved_order_id)
         if order_context:
             logger.debug(
@@ -454,6 +620,9 @@ async def process_ai_node(body: AiNodeProcessRequest):
                 out["responseType"] = "fallback"
             else:
                 out["assistantMessage"] = ai_assistant
+            _attach_ticket_to_response(
+                out, story=story, body=body, order_context=order_context
+            )
             if body.stream:
 
                 def _clar_gen() -> Iterator[str]:
@@ -481,6 +650,9 @@ async def process_ai_node(body: AiNodeProcessRequest):
                 ),
                 "responseType": "fallback",
             }
+            _attach_ticket_to_response(
+                out, story=story, body=body, order_context=order_context
+            )
             if body.stream:
 
                 def _clar_fallback_gen() -> Iterator[str]:
@@ -530,6 +702,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
                             src=body.src,
                             story_pages=pages if isinstance(pages, dict) else None,
                             story=story,
+                            order_context=order_context,
                         ),
                         media_type="text/event-stream",
                     )
@@ -540,6 +713,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
                     src=body.src,
                     story_pages=pages if isinstance(pages, dict) else None,
                     story=story,
+                    order_context=order_context,
                 )
 
                 def _step_done_only() -> Iterator[str]:
@@ -568,6 +742,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
                 src=body.src,
                 story_pages=pages if isinstance(pages, dict) else None,
                 story=story,
+                order_context=order_context,
             )
 
     if steps and not body.currentStepId:
@@ -598,6 +773,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
                         entry_step_id=entry_step_id,
                         story_pages=pages if isinstance(pages, dict) else None,
                         story=story,
+                        order_context=order_context,
                     ),
                     media_type="text/event-stream",
                 )
@@ -609,6 +785,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
                 entry_step_id=entry_step_id,
                 story_pages=pages if isinstance(pages, dict) else None,
                 story=story,
+                order_context=order_context,
             )
 
         step_result = process_step(
@@ -632,6 +809,7 @@ async def process_ai_node(body: AiNodeProcessRequest):
             entry_step_id=entry_step_id,
             story_pages=pages if isinstance(pages, dict) else None,
             story=story,
+            order_context=order_context,
         )
 
     # 3. Kondíció felismerés (+ válasz, ha nem routing-only handoff)
@@ -725,6 +903,14 @@ async def process_ai_node(body: AiNodeProcessRequest):
             if ask else None
         ),
     }
+    _attach_ticket_to_response(
+        final_out, story=story, body=body, order_context=order_context
+    )
+    _attach_session_event_to_response(
+        final_out,
+        body=body,
+        step_result=condition_result if isinstance(condition_result, dict) else None,
+    )
     if body.stream:
 
         def _tail_gen() -> Iterator[str]:
