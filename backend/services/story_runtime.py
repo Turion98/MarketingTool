@@ -520,18 +520,96 @@ def get_story_meta_string(story: dict | None, key: str) -> str:
     return default
 
 
+_PLACEHOLDER_RE = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
+
+
+def _format_context_value(value: object) -> str:
+    """OrderContext mező → ügyfélbarát string reprezentáció.
+
+    - date → ISO formátum (YYYY-MM-DD)
+    - list[str] → vesszővel összefűzve
+    - float → max 2 tizedes, felesleges trailing 0 nélkül
+    - bool → "igen" / "nem"
+    - None → "ismeretlen"
+    - egyéb → str()
+    """
+    if value is None:
+        return "ismeretlen"
+    if isinstance(value, bool):
+        return "igen" if value else "nem"
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, list):
+        return ", ".join(str(v) for v in value if v is not None)
+    if isinstance(value, float):
+        text = f"{value:.2f}".rstrip("0").rstrip(".")
+        return text if text else "0"
+    return str(value)
+
+
+def _substitute_context_placeholders(
+    template: str,
+    context_fields: list[str] | None,
+    order_context: object | None,
+) -> str:
+    """Story end node `content` `{field}` placeholderek behelyettesítése OrderContext-ből.
+
+    A behelyettesítés csak akkor fut, ha az end node-on van `context_fields` lista —
+    így a meglévő statikus contentek érintetlenek maradnak. Ismeretlen mező vagy hiányzó
+    context esetén "ismeretlen" jelenik meg (nincs KeyError).
+    """
+    if not isinstance(template, str) or not template:
+        return template
+    if not isinstance(context_fields, list) or not context_fields:
+        return template
+
+    allowed = {f for f in context_fields if isinstance(f, str) and f}
+    if not allowed:
+        return template
+
+    ctx_dict: dict = {}
+    if order_context is not None:
+        dump = getattr(order_context, "model_dump", None)
+        if callable(dump):
+            try:
+                ctx_dict = dump() or {}
+            except Exception:
+                ctx_dict = {}
+
+    def _replace(match: re.Match) -> str:
+        name = match.group(1)
+        if name not in allowed:
+            return match.group(0)
+        return _format_context_value(ctx_dict.get(name))
+
+    return _PLACEHOLDER_RE.sub(_replace, template)
+
+
 def resolve_end_page_content(
     pages: dict | None,
     page_id: str,
+    order_context: object | None = None,
 ) -> str:
-    """End node fix `content` szövege, ha létezik."""
+    """End node fix `content` szövege, ha létezik.
+
+    Ha az end node-on van `context_fields` lista, a `content` `{field}`
+    placeholderei behelyettesítődnek az `order_context` aktuális értékeivel —
+    így az ügyfél konkrét adatokat lát a végoldalon (dátum, összeg, ügyazonosító),
+    de a story JSON továbbra is deklaratív.
+    """
     if not isinstance(pages, dict) or not isinstance(page_id, str) or not page_id.strip():
         return ""
     page = pages.get(page_id.strip())
     if not isinstance(page, dict) or page.get("type") != "end":
         return ""
     raw = page.get("content")
-    return raw.strip() if isinstance(raw, str) and raw.strip() else ""
+    if not isinstance(raw, str) or not raw.strip():
+        return ""
+
+    context_fields = page.get("context_fields")
+    if isinstance(context_fields, list) and context_fields and order_context is not None:
+        raw = _substitute_context_placeholders(raw, context_fields, order_context)
+    return raw.strip()
 
 
 def resolve_ai_clarification_fallback_message(story: StoryDocument, page_id: str) -> str:
