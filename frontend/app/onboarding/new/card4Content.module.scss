@@ -1,0 +1,110 @@
+.regenRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.regenCopy {
+  flex: 1;
+  min-width: 200px;
+}
+
+.staleHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(165, 95, 30);
+  padding: 10px 12px;
+  background: rgba(200, 120, 50, 0.10);
+  border-radius: 8px;
+  border-left: 3px solid rgba(200, 120, 50, 0.5);
+}
+
+.errorHint {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(160, 50, 50);
+  padding: 10px 12px;
+  background: rgba(180, 60, 60, 0.08);
+  border-radius: 8px;
+}
+
+.errorDismiss {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  color: rgb(120, 40, 40);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.regenBtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(40, 83, 74, 0.4);
+  background: #fff;
+  color: rgb(40, 83, 74);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(40, 83, 74, 0.06);
+    border-color: rgba(40, 83, 74, 0.65);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.regenBtnHighlight {
+  background: rgba(200, 120, 50, 0.12);
+  border-color: rgba(200, 120, 50, 0.55);
+  color: rgb(140, 80, 25);
+  box-shadow: 0 0 0 3px rgba(200, 120, 50, 0.12);
+  animation: pulseHighlight 2s ease-in-out infinite;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(200, 120, 50, 0.12); }
+  50% { box-shadow: 0 0 0 6px rgba(200, 120, 50, 0.18); }
+}
+
+.slotList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fixedPanel {
+  padding: 16px 18px;
+  background: rgba(40, 83, 74, 0.05);
+  border: 1px solid rgba(40, 83, 74, 0.15);
+  border-radius: 10px;
+}
+
+.fixedPanelTitle {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.fixedPanelText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(20, 30, 30, 0.7);
+}

@@ -1,0 +1,302 @@
+.summaryBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background: rgba(40, 60, 60, 0.05);
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(20, 30, 30, 0.7);
+}
+
+.summaryHint {
+  font-weight: 400;
+  font-style: italic;
+  color: rgb(165, 95, 30);
+}
+
+.slotList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .cardGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.slotCard {
+  text-align: left;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(40, 60, 60, 0.12);
+  background: rgba(255, 254, 250, 0.9);
+  cursor: pointer;
+  font: inherit;
+  min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(40, 83, 74, 0.4);
+    box-shadow: 0 4px 12px rgba(40, 60, 60, 0.06);
+  }
+}
+
+.slotCardFilled {
+  border-color: rgba(40, 83, 74, 0.35);
+}
+
+.slotCardWarning {
+  border-color: rgba(200, 120, 50, 0.35);
+}
+
+.slotCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.slotCardTitle {
+  margin: 0 0 6px;
+  font-family: var(--font-cormorant, serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: #1d211f;
+}
+
+.slotCardMeta {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.overlayBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(20, 30, 30, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.overlayPanel {
+  width: min(100%, 640px);
+  max-height: min(85vh, 720px);
+  background: #fffdf8;
+  border-radius: 14px;
+  border: 1px solid rgba(40, 60, 60, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(20, 30, 30, 0.2);
+}
+
+.overlayHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(40, 60, 60, 0.08);
+}
+
+.overlayTitle {
+  margin: 0 0 8px;
+  font-family: var(--font-cormorant, serif);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.overlayClose {
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(20, 30, 30, 0.55);
+  padding: 4px 8px;
+}
+
+.overlayBody {
+  padding: 16px 18px 18px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.hiddenFile {
+  display: none;
+}
+
+.fileError {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: rgb(180, 60, 60);
+}
+
+.row {
+  padding: 16px;
+  background: rgba(255, 254, 250, 0.85);
+  border: 1px solid rgba(40, 60, 60, 0.10);
+  border-radius: 12px;
+}
+
+.rowWarning {
+  border-color: rgba(200, 120, 50, 0.35);
+  background: rgba(200, 120, 50, 0.04);
+}
+
+.rowHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rowTitleBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rowTitle {
+  margin: 0;
+  font-family: var(--font-cormorant, serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d211f;
+}
+
+.priorityBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.priority_required {
+  background: rgba(180, 60, 60, 0.12);
+  color: rgb(140, 45, 45);
+}
+
+.priority_strongly_recommended {
+  background: rgba(200, 120, 50, 0.14);
+  color: rgb(165, 95, 30);
+}
+
+.priority_recommended {
+  background: rgba(70, 110, 180, 0.12);
+  color: rgb(50, 80, 140);
+}
+
+.priority_optional {
+  background: rgba(40, 60, 60, 0.08);
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.warningBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(165, 95, 30);
+  white-space: nowrap;
+}
+
+.emptySlot {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(20, 30, 30, 0.5);
+}
+
+.attachmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.attachmentCard {
+  padding: 12px;
+  background: #fff;
+  border: 1px solid rgba(40, 60, 60, 0.10);
+  border-radius: 10px;
+}
+
+.attachmentHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.attachmentKind {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(40, 83, 74, 0.85);
+}
+
+.removeBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid rgba(40, 60, 60, 0.16);
+  background: transparent;
+  color: rgba(20, 30, 30, 0.55);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    background: rgba(180, 60, 60, 0.08);
+    color: rgb(180, 60, 60);
+  }
+}
+
+.fileHint {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.addBtn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(40, 83, 74, 0.35);
+  background: #fff;
+  color: rgb(40, 83, 74);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(40, 83, 74, 0.06);
+  }
+}

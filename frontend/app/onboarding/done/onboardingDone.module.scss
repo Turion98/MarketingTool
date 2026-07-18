@@ -1,0 +1,143 @@
+.frame {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px clamp(16px, 4vw, 40px) 80px;
+  text-align: center;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, rgba(40, 83, 74, 0.14), rgba(60, 130, 100, 0.08));
+  color: rgb(40, 83, 74);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(40, 83, 74, 0.8);
+}
+
+.title {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant, serif);
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 600;
+  color: #1d211f;
+  line-height: 1.2;
+}
+
+.lead {
+  margin: 0 0 28px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(20, 30, 30, 0.72);
+}
+
+.card {
+  text-align: left;
+  background: rgba(255, 254, 250, 0.92);
+  border: 1px solid rgba(40, 60, 60, 0.1);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 14px rgba(40, 60, 60, 0.04);
+}
+
+.cardTitle {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(20, 30, 30, 0.85);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(20, 30, 30, 0.68);
+
+  li + li {
+    margin-top: 6px;
+  }
+}
+
+.meta {
+  margin: 0 0 28px;
+  font-size: 13px;
+  color: rgba(20, 30, 30, 0.5);
+}
+
+.meta code {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(40, 60, 60, 0.06);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btnPrimary,
+.btnGhost {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnPrimary {
+  background: linear-gradient(140deg, #28534a 0%, #3d7a6c 80%);
+  color: #f4ecd8;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 14px rgba(40, 83, 74, 0.28);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(40, 83, 74, 0.36);
+  }
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid rgba(40, 60, 60, 0.22);
+  color: rgba(20, 30, 30, 0.7);
+
+  &:hover {
+    background: rgba(40, 60, 60, 0.04);
+    color: rgba(20, 30, 30, 0.9);
+  }
+}
+
+.placeholderNote {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(40, 60, 60, 0.15);
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.45);
+  font-style: italic;
+}

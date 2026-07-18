@@ -1,0 +1,518 @@
+/* Közös shared styling a Card 1-6 belső formjaihoz. */
+
+.cardForm {
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-gap-lg, 20px);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.intro {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(20, 30, 30, 0.7);
+  padding: 14px 16px;
+  background: rgba(40, 83, 74, 0.05);
+  border-radius: 10px;
+  border-left: 3px solid rgba(40, 83, 74, 0.4);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--ob-gap-md, 16px);
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.section {
+  margin-top: 18px;
+  padding: 18px 18px 16px;
+  background: rgba(40, 60, 60, 0.03);
+  border: 1px solid rgba(40, 60, 60, 0.08);
+  border-radius: 12px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  margin: 0 0 4px;
+  font-family: var(--font-cormorant, serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d211f;
+}
+
+.sectionSubtitle {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(20, 30, 30, 0.62);
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+.sectionAddBtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(40, 83, 74, 0.4);
+  color: rgb(40, 83, 74);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: rgba(40, 83, 74, 0.06);
+    border-color: rgba(40, 83, 74, 0.7);
+  }
+
+  &:disabled {
+    color: rgba(20, 30, 30, 0.35);
+    border-color: rgba(40, 60, 60, 0.12);
+    cursor: not-allowed;
+  }
+}
+
+.emptyHint {
+  padding: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(20, 30, 30, 0.5);
+  font-style: italic;
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryRow {
+  background: rgba(255, 254, 250, 0.9);
+  border: 1px solid rgba(40, 60, 60, 0.10);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.categoryRowMain {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+@media (max-width: 640px) {
+  .categoryRowMain {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.categoryRemove {
+  align-self: end;
+  margin-bottom: 18px;
+  background: transparent;
+  border: 1px solid rgba(40, 60, 60, 0.16);
+  color: rgba(20, 30, 30, 0.55);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(180, 60, 60, 0.08);
+    border-color: rgba(180, 60, 60, 0.32);
+    color: rgb(180, 60, 60);
+  }
+}
+
+.sumBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sumBarOk {
+  background: rgba(60, 130, 100, 0.10);
+  color: rgb(30, 70, 55);
+}
+
+.sumBarError {
+  background: rgba(200, 120, 50, 0.12);
+  color: rgb(140, 80, 30);
+}
+
+.sumBarMsg {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* --- Subsection (Card 2 / 3 belső "2a Returns" stb. blokkok) ----------- */
+
+.subsection {
+  margin-top: 0;
+  padding-top: var(--ob-gap-lg, 20px);
+  border-top: 1px solid rgba(40, 60, 60, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-gap-md, 16px);
+  min-width: 0;
+
+  &:first-of-type {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.subsectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.subsectionTag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(40, 83, 74, 0.85);
+  background: rgba(40, 83, 74, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.subsectionTitle {
+  margin: 0;
+  font-family: var(--font-cormorant, serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1d211f;
+  letter-spacing: -0.01em;
+}
+
+.subsectionSubtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(20, 30, 30, 0.6);
+}
+
+/* --- Checkbox + arrow remedy-ladder ------------------------------------ */
+
+.remedyLadder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.remedyRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(255, 254, 250, 0.7);
+  border: 1px solid rgba(40, 60, 60, 0.10);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  min-width: 0;
+}
+
+.remedyRowMain {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.remedyRowSelected {
+  background: #fff;
+  border-color: rgba(40, 83, 74, 0.4);
+  box-shadow: 0 2px 8px rgba(40, 60, 60, 0.06);
+}
+
+.remedyRank {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28534a, #3d7a6c);
+  color: #f4ecd8;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remedyRankInactive {
+  background: rgba(40, 60, 60, 0.08);
+  color: rgba(20, 30, 30, 0.4);
+  font-weight: 500;
+}
+
+.remedyCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: rgb(40, 83, 74);
+    cursor: pointer;
+  }
+}
+
+.remedyLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.remedyName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.remedyDesc {
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.remedyArrows {
+  display: flex;
+  gap: 4px;
+}
+
+.remedyArrowBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid rgba(40, 60, 60, 0.18);
+  background: #fff;
+  color: rgba(20, 30, 30, 0.65);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(40, 83, 74, 0.06);
+    border-color: rgba(40, 83, 74, 0.4);
+    color: rgb(40, 83, 74);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+/* --- Multi-checkbox (carriers, urgency triggers) ----------------------- */
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.checkChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 254, 250, 0.7);
+  border: 1px solid rgba(40, 60, 60, 0.12);
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(20, 30, 30, 0.75);
+  user-select: none;
+  transition: all 0.15s ease;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: rgb(40, 83, 74);
+    cursor: pointer;
+  }
+
+  &:hover {
+    background: #fff;
+    border-color: rgba(40, 60, 60, 0.25);
+  }
+}
+
+.checkChipSelected {
+  background: rgba(40, 83, 74, 0.06);
+  border-color: rgba(40, 83, 74, 0.5);
+  color: rgb(30, 60, 50);
+  font-weight: 600;
+}
+
+/* --- Inline 2-cell mini-row (value + unit) ----------------------------- */
+
+.inlinePair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+/* --- Toggle row (boolean field with inline label) ---------------------- */
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 254, 250, 0.7);
+  border: 1px solid rgba(40, 60, 60, 0.10);
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 14px;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: rgb(40, 83, 74);
+    cursor: pointer;
+  }
+}
+
+.toggleRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggleRowLabel {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.toggleRowDesc {
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.fieldHint {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.55);
+  line-height: 1.45;
+}
+
+.requiredMark {
+  color: rgb(180, 60, 60);
+}
+
+.segmentedInline {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segmentBtn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(40, 60, 60, 0.2);
+  background: #fff;
+  color: rgba(20, 30, 30, 0.7);
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgba(40, 83, 74, 0.45);
+  }
+}
+
+.segmentBtnActive {
+  background: rgba(40, 83, 74, 0.1);
+  border-color: rgba(40, 83, 74, 0.55);
+  color: rgb(30, 60, 50);
+}
+
+.repairSubRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding-left: 44px;
+}
+
+.repairSubCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+
+  input {
+    accent-color: rgb(40, 83, 74);
+  }
+}
+
+.repairSubInput {
+  flex: 1;
+  min-width: 180px;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid rgba(40, 60, 60, 0.16);
+  border-radius: 8px;
+}

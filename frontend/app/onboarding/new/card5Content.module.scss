@@ -1,0 +1,188 @@
+.chipSection {
+  margin-top: 16px;
+}
+
+.chipLabel,
+.fieldLabel {
+  margin: 0 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.chipHint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: rgba(20, 30, 30, 0.55);
+  line-height: 1.45;
+}
+
+.chipInputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(40, 83, 74, 0.08);
+  border: 1px solid rgba(40, 83, 74, 0.25);
+  border-radius: 999px;
+  font-size: 13px;
+  color: rgb(30, 60, 50);
+}
+
+.chipRemove {
+  font: inherit;
+  border: 0;
+  background: transparent;
+  color: rgba(20, 30, 30, 0.5);
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+
+  &:hover {
+    color: rgb(180, 60, 60);
+  }
+}
+
+.contactSection {
+  margin-top: 18px;
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contactRow {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+@media (max-width: 640px) {
+  .contactRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .contactSelect {
+    grid-column: 1 / -1;
+  }
+}
+
+.contactSelect {
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(40, 60, 60, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 18px;
+}
+
+.fixedPanel {
+  padding: 16px 18px;
+  background: rgba(40, 83, 74, 0.05);
+  border: 1px solid rgba(40, 83, 74, 0.15);
+  border-radius: 10px;
+}
+
+.fixedPanelTitle {
+  margin: 0 0 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d211f;
+}
+
+.fixedPanelList {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(20, 30, 30, 0.75);
+
+  li + li {
+    margin-top: 6px;
+  }
+}
+
+.fixedPanelNote {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(20, 30, 30, 0.55);
+}
+
+.exclusionSection {
+  margin-top: 8px;
+}
+
+.exclusionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .exclusionGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.exclusionTile {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(40, 60, 60, 0.14);
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  min-width: 0;
+}
+
+.exclusionTileOn {
+  border-color: rgba(40, 83, 74, 0.45);
+  background: rgba(40, 83, 74, 0.06);
+}
+
+.exclusionTileOff {
+  opacity: 0.72;
+  background: rgba(40, 60, 60, 0.03);
+}
+
+.exclusionTileMark {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(40, 83, 74, 0.12);
+  color: rgb(40, 83, 74);
+}
+
+.exclusionTileLabel {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(20, 30, 30, 0.8);
+}
