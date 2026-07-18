@@ -29,7 +29,7 @@ _STORY = _load_story()
 _STORY_MAPPING = get_order_context_mapping(_STORY)
 
 def test_extract_questell_order_id_from_prompt():
-    assert extract_questell_order_id("rendelési szám: ORD-DEL-001") == "ORD-DEL-001"
+    assert extract_questell_order_id("rendelési szám: ORD-CUST-001") == "ORD-CUST-001"
     assert extract_questell_order_id("dhl") is None
 
 
@@ -79,21 +79,17 @@ def test_resolve_precedence_drops_package_lost_when_delivered_not_received():
 
 
 MOCK_TODAY = date(2026, 5, 15)
+# A CSV-ben (backend/data/mock_orders.csv) az 5 rendelés purchase_date-je a
+# mock_today=2026-05-15-höz kalibrált; 30 napos return window mellett az első
+# három a határidőn belül, az utolsó kettő azon kívül.
 WITHIN_RETURN_WINDOW_ORDER_IDS = [
-    "ORD-DEL-001",
-    "ORD-DEL-002",
-    "ORD-DEL-003",
-    "ORD-DEL-004",
-    "ORD-RET-001",
-    "ORD-ACC-001",
-    "ORD-ACC-002",
+    "ORD-CUST-001",
+    "ORD-CUST-002",
+    "ORD-CUST-003",
 ]
 OUTSIDE_RETURN_WINDOW_ORDER_IDS = [
-    "ORD-RET-002",
-    "ORD-BAT-001",
-    "ORD-BAT-002",
-    "ORD-PAY-001",
-    "ORD-PAY-002",
+    "ORD-CUST-004",
+    "ORD-CUST-005",
 ]
 
 
@@ -113,7 +109,7 @@ def test_mock_today_splits_return_window_on_mock_orders():
 
 def test_return_window_days_override_changes_classification():
     story = _load_story()
-    ctx = MOCK_ORDERS["ORD-DEL-001"]
+    ctx = MOCK_ORDERS["ORD-CUST-001"]
     assert "within_return_window" in derive_conditions(ctx, {}, story=story)
     narrow_runtime = {
         **story["meta"]["runtime"],
@@ -137,7 +133,7 @@ def test_mock_today_fallback_uses_date_today_when_missing():
         **story,
         "meta": {**story["meta"], "runtime": runtime},
     }
-    ctx = MOCK_ORDERS["ORD-DEL-001"]
+    ctx = MOCK_ORDERS["ORD-CUST-001"]
     with patch("services.order_context.date_type") as mock_date_module:
         mock_date_module.today.return_value = MOCK_TODAY
         result = derive_conditions(ctx, {}, story=story_no_mock)
@@ -165,6 +161,99 @@ def test_apply_field_rules_when_any_value_delay():
     )
     assert "delay_duration_known" not in _apply_field_rules(
         ctx, set(), rules, today=date(2026, 4, 25)
+    )
+
+
+def test_apply_field_rules_not_null_with_requires_field_lt_today():
+    """Engine: requires_field_lt_today működik `when: not_null` ágon (story refund_overdue)."""
+    ctx_overdue = OrderContext(
+        order_id="X",
+        refund_eta_date=date(2026, 5, 10),
+    )
+    ctx_future = OrderContext(
+        order_id="X",
+        refund_eta_date=date(2026, 5, 20),
+    )
+    ctx_missing = OrderContext(order_id="X")
+    rules = [
+        {
+            "field": "refund_eta_date",
+            "condition": "refund_overdue",
+            "when": "not_null",
+            "requires_field_lt_today": "refund_eta_date",
+        }
+    ]
+    assert "refund_overdue" in _apply_field_rules(
+        ctx_overdue, set(), rules, today=date(2026, 5, 15)
+    )
+    assert "refund_overdue" not in _apply_field_rules(
+        ctx_future, set(), rules, today=date(2026, 5, 15)
+    )
+    assert "refund_overdue" not in _apply_field_rules(
+        ctx_missing, set(), rules, today=date(2026, 5, 15)
+    )
+
+
+def test_apply_field_rules_not_null_with_requires_field_not_null():
+    """Engine: requires_field_not_null működik `when: not_null` ágon (story refund_amount_known).
+
+    B megoldás: a refund_amount_known csak akkor satisfied, ha mind az amount, mind
+    a currency ki van töltve — kombinált 'és' feltétel egyetlen rule-ban.
+    """
+    rules = [
+        {
+            "field": "refund_amount",
+            "condition": "refund_amount_known",
+            "when": "not_null",
+            "requires_field_not_null": "refund_currency",
+        }
+    ]
+    today = date(2026, 5, 15)
+
+    ctx_both = OrderContext(order_id="X", refund_amount=249.0, refund_currency="EUR")
+    ctx_amount_only = OrderContext(order_id="X", refund_amount=249.0)
+    ctx_currency_only = OrderContext(order_id="X", refund_currency="EUR")
+    ctx_neither = OrderContext(order_id="X")
+
+    assert "refund_amount_known" in _apply_field_rules(
+        ctx_both, set(), rules, today=today
+    )
+    assert "refund_amount_known" not in _apply_field_rules(
+        ctx_amount_only, set(), rules, today=today
+    )
+    assert "refund_amount_known" not in _apply_field_rules(
+        ctx_currency_only, set(), rules, today=today
+    )
+    assert "refund_amount_known" not in _apply_field_rules(
+        ctx_neither, set(), rules, today=today
+    )
+
+
+def test_apply_field_rules_modifiers_work_on_truthy_branch():
+    """Engine: modifierek a `when: truthy` ágon is működnek (jövőálló bővítés)."""
+    rules = [
+        {
+            "field": "tracking_number",
+            "condition": "tracking_lt_today",
+            "when": "truthy",
+            "requires_field_lt_today": "estimated_delivery_date",
+        }
+    ]
+    ctx_overdue = OrderContext(
+        order_id="X",
+        tracking_number="ABC",
+        estimated_delivery_date=date(2026, 4, 30),
+    )
+    ctx_future = OrderContext(
+        order_id="X",
+        tracking_number="ABC",
+        estimated_delivery_date=date(2026, 5, 20),
+    )
+    assert "tracking_lt_today" in _apply_field_rules(
+        ctx_overdue, set(), rules, today=date(2026, 5, 15)
+    )
+    assert "tracking_lt_today" not in _apply_field_rules(
+        ctx_future, set(), rules, today=date(2026, 5, 15)
     )
 
 
@@ -285,10 +374,10 @@ def test_derive_conditions_uses_story_mapping():
     )
 
 
-def test_ord_del_002_mock_is_delivered_not_lost():
+def test_ord_cust_001_mock_is_delivered_not_lost():
     from services.order_context_providers import MOCK_ORDERS
 
-    ctx = MOCK_ORDERS["ORD-DEL-002"]
+    ctx = MOCK_ORDERS["ORD-CUST-001"]
     assert ctx.tracking_status == "delivered"
     result = derive_conditions(ctx, {}, mapping=_STORY_MAPPING)
     assert "package_lost" not in result
@@ -460,3 +549,70 @@ def test_return_not_received_when_none():
     assert "return_not_received" in derive_conditions(
         ctx, {}, mapping=_STORY_MAPPING
     )
+
+
+# --- HISTORIKUS REFUND KONDÍCIÓK (ORD-CUST-005 jellegű kontextus) ---
+
+
+def test_historical_refund_conditions_derived_from_full_context():
+    """ORD-CUST-005 mintájú teljes historikus kontextus → minden refund-kondíció derive-ol."""
+    ctx = MOCK_ORDERS["ORD-CUST-005"]
+    story = _load_story()
+    mapping = get_order_context_mapping(story)
+    result = derive_conditions(ctx, {}, story=story, mapping=mapping)
+
+    assert "payment_method_known" in result
+    assert "return_initiated" in result
+    assert "return_received" in result
+    assert "refund_initiated" in result
+    assert "refund_eta_known" in result
+    assert "prior_case_exists" in result
+    assert "refund_amount_known" in result
+
+
+def test_refund_overdue_not_satisfied_when_eta_in_future():
+    """ORD-CUST-005 refund_eta_date=2026-05-24, mock_today=2026-05-15 → még nincs lejárva."""
+    story = _load_story()
+    mapping = get_order_context_mapping(story)
+    ctx = MOCK_ORDERS["ORD-CUST-005"]
+    result = derive_conditions(ctx, {}, story=story, mapping=mapping)
+    assert "refund_overdue" not in result
+
+
+def test_refund_overdue_satisfied_when_eta_past():
+    """Másolt OrderContext lejárt ETA-val → refund_overdue derive-ol."""
+    story = _load_story()
+    mapping = get_order_context_mapping(story)
+    base = MOCK_ORDERS["ORD-CUST-005"]
+    overdue_ctx = base.model_copy(update={"refund_eta_date": date(2026, 5, 1)})
+    result = derive_conditions(overdue_ctx, {}, story=story, mapping=mapping)
+    assert "refund_overdue" in result
+    assert "refund_eta_known" in result
+
+
+def test_refund_amount_known_requires_both_amount_and_currency():
+    """ORD-CUST-001 (sem amount sem currency) → refund_amount_known nincs."""
+    story = _load_story()
+    mapping = get_order_context_mapping(story)
+    ctx = MOCK_ORDERS["ORD-CUST-001"]
+    result = derive_conditions(ctx, {}, story=story, mapping=mapping)
+    assert "refund_amount_known" not in result
+
+
+def test_minimal_orders_have_no_historical_refund_conditions():
+    """ORD-CUST-001..004 → nincs historikus refund kontextus, ezek a kondíciók NINCS satisfied."""
+    story = _load_story()
+    mapping = get_order_context_mapping(story)
+    for oid in ("ORD-CUST-001", "ORD-CUST-002", "ORD-CUST-003", "ORD-CUST-004"):
+        ctx = MOCK_ORDERS[oid]
+        result = derive_conditions(ctx, {}, story=story, mapping=mapping)
+        for cid in (
+            "return_initiated",
+            "return_received",
+            "refund_initiated",
+            "refund_eta_known",
+            "refund_overdue",
+            "prior_case_exists",
+            "refund_amount_known",
+        ):
+            assert cid not in result, f"{oid} should not derive {cid}"

@@ -1,0 +1,29 @@
+# Mock OrderContext adatlapok a test-chat folyamathoz.
+# Single source of truth a CsvOrderContextProvider számára.
+#
+# Dátum-kalibráció: minden időpont a story `meta.runtime.mock_today` = 2026-05-15
+# értékhez viszonyítva van számolva, így a `within/outside_return_window`, a
+# `delay_duration_known` és a `refund_overdue` derive szabályok valós eredményt
+# adnak teszt módban.
+#
+# Üzleti szcenáriók (5 db, minden node-on végigvihető):
+#   ORD-CUST-001 — Ideális, leszállítva, garanciás, magas grade.
+#   ORD-CUST-002 — Késő csomag (in_transit + lejárt ETA), nincs garancia.
+#   ORD-CUST-003 — Tracking szerint kézbesítve, de az ügyfél nem kapta meg.
+#   ORD-CUST-004 — 30 napos visszaküldési ablakon kívül, alacsony grade.
+#   ORD-CUST-005 — Folyamatban lévő refund, korábbi ügyazonosítóval.
+#
+# Formátum-konvenciók:
+#   - delimiter: standard vessző (,)
+#   - encoding: UTF-8, BOM nélkül
+#   - boolean: lowercase "true" / "false" (üres = None)
+#   - dátum: ISO 8601 (YYYY-MM-DD) (üres = None)
+#   - accessories_in_order: pipe-szeparált lista (pl. "charger|cable|case")
+#   - üres mező: csak `,,` (nincs literal "null")
+#   - megjegyzés sorok: `#` kezdettel, a parser kiszűri
+order_id,purchase_date,extended_warranty_active,sold_grade,sold_battery_threshold,accessories_in_order,return_status,payment_method,delivery_date,courier,tracking_number,tracking_status,estimated_delivery_date,return_initiated_date,return_received_date,original_complaint_type,refund_initiated_date,refund_eta_date,prior_case_id,refund_amount,refund_currency
+ORD-CUST-001,2026-04-20,true,Excellent,0.90,charger|cable|case|earphones,,bankkártya,2026-04-23,DPD,DPD123456789,delivered,2026-04-23,,,,,,,,
+ORD-CUST-002,2026-04-28,false,Good,0.80,charger|cable,,PayPal,,GLS,GLS987654321,in_transit,2026-05-10,,,,,,,,
+ORD-CUST-003,2026-04-25,true,Very Good,0.85,charger|cable|case,,bankkártya,2026-05-01,DHL,DHL555444333,delivered,2026-05-01,,,,,,,,
+ORD-CUST-004,2026-03-10,true,Acceptable,0.75,cable,,PayPal,2026-03-14,PostaNL,PostaNL111222,delivered,2026-03-14,,,,,,,,
+ORD-CUST-005,2026-03-26,false,Good,0.88,charger|cable,accepted,bankkártya,2026-03-30,DPD,DPD777888999,delivered,2026-03-30,2026-04-30,2026-05-08,cosmetic,2026-05-10,2026-05-24,CASE-2026-0428,249.0,EUR

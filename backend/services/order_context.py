@@ -143,6 +143,39 @@ class OrderContext(BaseModel):
         description="Futár által ígért kézbesítési dátum — delay számításhoz",
     )
 
+    # Historikus return / refund kontextus — folyamatban lévő visszaküldési ügyek
+    # esetén kitöltve (lásd backend/data/mock_orders.csv ORD-CUST-005).
+    return_initiated_date: Optional[date_type] = Field(
+        None,
+        description="Mikor kezdeményezte az ügyfél a visszaküldést",
+    )
+    return_received_date: Optional[date_type] = Field(
+        None,
+        description="Mikor érkezett be a visszaküldött termék a raktárba",
+    )
+    original_complaint_type: Optional[str] = Field(
+        None,
+        description='Az eredeti panasz típusa: "cosmetic" | "defect" | "regretted" | "wrong-item"',
+    )
+    refund_initiated_date: Optional[date_type] = Field(
+        None,
+        description="Refund mikor lett elindítva (pénzügyi rendszerben rögzítve)",
+    )
+    refund_eta_date: Optional[date_type] = Field(
+        None,
+        description="Várható kifizetés dátuma — ha mock_today > refund_eta_date, túllépés",
+    )
+    prior_case_id: Optional[str] = Field(
+        None,
+        description='Korábbi ügyazonosító (pl. "CASE-2026-0428") — historikus ticket reference',
+    )
+    refund_amount: Optional[float] = Field(
+        None, description="Visszatérítendő összeg"
+    )
+    refund_currency: Optional[str] = Field(
+        None, description="Pénznem pl. 'EUR'"
+    )
+
 
 def get_order_context_mapping(story: dict | None) -> dict | None:
     if not isinstance(story, dict):
@@ -183,6 +216,40 @@ def _session_state_key(mapping: dict, key: str, default: str) -> str:
     return val if isinstance(val, str) and val else default
 
 
+def _evaluate_rule_modifiers(
+    ctx_dict: dict,
+    rule: dict,
+    *,
+    today: date_type,
+) -> bool:
+    """Általános modifier kiértékelés: `requires_field_not_null`, `requires_field_lt_today`.
+
+    Bármely `when`/`when_value`/`when_any_value` ággal kombinálható —
+    a story JSON deklaratív kondíció-szabályait általánosan támogatja
+    (pl. `refund_amount` not_null + `requires_field_not_null: refund_currency`,
+    vagy `refund_eta_date` not_null + `requires_field_lt_today: refund_eta_date`).
+
+    Hibás vagy hiányzó modifier mező → True (a modifier nem korlátoz).
+    """
+    req_field = rule.get("requires_field_not_null")
+    if isinstance(req_field, str) and req_field:
+        if ctx_dict.get(req_field) is None:
+            return False
+
+    lt_field = rule.get("requires_field_lt_today")
+    if isinstance(lt_field, str) and lt_field:
+        lt_val = ctx_dict.get(lt_field)
+        if lt_val is None:
+            return False
+        try:
+            if lt_val >= today:
+                return False
+        except TypeError:
+            return False
+
+    return True
+
+
 def _apply_field_rules(
     ctx: OrderContext,
     session_ids: set[str],
@@ -205,33 +272,28 @@ def _apply_field_rules(
         guard = rule.get("session_guard_not")
         if isinstance(guard, str) and guard and guard in session_ids:
             continue
+
         when_any = rule.get("when_any_value")
         if when_any is not None:
             if not isinstance(when_any, list) or value not in when_any:
                 continue
-            req_field = rule.get("requires_field_not_null")
-            if isinstance(req_field, str) and req_field:
-                if ctx_dict.get(req_field) is None:
-                    continue
-            lt_field = rule.get("requires_field_lt_today")
-            if isinstance(lt_field, str) and lt_field:
-                lt_val = ctx_dict.get(lt_field)
-                if lt_val is None or lt_val >= today:
-                    continue
-            satisfied.append(cond)
-            continue
-        when = rule.get("when")
-        if "when_value" in rule:
+        elif "when_value" in rule:
             if value != rule.get("when_value"):
                 continue
-        elif when == "truthy":
-            if not value:
-                continue
-        elif when == "not_null":
-            if value is None:
-                continue
         else:
+            when = rule.get("when")
+            if when == "truthy":
+                if not value:
+                    continue
+            elif when == "not_null":
+                if value is None:
+                    continue
+            else:
+                continue
+
+        if not _evaluate_rule_modifiers(ctx_dict, rule, today=today):
             continue
+
         satisfied.append(cond)
     return satisfied
 
