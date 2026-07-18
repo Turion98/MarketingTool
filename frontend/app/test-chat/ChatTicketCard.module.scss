@@ -1,0 +1,121 @@
+/* Demo-céllal: emberi narratíva a chat alatt + lenyitható részletes TicketPanel.
+ * A meglévő test-chat warm paletta token-jeire épít (--tc-* a .shell-ben). */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-card-bg);
+  box-shadow: var(--tc-shadow);
+  color: var(--tc-text);
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.checkIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.32);
+}
+
+.headline {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--tc-text);
+}
+
+.summary {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--tc-text-secondary);
+}
+
+.refLine {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--tc-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.65rem;
+}
+
+.refLabel {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+  color: var(--tc-muted);
+}
+
+.refValue {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--tc-accent);
+  background: rgba(138, 106, 74, 0.08);
+  padding: 0.08em 0.4em;
+  border-radius: 4px;
+}
+
+.detailsToggle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.45rem 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tc-accent);
+  align-self: flex-start;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.detailsToggle:hover {
+  color: var(--tc-text);
+}
+
+.detailsToggle:focus-visible {
+  outline: 2px solid var(--tc-accent-mid);
+  outline-offset: 3px;
+}
+
+.detailsCaret {
+  display: inline-block;
+  font-size: 0.7rem;
+  transition: transform 0.18s ease;
+}
+
+.detailsCaretOpen {
+  transform: rotate(90deg);
+}
+
+.detailsBody {
+  margin-top: 0.35rem;
+  /* A TicketPanel saját design system-mel jön (panel SCSS) — a wrapping itt
+     csak biztosítja, hogy ne taszítsa szét a kártya layoutját. */
+  display: flex;
+  flex-direction: column;
+}

@@ -1,18 +1,53 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FileImage, Paperclip, X } from "lucide-react";
 
 // Kanonikus order ID regex: /\bORD-[A-Z]{2,6}-[0-9]{2,6}\b/i — questellOrderId.ts
 import { extractQuestellOrderId } from "../lib/questellOrderId";
+import { ChatTicketCard } from "./ChatTicketCard";
+import { DocsSection, DOCS_SECTION_ID } from "./DocsSection";
+import { LeftGuidePanel } from "./LeftGuidePanel";
+import {
+  RightProcessPanel,
+  type PhaseTurn,
+  type ProcessPhaseId,
+} from "./RightProcessPanel";
+import { SessionLogPanel } from "./SessionLogPanel";
 import { TestLogPanel } from "./TestLogPanel";
 import { appendSavedRun } from "./savedRunsStorage";
+import type {
+  ApiTurnLogEntry,
+  DebugInfo,
+  LogEntry,
+  ProcessResponse,
+  Ticket,
+} from "./testChatTypes";
+import {
+  formatApiTurnStepLabel,
+  formatStatusForLog,
+} from "./testChatTypes";
 
 import s from "./TestChatShell.module.scss";
 
 type ChatMessage =
   | { role: "user"; text: string; hasImage?: boolean }
-  | { role: "assistant"; bubbles: string[]; sentAt?: number; isLoading?: boolean };
+  | {
+      role: "assistant";
+      bubbles: string[];
+      sentAt?: number;
+      isLoading?: boolean;
+      /** A buborékhoz tartozó RightProcessPanel turn-id (data-turn-id alapján
+       *  a "Háttérben" chip ide scrollol és highlight pulse-t indít). */
+      turnId?: string;
+    };
 
 const PENDING_ASSISTANT_TEXT = "Feldolgozom a kérésedet…";
 
@@ -20,104 +55,12 @@ function stripLoadingAssistantMessages(msgs: ChatMessage[]): ChatMessage[] {
   return msgs.filter((m) => !(m.role === "assistant" && m.isLoading));
 }
 
-type DebugInfo = {
-  activeNodeId: string | null;
-  nextPageId: string | null;
-  status: string | null;
-  /** Backend: pl. "fallback" ha story JSON-ból jött assistantMessage. */
-  responseType: string | null;
-  satisfiedConditions: string[];
-  newlySatisfied: string[];
-  missing: string[];
-  latencyMs: number | null;
-  /** Utolsó API válasz `currentStepId` mezője (ha volt a payloadban). */
-  lastApiCurrentStepId: string | null;
-  stepNextId: string | null;
-};
-
-type ProcessResponse = {
-  assistantMessage?: string;
-  /** Goto végoldal fix szövege (ha a backend küldi). */
-  endPageContent?: string | null;
-  clarificationQuestion?: string | null;
-  responseType?: string | null;
-  activeNodeId?: string | null;
-  nextPageId?: string | null;
-  status?: string | null;
-  satisfiedConditions?: string[];
-  newlySatisfied?: string[];
-  missing?: string[];
-  currentStepId?: string | null;
-  nextStepId?: string | null;
-};
-
-type LogEntry = {
-  id: string;
-  ts: number;
-  prompt: string;
-  assistantMessage: string;
-  sentPageId: string | null;
-  serverActiveNodeId: string | null;
-  responseType: string | null;
-  activeNodeId: string | null;
-  nextPageId: string | null;
-  status: string | null;
-  latencyMs: number | null;
-  satisfiedConditions: string[];
-  newlySatisfied: string[];
-  missing: string[];
-  clarificationQuestion: string | null;
-  sentStepId: string | null;
-  responseStepId: string | null;
-  responseNextStepId: string | null;
-  imageProvided: boolean;
-  orderId: string | null;
-};
-
-type ApiTurnLogEntry = {
-  id: string;
-  turn: number;
-  promptTruncated: string;
-  sentPageId: string;
-  serverActiveNodeId: string | null;
-  responseType: string | null;
-  /** Kérésben küldött currentStepId (null = nem volt step a kérésben). */
-  sentStepId: string | null;
-  /** Válasz `currentStepId` (ha szerepelt a payloadban). */
-  responseStepId: string | null;
-  newlySatisfied: string[];
-  status: string | null;
-  latencyMs: number | null;
-};
-
 const PROMPT_TRUNCATE_LEN = 60;
 
 function truncatePrompt(s: string, maxLen: number): string {
   const t = s.trim();
   if (t.length <= maxLen) return t;
   return `${t.slice(0, maxLen - 1)}…`;
-}
-
-/** API forduló napló: step megjelenítés — transition esetén step_1 → step_3a. */
-function formatApiTurnStepLabel(sent: string | null, response: string | null): string {
-  const s = sent ?? null;
-  const r = response ?? null;
-  if (s === null && r === null) return "—";
-  if (s === null) return r as string;
-  if (r === null) return s;
-  if (s === r) return s;
-  return `${s} → ${r}`;
-}
-
-/** API forduló napló / Node Info: ha fallback clarification, egyértelmű címke. */
-function formatStatusForLog(
-  status: string | null | undefined,
-  responseType: string | null | undefined,
-): string {
-  if (responseType === "fallback" && status === "clarification") {
-    return "fallback (clarification)";
-  }
-  return status ?? "—";
 }
 
 function assistantTextFromProcess(data: ProcessResponse): string {
@@ -249,6 +192,32 @@ const INITIAL_DEBUG: DebugInfo = {
   stepNextId: null,
 };
 
+/** Új phase + intermediates rögzítése egy turn-ön. */
+function markPhase(
+  t: PhaseTurn,
+  phase: ProcessPhaseId,
+  intermediates: ProcessPhaseId[] = [],
+): PhaseTurn {
+  const next = [...t.phases, ...intermediates, phase];
+  const seen = new Set<ProcessPhaseId>();
+  const dedup: ProcessPhaseId[] = [];
+  for (const p of next) {
+    if (!seen.has(p)) {
+      seen.add(p);
+      dedup.push(p);
+    }
+  }
+  return { ...t, activePhase: phase, phases: dedup };
+}
+
+/**
+ * Minimum dwell time két egymást követő fázisváltás között.
+ * Gyors backend válasznál is láthatóvá teszi minden fázist a process panelen.
+ */
+const PHASE_MIN_DWELL_MS = 320;
+/** A "done" állapot rövid reveal-je a collapsed nézet előtt. */
+const PHASE_DONE_REVEAL_MS = 600;
+
 export default function TestChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [satisfiedConditions, setSatisfiedConditions] = useState<string[]>([]);
@@ -258,24 +227,59 @@ export default function TestChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   /** Backend activeNodeId — mindig a szerver válasz alapján frissül; a következő kérés pageId-je. */
-  const [currentPageId, setCurrentPageId] = useState<string>(AI_COMPLAINT_STORY_START_PAGE_ID);
+  const [currentPageId, setCurrentPageId] = useState<string>(
+    AI_COMPLAINT_STORY_START_PAGE_ID,
+  );
   const currentPageIdRef = useRef<string>(AI_COMPLAINT_STORY_START_PAGE_ID);
   const [currentStepId, setCurrentStepId] = useState<string | null>(null);
-  /** Kiszűrt rendelés-azonosító (ORD-[KAT]-[SZÁM]), ha a backend jelezte a has_order_id kondíciót. Lásd: questellOrderId.ts. */
+  /** Kiszűrt rendelés-azonosító (ORD-[KAT]-[SZÁM]), ha a backend jelezte a has_order_id kondíciót. */
   const [orderId, setOrderId] = useState<string | null>(null);
   const [apiTurnLog, setApiTurnLog] = useState<ApiTurnLogEntry[]>([]);
   const [activeTab, setActiveTab] = useState<TestTab>("test");
   const [savedRevision, setSavedRevision] = useState(0);
   /** Kiválasztott kép fájlneve — küldésig preview kártyán. */
   const [pendingAttachmentName, setPendingAttachmentName] = useState<string | null>(null);
+  /** Object URL a kiválasztott képhez (preview thumbnail). */
+  const [pendingAttachmentPreviewUrl, setPendingAttachmentPreviewUrl] = useState<
+    string | null
+  >(null);
   /** Teszt: következő üzenethez image_provided: true, küldés után auto off. */
   const [simulateImage, setSimulateImage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const apiTurnLogEndRef = useRef<HTMLDivElement | null>(null);
+  /** RightProcessPanel feed-je. */
+  const [processTurns, setProcessTurns] = useState<PhaseTurn[]>([]);
+  /** Input composer fókusz ring. */
+  const [composerFocused, setComposerFocused] = useState(false);
+  /**
+   * Legutóbb generált ticket — end node lezáráskor frissül az API válasz
+   * `ticket` mezőjéből. `null`: nincs ticket (még pre-end-page, vagy az end
+   * node-on nem volt `ticket` blokk). A `TicketPanel` ekkor nem renderel semmit.
+   */
+  const [lastTicket, setLastTicket] = useState<Ticket | null>(null);
+
+  /** A chat görgő-konténer ref-je — instant `scrollTop = scrollHeight`-tel
+   *  görgetjük, hogy a globális `.shell` scrollja NE mozduljon. */
+  const chatScrollRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const turnCounterRef = useRef(0);
+  const processTurnIdRef = useRef(0);
   const sessionIdRef = useRef<string>(`testchat-${Date.now()}`);
   const runIdRef = useRef<string>(`run-${Date.now()}`);
+
+  /**
+   * `?dev=1` URL paraméter — bekapcsolja a fejlesztői zónákat:
+   *  - Teszt/Log tab navigáció a stickyNav-on
+   *  - Aktív node code-chip a header alcímében
+   *  - SessionLogPanel a chat alatt (debugInfo + apiTurnLog + logs)
+   *  - "Mentett tesztek" funkció (TestLogPanel)
+   * Default `false` — a látogatói (demo) nézet ezekből egyetlen elemet sem lát.
+   */
+  const [isDev, setIsDev] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setIsDev(params.get("dev") === "1");
+  }, []);
 
   const syncPageIdFromServer = (activeNodeId: string | null | undefined) => {
     if (typeof activeNodeId === "string" && activeNodeId.trim()) {
@@ -295,13 +299,89 @@ export default function TestChatPage() {
     }
   };
 
+  /**
+   * Chat auto-scroll: CSAK a `.chatSection` belső görgőjét mozgatjuk.
+   * A `scrollIntoView` az ős-láncot is mozgatná, ami a `.shell`-t lefelé tolná
+   * (és a 2. sor logokra ugrana a viewport) — ezért közvetlen scrollTop-ot
+   * használunk a chat container-en.
+   */
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  /** Textarea auto-resize (1–5 sor). */
+  const resizeTextarea = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const lineHeight = 24;
+    const maxHeight = lineHeight * 5;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, []);
+
+  /** Az inputValue reset utáni "vissza-zsugorítás" (submit után). */
   useEffect(() => {
-    apiTurnLogEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [apiTurnLog.length]);
+    if (inputValue === "") resizeTextarea();
+  }, [inputValue, resizeTextarea]);
+
+  /** Object URL cleanup unmount-kor. */
+  useEffect(() => {
+    return () => {
+      if (pendingAttachmentPreviewUrl) {
+        URL.revokeObjectURL(pendingAttachmentPreviewUrl);
+      }
+    };
+  }, [pendingAttachmentPreviewUrl]);
+
+  /**
+   * Új beszélgetés indítása — minden chat state-et nulláz, friss sessionId-t
+   * generál. A `?dev=1` nézet log-listáját és a saved-runs localStorage-t
+   * NEM törli (a fejlesztő nem akar elveszteni rögzített futásokat).
+   */
+  const handleRestart = useCallback(() => {
+    setMessages([]);
+    setSatisfiedConditions([]);
+    setDebugInfo(INITIAL_DEBUG);
+    setLogs([]);
+    setApiTurnLog([]);
+    setProcessTurns([]);
+    setCurrentPageId(AI_COMPLAINT_STORY_START_PAGE_ID);
+    currentPageIdRef.current = AI_COMPLAINT_STORY_START_PAGE_ID;
+    setCurrentStepId(null);
+    setOrderId(null);
+    setLastTicket(null);
+    setInputValue("");
+    setPendingAttachmentName(null);
+    setPendingAttachmentPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setSimulateImage(false);
+    sessionIdRef.current = `testchat-${Date.now()}`;
+    runIdRef.current = `run-${Date.now()}`;
+    turnCounterRef.current = 0;
+    processTurnIdRef.current = 0;
+  }, []);
+
+  /**
+   * Az asszisztens-buborék "Háttérben" chipjének kattintása: a jobb oldali
+   * Döntési folyamat panelen a megfelelő turn-kártyához scrollol és egy rövid
+   * accent pulse-t indít a vizuális visszacsatoláshoz. A turn-kártyák a
+   * `data-turn-id` attribútumon keresztül azonosíthatók (RightProcessPanel).
+   */
+  const handleBehindReplyClick = useCallback((turnId: string) => {
+    if (typeof window === "undefined") return;
+    const el = document.querySelector(`[data-turn-id="${CSS.escape(turnId)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    el.classList.add("rpp-turn-highlight");
+    window.setTimeout(() => {
+      el.classList.remove("rpp-turn-highlight");
+    }, 700);
+  }, []);
 
   const submitMessage = async () => {
     const promptRaw = inputValue.trim();
@@ -314,20 +394,85 @@ export default function TestChatPage() {
     const pageIdAtSend = currentPageIdRef.current;
     const stepIdAtSend = currentStepId;
 
+    // A turn-id-t a setMessages ELŐTT generáljuk, hogy a loading
+    // assistant-üzenet már a buborék létrejöttekor tudjon hivatkozni
+    // a hozzá tartozó Process panel kártyára (data-turn-id-n keresztül).
+    processTurnIdRef.current += 1;
+    const newTurnNum = processTurnIdRef.current;
+    const newTurnId = `pturn-${Date.now()}-${newTurnNum}`;
+
     setMessages((prev) => [
       ...prev,
       { role: "user", text: displayText, hasImage: imageThisTurn },
-      { role: "assistant", bubbles: [PENDING_ASSISTANT_TEXT], isLoading: true },
+      {
+        role: "assistant",
+        bubbles: [PENDING_ASSISTANT_TEXT],
+        isLoading: true,
+        turnId: newTurnId,
+      },
     ]);
     setInputValue("");
     setPendingAttachmentName(null);
+    setPendingAttachmentPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     if (fileInputRef.current) fileInputRef.current.value = "";
     setSimulateImage(false);
     setIsLoading(true);
     const startedAt = performance.now();
 
+    // RightProcessPanel: új turn waiting fázissal.
+    setProcessTurns((prev) => [
+      ...prev.map((t) => ({ ...t, activePhase: null })),
+      {
+        id: newTurnId,
+        turnNum: newTurnNum,
+        activePhase: "waiting" as ProcessPhaseId,
+        phases: ["waiting" as ProcessPhaseId],
+        details: {},
+        finalTransition: null,
+      },
+    ]);
+
+    /**
+     * Per-turn animation queue.
+     * A backend gyorsabban is válaszolhat, mint amit a szem érzékelni tud:
+     * a phaseChain láncolja a fázisváltásokat, és minimum PHASE_MIN_DWELL_MS-ig
+     * tartja az előzőt, mielőtt a következőt alkalmazza.
+     * lastPhaseAt = utolsó alkalmazott fázisváltás időbélyege.
+     */
+    let lastPhaseAt = performance.now();
+    let phaseChain: Promise<void> = Promise.resolve();
+
+    const enqueuePhaseUpdate = (fn: () => void) => {
+      phaseChain = phaseChain
+        .catch(() => undefined)
+        .then(async () => {
+          const elapsed = performance.now() - lastPhaseAt;
+          const wait = PHASE_MIN_DWELL_MS - elapsed;
+          if (wait > 0) {
+            await new Promise<void>((resolve) => {
+              window.setTimeout(resolve, wait);
+            });
+          }
+          fn();
+          lastPhaseAt = performance.now();
+        });
+    };
+
+    const updateProcessTurn = (updater: (t: PhaseTurn) => PhaseTurn) => {
+      enqueuePhaseUpdate(() => {
+        setProcessTurns((prev) =>
+          prev.map((t) => (t.id === newTurnId ? updater(t) : t)),
+        );
+      });
+    };
+
+    let routingStarted = false;
+
     try {
-      const response = await fetch("/api/ai-node/process", {
+      const fetchPromise = fetch("/api/ai-node/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -343,6 +488,12 @@ export default function TestChatPage() {
           stream: true,
         }),
       });
+
+      // Fetch elindult → "sent" fázis. A "parsing" intermediate marker:
+      // ezt később a meta belép, vagy a done-only ágon a final cleanup.
+      updateProcessTurn((t) => markPhase(t, "sent"));
+
+      const response = await fetchPromise;
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -370,9 +521,18 @@ export default function TestChatPage() {
             role: "assistant",
             bubbles: [`Hiba (${response.status}): ${errorText || "ismeretlen hiba"}`],
             sentAt: Date.now(),
+            turnId: newTurnId,
           },
         ]);
         setDebugInfo((prev) => ({ ...prev, latencyMs: latencyMsErr }));
+        updateProcessTurn((t) => ({
+          ...markPhase(t, "done"),
+          details: {
+            ...t.details,
+            done: { transition: "error", latency: latencyMsErr },
+          },
+          finalTransition: "error",
+        }));
         return;
       }
 
@@ -384,7 +544,9 @@ export default function TestChatPage() {
         let doneData: ProcessResponse | null = null;
         await consumeAiNodeSseStream(response, {
           onMeta: (p) => {
-            const nextSatisfied = Array.isArray(p.satisfiedConditions) ? p.satisfiedConditions : [];
+            const nextSatisfied = Array.isArray(p.satisfiedConditions)
+              ? p.satisfiedConditions
+              : [];
             const nextNewly = Array.isArray(p.newlySatisfied) ? p.newlySatisfied : [];
             const nextMissing = Array.isArray(p.missing) ? p.missing : [];
             setSatisfiedConditions(nextSatisfied);
@@ -425,8 +587,21 @@ export default function TestChatPage() {
               }
               return copy;
             });
+            updateProcessTurn((t) => ({
+              ...markPhase(t, "meta", ["parsing"]),
+              details: {
+                ...t.details,
+                meta: {
+                  badges: nextNewly.length ? nextNewly : undefined,
+                },
+              },
+            }));
           },
           onDelta: (text) => {
+            if (!routingStarted) {
+              routingStarted = true;
+              updateProcessTurn((t) => markPhase(t, "routing"));
+            }
             setMessages((prev) => {
               const copy = [...prev];
               for (let i = copy.length - 1; i >= 0; i--) {
@@ -550,8 +725,25 @@ export default function TestChatPage() {
           role: "assistant",
           bubbles: assistantBubblesFromProcess(data),
           sentAt: Date.now(),
+          turnId: newTurnId,
         },
       ]);
+      // End-page lezáráskor a backend `ticket` mezőt küld; egyébként null.
+      // A TicketPanel null-on nem renderel — placeholder helyett semmi sem látszik.
+      setLastTicket(data.ticket ?? null);
+
+      // RightProcessPanel: done fázis + transition + latency.
+      const transition = data.activeNodeId
+        ? `${pageIdAtSend} → ${data.activeNodeId}`
+        : undefined;
+      updateProcessTurn((t) => ({
+        ...markPhase(t, "done"),
+        details: {
+          ...t.details,
+          done: { transition, latency: latencyMs },
+        },
+        finalTransition: transition ?? null,
+      }));
     } catch (err) {
       const latencyMs = Math.round(performance.now() - startedAt);
       const msg = err instanceof Error ? err.message : "ismeretlen hiba";
@@ -578,11 +770,40 @@ export default function TestChatPage() {
           role: "assistant",
           bubbles: [`Halozati hiba: ${msg}`],
           sentAt: Date.now(),
+          turnId: newTurnId,
         },
       ]);
       setDebugInfo((prev) => ({ ...prev, latencyMs }));
+      updateProcessTurn((t) => ({
+        ...markPhase(t, "done"),
+        details: {
+          ...t.details,
+          done: { transition: "error", latency: latencyMs },
+        },
+        finalTransition: "error",
+      }));
     } finally {
       setIsLoading(false);
+      /**
+       * Forduló lezárása:
+       *  1. megvárjuk, amíg a phaseChain teljes hosszában lecsorog
+       *     (azaz a "done" frame is alkalmazva van a UI-on)
+       *  2. PHASE_DONE_REVEAL_MS-ig hagyjuk látható a done állapotot
+       *  3. átkapcsolunk collapsed nézetre.
+       */
+      void (async () => {
+        try {
+          await phaseChain;
+        } catch {
+          /* a chain a fázisok közben lehet elbukik; a collapse-t mégis lefuttatjuk */
+        }
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, PHASE_DONE_REVEAL_MS);
+        });
+        setProcessTurns((prev) =>
+          prev.map((t) => (t.id === newTurnId ? { ...t, activePhase: null } : t)),
+        );
+      })();
     }
   };
 
@@ -591,7 +812,7 @@ export default function TestChatPage() {
     await submitMessage();
   };
 
-  const onInputKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
+  const onTextareaKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       await submitMessage();
@@ -684,405 +905,308 @@ export default function TestChatPage() {
     }
   };
 
-  const isClarification = debugInfo.status === "clarification";
+  /** Typing-dots feltétele (C variant):
+   *  - dot, ha a bubble még üres vagy a PENDING sablonszöveg van benne;
+   *  - amint az első delta beérkezik, élő token-folyam.
+   */
+  const shouldShowTypingDots = (m: ChatMessage): boolean => {
+    if (m.role !== "assistant" || !m.isLoading) return false;
+    const first = m.bubbles[0] ?? "";
+    return first === "" || first === PENDING_ASSISTANT_TEXT;
+  };
+
+  // Suppress unused-warning a formatStatusForLog import-ra: a SessionLogPanel kapja meg.
+  void formatStatusForLog;
+  void formatApiTurnStepLabel;
 
   return (
     <main className={s.shell}>
       <header className={s.stickyNav}>
-        <div>
-          <h1 className={s.navTitle}>Questell AI Teszt</h1>
-          {activeTab === "test" ? (
+        <div className={s.navTitleBlock}>
+          <h1 className={s.navTitle}>Questell · Decision flow demo</h1>
+          {isDev && activeTab === "test" ? (
             <p className={s.navMeta}>
-              Aktív node (automatikus): <code>{currentPageId}</code>
+              Aktív node: <code>{currentPageId}</code>
             </p>
-          ) : (
+          ) : isDev && activeTab === "log" ? (
             <p className={s.navMeta}>Mentett tesztek megtekintése</p>
-          )}
-        </div>
-        <div className={s.tabGroup} role="tablist" aria-label="Teszt nézet">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "test"}
-            className={`${s.tab} ${activeTab === "test" ? s.tabActive : ""}`}
-            onClick={() => setActiveTab("test")}
-          >
-            Teszt
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "log"}
-            className={`${s.tab} ${activeTab === "log" ? s.tabActive : ""}`}
-            onClick={() => setActiveTab("log")}
-          >
-            Log
-          </button>
-        </div>
-      </header>
-
-      {activeTab === "log" ? (
-        <TestLogPanel savedRevision={savedRevision} />
-      ) : (
-        <div className={s.testBody}>
-      <section className={s.chatSection}>
-        <div className={s.chatInner}>
-          {messages.length === 0 ? (
-            <p className={s.emptyHint}>
-              Kuldj egy uzenetet a teszthez. A valaszok itt jelennek meg.
+          ) : (
+            <p className={s.navMeta}>
+              Refurbished electronics — complaint intake (HU)
             </p>
-          ) : null}
-          {messages.map((m, i) =>
-            m.role === "user" ? (
-              <div key={`${m.role}-${i}`} className={s.bubbleUser}>
-                {m.hasImage ? (
-                  <span className={s.userBubbleInner}>
-                    <FileImage className={s.msgFileIcon} size={16} aria-hidden />
-                    <span>{m.text}</span>
-                  </span>
-                ) : (
-                  m.text
-                )}
-              </div>
-            ) : (
-              <div key={`${m.role}-${i}`} className={s.assistantTurn}>
-                {m.bubbles.map((para, pi) => (
-                  <div
-                    key={pi}
-                    className={m.isLoading ? s.bubbleAssistantPending : s.bubbleAssistant}
-                  >
-                    {para}
-                  </div>
-                ))}
-                {!m.isLoading && m.sentAt != null ? (
-                  <time
-                    className={s.assistantTimestamp}
-                    dateTime={new Date(m.sentAt).toISOString()}
-                  >
-                    {new Date(m.sentAt).toLocaleTimeString()}
-                  </time>
-                ) : null}
-              </div>
-            ),
           )}
-          <div ref={messagesEndRef} />
         </div>
-      </section>
-
-      <form onSubmit={onSubmit} className={s.inputBar}>
-        <div className={s.inputBarInner}>
-          <label className={`${s.simulateToggle} ${simulateImage ? s.simulateToggleOn : ""}`}>
-            <input
-              type="checkbox"
-              checked={simulateImage}
-              onChange={(e) => setSimulateImage(e.target.checked)}
-              disabled={isLoading}
-              className={s.simulateToggleInput}
-            />
-            <span>Kép szimulálása</span>
-          </label>
-          {pendingAttachmentName ? (
-            <div className={s.attachmentCard}>
-              <span className={s.attachmentName} title={pendingAttachmentName}>
-                {pendingAttachmentName}
-              </span>
+        <div className={s.navActions}>
+          <button
+            type="button"
+            className={s.navAction}
+            onClick={handleRestart}
+          >
+            Új beszélgetés
+          </button>
+          <a href={`#${DOCS_SECTION_ID}`} className={s.navAction}>
+            Dokumentáció
+          </a>
+          {isDev ? (
+            <div className={s.tabGroup} role="tablist" aria-label="Teszt nézet">
               <button
                 type="button"
-                className={s.attachmentRemove}
-                onClick={() => {
-                  setPendingAttachmentName(null);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                aria-label="Csatolmány eltávolítása"
+                role="tab"
+                aria-selected={activeTab === "test"}
+                className={`${s.tab} ${activeTab === "test" ? s.tabActive : ""}`}
+                onClick={() => setActiveTab("test")}
               >
-                <X size={16} />
+                Teszt
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "log"}
+                className={`${s.tab} ${activeTab === "log" ? s.tabActive : ""}`}
+                onClick={() => setActiveTab("log")}
+              >
+                Log
               </button>
             </div>
           ) : null}
-          <div className={s.inputRow}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className={s.fileInputHidden}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                setPendingAttachmentName(f ? f.name : null);
-              }}
-              aria-hidden
-              tabIndex={-1}
-            />
-            <button
-              type="button"
-              className={s.btnClip}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-              aria-label="Kép csatolása"
-            >
-              <Paperclip size={20} strokeWidth={2} />
-            </button>
-            <input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={onInputKeyDown}
-              placeholder="Ird be az uzeneted..."
-              className={s.input}
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={
-                isLoading ||
-                (!inputValue.trim() && !simulateImage && !pendingAttachmentName)
-              }
-              className={s.btnSend}
-            >
-              {isLoading ? "Kuldes..." : "Kuldes"}
-            </button>
-          </div>
         </div>
-      </form>
+      </header>
 
-      <aside className={s.debugAside}>
-        <div className="mx-auto max-w-4xl" style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div
-            className="grid grid-cols-1 gap-4 md:grid-cols-2"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: 16,
-            }}
-          >
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-gray-500" style={{ color: "#6b7280", margin: "0 0 12px 0", fontSize: 12 }}>
-              Node Info
-            </p>
-            <div className="space-y-1 text-sm font-mono" style={{ fontFamily: "monospace", fontSize: 14, color: "#4ade80" }}>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Aktiv:</span>
-                <span className="font-medium text-green-400" style={{ color: "#4ade80", fontWeight: 500 }}>{debugInfo.activeNodeId || "-"}</span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Aktív step:</span>
-                <span className="font-medium text-green-400" style={{ color: "#4ade80", fontWeight: 500 }}>
-                  {debugInfo.lastApiCurrentStepId ?? "—"}
-                </span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Kovetkezo step:</span>
-                <span className="font-medium text-green-400" style={{ color: "#4ade80", fontWeight: 500 }}>{debugInfo.stepNextId || "-"}</span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Új kondíciók:</span>
-                <span className="font-medium text-yellow-400" style={{ color: "#facc15", fontWeight: 500 }}>
-                  {debugInfo.newlySatisfied.length ? debugInfo.newlySatisfied.join(", ") : "—"}
-                </span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Statusz:</span>
-                <span
-                  className={
-                    debugInfo.status === "clarification"
-                      ? "font-medium text-yellow-400"
-                      : "font-medium text-green-400"
-                  }
-                  style={{ color: isClarification ? "#facc15" : "#4ade80", fontWeight: 500 }}
-                >
-                  {formatStatusForLog(debugInfo.status, debugInfo.responseType)}
-                </span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Kovetkezo:</span>
-                <span className="font-medium text-green-400" style={{ color: "#4ade80", fontWeight: 500 }}>{debugInfo.nextPageId || "-"}</span>
-              </p>
-              <p>
-                <span className="mr-2 text-gray-500" style={{ color: "#6b7280", marginRight: 8 }}>Latencia:</span>
-                <span className="font-medium text-blue-400" style={{ color: "#60a5fa", fontWeight: 500 }}>{debugInfo.latencyMs ?? "-"}ms</span>
-              </p>
-            </div>
-          </div>
+      {isDev && activeTab === "log" ? (
+        <TestLogPanel savedRevision={savedRevision} />
+      ) : (
+        <>
+          <div className={s.testBody}>
+            <LeftGuidePanel />
 
-          <div className="border-gray-800 md:border-l md:pl-4" style={{ borderLeft: "1px solid #1f2937", paddingLeft: 16 }}>
-            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-gray-500" style={{ color: "#6b7280", margin: "0 0 12px 0", fontSize: 12 }}>
-              Kondiciok
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="mb-2 text-xs text-gray-500" style={{ color: "#6b7280", fontSize: 12 }}>Teljesult</p>
-                {debugInfo.satisfiedConditions.length ? (
-                  <ul className="space-y-1">
-                    {debugInfo.satisfiedConditions.map((c) => (
-                      <li
-                        key={`sat-${c}`}
-                        className="flex items-center gap-1 font-mono text-xs text-green-400"
-                        style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "monospace", fontSize: 12, color: "#4ade80" }}
-                      >
-                        <span>✓</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-gray-600" style={{ color: "#4b5563", fontSize: 12 }}>—</p>
-                )}
-              </div>
-              <div className="border-l border-gray-800 pl-3" style={{ borderLeft: "1px solid #1f2937", paddingLeft: 12 }}>
-                <p className="mb-2 text-xs text-gray-500" style={{ color: "#6b7280", fontSize: 12 }}>Uj</p>
-                {debugInfo.newlySatisfied.length ? (
-                  <ul className="space-y-1">
-                    {debugInfo.newlySatisfied.map((c) => (
-                      <li
-                        key={`new-${c}`}
-                        className="flex items-center gap-1 font-mono text-xs text-yellow-400"
-                        style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "monospace", fontSize: 12, color: "#facc15" }}
-                      >
-                        <span>+</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-gray-600" style={{ color: "#4b5563", fontSize: 12 }}>—</p>
-                )}
-              </div>
-              <div className="border-l border-gray-800 pl-3" style={{ borderLeft: "1px solid #1f2937", paddingLeft: 12 }}>
-                <p className="mb-2 text-xs text-gray-500" style={{ color: "#6b7280", fontSize: 12 }}>Hianyzo</p>
-                {debugInfo.missing.length ? (
-                  <ul className="space-y-1">
-                    {debugInfo.missing.map((c) => (
-                      <li
-                        key={`miss-${c}`}
-                        className="flex items-center gap-1 font-mono text-xs text-red-400"
-                        style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "monospace", fontSize: 12, color: "#f87171" }}
-                      >
-                        <span>✗</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-gray-600" style={{ color: "#4b5563", fontSize: 12 }}>—</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+            <div className={s.mainChatColumn}>
+              <section ref={chatScrollRef} className={s.chatSection}>
+                <div className={s.chatInner}>
+                  {messages.length === 0 ? (
+                    <p className={s.emptyHint}>
+                      Kuldj egy uzenetet a teszthez. A valaszok itt jelennek meg.
+                    </p>
+                  ) : null}
+                  {messages.map((m, i) =>
+                    m.role === "user" ? (
+                      <div key={`${m.role}-${i}`} className={s.bubbleUser}>
+                        {m.hasImage ? (
+                          <span className={s.userBubbleInner}>
+                            <FileImage className={s.msgFileIcon} size={16} aria-hidden />
+                            <span>{m.text}</span>
+                          </span>
+                        ) : (
+                          m.text
+                        )}
+                      </div>
+                    ) : (
+                      <div key={`${m.role}-${i}`} className={s.assistantTurn}>
+                        <div className={s.assistantAvatar} aria-hidden />
+                        <div className={s.assistantBubbleGroup}>
+                          {m.bubbles.map((para, pi) => {
+                            const isFirst = pi === 0;
+                            const bubbleClass = m.isLoading
+                              ? `${s.bubbleAssistantPending}`
+                              : `${s.bubbleAssistant} ${
+                                  isFirst ? s.bubbleAssistantFirst : s.bubbleAssistantFollowup
+                                }`;
+                            const showDots = isFirst && shouldShowTypingDots(m);
+                            return (
+                              <div key={pi} className={bubbleClass}>
+                                {showDots ? (
+                                  <span
+                                    className={s.typingDots}
+                                    aria-label="Feldolgozás folyamatban"
+                                  >
+                                    <span />
+                                    <span />
+                                    <span />
+                                  </span>
+                                ) : (
+                                  para
+                                )}
+                              </div>
+                            );
+                          })}
+                          {!m.isLoading && m.sentAt != null ? (
+                            <div className={s.assistantMetaRow}>
+                              <time
+                                className={s.assistantTimestamp}
+                                dateTime={new Date(m.sentAt).toISOString()}
+                              >
+                                {new Date(m.sentAt).toLocaleTimeString()}
+                              </time>
+                              {m.turnId ? (
+                                <button
+                                  type="button"
+                                  className={s.behindReplyChip}
+                                  onClick={() =>
+                                    handleBehindReplyClick(m.turnId as string)
+                                  }
+                                  aria-label="Mutasd, mit csinált a háttérben"
+                                >
+                                  <span aria-hidden>▸</span> Háttérben
+                                </button>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </section>
 
-          <p
-            className="mb-2 mt-6 text-xs font-medium uppercase tracking-widest text-gray-500"
-            style={{ color: "#6b7280", margin: "24px 0 8px 0", fontSize: 12 }}
-          >
-            API forduló napló
-          </p>
-          <div
-            className="rounded-lg border border-gray-800 bg-black/30"
-            style={{
-              maxHeight: 300,
-              overflowY: "auto",
-              padding: 10,
-              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              fontSize: 12,
-            }}
-          >
-            {apiTurnLog.length === 0 ? (
-              <p style={{ color: "#6b7280", margin: 0 }}>Még nincs API válasz naplózva.</p>
-            ) : (
-              <div>
-                {apiTurnLog.map((entry, idx) => (
+              <form onSubmit={onSubmit} className={s.inputBar}>
+                <div className={s.inputBarInner}>
+                  <label
+                    className={`${s.simulateToggle} ${simulateImage ? s.simulateToggleOn : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={simulateImage}
+                      onChange={(e) => setSimulateImage(e.target.checked)}
+                      disabled={isLoading}
+                      className={s.simulateToggleInput}
+                    />
+                    <span>Kép szimulálása</span>
+                  </label>
+                  {pendingAttachmentName ? (
+                    <div className={s.attachmentCard}>
+                      {pendingAttachmentPreviewUrl ? (
+                        // blob: URL preview — next/image nem alkalmas (nem optimalizálható).
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={pendingAttachmentPreviewUrl}
+                          alt=""
+                          className={s.attachmentThumb}
+                        />
+                      ) : (
+                        <span className={s.attachmentThumbFallback} aria-hidden>
+                          <FileImage size={18} />
+                        </span>
+                      )}
+                      <span className={s.attachmentName} title={pendingAttachmentName}>
+                        {pendingAttachmentName}
+                      </span>
+                      <button
+                        type="button"
+                        className={s.attachmentRemove}
+                        onClick={() => {
+                          setPendingAttachmentName(null);
+                          setPendingAttachmentPreviewUrl((prev) => {
+                            if (prev) URL.revokeObjectURL(prev);
+                            return null;
+                          });
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        aria-label="Csatolmány eltávolítása"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : null}
                   <div
-                    key={entry.id}
-                    style={{
-                      paddingBottom: 10,
-                      marginBottom: 10,
-                      borderBottom: idx < apiTurnLog.length - 1 ? "1px solid #1f2937" : "none",
-                      color: "#d1d5db",
+                    className={`${s.inputComposer} ${composerFocused ? s.inputComposerFocused : ""}`}
+                    onFocusCapture={() => setComposerFocused(true)}
+                    onBlurCapture={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                        setComposerFocused(false);
+                      }
                     }}
                   >
-                    <p style={{ margin: "0 0 4px 0", color: "#9ca3af" }}>
-                      #{entry.turn} · {entry.latencyMs ?? "—"}ms ·{" "}
-                      <span
-                        style={{
-                          color:
-                            entry.status === "clarification" ? "#facc15" : "#e5e7eb",
-                        }}
-                      >
-                        {formatStatusForLog(entry.status, entry.responseType)}
-                      </span>
-                    </p>
-                    <p style={{ margin: "0 0 4px 0", color: "#93c5fd" }}>Prompt: {entry.promptTruncated}</p>
-                    <p style={{ margin: "0 0 2px 0", color: "#86efac" }}>
-                      Küldött node: <code>{entry.sentPageId}</code>
-                    </p>
-                    <p style={{ margin: "0 0 4px 0", color: "#86efac" }}>
-                      Szerver node:{" "}
-                      {entry.serverActiveNodeId ? (
-                        <code>{entry.serverActiveNodeId}</code>
-                      ) : entry.status === "clarification" ? (
-                        <span>— (clarification)</span>
-                      ) : (
-                        <span>—</span>
-                      )}{" "}
-                      · Step: {formatApiTurnStepLabel(entry.sentStepId, entry.responseStepId)}
-                    </p>
-                    <p style={{ margin: 0, color: "#fde047" }}>
-                      Új kondíciók: {entry.newlySatisfied.length ? entry.newlySatisfied.join(", ") : "—"}
-                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className={s.fileInputHidden}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        setPendingAttachmentName(f ? f.name : null);
+                        setPendingAttachmentPreviewUrl((prev) => {
+                          if (prev) URL.revokeObjectURL(prev);
+                          return f && f.type.startsWith("image/")
+                            ? URL.createObjectURL(f)
+                            : null;
+                        });
+                      }}
+                      aria-hidden
+                      tabIndex={-1}
+                    />
+                    <button
+                      type="button"
+                      className={s.btnClip}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoading}
+                      aria-label="Kép csatolása"
+                    >
+                      <Paperclip size={20} strokeWidth={2} />
+                    </button>
+                    <textarea
+                      ref={textareaRef}
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        requestAnimationFrame(resizeTextarea);
+                      }}
+                      onKeyDown={onTextareaKeyDown}
+                      placeholder="Írd be az üzeneted… (Shift+Enter = sortörés)"
+                      className={s.textarea}
+                      disabled={isLoading}
+                      rows={1}
+                    />
+                    <button
+                      type="submit"
+                      disabled={
+                        isLoading ||
+                        (!inputValue.trim() && !simulateImage && !pendingAttachmentName)
+                      }
+                      className={s.btnSend}
+                    >
+                      {isLoading ? "Küldés…" : "Küldés"}
+                    </button>
                   </div>
-                ))}
-                <div ref={apiTurnLogEndRef} style={{ height: 1 }} />
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
+                  <p className={s.inputHint}>
+                    Enter = küldés · Shift+Enter = sortörés
+                  </p>
+                </div>
+              </form>
+            </div>
 
-      <section className={s.promptLogSection}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div className={s.promptLogHeader}>
-            <p className={s.promptLogTitle}>Prompt Log</p>
-            <button
-              type="button"
-              onClick={saveLogsToBackend}
-              disabled={isSavingLogs || logs.length === 0}
-              className={s.btnSave}
-            >
-              {isSavingLogs ? "Mentés..." : "Mentés"}
-            </button>
+            <RightProcessPanel turns={processTurns} isRunning={isLoading} />
           </div>
 
-          <div
-            className="rounded-lg border border-gray-800 bg-black/20"
-            style={{ maxHeight: 170, overflowY: "auto", padding: 12 }}
-          >
-            {logs.length === 0 ? (
-              <p className="text-xs text-gray-600">Még nincs log bejegyzés.</p>
-            ) : (
-              <div className="space-y-2">
-                {logs.map((log) => (
-                  <div key={log.id} className="rounded-md border border-gray-800 bg-gray-900/40 p-2 text-xs font-mono">
-                    <p className="mb-1 text-gray-400">
-                      {new Date(log.ts).toLocaleTimeString()} | {log.status || "-"} | {log.latencyMs ?? "-"}ms
-                    </p>
-                    <p className="text-blue-300">Prompt: {log.prompt}</p>
-                    <p className="text-green-300">
-                      Küldött: {log.sentPageId ?? "—"} · Szerver:{" "}
-                      {log.serverActiveNodeId ??
-                        (log.status === "clarification" ? "— (clarification)" : "—")}{" "}
-                      → {log.nextPageId || "-"}
-                      {log.responseType ? ` · ${log.responseType}` : ""}
-                    </p>
-                    <p className="text-amber-200/90 text-[0.7rem] font-semibold uppercase tracking-wide">
-                      AI válasz
-                    </p>
-                    <p className="text-gray-300">{log.assistantMessage}</p>
-                  </div>
-                ))}
+          {(() => {
+            // Demo-nézet: a látogató csak a ticket-kártyát látja (ha készült),
+            // a fejlesztői SessionLogPanel `?dev=1` mögé van rejtve.
+            const showTicket = lastTicket !== null;
+            const showLogs = isDev && logs.length > 0;
+            if (!showTicket && !showLogs) return null;
+            const singleColumn = !(showTicket && showLogs);
+            return (
+              <div className={`${s.secondRow} ${s.secondRowVisible}`}>
+                <div
+                  className={`${s.secondRowInner} ${
+                    singleColumn ? s.secondRowInnerSingle : ""
+                  }`}
+                >
+                  {showTicket ? <ChatTicketCard ticket={lastTicket} /> : null}
+                  {showLogs ? (
+                    <SessionLogPanel
+                      debugInfo={debugInfo}
+                      apiTurnLog={apiTurnLog}
+                      logs={logs}
+                      isSavingLogs={isSavingLogs}
+                      onSave={saveLogsToBackend}
+                    />
+                  ) : null}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
-        </div>
+            );
+          })()}
+
+          <DocsSection />
+        </>
       )}
     </main>
   );

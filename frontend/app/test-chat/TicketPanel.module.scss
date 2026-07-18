@@ -1,0 +1,262 @@
+/* TicketPanel — F5 vizuális ticket-megjelenítés.
+ * Színek: a marketing CTA-paletta (#a94145 / #93393d / #f5f8ff) hexei
+ * lokális CSS-változókba másolva — független a marketing tokentől,
+ * tehát skinable a test-chat panel maga (pl. story-onként más szín). */
+
+.panel {
+  --ticket-bg: #a94145;
+  --ticket-bg-bot: #93393d;
+  --ticket-text: #f5f8ff;
+  --ticket-text-muted: rgba(245, 248, 255, 0.72);
+  --ticket-text-tertiary: rgba(245, 248, 255, 0.55);
+  --ticket-divider: rgba(245, 248, 255, 0.16);
+  --ticket-border: color-mix(in srgb, #a94145 68%, black);
+  --ticket-evidence-bg: rgba(110, 231, 183, 0.18);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+
+  min-height: 240px;
+  padding: 1.25rem 1.4rem;
+  border-radius: 14px;
+  border: 1px solid var(--ticket-border);
+  background: linear-gradient(
+    158deg,
+    var(--ticket-bg) 0%,
+    var(--ticket-bg-bot) 100%
+  );
+  color: var(--ticket-text);
+  box-shadow: 0 8px 28px rgba(169, 65, 69, 0.32);
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at 0% 0%,
+    rgba(245, 248, 255, 0.08),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── (1) Header ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ticketId {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--ticket-text-muted);
+  word-break: break-all;
+}
+
+.priorityBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ticket-text);
+  background: rgba(245, 248, 255, 0.22);
+}
+
+.priorityBadgeLow {
+  background: rgba(245, 248, 255, 0.12);
+}
+
+.priorityBadgeNormal {
+  background: rgba(245, 248, 255, 0.22);
+}
+
+.priorityBadgeHigh {
+  background: rgba(245, 248, 255, 0.36);
+}
+
+.priorityBadgeUrgent {
+  background: #fbbf24;
+  color: #7c2d12;
+  animation: ticketPulse 2s ease-in-out infinite;
+}
+
+@keyframes ticketPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+  }
+}
+
+/* ── (2) Category + Routing ─────────────────────────────── */
+.categoryBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.category {
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--ticket-text);
+}
+
+.routing {
+  font-size: 0.82rem;
+  color: var(--ticket-text-muted);
+}
+
+.routingArrow {
+  display: inline-block;
+  margin-right: 0.35rem;
+  opacity: 0.7;
+}
+
+/* ── Sections (Summary / Evidence / Actions) ────────────── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ticket-text);
+  opacity: 0.7;
+}
+
+/* ── (3) Summary ────────────────────────────────────────── */
+.summary {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ticket-text);
+}
+
+/* ── (4) Evidence list ──────────────────────────────────── */
+.evidenceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.evidenceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: var(--ticket-evidence-bg);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--ticket-text);
+}
+
+.evidenceCheck {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: rgba(245, 248, 255, 0.18);
+  color: var(--ticket-text);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+/* ── (5) Customer actions ───────────────────────────────── */
+.actionsList {
+  margin: 0;
+  padding-left: 1.05rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--ticket-text);
+}
+
+.actionsList li::marker {
+  color: var(--ticket-text-muted);
+}
+
+/* ── (6) Tags ───────────────────────────────────────────── */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--ticket-text-tertiary);
+}
+
+.tag::before {
+  content: "·";
+  margin-right: 0.45rem;
+  opacity: 0.5;
+}
+
+.tag:first-child::before {
+  content: none;
+  margin-right: 0;
+}
+
+/* ── (7) Footer ─────────────────────────────────────────── */
+.footer {
+  margin-top: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ticket-divider);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.7rem;
+  color: var(--ticket-text-tertiary);
+}
+
+.footerItem {
+  white-space: nowrap;
+}
+
+.footerItem code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.95em;
+  color: var(--ticket-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .priorityBadgeUrgent {
+    animation: none;
+  }
+}

@@ -1,0 +1,261 @@
+/* Doksi szekció a /test-chat oldalon — sticky ToC bal, tartalom jobb.
+ * Mobilon a ToC tetején egy lapos lista, scroll-anchor link-ekkel. */
+
+.docs {
+  width: 100%;
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)
+    clamp(2rem, 5vw, 3.5rem);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
+  border-top: 1px solid var(--tc-border);
+  color: var(--tc-text);
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.docsInner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+}
+
+@media (min-width: 880px) {
+  .docsInner {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+.head {
+  grid-column: 1 / -1;
+  margin-bottom: 0.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tc-accent);
+}
+
+.title {
+  margin: 0.4rem 0 0.55rem;
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--tc-text);
+}
+
+.lead {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--tc-text-secondary);
+}
+
+/* ── Sticky ToC ───────────────────────────────────────────── */
+.toc {
+  align-self: start;
+}
+
+@media (min-width: 880px) {
+  .toc {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+.tocLabel {
+  margin: 0 0 0.55rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tc-muted);
+}
+
+.tocList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-left: 1px solid var(--tc-border);
+}
+
+.tocItem {
+  margin: 0;
+}
+
+.tocLink {
+  display: block;
+  padding: 0.4rem 0.75rem;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  font-size: 0.85rem;
+  color: var(--tc-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  border-radius: 0 4px 4px 0;
+}
+
+.tocLink:hover {
+  color: var(--tc-accent);
+  background: rgba(138, 106, 74, 0.06);
+}
+
+.tocLinkActive {
+  color: var(--tc-accent);
+  border-left-color: var(--tc-accent);
+  font-weight: 600;
+}
+
+/* ── Content sections ─────────────────────────────────────── */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  min-width: 0;
+}
+
+.section {
+  /* Scroll-margin: a sticky stickyNav (4.5rem) ne takarja el a szekció címet
+     #anchor navigációkor. */
+  scroll-margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--tc-text);
+}
+
+.sectionLead {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--tc-text-secondary);
+}
+
+.paragraph {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--tc-text);
+}
+
+.paragraph code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.86em;
+  color: var(--tc-accent);
+  background: rgba(138, 106, 74, 0.08);
+  padding: 0.08em 0.35em;
+  border-radius: 4px;
+}
+
+.bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--tc-text);
+}
+
+.bullets li::marker {
+  color: var(--tc-accent);
+}
+
+/* ── Code blocks ──────────────────────────────────────────── */
+.codeWrap {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid var(--tc-border);
+  background: rgba(3, 7, 18, 0.92);
+  color: #e5e7eb;
+  overflow: hidden;
+}
+
+.codeCaption {
+  margin: 0;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  border-bottom: 1px solid #1f2937;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  color: #e5e7eb;
+}
+
+.codeBlock code {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+}
+
+/* ── Callouts ─────────────────────────────────────────────── */
+.callout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border-left: 3px solid var(--tc-accent);
+  background: rgba(138, 106, 74, 0.08);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.calloutInfo {
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.calloutWarn {
+  border-left-color: #d97706;
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.calloutTip {
+  border-left-color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.calloutTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tc-text);
+}
+
+.calloutText {
+  margin: 0;
+  color: var(--tc-text);
+}
